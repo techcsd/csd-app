@@ -14,7 +14,7 @@
  * cambios[] tipados) y FALLA (exit 1) si no pudo registrar.
  */
 import { readFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { resolverEnv } from './lib/entorno.mjs';
 import { verificarCanalEnZip } from './lib/canal.mjs';
 
@@ -40,9 +40,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-16';
 
-const TITULO = 'Importar choferes y vehículos desde Excel';
+const TITULO = 'Reuniones, Compa compartido y mejoras de Por despachar y Personal de obra';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Flota', d: 'El jefe de flota y quien tenga el permiso ya puede importar choferes y vehículos de un solo golpe desde un Excel (con sus fotos), sin tener que crearlos uno por uno.' },
+  { t: 'nuevo', m: 'Reuniones', d: 'Nuevo módulo: tus reuniones (unirte, agenda, mis notas con dictado y foto de pizarra, acuerdos) y "Programar reunión" corto desde el teléfono.' },
+  { t: 'nuevo', m: 'Compa', d: 'Ya puedes compartir una conversación con Compa con un compañero (y ver lo que te comparten a ti), y Compa ahora manda varios archivos a la vez, no solo uno.' },
+  { t: 'mejora', m: 'Por despachar', d: 'Cada requisición ahora muestra su código y hace cuánto espera, con las más atrasadas arriba.' },
+  { t: 'mejora', m: 'Personal de obra', d: 'La lista muestra de un vistazo cuántos expedientes están completos y qué le falta a cada quien (carnet, seguro, contrato, foto).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
@@ -146,8 +149,24 @@ async function registrarEnHistorial() {
   }
 }
 
+// CP5 — prod exige release-check.mjs en verde (qa/release-<v>.md con la prueba real
+// de actualización in-app, dev respirado/OK, versión alineada, build+test:canal).
+// `--force-prod` (regla 18) ya es la única vía de emergencia documentada; no se agrega
+// un segundo escape hatch aquí.
+function gateReleaseCheck() {
+  if (ENV !== 'prod') return; // dev no está gateado — es ahí donde se genera la prueba
+  console.log('\n▶ CP5: corriendo release-check.mjs antes de publicar en prod…\n');
+  try {
+    execFileSync(process.execPath, ['scripts/release-check.mjs', '--version', VERSION], { stdio: 'inherit' });
+  } catch {
+    console.error('\n🔴 release-check.mjs falló — corrígelo (ver arriba) antes de publicar en prod.');
+    process.exit(1);
+  }
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 await gateReglaDieciocho();
+gateReleaseCheck();
 
 if (!registerOnly) {
   // CL4 — CANDADO antes de subir: el APK que se publica DEBE traer canal:"apk" + la

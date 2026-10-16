@@ -1,6 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CompaRespuesta, Propuesta } from '../models/compa.model';
+import { CompaArchivo, CompaCompartida, CompaMensajeCompartido, CompaRespuesta, Propuesta } from '../models/compa.model';
+
+/** CP2 — usuario para el picker de "¿Con quién?" (mismo contrato que buscar_usuarios en otros servicios). */
+export interface CompaUsuarioBusqueda {
+  id: string;
+  nombre: string;
+  email: string | null;
+}
 
 /**
  * AZ5 — Resultado de una transcripción de voz, con la CAUSA cuando falla, para
@@ -40,12 +47,17 @@ export class CompaService {
       if (error) {
         return this.errorComoRespuesta(error, conversacionId);
       }
-      const r = (data ?? {}) as Partial<CompaRespuesta>;
+      const r = (data ?? {}) as Partial<CompaRespuesta> & { archivo?: CompaArchivo | null };
+      // CP3 — el edge manda `archivos[]` (varios) y, por compatibilidad, `archivo`
+      // (= archivos[0] ?? null). Si algún día solo llega `archivo` (edge viejo), lo
+      // envolvemos en un arreglo de 1 para que el UI no tenga dos caminos.
+      const archivos = Array.isArray(r.archivos) ? r.archivos : r.archivo ? [r.archivo] : [];
       return {
         conversacion_id: r.conversacion_id ?? conversacionId,
         respuesta: (r.respuesta && String(r.respuesta)) || 'No recibí una respuesta. Intenta de nuevo.',
         herramientas: Array.isArray(r.herramientas) ? r.herramientas : [],
         propuesta: r.propuesta ?? null,
+        archivos,
       };
     } catch (e) {
       return this.errorComoRespuesta(e, conversacionId);
@@ -142,6 +154,41 @@ export class CompaService {
     }
   }
 
+  // ── CP2 — Compartir conversación ─────────────────────────────────────────────
+
+  /** Picker "¿Con quién?" (reusa `buscar_usuarios`, igual que el resto de la app). */
+  async buscarUsuarios(term: string): Promise<CompaUsuarioBusqueda[]> {
+    const t = term.trim();
+    if (t.length < 2) return [];
+    const { data, error } = await this.supabase.client.rpc('buscar_usuarios', { p_term: t });
+    if (error) return [];
+    return (data as CompaUsuarioBusqueda[]) ?? [];
+  }
+
+  /** Comparte la conversación actual con uno o más usuarios (+ mensaje opcional). */
+  async compartir(conversacionId: string, usuarios: string[], mensaje: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('compa_compartir', {
+      p_conversacion: conversacionId,
+      p_usuarios: usuarios,
+      p_mensaje: mensaje?.trim() || null,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** "Compartidas conmigo" — lo que otros me compartieron. */
+  async compartidasConmigo(): Promise<CompaCompartida[]> {
+    const { data, error } = await this.supabase.client.rpc('compa_compartidas_conmigo');
+    if (error) throw new Error(error.message);
+    return (data as CompaCompartida[]) ?? [];
+  }
+
+  /** Hilo completo (solo lectura) de una conversación compartida. `p_id` = id del SHARE (no de la conversación). */
+  async conversacionCompartida(shareId: string): Promise<CompaMensajeCompartido[]> {
+    const { data, error } = await this.supabase.client.rpc('compa_conversacion_compartida', { p_id: shareId });
+    if (error) throw new Error(error.message);
+    return (data as CompaMensajeCompartido[]) ?? [];
+  }
+
   // ── Manejo de errores de edge (patrón de geocoding.service) ─────────────────
 
   /** Convierte un error de edge en una CompaRespuesta sintética (burbuja amable). */
@@ -156,6 +203,7 @@ export class CompaService {
       respuesta: this.mensajeAmable(status, body?.error),
       herramientas: [],
       propuesta: null,
+      archivos: [],
     };
   }
 

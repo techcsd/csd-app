@@ -41,6 +41,10 @@ export class PersonalListaPage {
   readonly aseguramientos = ASEGURAMIENTO; // AV4
   readonly aseguramientoLabel = ASEGURAMIENTO_LABEL; // AV4
 
+  /** CP1 — glifos desde TS (guarda AW12/no-ai-tropes: nada de emoji literal nuevo en la plantilla). */
+  readonly glyphContrato = '📄';
+  readonly glyphFoto = '🖼️';
+
   loading = signal(true);
   error = signal('');
   personal = signal<PersonalObra[]>([]);
@@ -55,8 +59,8 @@ export class PersonalListaPage {
   filCuadrilla = signal(''); // AV4
   filAseguramiento = signal(''); // AV4
   mostrarFiltros = signal(false);
-  /** CE1 — "Mi personal hoy": filtro rápido de pendientes (sin carnet / sin asegurar). */
-  filPendiente = signal<'' | 'sin_carnet' | 'sin_asegurar'>('');
+  /** CE1/CP1 — "Mi personal hoy": filtro rápido de pendientes. */
+  filPendiente = signal<'' | 'sin_carnet' | 'sin_asegurar' | 'sin_contrato' | 'sin_foto'>('');
 
   obraOptions = computed(() => [{ id: '', label: this.i18n.t('Todas las obras') }, ...this.obras().map((o) => ({ id: o.id, label: o.nombre }))]);
   cargoOptions = computed(() => [{ id: '', label: this.i18n.t('Todos los cargos') }, ...this.cargos().map((c) => ({ id: c.id, label: c.nombre }))]);
@@ -90,14 +94,35 @@ export class PersonalListaPage {
     return 'sin_datos';
   });
 
-  /** CE1 — contadores de pendientes sobre lo visible (activos) para el ingeniero. */
+  /** CE1/CP1 — contadores de pendientes sobre lo visible (activos) para el ingeniero. */
   pendientes = computed(() => {
     const act = this.visibles().filter((p) => p.estado === 'activo');
     return {
       sinCarnet: act.filter((p) => !p.carnet_numero).length,
       sinAsegurar: act.filter((p) => (p.aseguramiento_estado ?? 'desconocido') !== 'asegurado').length,
+      sinContrato: act.filter((p) => !p.tiene_contrato).length,
+      sinFoto: act.filter((p) => !p.tiene_foto_persona).length,
     };
   });
+
+  /** CP1 — "Expedientes completos N de M": las 4 cosas presentes a la vez (sobre activos). */
+  progreso = computed(() => {
+    const act = this.visibles().filter((p) => p.estado === 'activo');
+    const completos = act.filter(
+      (p) => !!p.carnet_numero && (p.aseguramiento_estado ?? 'desconocido') === 'asegurado' && !!p.tiene_contrato && !!p.tiene_foto_persona,
+    ).length;
+    return { completos, total: act.length, pct: act.length ? Math.round((completos / act.length) * 100) : 0 };
+  });
+
+  /** CP1 — chips "Le falta" de una fila (vacío = expediente completo). */
+  faltantes(p: PersonalObra): string[] {
+    const out: string[] = [];
+    if (!p.carnet_numero) out.push(this.i18n.t('Carnet'));
+    if ((p.aseguramiento_estado ?? 'desconocido') !== 'asegurado') out.push(this.i18n.t('Seguro'));
+    if (!p.tiene_contrato) out.push(this.i18n.t('Contrato'));
+    if (!p.tiene_foto_persona) out.push(this.i18n.t('Foto'));
+    return out;
+  }
 
   filtrados = computed(() => {
     const cargo = this.filCargo();
@@ -115,9 +140,11 @@ export class PersonalListaPage {
       if (est && p.estado !== est) return false;
       if (cuad && (p.cuadrilla ?? '') !== cuad) return false; // AV4
       if (aseg && (p.aseguramiento_estado ?? 'desconocido') !== aseg) return false; // AV4
-      // CE1 — pendientes (solo sobre activos).
+      // CE1/CP1 — pendientes (solo sobre activos).
       if (pend === 'sin_carnet' && (p.estado !== 'activo' || !!p.carnet_numero)) return false;
       if (pend === 'sin_asegurar' && (p.estado !== 'activo' || (p.aseguramiento_estado ?? 'desconocido') === 'asegurado')) return false;
+      if (pend === 'sin_contrato' && (p.estado !== 'activo' || !!p.tiene_contrato)) return false;
+      if (pend === 'sin_foto' && (p.estado !== 'activo' || !!p.tiene_foto_persona)) return false;
       if (term) {
         const hay = `${p.nombre} ${p.apellido ?? ''} ${p.documento_numero ?? ''} ${p.cargo?.nombre ?? ''} ${p.carnet_numero ?? ''}`.toLowerCase();
         if (!hay.includes(term)) return false;
@@ -196,8 +223,8 @@ export class PersonalListaPage {
     this.q.set('');
   }
 
-  /** CE1 — alterna un filtro de pendientes (toca de nuevo para quitarlo). */
-  togglePendiente(p: 'sin_carnet' | 'sin_asegurar'): void {
+  /** CE1/CP1 — alterna un filtro de pendientes (toca de nuevo para quitarlo). */
+  togglePendiente(p: 'sin_carnet' | 'sin_asegurar' | 'sin_contrato' | 'sin_foto'): void {
     this.filPendiente.update((cur) => (cur === p ? '' : p));
   }
 

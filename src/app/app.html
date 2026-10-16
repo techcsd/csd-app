@@ -14,8 +14,9 @@
   <!-- BU1 F1: cinta DEV (esquina superior). Se ve sobre TODO el shell, incluidos
        login/PIN. Solo en entorno dev; en prod no existe. -->
   @if (esDev) {
+    <!-- CP5 — dev ES el staging (docs/STAGING.md del padre); ya no es solo "DEV". -->
     <div class="dev-ribbon" role="status" aria-label="Entorno de desarrollo">
-      DEV · {{ refCorto }}
+      Staging (dev) · {{ refCorto }}
     </div>
   }
 

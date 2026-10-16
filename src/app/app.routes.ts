@@ -1001,6 +1001,23 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/legal/contratos/contratos').then((m) => m.ContratosPage),
   },
+  // CP8 — Reuniones (lista/ficha/crear). Solo en línea; gate `reuniones` en el
+  // tile de Home (RLS real = is_admin() or tiene_modulo('reuniones')).
+  {
+    path: 'reuniones',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/reuniones/reuniones-lista/reuniones-lista').then((m) => m.ReunionesListaPage),
+  },
+  {
+    path: 'reuniones/nueva',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/reuniones/reunion-crear/reunion-crear').then((m) => m.ReunionCrearPage),
+  },
+  {
+    path: 'reuniones/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/reuniones/reunion-detalle/reunion-detalle').then((m) => m.ReunionDetallePage),
+  },
   // CO12/CO13 — Documentos (generar/historial/plantillas-ver). Solo en línea.
   {
     path: 'documentos',

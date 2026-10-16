@@ -48,6 +48,66 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
 }
+// CP2 — botones de compartir/compartidas en el header.
+.compa__header-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 18px;
+}
+
+// CP2 — aviso fijo bajo el header.
+.compa__aviso {
+  padding: 6px 16px;
+  font-size: 11px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+// CP2 — hoja "Compartir".
+.compa__compartir { display: flex; flex-direction: column; gap: 10px; }
+.compa__compartir-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.compa__compartir-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text);
+}
+.compa__compartir-chip button { font-size: 12px; color: var(--color-text-secondary); }
+.compa__compartir-hint { font-size: 12px; color: var(--color-text-secondary); margin: 0; }
+.compa__compartir-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.compa__compartir-lista li button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+}
+.compa__compartir-lista li:last-child button { border-bottom: none; }
+.compa__compartir-lista li button span { color: var(--color-text-secondary); font-size: 12px; margin-left: 4px; }
+.compa__compartir-msg { resize: none; }
+.compa__compartir-info { font-size: 12px; color: var(--color-text-secondary); margin: 0; }
+.compa__compartir-acts { display: flex; flex-direction: column; gap: 8px; }
 
 // ── Hilo ──────────────────────────────────────────────────────────────────
 .compa__body {
@@ -111,6 +171,13 @@
 .compa__chip:disabled {
   opacity: 0.5;
 }
+.compa__archivos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.compa__archivos .compa__pdf-link { margin-top: 6px; }
+
 .compa__pdf-link {
   display: inline-flex;
   align-items: center;

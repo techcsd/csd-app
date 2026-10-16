@@ -92,6 +92,8 @@ const SOLCOMPRA_TILE: HomeTile = { modulo: 'solicitud_compra', icon: '🛍️', 
 // `documentos` O `legal` (quien tiene Legal también genera/usa documentos).
 const LEGAL_TILE: HomeTile = { modulo: 'legal', icon: '⚖️', label: 'Legal', route: '/legal', tint: '#7c2d12' };
 const DOCUMENTOS_TILE: HomeTile = { modulo: 'documentos', icon: '📄', label: 'Documentos', route: '/documentos', tint: '#334155' };
+// CP8 — Reuniones: módulo `reuniones` (gerencia/dirección/ingenieros/logística/legal/RRHH, admin).
+const REUNIONES_TILE: HomeTile = { modulo: 'reuniones', icon: '🗓️', label: 'Reuniones', route: '/reuniones', tint: '#175cd3' };
 
 // BC5/BD1 — agrupación del home por dominio (vista OPCIONAL, off por defecto). Cada
 // tile conserva su gating/ruta/badge; solo cambia la PRESENTACIÓN (grupos). El orden
@@ -256,6 +258,10 @@ export class HomePage implements OnDestroy {
     // también necesita generar/usar documentos — contratos salen de una plantilla).
     if (this.ctx.esAdmin() || this.ctx.hasModulo('documentos') || this.ctx.hasModulo('legal')) {
       extra.push(DOCUMENTOS_TILE);
+    }
+    // CP8 — Reuniones: módulo propio (ver sql/2026-10-16-cp8-reuniones.sql §3).
+    if (this.ctx.esAdmin() || this.ctx.hasModulo('reuniones')) {
+      extra.push(REUNIONES_TILE);
     }
     // AL8/AS7 — entrada permanente al confirmador sin módulo flota (los de flota la
     // tienen en el hub de Conduces). Se muestra SOLO a inventario/obra. Antes bastaba

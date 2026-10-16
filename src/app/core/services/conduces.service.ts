@@ -125,7 +125,7 @@ export interface ConduceSimpleCaptura {
   origenRequisicionId?: string | null;
 }
 
-/** BA/Transporte v3 (FASE 2) — requisición lista para despachar. */
+/** BA/Transporte v3 (FASE 2) — requisición lista para despachar. CP6: +codigo/urgencia/fecha_necesidad. */
 export interface RequisicionPorDespachar {
   id: string;
   proyecto_id: string;
@@ -134,6 +134,9 @@ export interface RequisicionPorDespachar {
   fecha: string;
   renglones: number;
   created_at: string;
+  codigo: string | null;
+  urgencia: 'normal' | 'urgente' | null;
+  fecha_necesidad: string | null;
 }
 
 /** BA/Transporte v3 (FASE 2) — avance de una requisición, renglón por renglón. */

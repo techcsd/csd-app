@@ -364,6 +364,14 @@ export function notifAppRoute(n: {
   if (n.tipo === 'version_publicada' || n.referencia_tipo === 'version' || r.startsWith('/actualizar')) {
     return '/actualizar';
   }
+  // CP2 — "Te compartieron una conversación con Compa": el padre manda
+  // '/asistente?compartida=<conversacion_id>' (el ID de la CONVERSACIÓN, no del
+  // share — `notificar_usuarios` no conoce el id de `assistant_compartidas`). La
+  // lista "Compartidas conmigo" resuelve el share real y salta a su detalle.
+  if (n.tipo === 'compa_compartida' || r.includes('compartida=')) {
+    const convId = r.match(/[?&]compartida=([0-9a-fA-F-]{36})/)?.[1] ?? n.referencia_id ?? null;
+    return convId ? `/compa/compartidas?conversacion=${convId}` : '/compa/compartidas';
+  }
   // BQ10 — "Compa ya puede ayudarte con esto": el padre guarda la ruta WEB
   // '/asistente?q=<pregunta>'. En la app el asistente vive en /compa; preservamos
   // la pregunta para precargarla en el composer (CompaPage lee ?q=).
@@ -409,7 +417,8 @@ export function notifAppRoute(n: {
         : r.match(/([0-9a-fA-F-]{36})/)?.[1] ?? null;
     return reqId ? `/solicitudes/requisicion/${reqId}` : '/solicitudes/mis';
   }
-  // Rutas que ya coinciden con el router de la app.
+  // Rutas que ya coinciden con el router de la app. CP8 — reunion_invitacion/
+  // reunion_minuta mandan '/reuniones/<id>' tal cual (mismo formato en la app).
   if (
     r.startsWith('/transporte') ||
     r.startsWith('/inventario') ||
@@ -418,7 +427,8 @@ export function notifAppRoute(n: {
     r.startsWith('/solicitudes') ||
     r.startsWith('/notas') ||
     r.startsWith('/tareas') ||
-    r.startsWith('/mensajes')
+    r.startsWith('/mensajes') ||
+    r.startsWith('/reuniones')
   ) {
     return r;
   }

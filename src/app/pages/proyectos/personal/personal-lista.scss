@@ -254,6 +254,61 @@
   flex: 0 0 auto;
 }
 
+// CP1 — franja de progreso única (reemplaza tarjetas repetidas de la web).
+.pl-progreso {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+.pl-progreso__texto {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+  b { color: var(--color-text); }
+}
+.pl-progreso__bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+.pl-progreso__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary, #ff5f00);
+  transition: width 0.3s ease;
+}
+
+// CP1 — composite "Le falta" por fila (chips) / "✓ Completo".
+.pl-card__falta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--color-warning, #b45309);
+}
+.pl-card__falta-chip {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--color-warning-bg, #fff7ed);
+  border: 1px solid var(--color-warning, #d97706);
+}
+.pl-card__completo {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-success, #16a34a);
+}
+
+// CP1 — pie persistente (cuántos se muestran + de prueba ocultos).
+.pl-pie {
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 10px 0 4px;
+}
+
 // FAB
 .pl-fab {
   position: fixed;

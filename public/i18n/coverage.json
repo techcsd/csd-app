@@ -196,7 +196,19 @@
       "ht": 1
     },
     "pages/compa": {
-      "conT": 11,
+      "conT": 19,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/compa/compartida-detalle": {
+      "conT": 5,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/compa/compartidas": {
+      "conT": 6,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -592,15 +604,33 @@
       "ht": 2
     },
     "pages/proyectos/personal": {
-      "conT": 103,
+      "conT": 110,
       "sinT": 1,
-      "en": 80,
+      "en": 81,
       "ht": 1
     },
     "pages/reportar": {
       "conT": 0,
       "sinT": 8,
       "en": 0,
+      "ht": 0
+    },
+    "pages/reuniones/reunion-crear": {
+      "conT": 16,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/reuniones/reunion-detalle": {
+      "conT": 13,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/reuniones/reuniones-lista": {
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/rrhh/empleado": {
@@ -820,7 +850,7 @@
       "ht": 3
     },
     "pages/transporte/conductores": {
-      "conT": 43,
+      "conT": 44,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -832,7 +862,7 @@
       "ht": 0
     },
     "pages/transporte/despachos": {
-      "conT": 8,
+      "conT": 11,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -866,6 +896,12 @@
       "sinT": 1,
       "en": 97,
       "ht": 1
+    },
+    "pages/transporte/importar": {
+      "conT": 25,
+      "sinT": 0,
+      "en": 96,
+      "ht": 0
     },
     "pages/transporte/mantenimiento": {
       "conT": 43,
@@ -1018,7 +1054,7 @@
       "ht": 0
     },
     "pages/transporte/vehiculos": {
-      "conT": 63,
+      "conT": 64,
       "sinT": 2,
       "en": 97,
       "ht": 0

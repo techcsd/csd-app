@@ -1,0 +1,65 @@
+<div class="screen rc">
+  <header class="rc-header">
+    <button type="button" class="rc-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="rc-header__title">{{ 'Programar reunión' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    <label class="field-label">{{ 'Tipo' | t }}</label>
+    <app-collapsible-select [label]="'Tipo' | t" [options]="tipoOptions()" [selectedId]="tipoId()" (picked)="tipoId.set($event)" />
+
+    <label class="field-label">{{ 'Título' | t }}</label>
+    <input class="field" type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)" [placeholder]="'Ej. Coordinación semanal' | t" />
+
+    <label class="field-label">{{ 'Fecha' | t }}</label>
+    <input class="field" type="date" [ngModel]="fecha()" (ngModelChange)="fecha.set($event)" />
+
+    <div class="rc-horas">
+      <div>
+        <label class="field-label">{{ 'Inicio' | t }}</label>
+        <input class="field" type="time" [ngModel]="horaInicio()" (ngModelChange)="horaInicio.set($event)" />
+      </div>
+      <div>
+        <label class="field-label">{{ 'Fin' | t }}</label>
+        <input class="field" type="time" [ngModel]="horaFin()" (ngModelChange)="horaFin.set($event)" />
+      </div>
+    </div>
+
+    <label class="field-label">{{ 'Obra' | t }}</label>
+    <app-collapsible-select [label]="'Obra' | t" [options]="obraOptions()" [selectedId]="proyectoId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="proyectoId.set($event)" />
+
+    <label class="field-label">{{ 'Modalidad' | t }}</label>
+    <div class="rc-modalidad">
+      @for (m of modalidades; track m.value) {
+        <button type="button" class="rc-mchip" [class.rc-mchip--on]="modalidad() === m.value" (click)="modalidad.set(m.value)">{{ m.label | t }}</button>
+      }
+    </div>
+
+    @if (modalidad() !== 'meet') {
+      <label class="field-label">{{ 'Lugar' | t }}</label>
+      <input class="field" type="text" [ngModel]="lugar()" (ngModelChange)="lugar.set($event)" [placeholder]="'Dirección o punto de encuentro' | t" />
+    }
+
+    <label class="field-label">{{ 'Participantes' | t }}</label>
+    @if (partElegidos().length) {
+      <div class="rc-chips">
+        @for (u of partElegidos(); track u.id) {
+          <span class="rc-chip">{{ u.nombre }}<button type="button" (click)="quitarParticipante(u)">✕</button></span>
+        }
+      </div>
+    }
+    <input class="field" type="search" [ngModel]="partTerm()" (ngModelChange)="onPartTerm($event)" [placeholder]="'Buscar por nombre…' | t" />
+    @if (partBuscando()) { <p class="rc-hint">{{ 'Buscando…' | t }}</p> }
+    @if (partResultados().length) {
+      <ul class="rc-lista">
+        @for (u of partResultados(); track u.id) {
+          <li><button type="button" (click)="elegirParticipante(u)">{{ u.nombre }}</button></li>
+        }
+      </ul>
+    }
+
+    <button type="button" class="btn-cta rc-guardar" [disabled]="!puedeGuardar()" (click)="guardar()">
+      {{ (guardando() ? 'Creando…' : 'Crear reunión') | t }}
+    </button>
+  </div>
+</div>

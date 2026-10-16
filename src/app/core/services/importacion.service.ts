@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { mimeForFilename } from '../util/zip-files';
 
 /**
  * CSD-importar — import masivo de Choferes/Vehículos desde Excel (+ fotos vía .zip),
@@ -17,7 +18,13 @@ export interface CampoImportacion {
 
 export interface FotoImportacion {
   bucket: string;
+  /** 't' del campo que identifica la fila (cedula/placa) — así se empareja la foto
+   *  del .zip sin necesitar una columna "archivo_foto" en el Excel. */
+  campoClave: string;
   campoDestino: string;
+  /** Mismo criterio de normalización que el RPC/servidor, para comparar contra el
+   *  nombre de archivo (sin extensión) del .zip. */
+  normalizar: (raw: string) => string;
   ruta: (id: string, filename: string) => string;
 }
 
@@ -43,11 +50,12 @@ export const ENTIDADES_IMPORTACION: EntidadImportacion[] = [
       { t: 'licencia_vencimiento', label: 'Vencimiento de licencia (AAAA-MM-DD)' },
       { t: 'tipo_vehiculo_autorizado', label: 'Vehículo autorizado (Liviano/Pesado/Ambos)' },
       { t: 'nota', label: 'Nota' },
-      { t: 'archivo_foto', label: 'Archivo de foto (nombre exacto dentro del .zip, opcional)' },
     ],
     foto: {
       bucket: 'conductores',
+      campoClave: 'cedula',
       campoDestino: 'foto_path',
+      normalizar: (s) => s.replace(/\D/g, ''),
       ruta: (id, filename) => `conductor/${id}/import-${Date.now()}-${filename}`,
     },
   },
@@ -62,11 +70,12 @@ export const ENTIDADES_IMPORTACION: EntidadImportacion[] = [
       { t: 'anio', label: 'Año (si no se indica, usa el año actual)' },
       { t: 'color', label: 'Color' },
       { t: 'tipo', label: 'Tipo' },
-      { t: 'archivo_foto', label: 'Archivo de foto (nombre exacto dentro del .zip, opcional)' },
     ],
     foto: {
       bucket: 'vehiculos',
+      campoClave: 'placa',
       campoDestino: 'foto_portada',
+      normalizar: (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, ''),
       ruta: (id, filename) => `vehiculo/${id}/import-${Date.now()}-${filename}`,
     },
   },

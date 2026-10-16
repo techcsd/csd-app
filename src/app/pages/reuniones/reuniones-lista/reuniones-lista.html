@@ -1,0 +1,43 @@
+<div class="screen">
+  <header class="rl-header">
+    <button type="button" class="rl-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <span class="rl-header__icon">{{ glyph.header }}</span>
+    <h1 class="rl-header__title">{{ 'Reuniones' | t }}</h1>
+  </header>
+
+  <div class="rl-tabs">
+    @for (t of tabs; track t.key) {
+      <button type="button" class="rl-tab" [class.rl-tab--on]="tab() === t.key" (click)="setTab(t.key)">{{ t.label | t }}</button>
+    }
+  </div>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      @if (error()) { <div class="rl-band rl-band--err">{{ error() }}</div> }
+
+      @for (r of reuniones(); track r.id) {
+        <button type="button" class="rl-card" (click)="abrir(r)">
+          <div class="rl-card__top">
+            <span class="rl-card__tipo" [style.background]="r.tipo_color + '22'" [style.color]="r.tipo_color">{{ r.tipo_nombre }}</span>
+            @if (r.acta_lista && r.estado !== 'acta_aprobada') { <span class="rl-card__acta">{{ glyph.pendiente }} {{ 'Acta pendiente' | t }}</span> }
+          </div>
+          <span class="rl-card__titulo">{{ r.titulo }}</span>
+          <span class="rl-card__meta">
+            {{ fmtFecha(r.inicio) }}@if (r.proyecto_nombre) { · {{ glyph.obra }} {{ r.proyecto_nombre }} }
+          </span>
+          <span class="rl-card__meta">{{ r.participantes_n }} {{ 'participante(s)' | t }}@if (r.acuerdos_n) { · {{ r.acuerdos_n }} {{ 'acuerdo(s)' | t }} }</span>
+        </button>
+      } @empty {
+        <app-empty-state [icon]="glyph.header" [title]="'No hay reuniones' | t" [message]="'No hay nada en este filtro por ahora.' | t" />
+      }
+    }
+  </div>
+
+  @if (puedeCrear()) {
+    <button type="button" class="rl-fab" (click)="crear()" [attr.aria-label]="'Programar reunión' | t">＋</button>
+  }
+
+  <app-sync-bar />
+</div>

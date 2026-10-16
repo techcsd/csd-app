@@ -1,5 +1,35 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 16/10/2026 (2ª) — PROMPT-101 · Ronda **CP** — app 2.53.0, build verde — **SIN commitear, SIN probar en dispositivo**
+> Trabaja en `feature/cp-ronda` (creada desde `dev`=`main`=`74c2cdb`, que YA incluía el import masivo de choferes/vehículos — ver abajo). **Nada commiteado/pusheado/buildeado en APK** — solo código + `npm run build`/`test:canal` verdes en este working tree.
+
+**FASE 0 — estado real (no lo que asumía el prompt):**
+- 2.51.0 **ya estaba publicada a prod** (sesión anterior del mismo día) — la FASE 1 del prompt (publicarla) ya no aplicaba.
+- Encontrado en el working tree: una feature sin commitear de una sesión previa — **import masivo de choferes/vehículos desde Excel (+fotos .zip)**, NO es parte de la ronda CP. Con OK de Xaviel se terminó de verificar (backend ya vivo: `sql/2026-10-16-importar-choferes-vehiculos-fotos.sql`) y **se commiteó como 2.52.0** (`4e95f3a`+`74c2cdb`) — **esto SÍ puede probarse/publicarse ya**, es independiente de esta ronda.
+- **Gotcha de numeración:** por eso esta ronda (CP1-CP11) es **2.53.0**, no 2.52.0 como decía el prompt — 2.52.0 ya estaba tomada por el import masivo.
+- El backend/web de **todo** PROMPT-100 (CP1-CP11) ya estaba en prod antes de empezar (SGC HANDOFF.md, web 1.191.0) — el trabajo real de esta sesión fue 100% lado app, contratos ya confirmados vivos.
+
+**Por fase (ver `PARIDAD.md` § CP para el detalle técnico completo de cada una):**
+- **CP6 (Por despachar) ✅ código listo:** código + fecha relativa + grupo "esperando >2 días" en la tarjeta.
+- **CP5 (release-check) ✅ código listo:** `scripts/release-check.mjs` nuevo, gatea `apk:publish --env prod`; cinta "Staging (dev)".
+- **CP3 (Compa archivos[]) ✅ código listo:** varios archivos por turno, no solo uno.
+- **CP2 (Compa compartir) ✅ código listo:** compartir conversación + "Compartidas conmigo" + vista de solo lectura.
+- **CP1 (Personal de obra) ✅ código listo:** franja de progreso, 4 chips "Le falta", pie de ocultos-de-prueba.
+- **CP8 (Reuniones, módulo nuevo) ✅ código listo:** lista/ficha/crear corto, notas con dictado+foto, recordatorio local 15min. **Debe al padre** `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (columna `foto_path` en `reunion_notas` — sin esto, "Foto de pizarra" no persiste, mensaje de texto sí).
+
+### 👤 Pendiente físico de Xaviel
+1. Revisar y decidir sobre `feature/cp-ronda` (nada commiteado todavía) — una vez commiteado, probar CP8 (Reuniones) de punta a punta con datos reales de sgc-dev (no se verificó en vivo esta sesión, solo build).
+2. Pedirle al padre que aplique `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (dev primero).
+3. Antes de publicar 2.53.0: crear `qa/release-2.53.0.md` con la prueba real de actualización in-app desde 2.52.0 (ahora que `release-check.mjs` lo exige).
+4. El import masivo (2.52.0, ya commiteado) está independiente y puede probarse/publicarse antes o junto con esta ronda — decisión de Xaviel.
+
+### Verify on resume
+- `git branch --show-current` → `feature/cp-ronda`; `git log -1 --oneline` → `74c2cdb` + working-tree changes (nada commiteado de CP aún).
+- `npm run build && npm run test:canal` → deben seguir verdes.
+- Leer `PARIDAD.md` § CP para el detalle de cada fase antes de seguir.
+
+---
+
 ## 🟢 SESIÓN 16/10/2026 — ronda **CO** 2.51.0 **PUBLICADA A PROD** ✅ (cierre de PROMPT-99)
 > `dev`=`feature/co-ronda`=`3862f43`. **PR real a `main`** (#1, `techcsd/csd-app`, check `build-prod` + Vercel en verde) → merge `c689d0f` → Vercel construye `app.` (prod PWA). **APK prod 2.51.0** firmado (cert `3c5316d8…5065`), candado `canal:"apk"`+`version:"2.51.0"` OK, regla 18 OK (2.51.0 ya había salido en dev con prueba real en Samsung — ver sesión 14-15/10 abajo), subido al bucket prod + `apk_url` + registrado. **PUBLICADA** (`2026-10-16-co-publicar-2.51.0.mjs --env prod`: 2.51.0 publicada, 2.50.0 despublicada, **mínima sigue 2.45.0** → no forzado) + **11 iPhone (ios-pwa) notificados** (`2026-10-16-co-notificar-ios-2.51.0.mjs --env prod`). Xaviel probó la PWA en su iPhone (2.50.0→2.51.0) antes de autorizar el push a prod.
 

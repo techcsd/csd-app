@@ -1,0 +1,62 @@
+.cd-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border);
+}
+.cd-header__back { font-size: 22px; color: var(--color-text); width: 40px; height: 40px; }
+.cd-header__info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.cd-header__title { font-size: 16px; font-weight: 800; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cd-header__sub { font-size: 12px; color: var(--color-text-secondary); }
+
+.cd-band {
+  padding: 8px 16px;
+  font-size: 12px;
+  text-align: center;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+.cd-band--err {
+  margin: 12px 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 12px);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.cd__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 12px;
+}
+.cd__msg {
+  max-width: 82%;
+  display: flex;
+  flex-direction: column;
+}
+.cd__msg--mio { align-self: flex-end; align-items: flex-end; }
+.cd__burbuja {
+  padding: 10px 14px;
+  border-radius: 16px 16px 16px 5px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 14px;
+}
+.cd__msg--mio .cd__burbuja {
+  border-radius: 16px 16px 5px 16px;
+  background: var(--Hub, #ffb300);
+  border-color: transparent;
+}
+.cd__hora { margin-top: 3px; font-size: 11px; color: var(--color-text-secondary); }
+
+.cd-foot {
+  padding: 12px 16px;
+  background: var(--color-surface, #fff);
+  border-top: 1px solid var(--color-border);
+}

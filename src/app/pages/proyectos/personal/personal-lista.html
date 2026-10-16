@@ -34,8 +34,19 @@
         </div>
       }
 
-      <!-- CE1 — "Mi personal hoy": pendientes con acción rápida (toca para filtrar) -->
-      @if (pendientes().sinCarnet || pendientes().sinAsegurar) {
+      <!-- CP1 — franja de progreso única (reemplaza tarjetas repetidas): expedientes completos. -->
+      @if (progreso().total > 0) {
+        <div class="pl-progreso">
+          <div class="pl-progreso__texto">
+            {{ 'Expedientes completos' | t }}
+            <b>{{ progreso().completos }} {{ 'de' | t }} {{ progreso().total }}</b>
+          </div>
+          <div class="pl-progreso__bar"><div class="pl-progreso__fill" [style.width.%]="progreso().pct"></div></div>
+        </div>
+      }
+
+      <!-- CE1/CP1 — "Mi personal hoy": pendientes con acción rápida (toca para filtrar) -->
+      @if (pendientes().sinCarnet || pendientes().sinAsegurar || pendientes().sinContrato || pendientes().sinFoto) {
         <div class="pl-pend">
           @if (pendientes().sinCarnet) {
             <button type="button" class="pl-pend__chip" appTapScale [class.pl-pend__chip--on]="filPendiente() === 'sin_carnet'" (click)="togglePendiente('sin_carnet')">
@@ -45,6 +56,16 @@
           @if (pendientes().sinAsegurar) {
             <button type="button" class="pl-pend__chip" appTapScale [class.pl-pend__chip--on]="filPendiente() === 'sin_asegurar'" (click)="togglePendiente('sin_asegurar')">
               🛡️ {{ 'Sin asegurar' | t }}: <b><span [appCountUp]="pendientes().sinAsegurar"></span></b>
+            </button>
+          }
+          @if (pendientes().sinContrato) {
+            <button type="button" class="pl-pend__chip" appTapScale [class.pl-pend__chip--on]="filPendiente() === 'sin_contrato'" (click)="togglePendiente('sin_contrato')">
+              {{ glyphContrato }} {{ 'Sin contrato' | t }}: <b><span [appCountUp]="pendientes().sinContrato"></span></b>
+            </button>
+          }
+          @if (pendientes().sinFoto) {
+            <button type="button" class="pl-pend__chip" appTapScale [class.pl-pend__chip--on]="filPendiente() === 'sin_foto'" (click)="togglePendiente('sin_foto')">
+              {{ glyphFoto }} {{ 'Sin foto' | t }}: <b><span [appCountUp]="pendientes().sinFoto"></span></b>
             </button>
           }
         </div>
@@ -101,9 +122,18 @@
               @if (p.cuadrilla) { · 👷 {{ p.cuadrilla }} }
             </span>
             <span class="pl-card__sub">
-              @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} } @else { ⏳ {{ 'Carnet pendiente' | t }} }
+              @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} }
               @if (p.documento_numero) { · {{ p.documento_numero }} }
             </span>
+            <!-- CP1 — composite "Le falta": chips de lo que falta, o "✓ Completo". -->
+            @if (faltantes(p).length) {
+              <span class="pl-card__falta">
+                {{ 'Le falta:' | t }}
+                @for (f of faltantes(p); track f) { <span class="pl-card__falta-chip">{{ f }}</span> }
+              </span>
+            } @else {
+              <span class="pl-card__completo">✓ {{ 'Completo' | t }}</span>
+            }
             <!-- CE2/CE11 — quién registró (RPC definer, visible para cualquier rol) + fecha legible -->
             <span class="pl-card__reg">
               📝 {{ 'Registró' | t }}: {{ p.registrado_por_nombre || ('—' ) }} · {{ fmtFecha(p.created_at) }}
@@ -126,6 +156,14 @@
         }
       }
       </div>
+
+      <!-- CP1 — pie persistente: cuántos se muestran + cuántos de prueba quedan ocultos. -->
+      @if (filtrados().length > 0) {
+        <p class="pl-pie">
+          {{ 'Mostrando' | t }} {{ filtrados().length }}
+          @if (ocultosPrueba() > 0) { · {{ '{n} de prueba ocultos' | t: { n: ocultosPrueba() } }} }
+        </p>
+      }
     }
   </div>
 
