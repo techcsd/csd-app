@@ -45,6 +45,14 @@ export const submoduleGuard = (clave: string, nivel: 'ver' | 'operar' = 'ver'): 
   };
 };
 
+/** CSD-importar — gate por rol "flota elevado" (mirror de `UserContextService.esFlotaElevado`,
+ *  que a su vez espeja `sgc.es_flota_elevado()`). NUNCA duplicar la lista de roles aquí. */
+export const flotaElevadoGuard: CanActivateFn = () => {
+  const ctx = inject(UserContextService);
+  const router = inject(Router);
+  return ctx.esFlotaElevado() ? true : router.createUrlTree(['/403']);
+};
+
 /** Obra module gate: visible to anyone with the `obra` module OR any `obra.*` permiso. */
 export const obraGuard: CanActivateFn = () => {
   const ctx = inject(UserContextService);

@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard, proyectosGestionGuard } from './core/guards/module.guard';
+import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard, proyectosGestionGuard, flotaElevadoGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -203,6 +203,13 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, submoduleGuard('flota.conductores')],
     loadComponent: () =>
       import('./pages/transporte/conductores/conductores').then((m) => m.ConductoresListaPage),
+  },
+  {
+    // CSD-importar — import masivo de choferes/vehículos desde Excel (+ fotos .zip): solo flota elevado.
+    path: 'transporte/importar',
+    canActivate: [authGuard, pinGuard, flotaElevadoGuard],
+    loadComponent: () =>
+      import('./pages/transporte/importar/importar').then((m) => m.ImportarPage),
   },
   {
     path: 'transporte/conductores/nuevo',
@@ -413,6 +420,17 @@ export const routes: Routes = [
     path: 'compa',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/compa/compa').then((m) => m.CompaPage),
+  },
+  {
+    // CP2 — "Compartidas conmigo": conversaciones de Compa que otros compartieron.
+    path: 'compa/compartidas',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/compa/compartidas/compartidas').then((m) => m.CompaCompartidasPage),
+  },
+  {
+    path: 'compa/compartidas/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/compa/compartida-detalle/compartida-detalle').then((m) => m.CompaCompartidaDetallePage),
   },
   {
     // AJ8 — bandeja del RECEPTOR: entregas que debe confirmar en SU teléfono.
