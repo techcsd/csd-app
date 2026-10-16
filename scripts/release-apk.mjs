@@ -40,11 +40,16 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-12';
 
-const TITULO = 'Ordenar el día de los choferes y mejoras en Mis trabajos y práctica';
+const TITULO = 'La app se repara sola, avisos reales en iPhone, y nuevo Legal, Documentos y Compras tecnológicas';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Trabajos de transporte', d: 'Misael (y quien gestiona transporte) ya puede ORDENAR el día de cada chofer: en "Asignados", con las flechas, sube o baja cada trabajo para dejar el orden en que se harán. El chofer lo ve en "Mis trabajos".' },
-  { t: 'mejora', m: 'Mis trabajos', d: 'El chofer ya ve sus trabajos del día en orden y la nota que le dejó quien se los asignó.' },
-  { t: 'mejora', m: 'Modo práctica', d: 'Al terminar la bienvenida te invitamos a practicar primero (sin miedo). Además, la práctica ahora limpia bien el cronómetro y no te deja una misión a medias si sales.' },
+  { t: 'arreglo', m: 'Actualizaciones', d: 'La app ya no se queda "pegada" en una versión vieja: si algo falla al instalar una actualización, ahora se repara sola. También puedes tocar "Reparar la app" en Perfil › Acerca de si la ves rara.' },
+  { t: 'arreglo', m: 'Combustible y conduces', d: 'Ya no se duplican los registros si tocas "Guardar" más de una vez o se te va la señal a mitad de camino (para Manolo y quien crea los conduces).' },
+  { t: 'mejora', m: 'Requisiciones', d: 'Raykler y quien tenga el permiso ya puede aprobar sus propias requisiciones cuando corresponda, en vez de quedar bloqueado (para Raykler).' },
+  { t: 'mejora', m: 'Apoyo de transporte', d: 'Ahora ves quién canceló o completó cada apoyo y por qué, y transporte puede cambiar el estado directo desde la ficha.' },
+  { t: 'nuevo', m: 'Avisos en iPhone', d: 'Los iPhone ya pueden recibir avisos reales cuando llega algo nuevo, activándolos desde la cinta de notificaciones.' },
+  { t: 'nuevo', m: 'Legal y Documentos', d: 'Nuevos módulos: expedientes y contratos en Legal, y generar documentos desde plantillas con vista previa y compartir por WhatsApp.' },
+  { t: 'nuevo', m: 'Compras tecnológicas', d: 'El aprobador ya puede ver la cotización en PDF y aprobar o rechazar una compra directo desde el teléfono.' },
+  { t: 'mejora', m: 'Compa', d: 'Los enlaces y PDF que te manda Compa ahora se ven y se abren bien, no como texto suelto (para Hector).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
