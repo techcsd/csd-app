@@ -1,19 +1,19 @@
 {
-  "en": 93,
+  "en": 91,
   "ht": 3,
   "alcance": true,
   "byScreen": {
     "": {
-      "conT": 0,
+      "conT": 2,
       "sinT": 21,
       "en": 0,
       "ht": 0
     },
     "pages/actualizar": {
-      "conT": 26,
+      "conT": 28,
       "sinT": 0,
-      "en": 100,
-      "ht": 12
+      "en": 93,
+      "ht": 11
     },
     "pages/admin": {
       "conT": 12,
@@ -196,7 +196,7 @@
       "ht": 1
     },
     "pages/compa": {
-      "conT": 10,
+      "conT": 11,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -211,6 +211,30 @@
       "conT": 25,
       "sinT": 1,
       "en": 96,
+      "ht": 0
+    },
+    "pages/documentos": {
+      "conT": 6,
+      "sinT": 0,
+      "en": 50,
+      "ht": 0
+    },
+    "pages/documentos/generar": {
+      "conT": 15,
+      "sinT": 0,
+      "en": 33,
+      "ht": 7
+    },
+    "pages/documentos/historial": {
+      "conT": 7,
+      "sinT": 0,
+      "en": 29,
+      "ht": 0
+    },
+    "pages/documentos/plantillas": {
+      "conT": 6,
+      "sinT": 0,
+      "en": 50,
       "ht": 0
     },
     "pages/en-proceso": {
@@ -363,6 +387,24 @@
       "en": 100,
       "ht": 0
     },
+    "pages/legal": {
+      "conT": 5,
+      "sinT": 0,
+      "en": 20,
+      "ht": 0
+    },
+    "pages/legal/contratos": {
+      "conT": 30,
+      "sinT": 0,
+      "en": 30,
+      "ht": 0
+    },
+    "pages/legal/expedientes": {
+      "conT": 31,
+      "sinT": 0,
+      "en": 32,
+      "ht": 0
+    },
     "pages/mensajes": {
       "conT": 10,
       "sinT": 0,
@@ -496,7 +538,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 71,
+      "conT": 72,
       "sinT": 0,
       "en": 100,
       "ht": 1
@@ -586,9 +628,9 @@
       "ht": 0
     },
     "pages/solicitudes/detalle": {
-      "conT": 72,
+      "conT": 74,
       "sinT": 12,
-      "en": 77,
+      "en": 76,
       "ht": 1
     },
     "pages/solicitudes/mis": {
@@ -616,10 +658,10 @@
       "ht": 0
     },
     "pages/tecnologia": {
-      "conT": 9,
+      "conT": 11,
       "sinT": 12,
-      "en": 43,
-      "ht": 29
+      "en": 39,
+      "ht": 26
     },
     "pages/tecnologia-inventario": {
       "conT": 0,
@@ -637,6 +679,12 @@
       "conT": 0,
       "sinT": 29,
       "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia/compras-tec": {
+      "conT": 23,
+      "sinT": 0,
+      "en": 26,
       "ht": 0
     },
     "pages/tecnologia/dev-notes": {
@@ -658,9 +706,9 @@
       "ht": 0
     },
     "pages/transporte/apoyo-transporte": {
-      "conT": 47,
+      "conT": 53,
       "sinT": 0,
-      "en": 100,
+      "en": 91,
       "ht": 0
     },
     "pages/transporte/asignar": {
@@ -1023,6 +1071,12 @@
       "en": 100,
       "ht": 0
     },
+    "shared/components/novedades": {
+      "conT": 11,
+      "sinT": 0,
+      "en": 18,
+      "ht": 9
+    },
     "shared/components/onboarding": {
       "conT": 7,
       "sinT": 0,
@@ -1222,10 +1276,10 @@
       "ht": 100
     },
     "shared/ui/notif-health-band": {
-      "conT": 4,
-      "sinT": 0,
-      "en": 100,
-      "ht": 25
+      "conT": 22,
+      "sinT": 3,
+      "en": 36,
+      "ht": 8
     },
     "shared/ui/option-button": {
       "conT": 0,

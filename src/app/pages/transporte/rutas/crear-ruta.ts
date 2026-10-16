@@ -765,38 +765,42 @@ export class CrearRutaPage implements OnDestroy {
 
   async guardar(): Promise<void> {
     if (this.submitting()) return;
-    if (!this.vehiculoId()) {
-      this.toast.error(this.i18n.t('Elige el vehículo.'));
-      return;
-    }
-    if (this.esElevado && !this.conductorId()) {
-      this.toast.error(this.i18n.t('Elige el conductor al que le asignas la ruta.'));
-      return;
-    }
-    if (!this.origen().trim()) {
-      this.toast.error(this.i18n.t('Escribe el origen.'));
-      return;
-    }
-    if (!this.destinoTexto()) {
-      this.toast.error(this.destinoModo() === 'lugar' ? this.i18n.t('Elige la obra de destino.') : this.i18n.t('Marca el destino en el mapa.'));
-      return;
-    }
-    // AF24.3 — la foto de carga es obligatoria en rutas de material.
-    if (this.cargaObligatoria() && !this.fotoCarga()) {
-      this.toast.error(this.i18n.t('Toma la foto de la carga.'));
-      return;
-    }
-    // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).
-    if (await this.desviarAUsoDeVehiculo()) return;
-    // AF26 — crear una ruta exige GPS activo (bloquea si está apagado/revocado).
-    if (!(await this.tracking.exigirGps('crear_ruta'))) return;
-    const lugar = this.destinoModo() === 'lugar' ? this.selectedLugar() : null;
-    const mapaCoords = this.destinoModo() === 'mapa' ? this.destinoMapaCoords() : null;
-    // AV11 — id estable (idempotencia por p_id). Si venimos del checklist ya viene
-    // fijado; si no, lo generamos ahora para blindar también el doble-tap normal.
-    if (!this.rutaId()) this.rutaId.set(crypto.randomUUID());
+    // CO5/CO16 — la bandera va en la PRIMERA línea, antes de `desviarAUsoDeVehiculo()`
+    // / `exigirGps()` (awaits que pueden tardar segundos buscando GPS). Mismo bug/
+    // mismo arreglo que generar-conduce.ts (3 conduces duplicados, CO5): varios
+    // toques mientras busca GPS pasaban la barrera.
     this.submitting.set(true);
     try {
+      if (!this.vehiculoId()) {
+        this.toast.error(this.i18n.t('Elige el vehículo.'));
+        return;
+      }
+      if (this.esElevado && !this.conductorId()) {
+        this.toast.error(this.i18n.t('Elige el conductor al que le asignas la ruta.'));
+        return;
+      }
+      if (!this.origen().trim()) {
+        this.toast.error(this.i18n.t('Escribe el origen.'));
+        return;
+      }
+      if (!this.destinoTexto()) {
+        this.toast.error(this.destinoModo() === 'lugar' ? this.i18n.t('Elige la obra de destino.') : this.i18n.t('Marca el destino en el mapa.'));
+        return;
+      }
+      // AF24.3 — la foto de carga es obligatoria en rutas de material.
+      if (this.cargaObligatoria() && !this.fotoCarga()) {
+        this.toast.error(this.i18n.t('Toma la foto de la carga.'));
+        return;
+      }
+      // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).
+      if (await this.desviarAUsoDeVehiculo()) return;
+      // AF26 — crear una ruta exige GPS activo (bloquea si está apagado/revocado).
+      if (!(await this.tracking.exigirGps('crear_ruta'))) return;
+      const lugar = this.destinoModo() === 'lugar' ? this.selectedLugar() : null;
+      const mapaCoords = this.destinoModo() === 'mapa' ? this.destinoMapaCoords() : null;
+      // AV11 — id estable (idempotencia por p_id). Si venimos del checklist ya viene
+      // fijado; si no, lo generamos ahora para blindar también el doble-tap normal.
+      if (!this.rutaId()) this.rutaId.set(crypto.randomUUID());
       await this.conduces.crearRuta({
         id: this.rutaId(),
         vehiculoId: this.vehiculoId(),

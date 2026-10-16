@@ -111,6 +111,19 @@
 .compa__chip:disabled {
   opacity: 0.5;
 }
+.compa__pdf-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 8px 14px;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
 
 // Burbujas.
 .compa__msg {

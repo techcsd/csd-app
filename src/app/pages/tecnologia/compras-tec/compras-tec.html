@@ -1,0 +1,133 @@
+<div class="screen ctec" data-testid="compras-tec">
+  <header class="ctec__header">
+    <button type="button" class="ctec__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="ctec__title">{{ 'Compras por aprobar' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="3" />
+    } @else if (error()) {
+      <app-empty-state
+        [title]="'No pudimos cargar' | t"
+        [message]="'Revisa la conexión y vuelve a intentar.' | t"
+      />
+    } @else if (!lista().length) {
+      <app-empty-state
+        [title]="'Sin compras por aprobar' | t"
+        [message]="'Cuando alguien te mande una compra tecnológica a aprobar, aparece aquí.' | t"
+      />
+    } @else {
+      <div class="ctec__lista" appStagger>
+        @for (r of lista(); track r.id) {
+          <button type="button" class="ctec__card" appTapScale (click)="abrir(r)">
+            <div class="ctec__card-main">
+              <p class="ctec__card-notas">{{ r.notas || ('Compra tecnológica' | t) }}</p>
+              <span class="ctec__card-meta">
+                {{ r.solicitante_nombre || ('Alguien' | t) }}
+                @if (r.total) { · RD$ {{ r.total | number:'1.0-0' }} }
+              </span>
+            </div>
+            <span class="ctec__card-estado">{{ 'Esperando aprobación' | t }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Ficha -->
+  @if (cargandoDetalle()) {
+    <div class="ctec__overlay">
+      <app-skeleton [rows]="4" />
+    </div>
+  }
+  @if (abierta(); as d) {
+    <div class="ctec__overlay ctec__ficha" appFadeIn>
+      <header class="ctec__ficha-header">
+        <button type="button" class="ctec__back" [disabled]="decidiendo()" (click)="cerrarDetalle()" [attr.aria-label]="'Atrás' | t">←</button>
+        <h2 class="ctec__ficha-title">{{ d.notas || ('Compra tecnológica' | t) }}</h2>
+      </header>
+      <div class="ctec__ficha-body">
+        @if (cotizacionPrincipal(d); as c) {
+          <div class="ctec__preview">
+            @if (esPdf(c.nombre) && c.url) {
+              <button type="button" class="btn-ghost ctec__ver-pdf" (click)="verPdf.set(true)">{{ 'Ver PDF' | t }}</button>
+            } @else if (c.url) {
+              <img class="ctec__preview-img" [src]="c.url" [alt]="c.nombre" />
+            }
+            <span class="ctec__preview-meta">
+              {{ c.nombre }}
+              @if (c.proveedor) { · {{ c.proveedor }} }
+              @if (c.monto) { · RD$ {{ c.monto | number:'1.0-0' }} }
+            </span>
+          </div>
+        } @else {
+          <app-empty-state [title]="'Sin cotización' | t" [message]="'Esta compra no tiene una cotización adjunta todavía.' | t" />
+        }
+
+        @if (d.items.length) {
+          <div class="ctec__renglones">
+            <div class="ctec__renglon ctec__renglon--head">
+              <span>{{ 'Artículo' | t }}</span>
+              <span>{{ 'Cant.' | t }}</span>
+              <span class="ctec__renglon-precio">{{ 'Precio' | t }}</span>
+            </div>
+            @for (it of d.items; track it.id) {
+              <div class="ctec__renglon">
+                <span>{{ it.descripcion }}</span>
+                <span>{{ it.cantidad }}</span>
+                <span class="ctec__renglon-precio">
+                  @if (it.precio_unitario) { RD$ {{ it.precio_unitario | number:'1.0-0' }} }
+                </span>
+              </div>
+            }
+            @if (total(d)) {
+              <div class="ctec__renglon ctec__renglon--total">
+                <span>{{ 'Total' | t }}</span>
+                <span></span>
+                <span class="ctec__renglon-precio">RD$ {{ total(d) | number:'1.0-0' }}</span>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="ctec__linea">
+          <span><b>{{ 'Pedido' | t }}</b> · {{ d.solicitante_nombre || ('—') }} · {{ fmtFechaHora(d.created_at) }}</span>
+          @if (d.enviada_at) {
+            <span><b>{{ 'Enviado a aprobar' | t }}</b> · {{ d.aprobador_nombre || ('—') }} · {{ fmtFechaHora(d.enviada_at) }}</span>
+          }
+        </div>
+
+        @if (modo(); as m) {
+          <div class="ctec__modo">
+            @if (m === 'rechazar') {
+              <label class="field-label">{{ 'Motivo del rechazo (obligatorio)' | t }}</label>
+              <textarea class="field ctec__motivo" rows="3" [ngModel]="motivo()" (ngModelChange)="motivo.set($event)"
+                [placeholder]="'¿Por qué se rechaza?' | t"></textarea>
+            } @else {
+              <p class="ctec__modo-txt">{{ '¿Aprobar esta compra?' | t }}</p>
+            }
+            <div class="ctec__modo-btns">
+              <button type="button" class="btn-ghost" [disabled]="decidiendo()" (click)="cancelarModo()">{{ 'Atrás' | t }}</button>
+              <button type="button" class="btn-cta" [disabled]="decidiendo()" (click)="confirmar()">
+                {{ (decidiendo() ? 'Guardando…' : (m === 'aprobar' ? 'Confirmar aprobación' : 'Confirmar rechazo')) | t }}
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (!modo()) {
+        <footer class="ctec__ficha-footer">
+          <button type="button" class="ctec__rechazar" (click)="tocarRechazar()">{{ 'Rechazar' | t }}</button>
+          <button type="button" class="btn-cta ctec__aprobar" (click)="tocarAprobar()">{{ 'Aprobar compra' | t }}</button>
+        </footer>
+      }
+
+      <!-- `app-pdf-viewer` es un modal a pantalla completa — se monta solo al pedirlo. -->
+      @if (verPdf() && cotizacionPrincipal(d)?.url; as url) {
+        <app-pdf-viewer [src]="url" [nombre]="cotizacionPrincipal(d)!.nombre" (cerrado)="verPdf.set(false)" />
+      }
+    </div>
+  }
+</div>

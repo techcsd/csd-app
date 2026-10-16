@@ -148,6 +148,14 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+.apl__quien {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.apl__quien--cancel {
+  color: var(--color-danger, #c0392b);
+}
 
 .apl__fab {
   position: fixed;

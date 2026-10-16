@@ -1,0 +1,65 @@
+@if (mostrar() && datos(); as d) {
+  <div class="nov" appFadeIn>
+    <header class="nov__header">
+      <span class="nov__kicker">{{ ('CSD APP' | t) }} {{ local }} · {{ 'NOVEDADES' | t }}</span>
+      <h1 class="nov__title">{{ 'Esto cambió' | t }}{{ nombre() ? ', ' + nombre() : '' }}</h1>
+      @if (d.version_vista) {
+        <span class="nov__sub">{{ 'Desde la' | t }} {{ d.version_vista }} {{ 'que usaste por última vez' | t }}</span>
+      } @else {
+        <span class="nov__sub">{{ 'Novedades de tu CSD App' | t }}</span>
+      }
+    </header>
+
+    <div class="nov__body" appStagger>
+      @if (d.arreglado_para_ti.length) {
+        <div class="nov__fixed">
+          <span class="nov__fixed-title">{{ 'Lo que reportaste ya está arreglado' | t }}</span>
+          @for (frase of d.arreglado_para_ti; track $index) {
+            <span class="nov__fixed-txt">{{ frase }}</span>
+          }
+          <span class="nov__fixed-ver">{{ 'Arreglado en' | t }} {{ d.versiones[0]?.version ?? local }}</span>
+        </div>
+      }
+
+      @if (!verTodo()) {
+        @for (v of d.versiones; track v.version) {
+          <div class="nov__grupo">
+            <span class="nov__grupo-title">{{ v.version }} · {{ fechaLabel(v.fecha) }}</span>
+            @for (c of (v.cambios ?? []); track $index) {
+              <div class="nov__item">
+                <span class="nov__chip nov__chip--{{ c.t }}">{{ chipLabel(c.t) | t }}</span>
+                <span class="nov__item-txt">{{ c.d }}</span>
+              </div>
+            }
+          </div>
+        }
+        @if (d.hay_mas) {
+          <p class="nov__mas">{{ '+' + (d.total_versiones - d.versiones.length) + (' versión(es) anterior(es)' | t) }}</p>
+        }
+      } @else {
+        @if (cargandoTodo()) {
+          <p class="nov__mas">{{ 'Cargando…' | t }}</p>
+        } @else {
+          @for (v of todoElHistorial(); track v.id) {
+            <div class="nov__grupo">
+              <span class="nov__grupo-title">{{ v.version }} · {{ fechaLabel(v.fecha) }}</span>
+              @for (c of (v.cambios ?? []); track $index) {
+                <div class="nov__item">
+                  <span class="nov__chip nov__chip--{{ c.t }}">{{ chipLabel(c.t) | t }}</span>
+                  <span class="nov__item-txt">{{ c.d }}</span>
+                </div>
+              }
+            </div>
+          }
+        }
+      }
+    </div>
+
+    <footer class="nov__footer">
+      <button type="button" class="btn-cta nov__ok" (click)="entendido()">{{ 'Entendido' | t }}</button>
+      <button type="button" class="nov__historial" (click)="verHistorial()">
+        {{ (verTodo() ? 'Ver menos' : 'Ver historial completo') | t }}
+      </button>
+    </footer>
+  </div>
+}

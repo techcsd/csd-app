@@ -229,24 +229,25 @@ export class PorConfirmarPage {
 
   async confirmar(e: EntregaPorRecibir): Promise<void> {
     if (this.enviando()) return;
-    const firma = await this.sigPad()?.toBlob();
-    if (!firma) {
-      this.toast.error(this.i18n.t('Falta tu firma de recepción.'));
-      return;
-    }
-    const foto = this.foto();
-    const notas = this.notas().trim();
-    // BD2 — foto obligatoria pero NO bloqueante: si no hay foto, se exige una nota.
-    if (!foto && !notas) {
-      this.toast.error(this.i18n.t('Toma la foto de lo recibido; si no puedes, explica por qué en las notas.'));
-      return;
-    }
+    // CO16 — la bandera va en la PRIMERA línea, antes del `await …toBlob()` de la
+    // firma (un doble toque mientras se generaba el blob podía confirmar dos veces).
     this.enviando.set(true);
     try {
+      const firma = await this.sigPad()?.toBlob();
+      if (!firma) {
+        this.toast.error(this.i18n.t('Falta tu firma de recepción.'));
+        return;
+      }
+      const foto = this.foto();
+      const notas = this.notas().trim();
+      // BD2 — foto obligatoria pero NO bloqueante: si no hay foto, se exige una nota.
+      if (!foto && !notas) {
+        this.toast.error(this.i18n.t('Toma la foto de lo recibido; si no puedes, explica por qué en las notas.'));
+        return;
+      }
       if (e.fuente === 'confirmar') {
         if (this.llegoTodo() === null) {
           this.toast.error(this.i18n.t('Dinos si llegó todo el material.'));
-          this.enviando.set(false);
           return;
         }
         // QA-13 — si faltó algo y tenemos el detalle, registra cantidades por item.

@@ -1,0 +1,120 @@
+.gen {
+  background: var(--color-bg);
+}
+.gen__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.gen__back {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+}
+.gen__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: #fff;
+}
+.gen__intro {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.gen__plantillas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gen__plantilla {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+}
+.gen__plantilla-nom {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.gen__plantilla-meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.gen__campos {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+.gen__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gen__continuar {
+  margin-top: 18px;
+  min-height: 52px;
+}
+
+.gen__preview {
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  max-height: 55vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+.gen__preview-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.gen__preview-btns > * {
+  flex: 1;
+}
+
+.gen__exito {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  text-align: center;
+  padding-top: 24px;
+}
+.gen__exito-tit {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.gen__exito-sub {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+}
+.gen__exito-nuevo {
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--color-secondary);
+  font-weight: 700;
+  font-size: 14px;
+}

@@ -1,0 +1,178 @@
+<div class="screen exp" data-testid="expedientes">
+  <header class="exp__header">
+    <button type="button" class="exp__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="exp__title">{{ 'Expedientes legales' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (error()) {
+      <app-empty-state [title]="'No pudimos cargar' | t" [message]="'Revisa la conexión y vuelve a intentar.' | t" />
+    } @else {
+      <div class="exp__kpis">
+        <div class="exp__kpi"><span class="exp__kpi-lb">{{ 'Abiertos' | t }}</span><span class="exp__kpi-val">{{ kpis().abiertos }}</span></div>
+        <div class="exp__kpi"><span class="exp__kpi-lb">{{ 'Vencen en 15 días' | t }}</span><span class="exp__kpi-val">{{ kpis().vencenPronto }}</span></div>
+        <div class="exp__kpi"><span class="exp__kpi-lb">{{ 'Monto reclamado' | t }}</span><span class="exp__kpi-val">RD$ {{ kpis().montoReclamado | number:'1.0-0' }}</span></div>
+        <div class="exp__kpi"><span class="exp__kpi-lb">{{ 'Cerrados' | t }}</span><span class="exp__kpi-val">{{ kpis().cerrados }}</span></div>
+      </div>
+
+      @if (!lista().length) {
+        <app-empty-state [title]="'Sin expedientes' | t" [message]="'Toca + para crear el primero.' | t" />
+      } @else {
+        <div class="exp__lista" appStagger>
+          @for (e of lista(); track e.id) {
+            <button type="button" class="exp__card" appTapScale (click)="abrir(e)">
+              <div class="exp__card-main">
+                <span class="exp__card-codigo">{{ e.codigo }}</span>
+                <p class="exp__card-titulo">{{ e.titulo }}</p>
+                <span class="exp__card-meta">
+                  {{ tipoLabel(e.tipo) | t }}
+                  @if (e.proyecto_nombre) { · {{ e.proyecto_nombre }} }
+                </span>
+              </div>
+              <span class="exp__card-estado" [attr.data-estado]="e.estado">{{ estadoLabel(e.estado) | t }}</span>
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <button type="button" class="exp__fab" (click)="abrirCrear()" [attr.aria-label]="'Nuevo expediente' | t">＋</button>
+
+  <!-- Ficha -->
+  @if (abierto(); as e) {
+    <div class="exp__overlay" appFadeIn>
+      <header class="exp__ficha-header">
+        <button type="button" class="exp__back" (click)="cerrarFicha()" [attr.aria-label]="'Atrás' | t">←</button>
+        <div class="exp__ficha-head-txt">
+          <span class="exp__card-codigo">{{ e.codigo }}</span>
+          <h2 class="exp__ficha-title">{{ e.titulo }}</h2>
+        </div>
+      </header>
+      <div class="exp__chips">
+        <span class="exp__chip" [attr.data-estado]="e.estado">{{ estadoLabel(e.estado) | t }}</span>
+        <span class="exp__chip exp__chip--prioridad">{{ prioridadLabel(e.prioridad) | t }}</span>
+        <span class="exp__chip exp__chip--tipo">{{ tipoLabel(e.tipo) | t }}</span>
+      </div>
+
+      <div class="exp__tabs">
+        <button type="button" class="exp__tab" [class.exp__tab--on]="tab() === 'resumen'" (click)="cambiarTab('resumen')">{{ 'Resumen' | t }}</button>
+        <button type="button" class="exp__tab" [class.exp__tab--on]="tab() === 'notas'" (click)="cambiarTab('notas')">{{ 'Notas' | t }} ({{ notas().length }})</button>
+        <button type="button" class="exp__tab" [class.exp__tab--on]="tab() === 'archivos'" (click)="cambiarTab('archivos')">{{ 'Archivos' | t }} ({{ archivos().length }})</button>
+      </div>
+
+      <div class="exp__ficha-body">
+        @if (tab() === 'resumen') {
+          <div class="exp__kv-grid">
+            @if (e.proyecto_nombre) { <div class="exp__kv"><span>{{ 'Obra' | t }}</span><b>{{ e.proyecto_nombre }}</b></div> }
+            @if (e.contraparte) { <div class="exp__kv"><span>{{ 'Contraparte' | t }}</span><b>{{ e.contraparte }}</b></div> }
+            <div class="exp__kv"><span>{{ 'Apertura' | t }}</span><b>{{ fmtFecha(e.fecha_apertura) }}</b></div>
+            <div class="exp__kv"><span>{{ 'Fecha límite' | t }}</span><b>{{ e.fecha_limite ? fmtFecha(e.fecha_limite) : ('Sin fecha' | t) }}</b></div>
+            @if (e.monto_reclamado) { <div class="exp__kv"><span>{{ 'Monto reclamado' | t }}</span><b>RD$ {{ e.monto_reclamado | number:'1.0-0' }}</b></div> }
+          </div>
+          @if (e.descripcion) {
+            <div class="exp__desc">
+              <span class="exp__desc-lb">{{ 'Descripción' | t }}</span>
+              <p>{{ e.descripcion }}</p>
+            </div>
+          }
+          <div class="exp__estado-cambiar">
+            <label class="field-label">{{ 'Cambiar estado' | t }}</label>
+            <select class="field" [ngModel]="e.estado" (ngModelChange)="cambiarEstado($event)" [disabled]="cambiandoEstado()">
+              @for (s of estados; track s) { <option [value]="s">{{ estadoLabel(s) | t }}</option> }
+            </select>
+          </div>
+        }
+
+        @if (tab() === 'notas') {
+          @if (cargandoTab()) {
+            <app-skeleton [rows]="2" />
+          } @else {
+            <div class="exp__notas" appStagger>
+              @for (n of notas(); track n.id) {
+                <div class="exp__nota">
+                  <span class="exp__nota-meta"><b>{{ n.usuario_nombre || ('—') }}</b> · {{ fmtFechaHora(n.created_at) }}</span>
+                  <p class="exp__nota-txt">{{ n.nota }}</p>
+                </div>
+              }
+              @if (!notas().length) { <app-empty-state [title]="'Sin notas' | t" [message]="''" /> }
+            </div>
+            <div class="exp__nota-nueva">
+              <textarea class="field" rows="3" [ngModel]="nuevaNota()" (ngModelChange)="nuevaNota.set($event)"
+                [placeholder]="'Escribe lo que pasó o lo que hay que hacer…' | t"></textarea>
+              <button type="button" class="btn-cta" [disabled]="guardandoNota()" (click)="guardarNota()">
+                {{ (guardandoNota() ? 'Guardando…' : 'Guardar nota') | t }}
+              </button>
+            </div>
+          }
+        }
+
+        @if (tab() === 'archivos') {
+          @if (cargandoTab()) {
+            <app-skeleton [rows]="2" />
+          } @else {
+            <div class="exp__archivos" appStagger>
+              @for (a of archivos(); track a.id) {
+                <a class="exp__archivo" [href]="a.url ?? '#'" target="_blank" rel="noopener">
+                  <span class="exp__archivo-nom">{{ a.nombre }}</span>
+                  <span class="exp__archivo-meta">{{ fmtFechaHora(a.created_at) }}</span>
+                </a>
+              }
+              @if (!archivos().length) { <app-empty-state [title]="'Sin archivos' | t" [message]="''" /> }
+            </div>
+            <label class="btn-ghost exp__adjuntar">
+              {{ (subiendoArchivo() ? 'Subiendo…' : 'Adjuntar archivo') | t }}
+              <input type="file" hidden [disabled]="subiendoArchivo()" (change)="onArchivoElegido($event)" />
+            </label>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Crear -->
+  @if (creando()) {
+    <div class="exp__overlay" appFadeIn>
+      <header class="exp__ficha-header">
+        <button type="button" class="exp__back" (click)="cerrarCrear()" [attr.aria-label]="'Atrás' | t">←</button>
+        <h2 class="exp__ficha-title">{{ 'Nuevo expediente' | t }}</h2>
+      </header>
+      <div class="exp__ficha-body">
+        <label class="field-label">{{ 'Título' | t }}</label>
+        <input class="field" type="text" [ngModel]="nTitulo()" (ngModelChange)="nTitulo.set($event)" [placeholder]="'¿De qué se trata?' | t" />
+
+        <label class="field-label">{{ 'Tipo' | t }}</label>
+        <select class="field" [ngModel]="nTipo()" (ngModelChange)="nTipo.set($event)">
+          @for (t of tipos; track t) { <option [value]="t">{{ tipoLabel(t) | t }}</option> }
+        </select>
+
+        <label class="field-label">{{ 'Prioridad' | t }}</label>
+        <select class="field" [ngModel]="nPrioridad()" (ngModelChange)="nPrioridad.set($event)">
+          @for (p of prioridades; track p) { <option [value]="p">{{ prioridadLabel(p) | t }}</option> }
+        </select>
+
+        <app-collapsible-select
+          [label]="'Obra' | t"
+          icon="🏗️"
+          [options]="proyectoOptions()"
+          [selectedId]="nProyectoId()"
+          [placeholder]="'Elige la obra (opcional)' | t"
+          [searchable]="true"
+          (picked)="nProyectoId.set($event)"
+        />
+
+        <label class="field-label">{{ 'Contraparte' | t }}</label>
+        <input class="field" type="text" [ngModel]="nContraparte()" (ngModelChange)="nContraparte.set($event)" [placeholder]="'Nombre de la contraparte (opcional)' | t" />
+
+        <label class="field-label">{{ 'Descripción' | t }}</label>
+        <textarea class="field" rows="4" [ngModel]="nDescripcion()" (ngModelChange)="nDescripcion.set($event)" [placeholder]="'¿Qué pasó?' | t"></textarea>
+
+        <button type="button" class="btn-cta exp__crear-btn" [disabled]="guardandoNuevo()" (click)="guardarNuevo()">
+          {{ (guardandoNuevo() ? 'Creando…' : 'Crear expediente') | t }}
+        </button>
+      </div>
+    </div>
+  }
+</div>

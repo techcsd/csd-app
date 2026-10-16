@@ -204,41 +204,43 @@ export class DevolverMaterialPage implements OnDestroy {
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    if (!this.obraId()) return this.toast.error(this.i18n.t('Elige la obra de origen.'));
-    if (!this.bodegaId()) return this.toast.error(this.i18n.t('Elige el almacén destino.'));
-    if (this.faltaItems()) return this.toast.error(this.i18n.t('Agrega al menos un material.'));
-
-    const emisorBlob = await this.emisorPad()?.toBlob();
-    if (!emisorBlob) return this.toast.error(this.i18n.t('Falta tu firma (quien entrega).'));
-
-    let receptorNombre: string | null;
-    let receptorUsuarioId: string | null;
-    let firmaReceptor: Blob | null;
-    let confirmarPorAlmacen = false;
-
-    if (this.receptorModo() === 'yo') {
-      // AE8 — el chofer NO se auto-firma la recepción (colapsaba el antifraude):
-      // el stock se mueve pero la firma de recibido queda PENDIENTE para que
-      // Almacén la confirme.
-      receptorNombre = 'Almacén';
-      receptorUsuarioId = null;
-      firmaReceptor = null;
-      confirmarPorAlmacen = true;
-    } else {
-      const u = this.receptorSel();
-      if (!u) return this.toast.error(this.i18n.t('Elige quién recibe.'));
-      receptorNombre = u.nombre;
-      receptorUsuarioId = u.id;
-      if (this.receptorPresente()) {
-        firmaReceptor = (await this.receptorPad()?.toBlob()) ?? null;
-        if (!firmaReceptor) return this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
-      } else {
-        firmaReceptor = null; // queda pendiente y se le enruta
-      }
-    }
-
+    // CO16 — la bandera va en la PRIMERA línea, antes de los `await …toBlob()` de
+    // las firmas (puntos donde un doble toque podía pasar la barrera).
     this.submitting.set(true);
     try {
+      if (!this.obraId()) return this.toast.error(this.i18n.t('Elige la obra de origen.'));
+      if (!this.bodegaId()) return this.toast.error(this.i18n.t('Elige el almacén destino.'));
+      if (this.faltaItems()) return this.toast.error(this.i18n.t('Agrega al menos un material.'));
+
+      const emisorBlob = await this.emisorPad()?.toBlob();
+      if (!emisorBlob) return this.toast.error(this.i18n.t('Falta tu firma (quien entrega).'));
+
+      let receptorNombre: string | null;
+      let receptorUsuarioId: string | null;
+      let firmaReceptor: Blob | null;
+      let confirmarPorAlmacen = false;
+
+      if (this.receptorModo() === 'yo') {
+        // AE8 — el chofer NO se auto-firma la recepción (colapsaba el antifraude):
+        // el stock se mueve pero la firma de recibido queda PENDIENTE para que
+        // Almacén la confirme.
+        receptorNombre = 'Almacén';
+        receptorUsuarioId = null;
+        firmaReceptor = null;
+        confirmarPorAlmacen = true;
+      } else {
+        const u = this.receptorSel();
+        if (!u) return this.toast.error(this.i18n.t('Elige quién recibe.'));
+        receptorNombre = u.nombre;
+        receptorUsuarioId = u.id;
+        if (this.receptorPresente()) {
+          firmaReceptor = (await this.receptorPad()?.toBlob()) ?? null;
+          if (!firmaReceptor) return this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
+        } else {
+          firmaReceptor = null; // queda pendiente y se le enruta
+        }
+      }
+
       const captura: DevolucionChoferCaptura = {
         bodegaDestinoId: this.bodegaId(),
         origenProyectoId: this.obraId(),

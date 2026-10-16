@@ -1,0 +1,104 @@
+.his {
+  background: var(--color-bg);
+  position: relative;
+  min-height: 100%;
+}
+.his__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.his__back {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+}
+.his__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: #fff;
+}
+.his__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.his__card {
+  display: flex;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+}
+.his__card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.his__card-nom {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.his__card-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.his__badge {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.his__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900; // CO — sobre la cinta de salud de notificaciones (z-index 499), bajo cámara/firma
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+.his__ficha-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(14px + var(--safe-top)) 16px 14px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.his__ficha-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.his__preview {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+.his__footer {
+  flex: none;
+  padding: 14px 16px calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}

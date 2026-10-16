@@ -3,13 +3,13 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 91%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
 |---|---:|---:|---:|---:|:--:|
-|  | 0 | 21 | 0% | 0% |  |
-| pages/actualizar | 26 | 0 | 100% | 12% |  |
+|  | 2 | 21 | 0% | 0% |  |
+| pages/actualizar | 28 | 0 | 93% | 11% |  |
 | pages/admin | 12 | 0 | 100% | 0% |  |
 | pages/admin/auditoria | 22 | 0 | 100% | 5% |  |
 | pages/admin/catalogos | 5 | 0 | 100% | 0% |  |
@@ -39,9 +39,13 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/orden-trabajo | 60 | 1 | 98% | 2% |  |
 | pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
 | pages/bitacora/parte | 186 | 4 | 98% | 1% |  |
-| pages/compa | 10 | 0 | 100% | 0% |  |
+| pages/compa | 11 | 0 | 100% | 0% |  |
 | pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
 | pages/compras/solicitud-compra | 25 | 1 | 96% | 0% |  |
+| pages/documentos | 6 | 0 | 50% | 0% |  |
+| pages/documentos/generar | 15 | 0 | 33% | 7% |  |
+| pages/documentos/historial | 7 | 0 | 29% | 0% |  |
+| pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
 | pages/home | 14 | 0 | 100% | 14% | ✅ |
@@ -67,6 +71,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/retiro-nuevo | 4 | 19 | 17% | 4% |  |
 | pages/inventario/retiros | 6 | 0 | 100% | 0% |  |
 | pages/inventario/salida | 34 | 0 | 100% | 0% |  |
+| pages/legal | 5 | 0 | 20% | 0% |  |
+| pages/legal/contratos | 30 | 0 | 30% | 0% |  |
+| pages/legal/expedientes | 31 | 0 | 32% | 0% |  |
 | pages/mensajes | 10 | 0 | 100% | 0% |  |
 | pages/mensajes/grupo-info | 24 | 0 | 100% | 4% |  |
 | pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 7% |  |
@@ -89,7 +96,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 4% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 71 | 0 | 100% | 1% | ✅ |
+| pages/perfil | 72 | 0 | 100% | 1% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/practica | 18 | 0 | 100% | 100% |  |
@@ -104,19 +111,20 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
 | pages/solicitudes/bandeja | 16 | 0 | 100% | 0% |  |
-| pages/solicitudes/detalle | 72 | 12 | 77% | 1% |  |
+| pages/solicitudes/detalle | 74 | 12 | 76% | 1% |  |
 | pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 9 | 12 | 43% | 29% |  |
+| pages/tecnologia | 11 | 12 | 39% | 26% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
+| pages/tecnologia/compras-tec | 23 | 0 | 26% | 0% |  |
 | pages/tecnologia/dev-notes | 0 | 5 | 0% | 0% |  |
 | pages/transporte | 16 | 0 | 100% | 6% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
-| pages/transporte/apoyo-transporte | 47 | 0 | 100% | 0% |  |
+| pages/transporte/apoyo-transporte | 53 | 0 | 91% | 0% |  |
 | pages/transporte/asignar | 35 | 0 | 100% | 3% |  |
 | pages/transporte/asignarme | 36 | 0 | 100% | 0% |  |
 | pages/transporte/aviso-vehiculo | 38 | 0 | 100% | 0% |  |
@@ -177,6 +185,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/components/generar-acceso | 11 | 0 | 100% | 18% |  |
 | shared/components/gps-gate-banner | 2 | 0 | 100% | 0% |  |
 | shared/components/module-placeholder | 2 | 0 | 100% | 0% |  |
+| shared/components/novedades | 11 | 0 | 18% | 9% |  |
 | shared/components/onboarding | 7 | 0 | 100% | 29% |  |
 | shared/components/permisos-onboarding | 13 | 0 | 100% | 15% |  |
 | shared/components/tienda-aviso | 3 | 0 | 0% | 0% |  |
@@ -198,7 +207,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
 | shared/ui/momento | 1 | 0 | 100% | 100% |  |
-| shared/ui/notif-health-band | 4 | 0 | 100% | 25% |  |
+| shared/ui/notif-health-band | 22 | 3 | 36% | 8% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
 | shared/ui/photo-slot | 18 | 1 | 95% | 5% |  |

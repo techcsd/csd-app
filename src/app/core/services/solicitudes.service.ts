@@ -163,6 +163,20 @@ export class SolicitudesService {
     }
   }
 
+  /** CO4 — permiso explícito (por usuario) para aprobar/rechazar su PROPIA
+   *  requisición (regla BH1: nadie se aprueba lo suyo, salvo este permiso puntual
+   *  otorgado a mano, p. ej. Raykler). Capability-safe: si el RPC aún no existe en
+   *  el entorno, degrada a false (sin romper la regla de siempre). */
+  async puedeAutoaprobar(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('puede_autoaprobar_requisicion');
+      if (error) return false;
+      return !!data;
+    } catch {
+      return false;
+    }
+  }
+
   /** BB10/BF6 — edita una requisición PENDIENTE o RECHAZADA (solo el autor/admin).
    *  Online (no outbox: es una corrección puntual que necesita eco inmediato del
    *  servidor). BF6: al editar una RECHAZADA, el server la reenvía (vuelve a

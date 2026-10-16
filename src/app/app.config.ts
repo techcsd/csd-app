@@ -62,9 +62,19 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' }),
       withViewTransitions({ skipInitialTransition: true }),
     ),
-    provideServiceWorker('ngsw-worker.js', {
+    // CO10/CO17 — se registra `push-sw.js` (no `ngsw-worker.js` directo): es una capa
+    // fina que hace `importScripts('./ngsw-worker.js')` + pinta ella misma la
+    // notificación cuando el push llega en el formato plano `{title,body,url}` que
+    // manda el edge del padre (ngsw-worker.js solo entiende `{notification:{...}}}`
+    // y si no, no hace nada). Angular sigue gestionando caché/versión normalmente;
+    // `provideServiceWorker` no exige que el archivo se llame `ngsw-worker.js`.
+    provideServiceWorker('push-sw.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000',
+      // CO1 — con `registerWhenStable:30000` un chofer que abre y cierra la PWA
+      // antes de los 30s nunca llega a registrar el SW ese día (y con el sistema de
+      // movimiento de CJ, "estable" tarda más). `registerImmediately` registra el SW
+      // en cuanto arranca la app, sin esperar.
+      registrationStrategy: 'registerImmediately',
     }),
     // Instantiate feature services that register outbox handlers, so queued
     // captures sync even before the user opens that module.

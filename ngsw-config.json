@@ -11,9 +11,18 @@
           "/index.csr.html",
           "/index.html",
           "/manifest.webmanifest",
-          "/*.css",
-          "/*.js"
+          "/main-*.js",
+          "/polyfills-*.js",
+          "/styles-*.css"
         ]
+      }
+    },
+    {
+      "name": "lazy-chunks",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/chunk-*.js", "/worker-basic.min.js", "/safety-worker.js", "/pdf.worker.min.mjs"]
       }
     },
     {

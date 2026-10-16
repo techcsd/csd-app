@@ -959,6 +959,51 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/dev-notes/dev-notes').then((m) => m.DevNotesPage),
   },
+  {
+    // CO8 — Compras tecnológicas por aprobar (solo el aprobador/admin; RLS acota la
+    // lectura real de `solicitudes_compra`, esta ruta solo decide si se pinta el tile).
+    path: 'tecnologia/compras-aprobar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tecnologia/compras-tec/compras-tec').then((m) => m.ComprasTecPage),
+  },
+  // CO13/CO11 — Legal (expedientes + contratos). Solo en línea; gate `legal` dentro
+  // del hub/home (RLS real = is_admin() or tiene_modulo('legal')).
+  {
+    path: 'legal',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/legal/legal').then((m) => m.LegalPage),
+  },
+  {
+    path: 'legal/expedientes',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/legal/expedientes/expedientes').then((m) => m.ExpedientesPage),
+  },
+  {
+    path: 'legal/contratos',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/legal/contratos/contratos').then((m) => m.ContratosPage),
+  },
+  // CO12/CO13 — Documentos (generar/historial/plantillas-ver). Solo en línea.
+  {
+    path: 'documentos',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/documentos/documentos').then((m) => m.DocumentosPage),
+  },
+  {
+    path: 'documentos/generar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/documentos/generar/generar').then((m) => m.DocumentosGenerarPage),
+  },
+  {
+    path: 'documentos/historial',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/documentos/historial/historial').then((m) => m.DocumentosHistorialPage),
+  },
+  {
+    path: 'documentos/plantillas',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/documentos/plantillas/plantillas').then((m) => m.DocumentosPlantillasPage),
+  },
   // AL2 — Inventario tecnológico (módulo Tecnología real). Gating admin|tecnologia.
   {
     path: 'tecnologia-inventario',

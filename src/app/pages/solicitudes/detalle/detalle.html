@@ -27,6 +27,12 @@
       <div class="reqd__code">
         <span class="reqd__code-req">{{ codigo(r.folio) }}</span>
         @if ((r.version ?? 1) > 1) { <span class="reqd__code-ver">v{{ r.version }}</span> }
+        <!-- CO4 — el autor se aprobó/rechazó con el permiso explícito (Raykler). -->
+        @if (r.autoaprobada) {
+          <span class="reqd__code-ver" title="{{ 'Aprobada o rechazada por su propio autor, con permiso.' | t }}">
+            {{ 'Aprobada por su autor' | t }}
+          </span>
+        }
       </div>
 
       <!-- BV10/BV11 — Fecha de necesidad DESTACADA, arriba de Fecha, editable -->
