@@ -342,14 +342,17 @@ Dos módulos nuevos (`pages/legal/`, `pages/documentos/`), ninguno existía ante
 ### CO6 — Compa ahora muestra enlaces y PDF (cerrado, **en prod**)
 La burbuja de Compa era `{{ m.texto }}` plano — ningún enlace markdown/suelto se veía clicable y no había forma de abrir un PDF generado (`generar_reporte_pdf`). Se reutilizaron 2 componentes ya existentes sin tocarlos: `app-markdown-view` (mensajes del asistente, GFM + autolinks + DOMPurify) y `app-pdf-viewer` (visor inline pdf.js, ya usado en `mensajes/thread`). Nuevo: detección de URL `.pdf` en el texto (`CompaPage.pdfDe()`) → botón "Ver PDF" que abre el mismo visor. Los mensajes del usuario siguen en texto plano (no lo necesitan).
 
-## CP (ronda 16/10/2026, `feature/cp-ronda`) — app 2.53.0, backend/web ya en prod
+## CP (ronda 16/10/2026, `feature/cp-ronda`) — app 2.54.0, backend/web ya en prod
 
 > Todo el backend/web de PROMPT-100 (CP1-CP11) ya está **en prod** (SGC HANDOFF.md,
 > web 1.191.0) antes de empezar esta ronda — esta sección documenta solo el lado
-> app. Build + `test:canal` verdes en cada fase; **sin commitear/publicar** (OK
-> pendiente de Xaviel). Nota de numeración: esta ronda iba a ser 2.52.0 por prompt,
-> pero una sesión concurrente ya shippeó el import masivo de choferes/vehículos
-> (CSD-importar, no-CP) como 2.52.0 — esta ronda pasa a **2.53.0** para no chocar.
+> app. Build + `test:canal` verdes en cada fase; commiteado y mergeado a `dev` con
+> OK explícito de Xaviel. Nota de numeración (dos saltos, no uno): esta ronda iba a
+> ser 2.52.0 por prompt, pero una sesión concurrente ya shippeó el import masivo de
+> choferes/vehículos (CSD-importar, no-CP) como 2.52.0 → esta ronda pasó a 2.53.0;
+> mientras esta sesión trabajaba, OTRA sesión concurrente le aplicó un fix al import
+> (fotos por cédula/placa) y bumpeó a **2.54.0** (2.53.0 ya estaba tomada) — el
+> release final es 2.54.0 e incluye ambas cosas.
 
 - **CP6 (Por despachar):** `requisiciones_por_despachar()` ya traía `codigo`/
   `urgencia`/`fecha_necesidad` (padre, aditivo) — la tarjeta del app no los pintaba.
