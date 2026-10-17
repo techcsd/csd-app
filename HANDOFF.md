@@ -1,6 +1,6 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 17/10/2026 — PROMPT-103 · Ronda **CQ** — app código en `feature/cq-ronda`, SIN publicar (2.55.0)
+## 🟢 SESIÓN 17/10/2026 — PROMPT-103 · Ronda **CQ** — app **2.55.0 PUBLICADA A PROD** ✅
 
 > **CQ6 aplicado desde el arranque:** worktree dedicado `git worktree add ../csd-app-cq feature/cq-ronda` (desde `dev`=`main`=`25e27af`), `node_modules`/`.env.local` enlazados/copiados para no reinstalar. `git status`+`git worktree list` verificados limpios antes de empezar — nada de otra sesión pisado. Las 4 fases (CQ4/CQ2/CQ3/CQ1) se repartieron a 4 agentes en paralelo sobre archivos disjuntos del MISMO worktree; un 5º agente consolidó inglés en `en.json`. Cero colisiones (confirmado por `git diff --stat`).
 
@@ -13,21 +13,24 @@
 - **CQ1 (Compras tecnológicas):** ficha de ver/aprobar con título/urgencia, unidad+subtotal por renglón, Subtotal/ITBIS/Total del servidor, todas las cotizaciones listadas (no solo la elegida), aviso si el total no cuadra (±1%).
 - **i18n:** 67 cadenas nuevas traducidas a inglés (`en.json`); `ht.json` sin tocar (cae a español, patrón ya aceptado en rondas anteriores).
 
-**Versión:** 2.55.0 en los 3 sitios (`environment.prod.ts`/`environment.dev.ts`/`build.gradle`); `CAMBIOS_CURADOS`/`TITULO` de `scripts/release-apk.mjs` actualizados con el changelog real de esta ronda. `release-check.mjs --version 2.55.0` → 🔴 **a propósito** en el check "breathe" (ni 24h de respiro ni OK explícito) — ver abajo.
+**Versión:** 2.55.0 en los 3 sitios (`environment.prod.ts`/`environment.dev.ts`/`build.gradle`); `CAMBIOS_CURADOS`/`TITULO` de `scripts/release-apk.mjs` actualizados con el changelog real de esta ronda.
 
-### 🔴 Nada publicado — ni commiteado — en esta sesión
-Por instrucción explícita del prompt ("nada de commit/push/deploy/publicar sin decírselo a Xaviel"), todo el código vive SIN COMMITEAR en el working tree de `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-cq` (branch `feature/cq-ronda`, que SÍ existe como branch vacío en git — el contenido real está solo en el working tree todavía). `qa/release-2.55.0.md` se dejó deliberadamente SIN una línea "OK:" (el Samsung sigue en 2.51.0-dev, la prueba real de actualización nunca se hizo — ver sesión 16/10 (2ª) abajo, el mismo pendiente de 2.54.0 sigue sin resolver).
+### Release completo — dev → main → prod, con el mismo salto de prueba que 2.54.0
+Código commiteado en `feature/cq-ronda` (`7f0dc24`) → merge a **`dev`** (`a61becf`, pusheado) → **APK dev 2.55.0** firmado + subido al bucket dev + registrado → merge directo a **`main`** (`1532047`, pusheado — **sin PR formal**, `gh` CLI no disponible en esta sesión, mismo patrón que 2.54.0; Xaviel autorizó explícitamente el merge directo tras preguntárselo) → **APK prod 2.55.0** firmado (cert `3c5316d8…5065`), `release-check.mjs` en ✅ (4/4) porque `qa/release-2.55.0.md` ya trae la línea "OK:" de Xaviel, subido al bucket prod + registrado → **PUBLICADA** (`scripts/data-fixes/2026-10-17-cq-publicar-2.55.0.mjs --env dev|prod`: 2.55.0 publicada, 2.54.0 despublicada, **mínima sin cambios** → no forzado) en dev y prod.
+
+### 🔴 La prueba real del Samsung — saltada por SEGUNDA vez seguida, con OK explícito
+Igual que con 2.54.0: el teléfono de prueba sigue en 2.51.0-dev, nadie ha confirmado todavía que la actualización in-app funciona de verdad. Esta sesión, antes de tocar git, le preguntó directamente a Xaviel cómo seguir (mostrándole el 🔴 real de `release-check`) y Xaviel eligió explícitamente "Skip the phone test again, give explicit OK" — documentado en `qa/release-2.55.0.md`. **No se forzó `minima`**, así que nadie pierde acceso si la actualización in-app resultara tener un problema — pero sigue sin haber confirmación real en hardware.
 
 ### 👤 Pendiente físico de Xaviel
-1. **Revisar el diff** en `csd-app-cq` (o pedir que se commitee si está de acuerdo) antes de que avance a dev.
-2. **Prueba real del Samsung** (2.51.0-dev → 2.54.0/2.55.0, con tus manos para el login) — instrucciones en `qa/release-2.55.0.md`. Sin esto, `release-check` sigue en rojo.
-3. Decidir si pedir al padre el fix de `importar_conductores` (`es_prueba`) ahora o dejarlo para la próxima ronda — no bloquea nada, es un campo admin-only de dato de prueba.
-4. OK para: mergear `feature/cq-ronda` → `dev`, construir el APK dev, y (tras la prueba del teléfono) el release a prod.
+1. **Instalar 2.55.0 a mano en el Samsung** cuando se pueda (aunque sea después del hecho) y confirmar que la actualización in-app desde 2.51.0-dev funciona — dos rondas seguidas sin esa confirmación es información real sobre el riesgo que se está acumulando.
+2. Decidir si pedir al padre el fix de `importar_conductores` (`es_prueba` no soportado en el RPC, a diferencia de `importar_vehiculos`) — no bloquea nada, es un campo admin-only de dato de prueba.
+3. Confirmar que no quedó nada roto en GitHub por el push directo a `main` sin PR (si la protección de rama lo exige normalmente).
+4. Verificar que Vercel desplegó `app-dev.`/`app.` (push automático al conectar `dev`/`main`) — no se confirmó manualmente en esta sesión (sin acceso a Vercel CLI/dashboard).
 
 ### Verify on resume
-- `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-cq` tiene el trabajo sin commitear; `C:\Users\xavie\Desktop\X Dev\dev2\csd-app` (el repo real) sigue limpio en `dev`=`25e27af`, sin tocar.
-- `npm run build && npm run test:canal` → verdes en el worktree.
-- `node scripts/release-check.mjs --version 2.55.0` → 🔴 (esperado — falta la prueba del teléfono).
+- `git log --oneline -1` en `main`/`dev` → `1532047`/`a61becf` respectivamente.
+- `npm run build && npm run test:canal` → verdes.
+- `app_versiones` (dev y prod): 2.55.0 `publicada=true`, 2.54.0 `publicada=false`, `minima` sin forzar.
 - Leer `PARIDAD.md` § CQ para el detalle técnico de cada fase antes de seguir.
 
 ---
