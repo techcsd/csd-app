@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 91%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 92%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -11,7 +11,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 |  | 2 | 21 | 0% | 0% |  |
 | pages/actualizar | 28 | 0 | 93% | 11% |  |
 | pages/admin | 12 | 0 | 100% | 0% |  |
-| pages/admin/auditoria | 22 | 0 | 100% | 5% |  |
+| pages/admin/auditoria | 37 | 0 | 100% | 5% |  |
 | pages/admin/catalogos | 5 | 0 | 100% | 0% |  |
 | pages/admin/conteos | 4 | 0 | 100% | 0% |  |
 | pages/admin/parametros | 6 | 0 | 100% | 0% |  |
@@ -46,7 +46,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/compras/solicitud-compra | 25 | 1 | 96% | 0% |  |
 | pages/documentos | 6 | 0 | 50% | 0% |  |
 | pages/documentos/generar | 15 | 0 | 33% | 7% |  |
-| pages/documentos/historial | 7 | 0 | 29% | 0% |  |
+| pages/documentos/historial | 7 | 0 | 43% | 0% |  |
 | pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
@@ -74,8 +74,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/retiros | 6 | 0 | 100% | 0% |  |
 | pages/inventario/salida | 34 | 0 | 100% | 0% |  |
 | pages/legal | 5 | 0 | 20% | 0% |  |
-| pages/legal/contratos | 30 | 0 | 30% | 0% |  |
-| pages/legal/expedientes | 31 | 0 | 32% | 0% |  |
+| pages/legal/contratos | 30 | 0 | 33% | 0% |  |
+| pages/legal/expedientes | 31 | 0 | 39% | 0% |  |
 | pages/mensajes | 10 | 0 | 100% | 0% |  |
 | pages/mensajes/grupo-info | 24 | 0 | 100% | 4% |  |
 | pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 7% |  |
@@ -121,12 +121,13 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 11 | 12 | 39% | 26% |  |
+| pages/tecnologia | 11 | 12 | 43% | 26% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
-| pages/tecnologia/compras-tec | 23 | 0 | 26% | 0% |  |
-| pages/tecnologia/dev-notes | 0 | 5 | 0% | 0% |  |
+| pages/tecnologia/compras-tec | 29 | 0 | 100% | 0% |  |
+| pages/tecnologia/dev-notes | 0 | 7 | 0% | 0% |  |
+| pages/tecnologia/dev-notes/editor | 8 | 0 | 100% | 0% |  |
 | pages/transporte | 16 | 0 | 100% | 6% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
 | pages/transporte/apoyo-transporte | 53 | 0 | 91% | 0% |  |
@@ -156,7 +157,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 3% |  |
 | pages/transporte/generar-conduce | 104 | 1 | 97% | 1% |  |
-| pages/transporte/importar | 25 | 0 | 96% | 0% |  |
+| pages/transporte/importar | 34 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimiento | 43 | 1 | 91% | 2% |  |
 | pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 5% |  |
@@ -178,7 +179,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/rutas | 63 | 0 | 100% | 2% |  |
 | pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
 | pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
-| pages/transporte/solicitud-movimiento | 33 | 0 | 73% | 0% |  |
+| pages/transporte/solicitud-movimiento | 33 | 0 | 76% | 0% |  |
 | pages/transporte/trabajos-transporte | 35 | 0 | 97% | 9% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |

@@ -1,0 +1,81 @@
+<div class="screen dneditor">
+  <header class="dneditor__header">
+    <button type="button" class="dneditor__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="dneditor__guardado">
+      @if (guardando()) {
+        {{ 'Guardando…' | t }}
+      } @else if (guardadoTexto()) {
+        ✓ {{ guardadoTexto() }}
+      }
+    </span>
+    <div class="dneditor__actions">
+      @if (puedeEditar()) {
+        <button type="button" class="dneditor__act" [class.dneditor__act--on]="pinned()" (click)="togglePin()" aria-label="Fijar">📌</button><!-- tropes-allow: 📌 = mismo icono de fijar que nota-editor.html -->
+      }
+      <button type="button" class="dneditor__act" (click)="mandarARonda()" aria-label="Mandar a ronda" title="Mandar a ronda">📋</button><!-- tropes-allow: 📋 = icono de "Mandar a ronda" (acción nueva de CQ2) -->
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="screen__body"><app-skeleton [rows]="4" /></div>
+  } @else {
+    <div class="screen__body">
+      @if (!puedeEditar()) {
+        <p class="dneditor__ro">👁️ {{ 'Solo lectura — te la compartieron sin permiso de editar.' | t }}</p><!-- tropes-allow: 👁️ = mismo icono de solo-lectura que nota-editor.html -->
+      }
+
+      <input
+        class="dneditor__titulo"
+        type="text"
+        [ngModel]="titulo()"
+        (ngModelChange)="onTitulo($event)"
+        [readonly]="!puedeEditar()"
+        [placeholder]="'Título' | t"
+        aria-label="Título de la nota"
+      />
+
+      @if (enviadaARondaAt()) {
+        <p class="dneditor__hint">📋 {{ 'Enviada a ronda' | t }} · {{ fechaHora(enviadaARondaAt()) }}</p><!-- tropes-allow: 📋 = icono de "Mandar a ronda" (acción nueva de CQ2) -->
+      }
+
+      @if (puedeEditar()) {
+        <div class="dneditor__modebar">
+          <div class="dneditor__toolbar" role="toolbar" aria-label="Formato">
+            @if (!modoSimple()) {
+              <button type="button" class="dneditor__tool" (click)="cmdBold()" aria-label="Negrita"><b>B</b></button>
+              <button type="button" class="dneditor__tool" (click)="cmdItalic()" aria-label="Cursiva"><i>I</i></button>
+              <button type="button" class="dneditor__tool" (click)="cmdTituloH3()" aria-label="Título">{{ 'Título' | t }}</button>
+              <button type="button" class="dneditor__tool" (click)="cmdVineta()" aria-label="Lista con viñetas">• {{ 'Lista' | t }}</button>
+              <button type="button" class="dneditor__tool" (click)="cmdNumerada()" aria-label="Lista numerada">1. {{ 'Lista' | t }}</button>
+            }
+          </div>
+          <label class="dneditor__simple">
+            <input type="checkbox" [checked]="modoSimple()" (change)="toggleModoSimple()" />
+            {{ 'Texto simple' | t }}
+          </label>
+        </div>
+      }
+
+      @if (modoSimple()) {
+        <textarea
+          class="dneditor__textarea"
+          [ngModel]="contenido()"
+          (ngModelChange)="onSimpleInput($event)"
+          [readonly]="!puedeEditar()"
+          [placeholder]="'Escribe en Markdown…' | t"
+          aria-label="Contenido en Markdown"
+          spellcheck="false"
+        ></textarea>
+      } @else {
+        <div
+          #bodyRef
+          class="dneditor__contenido"
+          [attr.contenteditable]="puedeEditar()"
+          (input)="onBodyInput(bodyRef)"
+          [attr.data-placeholder]="'Escribe aquí…' | t"
+          aria-label="Contenido de la nota"
+        ></div>
+      }
+    </div>
+  }
+</div>

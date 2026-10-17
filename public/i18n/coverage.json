@@ -1,5 +1,5 @@
 {
-  "en": 91,
+  "en": 92,
   "ht": 3,
   "alcance": true,
   "byScreen": {
@@ -22,7 +22,7 @@
       "ht": 0
     },
     "pages/admin/auditoria": {
-      "conT": 22,
+      "conT": 37,
       "sinT": 0,
       "en": 100,
       "ht": 5
@@ -240,7 +240,7 @@
     "pages/documentos/historial": {
       "conT": 7,
       "sinT": 0,
-      "en": 29,
+      "en": 43,
       "ht": 0
     },
     "pages/documentos/plantillas": {
@@ -408,13 +408,13 @@
     "pages/legal/contratos": {
       "conT": 30,
       "sinT": 0,
-      "en": 30,
+      "en": 33,
       "ht": 0
     },
     "pages/legal/expedientes": {
       "conT": 31,
       "sinT": 0,
-      "en": 32,
+      "en": 39,
       "ht": 0
     },
     "pages/mensajes": {
@@ -690,7 +690,7 @@
     "pages/tecnologia": {
       "conT": 11,
       "sinT": 12,
-      "en": 39,
+      "en": 43,
       "ht": 26
     },
     "pages/tecnologia-inventario": {
@@ -712,15 +712,21 @@
       "ht": 0
     },
     "pages/tecnologia/compras-tec": {
-      "conT": 23,
+      "conT": 29,
       "sinT": 0,
-      "en": 26,
+      "en": 100,
       "ht": 0
     },
     "pages/tecnologia/dev-notes": {
       "conT": 0,
-      "sinT": 5,
+      "sinT": 7,
       "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia/dev-notes/editor": {
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte": {
@@ -898,9 +904,9 @@
       "ht": 1
     },
     "pages/transporte/importar": {
-      "conT": 25,
+      "conT": 34,
       "sinT": 0,
-      "en": 96,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
@@ -1032,7 +1038,7 @@
     "pages/transporte/solicitud-movimiento": {
       "conT": 33,
       "sinT": 0,
-      "en": 73,
+      "en": 76,
       "ht": 0
     },
     "pages/transporte/trabajos-transporte": {

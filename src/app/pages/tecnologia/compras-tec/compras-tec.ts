@@ -82,12 +82,46 @@ export class ComprasTecPage {
   cotizacionPrincipal(d: CompraTecDetalle) {
     return d.adjuntos.find((a) => a.elegida) ?? d.adjuntos[0] ?? null;
   }
+  /** El resto de las cotizaciones comparadas (todas menos la principal) — para que el aprobador las vea también. */
+  otrasCotizaciones(d: CompraTecDetalle) {
+    const principal = this.cotizacionPrincipal(d);
+    return d.adjuntos.filter((a) => a !== principal);
+  }
   esPdf(nombre: string): boolean {
     return /\.pdf$/i.test(nombre);
   }
 
-  total(d: CompraTecDetalle): number {
+  /** Suma client-side de los renglones (cantidad × precio unitario) — fallback para compras legacy sin `total` server. */
+  private totalItems(d: CompraTecDetalle): number {
     return d.items.reduce((acc, it) => acc + (it.precio_unitario ?? 0) * (it.cantidad ?? 0), 0);
+  }
+
+  /** Total autoritativo: el calculado y guardado server-side; si es null (renglón legacy), se suman los artículos. */
+  total(d: CompraTecDetalle): number {
+    return d.total ?? this.totalItems(d);
+  }
+
+  /** Subtotal de un renglón (cantidad × precio unitario). */
+  subtotalItem(it: CompraTecDetalle['items'][number]): number {
+    return it.cantidad * (it.precio_unitario ?? 0);
+  }
+
+  /** `true` cuando hay totales server-side (subtotal + ITBIS) para mostrar el desglose de 3 líneas. */
+  tieneDesgloseServidor(d: CompraTecDetalle): boolean {
+    return d.subtotal != null && d.itbis != null;
+  }
+
+  /**
+   * El monto de la cotización elegida y el total de la compra no cuadran
+   * (>1% de diferencia) — probablemente un error de captura o un artículo
+   * que falta agregar.
+   */
+  totalNoCuadra(d: CompraTecDetalle): boolean {
+    const elegida = d.adjuntos.find((a) => a.elegida);
+    const monto = elegida?.monto;
+    const total = this.total(d);
+    if (monto == null || !total) return false;
+    return Math.abs(monto - total) / total > 0.01;
   }
 
   cerrarDetalle(): void {

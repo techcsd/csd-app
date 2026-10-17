@@ -5,11 +5,109 @@
   </header>
 
   <div class="screen__body">
-    <!-- P13 — toggle Panel / Filas (paridad con la web) -->
+    <!-- CQ3 — toggle Actividad (default) / Resumen / Filas -->
     <div class="aud__toggle">
-      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'panel'" (click)="cambiarVista('panel')">📊 {{ 'Panel' | t }}</button>
+      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'actividad'" (click)="cambiarVista('actividad')">🕒 {{ 'Actividad' | t }}</button><!-- tropes-allow: mismo patrón de ícono-emoji que las pestañas hermanas (📊/📋) -->
+      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'panel'" (click)="cambiarVista('panel')">📊 {{ 'Resumen' | t }}</button>
       <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'filas'" (click)="cambiarVista('filas')">📋 {{ 'Filas' | t }}</button>
     </div>
+
+    <!-- ══════════ ACTIVIDAD (feed humano, CQ3) ══════════ -->
+    @if (vista() === 'actividad') {
+      <div class="aud__search">
+        <input
+          type="search"
+          class="aud__search-input"
+          [value]="actTexto()"
+          (input)="onActTexto($any($event.target).value)"
+          [placeholder]="'Buscar por código, placa, cédula, persona…' | t"
+          autocomplete="off" />
+      </div>
+
+      <div class="aud__periodos">
+        @for (p of actPeriodos; track p.dias) {
+          <button type="button" class="aud__chip" appTapScale [class.aud__chip--on]="actPeriodoDias() === p.dias" (click)="setActPeriodo(p.dias)">
+            {{ p.label | t }}
+          </button>
+        }
+      </div>
+
+      <div class="aud__chips">
+        <button type="button" class="aud__chip" appTapScale [class.aud__chip--on]="actAccion() === ''" (click)="setActAccion('')">{{ 'Todo' | t }}</button>
+        <button type="button" class="aud__chip" appTapScale [class.aud__chip--on]="actAccion() === 'INSERT'" (click)="setActAccion('INSERT')">{{ 'Creó' | t }}</button>
+        <button type="button" class="aud__chip" appTapScale [class.aud__chip--on]="actAccion() === 'UPDATE'" (click)="setActAccion('UPDATE')">{{ 'Modificó' | t }}</button>
+        <button type="button" class="aud__chip" appTapScale [class.aud__chip--on]="actAccion() === 'DELETE'" (click)="setActAccion('DELETE')">{{ 'Eliminó' | t }}</button>
+      </div>
+
+      <!-- Filtro de persona -->
+      @if (actPersonaSel(); as p) {
+        <div class="aud__persona-sel">
+          <span>👤 {{ p.nombre }}</span><!-- tropes-allow: mismo patrón que ayudante-picker (👷) -->
+          <button type="button" class="aud__persona-x" (click)="limpiarActPersona()" [attr.aria-label]="'Quitar filtro de persona' | t">✕</button>
+        </div>
+      } @else {
+        <div class="aud__persona-search">
+          <input
+            type="search"
+            class="aud__persona-input"
+            [value]="actPersonaTerm()"
+            (input)="onActPersonaTerm($any($event.target).value)"
+            [placeholder]="'Filtrar por persona…' | t"
+            autocomplete="off" />
+          @if (actPersonaBuscando()) {
+            <p class="adm-sub__muted">{{ 'Buscando…' | t }}</p>
+          } @else if (actPersonaResultados().length) {
+            <div class="aud__persona-results">
+              @for (u of actPersonaResultados(); track u.id) {
+                <button type="button" class="aud__persona-result" (click)="elegirActPersona(u)">{{ u.nombre }}</button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (actError()) {
+        <p class="adm-sub__muted">{{ actError() }}</p>
+      }
+
+      @if (actLoading()) {
+        <app-skeleton [rows]="6" />
+      } @else {
+        <div appStagger style="display:contents">
+          @for (f of actFilas(); track f.id; let i = $index) {
+            @if (actEsNuevoDia(i)) {
+              <div class="aud__day-sep">{{ actEtiquetaDia(f.creado_en) }}</div>
+            }
+            <button type="button" class="aud__feed-item" appTapScale (click)="abrirDetalleActividad(f)">
+              <div class="aud__feed-top">
+                <span class="aud__feed-hora">{{ fmtHora(f.creado_en) }}</span>
+                @if (f.origen) {
+                  <span class="aud__feed-origen">{{ f.origen }}</span>
+                }
+              </div>
+              <p class="aud__feed-frase">
+                @if (fraseParts(f); as fp) {
+                  {{ fp.pre }}<strong>{{ fp.codigo }}</strong>{{ fp.post }}
+                } @else {
+                  {{ f.frase_resumen }}
+                }
+              </p>
+              @if (f.resumen_cambio) {
+                <p class="aud__feed-cambio">{{ f.resumen_cambio }}</p>
+              }
+            </button>
+          } @empty {
+            <p class="adm-sub__muted">{{ 'No hay actividad con estos filtros.' | t }}</p>
+          }
+        </div>
+
+        @if (actHayMas()) {
+          <button type="button" class="aud__more" [disabled]="actLoadingMore()" (click)="actLoadMore()">
+            {{ (actLoadingMore() ? 'Cargando…' : 'Cargar más') | t }}
+          </button>
+        }
+      }
+    }
 
     <!-- ══════════ PANEL analítico ══════════ -->
     @if (vista() === 'panel') {
@@ -167,4 +265,99 @@
     }
     }
   </div>
+
+  <!-- CQ3 — detalle de una fila de Actividad (bottom sheet) -->
+  <app-bottom-sheet [open]="actSheetOpen()" [titulo]="'Detalle' | t" (closed)="cerrarDetalleActividad()">
+    @if (actSheetFila(); as f) {
+      <div class="aud__sheet">
+        <p class="aud__sheet-frase">
+          @if (fraseParts(f); as fp) {
+            {{ fp.pre }}<strong>{{ fp.codigo }}</strong>{{ fp.post }}
+          } @else {
+            {{ f.frase_resumen }}
+          }
+        </p>
+
+        <div class="aud__sheet-row">
+          <span class="aud__sheet-lbl">{{ 'Quién' | t }}</span>
+          <span>
+            {{ f.actor_nombre ?? ('Sistema' | t) }}
+            @if (f.actor_roles?.length) {
+              <span class="aud__sheet-muted"> · {{ f.actor_roles!.join(', ') }}</span>
+            }
+          </span>
+        </div>
+        @if (f.impersonador_nombre) {
+          <div class="aud__sheet-row">
+            <span class="aud__sheet-lbl">{{ 'Como' | t }}</span>
+            <span>{{ f.impersonador_nombre }} → {{ f.actor_nombre ?? ('Sistema' | t) }}</span>
+          </div>
+        }
+        <div class="aud__sheet-row">
+          <span class="aud__sheet-lbl">{{ 'Cuándo' | t }}</span>
+          <span>{{ fmtFecha(f.creado_en) }}</span>
+        </div>
+        <div class="aud__sheet-row">
+          <span class="aud__sheet-lbl">{{ 'Desde dónde' | t }}</span>
+          <span>{{ f.origen ?? '—' }}</span>
+        </div>
+        <div class="aud__sheet-row">
+          <span class="aud__sheet-lbl">{{ 'Registro' | t }}</span>
+          <span>{{ f.codigo ?? (tablaLabel(f.tabla) + ' · ' + f.registro_id) }}</span>
+        </div>
+
+        @if (f.accion === 'UPDATE' && cambiosList(f).length) {
+          <h3 class="aud__sheet-title">{{ 'Qué cambió' | t }}</h3>
+          @for (c of cambiosList(f); track c.campo) {
+            <div class="aud__change">
+              <span class="aud__change-campo">{{ c.campo }}</span>
+              <span class="aud__change-vals">
+                <span class="aud__antes">{{ c.antes }}</span>
+                <span class="aud__arrow">→</span>
+                <span class="aud__despues">{{ c.despues }}</span>
+              </span>
+            </div>
+          }
+        } @else if (datosList(f).length) {
+          <h3 class="aud__sheet-title">{{ 'Datos técnicos' | t }}</h3>
+          @for (d of datosList(f); track d.campo) {
+            <div class="aud__change">
+              <span class="aud__change-campo">{{ d.campo }}</span>
+              <span class="aud__despues">{{ d.valor }}</span>
+            </div>
+          }
+        }
+
+        <button type="button" class="aud__sheet-historia-btn" (click)="verHistoriaRegistro()">
+          {{ 'Ver historia completa de este registro' | t }}
+        </button>
+
+        @if (actHistoriaError()) {
+          <p class="adm-sub__muted">{{ actHistoriaError() }}</p>
+        }
+        @if (actHistoriaLoading()) {
+          <app-skeleton [rows]="3" />
+        }
+        @if (actHistoria().length) {
+          <div class="aud__sheet-historia">
+            @for (h of actHistoria(); track h.id) {
+              <div class="aud__historia-item">
+                <span class="aud__feed-hora">{{ fmtFecha(h.creado_en) }}</span>
+                <p class="aud__feed-frase">
+                  @if (fraseParts(h); as hp) {
+                    {{ hp.pre }}<strong>{{ hp.codigo }}</strong>{{ hp.post }}
+                  } @else {
+                    {{ h.frase_resumen }}
+                  }
+                </p>
+                @if (h.resumen_cambio) {
+                  <p class="aud__feed-cambio">{{ h.resumen_cambio }}</p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </app-bottom-sheet>
 </div>

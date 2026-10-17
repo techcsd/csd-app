@@ -971,11 +971,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
   {
-    // BP5 — Dev notes (Tecnología): solo lectura. Gate por rol es_tecnologia()
+    // BP5/CQ2 — Dev notes (Tecnología): lista + lector. Gate por rol es_desarrollador()
     // dentro del componente (la RLS de sgc.notas ambito='dev' lo respalda).
     path: 'tecnologia/dev-notes',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/dev-notes/dev-notes').then((m) => m.DevNotesPage),
+  },
+  {
+    // CQ2 — Dev notes escribible: nota nueva. Mismo gate que la lista (dentro del
+    // componente); va ANTES de ':id' para que 'nueva' no se interprete como un id.
+    path: 'tecnologia/dev-notes/nueva',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/dev-notes/editor/dev-nota-editor').then((m) => m.DevNotaEditorPage),
+  },
+  {
+    // CQ2 — Dev notes escribible: editar una existente.
+    path: 'tecnologia/dev-notes/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/dev-notes/editor/dev-nota-editor').then((m) => m.DevNotaEditorPage),
   },
   {
     // CO8 — Compras tecnológicas por aprobar (solo el aprobador/admin; RLS acota la
