@@ -46,28 +46,47 @@
         icon="🧑‍💻"
         title="Sin notas"
         [message]="online ? 'No hay notas técnicas para ver aquí.' : 'Conéctate para ver tus notas técnicas.'"
+        [ctaLabel]="tab() === 'mias' && online ? 'Nota nueva' : ''"
+        (action)="nuevaNota()"
       />
     } @else {
-      <ul class="dnotes__list" appStagger>
-        @for (n of lista(); track n.id) {
-          <li class="dnotes__item" appTapScale (click)="abrir(n)">
-            <div class="dnotes__item-top">
-              @if (n.pinned) { <span class="dnotes__pin" aria-label="Fijada">📌</span> }
-              <span class="dnotes__item-title">{{ n.titulo || 'Sin título' }}</span>
-            </div>
-            @if (n.tags?.length) {
-              <div class="dnotes__item-tags">
-                @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
+      @for (g of grupos(); track g.label) {
+        <h2 class="dnotes__grupo">{{ g.label }}</h2>
+        <ul class="dnotes__list" appStagger>
+          @for (n of g.notas; track n.id) {
+            <li class="dnotes__item" appTapScale (click)="abrir(n)">
+              <div class="dnotes__item-top">
+                @if (n.pinned) { <span class="dnotes__pin" aria-label="Fijada">📌</span> }
+                <span class="dnotes__item-title">{{ n.titulo || 'Sin título' }}</span>
+                @if (n.es_mia && online) {
+                  <button
+                    type="button"
+                    class="dnotes__item-ronda"
+                    (click)="mandarARonda(n, $event)"
+                    aria-label="Mandar a ronda"
+                    title="Mandar a ronda"
+                  >📋</button><!-- tropes-allow: 📋 = mismo icono de "Mandar a ronda" que el pie del lector -->
+                }
               </div>
-            }
-            <span class="dnotes__item-fecha">{{ fechaHora(n.updated_at) }}</span>
-          </li>
-        }
-      </ul>
+              @if (n.tags?.length) {
+                <div class="dnotes__item-tags">
+                  @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
+                </div>
+              }
+              <span class="dnotes__item-fecha">{{ fechaHora(n.updated_at) }}</span>
+            </li>
+          }
+        </ul>
+      }
     }
   </div>
 
-  <!-- Lector de una nota (solo lectura, Markdown) -->
+  <!-- CQ2 — CTA naranja: una sola acción destacada (solo en Mis notas, en línea). -->
+  @if (tab() === 'mias' && online && !abierta()) {
+    <button type="button" class="dnotes__fab" (click)="nuevaNota()" aria-label="Nota nueva">➕</button><!-- tropes-allow: ➕ = mismo FAB de "Nueva nota" que /notas -->
+  }
+
+  <!-- Lector de una nota (Markdown), con acceso rápido a editar/mandar a ronda -->
   @if (abierta(); as n) {
     <div class="dnotes__reader">
       <header class="dnotes__reader-head">
@@ -80,11 +99,18 @@
             @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
           </div>
         }
+        @if (n.enviada_a_ronda_at) {
+          <p class="dnotes__reader-hint">📋 Enviada a ronda · {{ fechaHora(n.enviada_a_ronda_at) }}</p><!-- tropes-allow: 📋 = mismo icono de "Mandar a ronda" del pie -->
+        }
         <app-markdown-view [source]="n.contenido" />
       </div>
       <footer class="dnotes__reader-foot">
-        <button type="button" class="btn-cta" (click)="editarEnWeb(n)">Editar en SGC web</button>
+        @if (n.es_mia) {
+          <button type="button" class="btn-ghost dnotes__reader-mini" (click)="mandarARonda(n)">📋 Mandar a ronda</button><!-- tropes-allow: 📋 = icono de "Mandar a ronda" (acción nueva de CQ2) -->
+        }
+        <button type="button" class="btn-cta" (click)="editar(n)">{{ n.permiso === 'editar' ? 'Editar' : 'Ver' }}</button>
       </footer>
+      <button type="button" class="dnotes__reader-web" (click)="abrirEnWeb(n)">Abrir en la web</button>
     </div>
   }
 </div>

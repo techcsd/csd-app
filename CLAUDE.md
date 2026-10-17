@@ -59,6 +59,22 @@ Gemelo del `release-check.mjs` del padre, adaptado: el hijo no aplica sus propia
 4. `main` protegida (PR obligatorio); Xaviel puede saltarla.
 - **HANDOFF**: cada sesión cierra con un bloque **"En dev / En prod"** (qué quedó en cada entorno).
 
+## Sesiones en paralelo (CQ6 — no negociable)
+**Una sesión de Claude Code = un worktree.** Nunca dos sesiones trabajando sobre el mismo
+directorio `dev2\csd-app` a la vez — pasó dos veces seguidas (rondas CP y CQ, 16-oct) y
+costó un `git checkout` chocado, un `CAMBIOS_CURADOS` pisado y un changelog incompleto.
+- **Al empezar cualquier sesión:** `git status` + `git worktree list` ANTES de tocar nada.
+  Si hay cambios sin commitear que no son tuyos (de otra sesión activa o recién cerrada sin
+  commitear), **para y avísale a Xaviel** — no los pises, no los descartes.
+- **Trabajo de una ronda nueva:** `git worktree add ../csd-app-<ronda> feature/<ronda>`
+  (desde `dev`), NO trabajar directo sobre `dev2\csd-app`. El worktree no copia
+  `node_modules` (gitignored) ni `.env.local` — enlázalo por *junction*
+  (`New-Item -ItemType Junction` en PowerShell, o `ln -s`/mklink) en vez de reinstalar, y
+  copia `.env.local` a mano (es local, no se versiona).
+- `CAMBIOS_CURADOS`/`TITULO` de `scripts/release-apk.mjs` se editan SOLO en el commit de
+  cierre de la ronda (justo antes del bump de versión) — nunca a mitad de camino, para que
+  no se pisen entre sesiones que corren a la vez.
+
 ## Regla 19 — nada escrito en prod fuera de archivos versionados (CD10, no negociable)
 **Toda escritura en prod —migración DDL o corrección de datos— vive en un archivo versionado antes de aplicarse: `sql/` (SGC) / `sql-para-sgc/` (app) o `scripts/data-fixes/` con fecha, y en el ledger del padre. Nada desde el scratchpad.** El hijo no aplica nada: deja el SQL fechado en `sql-para-sgc/` y lo aplica el PADRE (regla 18/AU1). Ningún `.rpc()`/`.from().update()` de service_role fuera de un script versionado y revisable cuenta como "aplicado"; una escritura en prod sin archivo es un incidente (origen de CD3: la realineación del 29-08 se corrió sin dejar archivo). Los comentarios que citan `sql/*.sql` deben apuntar a archivos que existen.
 

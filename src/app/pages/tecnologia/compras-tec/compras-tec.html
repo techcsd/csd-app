@@ -22,7 +22,12 @@
         @for (r of lista(); track r.id) {
           <button type="button" class="ctec__card" appTapScale (click)="abrir(r)">
             <div class="ctec__card-main">
-              <p class="ctec__card-notas">{{ r.notas || ('Compra tecnológica' | t) }}</p>
+              <p class="ctec__card-notas">
+                @if (r.urgencia === 'urgente') {
+                  <span class="ctec__chip-urgente">{{ 'Urgente' | t }}</span>
+                }
+                {{ r.titulo || r.notas || ('Compra tecnológica' | t) }}
+              </p>
               <span class="ctec__card-meta">
                 {{ r.solicitante_nombre || ('Alguien' | t) }}
                 @if (r.total) { · RD$ {{ r.total | number:'1.0-0' }} }
@@ -45,7 +50,12 @@
     <div class="ctec__overlay ctec__ficha" appFadeIn>
       <header class="ctec__ficha-header">
         <button type="button" class="ctec__back" [disabled]="decidiendo()" (click)="cerrarDetalle()" [attr.aria-label]="'Atrás' | t">←</button>
-        <h2 class="ctec__ficha-title">{{ d.notas || ('Compra tecnológica' | t) }}</h2>
+        <h2 class="ctec__ficha-title">
+          @if (d.urgencia === 'urgente') {
+            <span class="ctec__chip-urgente">{{ 'Urgente' | t }}</span>
+          }
+          {{ d.titulo || d.notas || ('Compra tecnológica' | t) }}
+        </h2>
       </header>
       <div class="ctec__ficha-body">
         @if (cotizacionPrincipal(d); as c) {
@@ -56,39 +66,85 @@
               <img class="ctec__preview-img" [src]="c.url" [alt]="c.nombre" />
             }
             <span class="ctec__preview-meta">
-              {{ c.nombre }}
+              ★ {{ c.nombre }}
               @if (c.proveedor) { · {{ c.proveedor }} }
               @if (c.monto) { · RD$ {{ c.monto | number:'1.0-0' }} }
             </span>
+            @if (c.lectura) {
+              <span class="ctec__lectura-badge">{{ 'Llenado por lectura automática' | t }}</span>
+            }
           </div>
         } @else {
           <app-empty-state [title]="'Sin cotización' | t" [message]="'Esta compra no tiene una cotización adjunta todavía.' | t" />
+        }
+
+        @if (otrasCotizaciones(d).length) {
+          <div class="ctec__otras">
+            <p class="ctec__otras-titulo">{{ 'Otras cotizaciones comparadas' | t }}</p>
+            @for (a of otrasCotizaciones(d); track a.id) {
+              <div class="ctec__otras-item">
+                <span class="ctec__otras-nombre">{{ a.nombre }}</span>
+                <span class="ctec__otras-meta">
+                  @if (a.proveedor) { {{ a.proveedor }} · }
+                  @if (a.monto) { RD$ {{ a.monto | number:'1.0-0' }} }
+                </span>
+                @if (a.lectura) {
+                  <span class="ctec__lectura-badge">{{ 'Llenado por lectura automática' | t }}</span>
+                }
+              </div>
+            }
+          </div>
         }
 
         @if (d.items.length) {
           <div class="ctec__renglones">
             <div class="ctec__renglon ctec__renglon--head">
               <span>{{ 'Artículo' | t }}</span>
+              <span>{{ 'Unidad' | t }}</span>
               <span>{{ 'Cant.' | t }}</span>
-              <span class="ctec__renglon-precio">{{ 'Precio' | t }}</span>
+              <span class="ctec__renglon-precio">{{ 'Subtotal' | t }}</span>
             </div>
             @for (it of d.items; track it.id) {
               <div class="ctec__renglon">
                 <span>{{ it.descripcion }}</span>
+                <span>{{ it.unidad || '—' }}</span>
                 <span>{{ it.cantidad }}</span>
                 <span class="ctec__renglon-precio">
-                  @if (it.precio_unitario) { RD$ {{ it.precio_unitario | number:'1.0-0' }} }
+                  @if (it.precio_unitario) { RD$ {{ subtotalItem(it) | number:'1.0-0' }} }
                 </span>
               </div>
             }
-            @if (total(d)) {
-              <div class="ctec__renglon ctec__renglon--total">
-                <span>{{ 'Total' | t }}</span>
-                <span></span>
-                <span class="ctec__renglon-precio">RD$ {{ total(d) | number:'1.0-0' }}</span>
-              </div>
-            }
           </div>
+
+          @if (tieneDesgloseServidor(d)) {
+            <div class="ctec__totales">
+              <div class="ctec__totales-linea">
+                <span>{{ 'Subtotal' | t }}</span>
+                <span>RD$ {{ d.subtotal | number:'1.0-0' }}</span>
+              </div>
+              <div class="ctec__totales-linea">
+                <span>{{ 'ITBIS (18%)' | t }}</span>
+                <span>RD$ {{ d.itbis | number:'1.0-0' }}</span>
+              </div>
+              <div class="ctec__totales-linea ctec__totales-linea--total">
+                <span>{{ 'Total' | t }}</span>
+                <span>RD$ {{ total(d) | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          } @else if (total(d)) {
+            <div class="ctec__totales">
+              <div class="ctec__totales-linea ctec__totales-linea--total">
+                <span>{{ 'Total' | t }}</span>
+                <span>RD$ {{ total(d) | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          }
+
+          @if (totalNoCuadra(d)) {
+            <div class="ctec__banner-warn">
+              <span class="ctec__banner-warn-txt">{{ 'El total de los artículos no cuadra con el de la cotización.' | t }}</span>
+            </div>
+          }
         }
 
         <div class="ctec__linea">

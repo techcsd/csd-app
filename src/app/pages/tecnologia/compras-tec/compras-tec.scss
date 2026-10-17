@@ -125,6 +125,64 @@
   color: var(--color-text-secondary);
 }
 
+.ctec__chip-urgente {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  margin-right: 6px;
+  border-radius: 999px;
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.ctec__lectura-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.ctec__otras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+}
+.ctec__otras-titulo {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.ctec__otras-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border);
+}
+.ctec__otras-item:first-of-type {
+  border-top: none;
+}
+.ctec__otras-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ctec__otras-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
 .ctec__renglones {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -132,7 +190,8 @@
 }
 .ctec__renglon {
   display: grid;
-  grid-template-columns: 1fr 44px 100px;
+  grid-template-columns: 1fr 56px 44px 90px;
+  gap: 6px;
   padding: 10px 12px;
   font-size: 14px;
   border-top: 1px solid var(--color-border);
@@ -152,6 +211,46 @@
 .ctec__renglon-precio {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.ctec__totales {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+}
+.ctec__totales-linea {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.ctec__totales-linea--total {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+// CQ1 — aviso cuando el total de los artículos no cuadra con la cotización elegida.
+.ctec__banner-warn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+}
+.ctec__banner-warn-txt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .ctec__linea {

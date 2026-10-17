@@ -38,15 +38,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-16';
+const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Reuniones, Compa compartido, Por despachar/Personal de obra + importar choferes y vehículos';
+const TITULO = 'Importar con fotos a la vista, Dev notes editable, Auditoría legible, Compras con ITBIS';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Reuniones', d: 'Nuevo módulo: tus reuniones (unirte, agenda, mis notas con dictado y foto de pizarra, acuerdos) y "Programar reunión" corto desde el teléfono.' },
-  { t: 'nuevo', m: 'Compa', d: 'Ya puedes compartir una conversación con Compa con un compañero (y ver lo que te comparten a ti), y Compa ahora manda varios archivos a la vez, no solo uno.' },
-  { t: 'nuevo', m: 'Flota', d: 'El jefe de flota y quien tenga el permiso ya puede importar choferes y vehículos de un solo golpe desde un Excel. Para las fotos: súbelas en un .zip nombrando cada una con la cédula o la placa, y se emparejan solas.' },
-  { t: 'mejora', m: 'Por despachar', d: 'Cada requisición ahora muestra su código y hace cuánto espera, con las más atrasadas arriba.' },
-  { t: 'mejora', m: 'Personal de obra', d: 'La lista muestra de un vistazo cuántos expedientes están completos y qué le falta a cada quien (carnet, seguro, contrato, foto).' },
+  { t: 'mejora', m: 'Importar', d: 'Importar choferes y vehículos ahora deja revisar cómo se emparejaron las fotos antes de subir, acepta el Excel y el .zip en una sola selección, avisa claro si el archivo no es la plantilla del SGC, y la plantilla ya pide todo lo que el formulario usa (VIN, kilometraje, seguro, matrícula, mantenimiento…). El resultado se ve en una pantalla aparte con lo que cambió en cada registro.' },
+  { t: 'nuevo', m: 'Dev notes', d: 'Ya se escribe desde el teléfono: pantalla completa, formato visible mientras escribes, guardado automático, y funciona sin conexión.' },
+  { t: 'mejora', m: 'Auditoría', d: 'Nueva pestaña Actividad: lo que hizo cada quien, en español y por día, con buscador y el detalle de qué cambió.' },
+  { t: 'mejora', m: 'Compras tecnológicas', d: 'La ficha ahora muestra unidad, subtotal, ITBIS y total de cada compra, todas las cotizaciones comparadas, y un aviso si el total no cuadra.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

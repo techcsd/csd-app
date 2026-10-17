@@ -6,7 +6,7 @@
     "start": "node scripts/gen-environment.mjs --ensure && ng serve",
     "env:dev": "node scripts/gen-environment.mjs --env dev",
     "env:prod": "node scripts/gen-environment.mjs --env prod",
-    "prebuild": "node scripts/gen-environment.mjs --ensure-canal && node scripts/verify-sin-ref-hardcodeado.mjs && node scripts/verify-tokens.mjs && node scripts/verify-no-ai-tropes.mjs && node scripts/verify-pickers.mjs && node scripts/i18n-coverage.mjs && node scripts/verify-i18n.mjs && node scripts/verify-dev-strings.mjs && node scripts/verify-envio-unico.mjs",
+    "prebuild": "node scripts/gen-environment.mjs --ensure-canal && node scripts/verify-sin-ref-hardcodeado.mjs && node scripts/verify-tokens.mjs && node scripts/verify-no-ai-tropes.mjs && node scripts/verify-pickers.mjs && node scripts/i18n-coverage.mjs && node scripts/verify-i18n.mjs && node scripts/verify-dev-strings.mjs && node scripts/verify-envio-unico.mjs && node scripts/verify-import-template-paridad.mjs",
     "build": "ng build",
     "test:canal": "node scripts/test/verificar-canal.test.mjs",
     "build:dev": "node scripts/build-env.mjs --env dev",

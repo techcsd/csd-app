@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { mimeForFilename } from '../util/zip-files';
+import { parseNumeroFlexible, type NumeroModo } from '../util/numero';
 
 /**
  * CSD-importar — import masivo de Choferes/Vehículos desde Excel (+ fotos vía .zip),
@@ -8,6 +9,10 @@ import { mimeForFilename } from '../util/zip-files';
  * web (`src/shared/services/importador.service.ts` en el repo padre) — sin UI de
  * mapeo de columnas. Llama los mismos RPCs que la web
  * (`sql/2026-10-16-importar-choferes-vehiculos-fotos.sql`, ya en sgc-dev).
+ *
+ * CQ4 — labels EXACTOS copiados de `importador.service.ts` (padre): la plantilla web
+ * usa `campo.label` tal cual como encabezado de columna, así que copiarlos al dedillo
+ * es lo que hace que re-subir esa plantilla automapee el 100% de las columnas.
  */
 
 export interface CampoImportacion {
@@ -49,6 +54,10 @@ export const ENTIDADES_IMPORTACION: EntidadImportacion[] = [
       { t: 'licencia_numero', label: 'N° de licencia' },
       { t: 'licencia_vencimiento', label: 'Vencimiento de licencia (AAAA-MM-DD)' },
       { t: 'tipo_vehiculo_autorizado', label: 'Vehículo autorizado (Liviano/Pesado/Ambos)' },
+      // CQ4-f — campos nuevos del formulario real (conductores.html), ya en el RPC.
+      { t: 'vehiculo_id', label: 'Vehículo asignado (placa)' },
+      { t: 'tags', label: 'Tags (separados por coma)' },
+      { t: 'activo', label: 'Activo (sí/no)' },
       { t: 'nota', label: 'Nota' },
     ],
     foto: {
@@ -70,6 +79,26 @@ export const ENTIDADES_IMPORTACION: EntidadImportacion[] = [
       { t: 'anio', label: 'Año (si no se indica, usa el año actual)' },
       { t: 'color', label: 'Color' },
       { t: 'tipo', label: 'Tipo' },
+      // CQ4-e — campos nuevos del formulario real (vehiculos.html), ya en el RPC.
+      { t: 'vin', label: 'VIN / Serial' },
+      { t: 'alias', label: 'Nombre / Alias' },
+      { t: 'estado', label: 'Estado' },
+      { t: 'uso', label: 'Uso (Obra/Oficina)' },
+      { t: 'medida_uso', label: 'Medida de uso (Km/Horas)' },
+      { t: 'kilometraje', label: 'Kilometraje / lectura actual' },
+      { t: 'capacidad_valor', label: 'Capacidad de carga (valor)' },
+      { t: 'capacidad_unidad', label: 'Unidad de capacidad' },
+      { t: 'numero_matricula', label: 'N° de matrícula' },
+      { t: 'vencimiento_matricula', label: 'Vencimiento de matrícula (AAAA-MM-DD)' },
+      { t: 'numero_seguro', label: 'N° de seguro (póliza)' },
+      { t: 'aseguradora', label: 'Compañía aseguradora' },
+      { t: 'vencimiento_seguro', label: 'Vencimiento de seguro (AAAA-MM-DD)' },
+      { t: 'km_ultimo_mantenimiento', label: 'Km/horas último mantenimiento' },
+      { t: 'intervalo_mantenimiento_km', label: 'Intervalo de mantenimiento (km)' },
+      { t: 'intervalo_mantenimiento_horas', label: 'Intervalo de mantenimiento (horas)' },
+      { t: 'rendimiento_esperado_km_gal', label: 'Rendimiento esperado (km/gal)' },
+      { t: 'notas', label: 'Notas' },
+      { t: 'es_prueba', label: 'Dato de prueba (sí/no)' },
     ],
     foto: {
       bucket: 'vehiculos',
@@ -89,11 +118,64 @@ function excelSerialToIso(serial: number): string | null {
   return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 }
 
+/** Celda de fecha → AAAA-MM-DD. Mismo criterio para los 3 campos de fecha: si Excel
+ *  "auto-formateó" la celda como fecha, llega como serial numérico en vez de texto. */
+function parseFechaCelda(raw: string): string {
+  if (/^\d+(\.\d+)?$/.test(raw) && Number(raw) >= 25000 && Number(raw) <= 60000) {
+    return excelSerialToIso(Number(raw)) ?? raw;
+  }
+  return raw;
+}
+
+/** Texto común (ES) → booleano. Cualquier otra cosa (no/false/0/vacío) → false. */
+function parseBooleano(raw: string): boolean {
+  const s = raw.trim().toLowerCase();
+  return ['si', 'sí', 'true', '1', 'yes', 'x'].includes(s);
+}
+
+const CAMPOS_FECHA = new Set(['licencia_vencimiento', 'vencimiento_matricula', 'vencimiento_seguro']);
+/** Lecturas/contadores — tolerantes a separador de miles (AW3 `parseNumeroFlexible`, modo 'monto'). */
+const CAMPOS_NUMERO_ENTERO = new Set([
+  'kilometraje',
+  'km_ultimo_mantenimiento',
+  'intervalo_mantenimiento_km',
+  'intervalo_mantenimiento_horas',
+]);
+/** Valores con decimales típicos (capacidad, rendimiento) — modo 'decimal'. */
+const CAMPOS_NUMERO_DECIMAL = new Set(['capacidad_valor', 'rendimiento_esperado_km_gal']);
+const CAMPOS_BOOLEANO = new Set(['es_prueba', 'activo']);
+
+export interface CambioCampo {
+  antes: unknown;
+  despues: unknown;
+}
+
+export interface FilaResultadoRpc {
+  i: number;
+  id: string;
+  accion?: 'creado' | 'actualizado';
+  cambios?: Record<string, CambioCampo>;
+}
+
 export interface ResultadoImportacion {
   nuevos: number;
   actualizados: number;
   errores: { i: number; motivo: string }[];
-  filas: { i: number; id: string }[];
+  filas: FilaResultadoRpc[];
+}
+
+/** CQ4 — a qué slot de foto pertenece un archivo del .zip de conductores. 'principal'
+ *  es la foto de cédula (única con columna real, `foto_path`); los otros dos solo se
+ *  detectan/etiquetan en la revisión — `sgc.conductores` todavía no tiene columnas
+ *  `licencia_frente_path`/`licencia_dorso_path` (verificado en sgc-dev), así que NUNCA
+ *  se suben, en esta versión. */
+export type SlotFotoConductor = 'principal' | 'licencia_frente' | 'licencia_dorso';
+
+export interface PreviewFotos {
+  /** Índice de fila 0-based (mismo índice que `filasRpc`) → foto emparejada por slot. */
+  porFila: Map<number, Partial<Record<SlotFotoConductor, string>>>;
+  /** Archivos del .zip que no emparejaron con ninguna fila (ningún slot). */
+  sinDueno: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -131,6 +213,19 @@ export class ImportacionService {
     return entidad.campos.filter((c) => c.requerido && !mapeo[c.t]);
   }
 
+  /** CQ4-a — fracción de campos de la entidad cuya columna SÍ se emparejó. Sirve para
+   *  distinguir "este archivo no es la plantilla" (match muy bajo) de "es la plantilla
+   *  pero le faltan una o dos columnas". */
+  tasaCoincidencia(entidad: EntidadImportacion, mapeo: Record<string, string>): number {
+    if (!entidad.campos.length) return 1;
+    return Object.keys(mapeo).length / entidad.campos.length;
+  }
+
+  /** Label legible de un campo (para el detalle de cambios del resultado). */
+  labelCampo(entidad: EntidadImportacion, t: string): string {
+    return entidad.campos.find((c) => c.t === t)?.label ?? t;
+  }
+
   /**
    * Construye las filas que espera el RPC. 1:1 con `rows` (NUNCA filtra ni reordena)
    * para que el índice 1-based que devuelve el RPC (`errores[].i` / `filas[].i`)
@@ -145,9 +240,14 @@ export class ImportacionService {
         if (!raw) continue;
         if (campo.t === 'anio') {
           out[campo.t] = Number(raw) || undefined;
-        } else if (campo.t === 'licencia_vencimiento' && /^\d+(\.\d+)?$/.test(raw) && Number(raw) >= 25000 && Number(raw) <= 60000) {
-          // Excel auto-formateó la celda como fecha → llega como serial numérico, no AAAA-MM-DD.
-          out[campo.t] = excelSerialToIso(Number(raw)) ?? raw;
+        } else if (CAMPOS_FECHA.has(campo.t)) {
+          out[campo.t] = parseFechaCelda(raw);
+        } else if (CAMPOS_NUMERO_ENTERO.has(campo.t) || CAMPOS_NUMERO_DECIMAL.has(campo.t)) {
+          const modo: NumeroModo = CAMPOS_NUMERO_DECIMAL.has(campo.t) ? 'decimal' : 'monto';
+          const n = parseNumeroFlexible(raw, modo);
+          if (n != null) out[campo.t] = n;
+        } else if (CAMPOS_BOOLEANO.has(campo.t)) {
+          out[campo.t] = parseBooleano(raw);
         } else {
           out[campo.t] = raw;
         }
@@ -208,10 +308,62 @@ export class ImportacionService {
   }
 
   /**
+   * CQ4 — preview de emparejamiento foto↔fila SIN subir nada (paso "Revisa y
+   * confirma"). Usa el MISMO `entidad.foto.normalizar` + comparación exacta de
+   * basename que `subirFotosImportadas` (abajo) para el slot 'principal', así que el
+   * preview nunca miente sobre lo que realmente se sube. Para conductores además
+   * reconoce los sufijos "-licencia-frente"/"-licencia-dorso" (solo para etiquetar en
+   * la revisión — ver nota en `SlotFotoConductor`).
+   */
+  previsualizarFotos(entidad: EntidadImportacion, filasRpc: Record<string, unknown>[], zip: Map<string, Uint8Array> | null): PreviewFotos {
+    const porFila = new Map<number, Partial<Record<SlotFotoConductor, string>>>();
+    if (!zip || !zip.size) return { porFila, sinDueno: [] };
+
+    const sufijos: { suf: string; slot: SlotFotoConductor }[] =
+      entidad.key === 'conductores'
+        ? [
+            { suf: '-licencia-frente', slot: 'licencia_frente' },
+            { suf: '-licencia-dorso', slot: 'licencia_dorso' },
+          ]
+        : [];
+
+    const clavesPorFila = filasRpc.map((f) => {
+      const raw = String(f[entidad.foto.campoClave] ?? '').trim();
+      return raw ? entidad.foto.normalizar(raw) : '';
+    });
+
+    const usados = new Set<string>();
+    for (const nombre of zip.keys()) {
+      const base = nombre.replace(/\.[^.]+$/, '');
+      let slot: SlotFotoConductor = 'principal';
+      let claveBase = base;
+      for (const s of sufijos) {
+        if (base.toLowerCase().endsWith(s.suf)) {
+          slot = s.slot;
+          claveBase = base.slice(0, base.length - s.suf.length);
+          break;
+        }
+      }
+      const clave = entidad.foto.normalizar(claveBase);
+      if (!clave) continue;
+      const fila = clavesPorFila.findIndex((c) => c === clave);
+      if (fila === -1) continue;
+      const entry = porFila.get(fila) ?? {};
+      if (entry[slot]) continue; // ya hay una foto para ese slot de esa fila
+      entry[slot] = nombre;
+      porFila.set(fila, entry);
+      usados.add(nombre);
+    }
+    const sinDueno = [...zip.keys()].filter((n) => !usados.has(n));
+    return { porFila, sinDueno };
+  }
+
+  /**
    * Empareja cada foto del .zip con su fila por el campo clave (cédula/placa, ya
    * normalizado igual que el servidor) — no hace falta una columna "archivo_foto" en
    * el Excel. Solo reporta como "sin usar" los archivos del .zip que NO encontraron
    * fila (típico: nombre mal escrito); que una fila no tenga foto es normal.
+   * Solo sube la foto 'principal' (cédula/placa) — ver `SlotFotoConductor`.
    */
   async subirFotosImportadas(
     entidad: EntidadImportacion,
@@ -243,6 +395,28 @@ export class ImportacionService {
     }
     const sinUsar = [...zip.keys()].filter((n) => !usados.has(n));
     return { subidas, sinUsar };
+  }
+
+  /** CQ4 — sube las fotos huérfanas que el usuario emparejó a mano en la revisión
+   *  ("¿de cuál es?"). `filaIndex` es 0-based (mismo índice que `filasRpc`). */
+  async subirFotosManual(
+    entidad: EntidadImportacion,
+    resultado: ResultadoImportacion,
+    asignaciones: { filaIndex: number; nombre: string; bytes: Uint8Array }[],
+  ): Promise<number> {
+    const idPorFila = new Map(resultado.filas.map((f) => [f.i, f.id]));
+    let subidas = 0;
+    for (const a of asignaciones) {
+      const id = idPorFila.get(a.filaIndex + 1);
+      if (!id) continue;
+      try {
+        await this.subirFoto(entidad, id, a.nombre, a.bytes, mimeForFilename(a.nombre));
+        subidas++;
+      } catch {
+        /* best-effort */
+      }
+    }
+    return subidas;
   }
 
   async registrarResultado(id: string, r: ResultadoImportacion): Promise<void> {

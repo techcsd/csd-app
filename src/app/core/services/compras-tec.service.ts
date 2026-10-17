@@ -23,7 +23,9 @@ export class ComprasTecService {
   async pendientesDeAprobar(): Promise<CompraTecRow[]> {
     const { data, error } = await this.supabase.client
       .from('solicitudes_compra')
-      .select('id, estado, notas, created_at, enviada_at, solicitante_id, aprobador_id')
+      .select(
+        'id, estado, titulo, urgencia, notas, created_at, enviada_at, solicitante_id, aprobador_id, itbis_incluido, subtotal, itbis, total',
+      )
       .eq('categoria', 'tecnologia')
       .eq('estado', 'esperando_aprobacion')
       .order('enviada_at', { ascending: true });
@@ -37,7 +39,7 @@ export class ComprasTecService {
     const { data, error } = await this.supabase.client
       .from('solicitudes_compra')
       .select(
-        'id, estado, notas, created_at, enviada_at, solicitante_id, aprobador_id, decidida_por, decidida_at, motivo_rechazo',
+        'id, estado, titulo, urgencia, notas, created_at, enviada_at, solicitante_id, aprobador_id, decidida_por, decidida_at, motivo_rechazo, itbis_incluido, subtotal, itbis, total',
       )
       .eq('id', id)
       .eq('categoria', 'tecnologia')
@@ -47,11 +49,11 @@ export class ComprasTecService {
     const [itemsRes, adjRes] = await Promise.all([
       this.supabase.client
         .from('solicitud_compra_items')
-        .select('id, descripcion, cantidad, proveedor_sugerido, precio_unitario')
+        .select('id, descripcion, cantidad, proveedor_sugerido, precio_unitario, unidad')
         .eq('solicitud_id', id),
       this.supabase.client
         .from('solicitud_compra_adjuntos')
-        .select('id, tipo, proveedor, monto, path, nombre, elegida, created_at')
+        .select('id, tipo, proveedor, monto, path, nombre, elegida, created_at, fecha, lectura, lectura_costo_usd')
         .eq('solicitud_id', id)
         .order('created_at', { ascending: true }),
     ]);
@@ -108,22 +110,28 @@ export class ComprasTecService {
     }
   }
 
+  /**
+   * Fallback client-side SOLO para renglones legacy (creados antes de que el
+   * servidor empezara a calcular y guardar `total`). Si ya viene de la BD, se
+   * respeta tal cual (es la fuente autoritativa).
+   */
   private async resolverTotales(rows: CompraTecRow[]): Promise<void> {
-    if (!rows.length) return;
+    const sinTotal = rows.filter((r) => r.total == null);
+    if (!sinTotal.length) return;
     try {
       const { data } = await this.supabase.client
         .from('solicitud_compra_items')
         .select('solicitud_id, cantidad, precio_unitario')
         .in(
           'solicitud_id',
-          rows.map((r) => r.id),
+          sinTotal.map((r) => r.id),
         );
       const totales = new Map<string, number>();
       for (const it of (data ?? []) as { solicitud_id: string; cantidad: number; precio_unitario: number | null }[]) {
         const t = (it.precio_unitario ?? 0) * (it.cantidad ?? 0);
         totales.set(it.solicitud_id, (totales.get(it.solicitud_id) ?? 0) + t);
       }
-      for (const r of rows) r.total = totales.get(r.id) ?? null;
+      for (const r of sinTotal) r.total = totales.get(r.id) ?? null;
     } catch {
       /* best-effort */
     }

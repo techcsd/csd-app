@@ -62,6 +62,54 @@ export interface AuditoriaResumen {
   acciones_comunes: { tabla: string; accion: string; n: number }[];
 }
 
+// ── CQ3 — pestaña "Actividad" (feed humano, RPC `auditoria_actividad`) ────────
+/** Una fila del feed humano de actividad (frase ya redactada por el servidor). */
+export interface AuditoriaActividadFila {
+  id: number;
+  tabla: string;
+  registro_id: string;
+  accion: 'INSERT' | 'UPDATE' | 'DELETE';
+  creado_en: string;
+  actor_id: string | null;
+  actor_nombre: string | null;
+  actor_roles: string[] | null;
+  impersonado_por: string | null;
+  impersonador_nombre: string | null;
+  /** p. ej. "app@2.55.0" / "web@1.193.0"; puede faltar en filas antiguas. */
+  origen: string | null;
+  /** Frase humana lista para pintar, p. ej. "Raykler Peña aprobó la requisición REQ-000091". */
+  frase_resumen: string;
+  /** Código legible del registro (REQ-000091, placa, cédula…), si aplica. */
+  codigo: string | null;
+  /** "Campo: antes → después · Campo2: antes → después", listo para pintar. */
+  resumen_cambio: string | null;
+  cambios: Record<string, { antes: unknown; despues: unknown }> | null;
+  datos_antes: Record<string, unknown> | null;
+  datos_despues: Record<string, unknown> | null;
+}
+
+export interface AuditoriaActividadFiltros {
+  persona?: string | null;
+  modulo?: string | null;
+  accion?: string | null;
+  desde?: string | null;
+  hasta?: string | null;
+  texto?: string | null;
+}
+
+export interface AuditoriaActividadResultado {
+  filas: AuditoriaActividadFila[];
+  cursor_siguiente: string | null;
+  hay_mas: boolean;
+}
+
+/** Usuario para el filtro "persona" del feed de Actividad (reusa `buscar_usuarios`). */
+export interface AuditoriaUsuario {
+  id: string;
+  nombre: string;
+  email: string | null;
+}
+
 // ── AL2 — Usuarios / Roles / Parámetros (Administración completo) ─────────────
 export type NivelPermiso = 'ver' | 'operar';
 export type PermisosMap = Record<string, NivelPermiso>;
@@ -449,6 +497,47 @@ export class AdminService {
     });
     if (error) throw new Error(error.message);
     return (data ?? {}) as AuditoriaResumen;
+  }
+
+  /**
+   * CQ3 — feed humano de actividad (`auditoria_actividad`): frases ya redactadas
+   * ("Raykler Peña aprobó la requisición REQ-000091") + paginación por cursor
+   * opaco (NO offset — pasar siempre el `cursor_siguiente` de la respuesta previa,
+   * `null` para la primera página). Diseñado para 40k+ filas vía índices del
+   * servidor: nunca filtrar/ordenar client-side, siempre mandar los filtros al RPC.
+   */
+  async getAuditoriaActividad(
+    filtros: AuditoriaActividadFiltros,
+    cursor: string | null,
+    limite = 40,
+  ): Promise<AuditoriaActividadResultado> {
+    const { data, error } = await this.supabase.client.rpc('auditoria_actividad', {
+      p_filtros: filtros ?? {},
+      p_cursor: cursor,
+      p_limite: limite,
+    });
+    if (error) throw new Error(error.message);
+    const r = (data ?? {}) as Partial<AuditoriaActividadResultado>;
+    return { filas: r.filas ?? [], cursor_siguiente: r.cursor_siguiente ?? null, hay_mas: r.hay_mas === true };
+  }
+
+  /** CQ3 — "ver historia completa de este registro": todas las filas de auditoría
+   *  para un (tabla, registro_id) exacto, orden cronológico ascendente. */
+  async getAuditoriaHistoriaRegistro(tabla: string, registroId: string): Promise<AuditoriaActividadFila[]> {
+    const { data, error } = await this.supabase.client.rpc('auditoria_historia_registro', {
+      p_tabla: tabla,
+      p_registro_id: registroId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as unknown as AuditoriaActividadFila[]) ?? [];
+  }
+
+  /** CQ3 — busca usuarios para el filtro "persona" del feed de Actividad. */
+  async buscarUsuarios(term: string): Promise<AuditoriaUsuario[]> {
+    if (term.trim().length < 2) return [];
+    const { data, error } = await this.supabase.client.rpc('buscar_usuarios', { p_term: term.trim() });
+    if (error) throw new Error(error.message);
+    return (data as AuditoriaUsuario[]) ?? [];
   }
 
   private slug(nombre: string): string {
