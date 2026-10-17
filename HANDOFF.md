@@ -1,5 +1,37 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 17/10/2026 — PROMPT-103 · Ronda **CQ** — app código en `feature/cq-ronda`, SIN publicar (2.55.0)
+
+> **CQ6 aplicado desde el arranque:** worktree dedicado `git worktree add ../csd-app-cq feature/cq-ronda` (desde `dev`=`main`=`25e27af`), `node_modules`/`.env.local` enlazados/copiados para no reinstalar. `git status`+`git worktree list` verificados limpios antes de empezar — nada de otra sesión pisado. Las 4 fases (CQ4/CQ2/CQ3/CQ1) se repartieron a 4 agentes en paralelo sobre archivos disjuntos del MISMO worktree; un 5º agente consolidó inglés en `en.json`. Cero colisiones (confirmado por `git diff --stat`).
+
+**FASE 0 — estado real:** 2.54.0 confirmada PUBLICADA en prod (`app_versiones`, `publicada=true`). `cp8c-reunion-notas-foto.sql` confirmado aplicado en sgc-dev (`reunion_notas.foto_path` existe). Los 5 SQL del padre para esta ronda (`cq1-compras-tec`, `cq2-dev-notes-enviada`, `cq3-audit-log-listado-text`, `cq3-auditoria-contexto`, `cq4-importar-vehiculos-conductores-campos`) confirmados vivos en sgc-dev por RPC probe antes de tocar código — ver detalle técnico completo en `PARIDAD.md` § CQ.
+
+**Por fase (todas con `npm run build` verde, incluido un nuevo guard):**
+- **CQ4 (Importar):** plantillas de vehículos/choferes con TODOS los campos de los formularios reales (VIN, kilometraje, seguro, matrícula, mantenimiento, capacidad, alias, vehículo asignado, tags, activo); selector de archivo combinado (Excel+.zip en una sola selección); detección de "archivo no es la plantilla del SGC"; paso de revisión con miniaturas por fila + fotos sin dueño asignables; resultado en modal con fondo oscurecido/borroso. **Candado nuevo** `scripts/verify-import-template-paridad.mjs` (en `prebuild`) — encontró un hueco real: `conductor-form.ts` captura `esPrueba` pero `importar_conductores` no lo soporta (a diferencia de `importar_vehiculos`) → excluido explícitamente con comentario, **debe el padre**. Fotos de licencia (frente/dorso) se detectan/etiquetan pero NO suben — `sgc.conductores` no tiene esas columnas todavía.
+- **CQ2 (Dev notes):** editor nuevo en el teléfono (`tecnologia/dev-notes/editor/`), pantalla completa, formato visible mientras escribes + "Texto simple", autoguardado cada 2s, "Mandar a ronda" (copia texto plano), agrupado Hoy/Esta semana/Antes. Sin huecos de backend — ambos RPC (`guardar_nota` con `p_ambito/p_formato/p_tags`, `nota_marcar_enviada_ronda`) ya en prod.
+- **CQ3 (Auditoría):** pestaña "Actividad" nueva y por defecto (línea de tiempo en español, cursor-paginada, búsqueda+filtros, detalle Campo·Antes·Después + "ver historia del registro"). Panel/Filas intactos. "Acciones de admin" confirmado que NO existe en la app — nada que arreglar de ese lado.
+- **CQ1 (Compras tecnológicas):** ficha de ver/aprobar con título/urgencia, unidad+subtotal por renglón, Subtotal/ITBIS/Total del servidor, todas las cotizaciones listadas (no solo la elegida), aviso si el total no cuadra (±1%).
+- **i18n:** 67 cadenas nuevas traducidas a inglés (`en.json`); `ht.json` sin tocar (cae a español, patrón ya aceptado en rondas anteriores).
+
+**Versión:** 2.55.0 en los 3 sitios (`environment.prod.ts`/`environment.dev.ts`/`build.gradle`); `CAMBIOS_CURADOS`/`TITULO` de `scripts/release-apk.mjs` actualizados con el changelog real de esta ronda. `release-check.mjs --version 2.55.0` → 🔴 **a propósito** en el check "breathe" (ni 24h de respiro ni OK explícito) — ver abajo.
+
+### 🔴 Nada publicado — ni commiteado — en esta sesión
+Por instrucción explícita del prompt ("nada de commit/push/deploy/publicar sin decírselo a Xaviel"), todo el código vive SIN COMMITEAR en el working tree de `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-cq` (branch `feature/cq-ronda`, que SÍ existe como branch vacío en git — el contenido real está solo en el working tree todavía). `qa/release-2.55.0.md` se dejó deliberadamente SIN una línea "OK:" (el Samsung sigue en 2.51.0-dev, la prueba real de actualización nunca se hizo — ver sesión 16/10 (2ª) abajo, el mismo pendiente de 2.54.0 sigue sin resolver).
+
+### 👤 Pendiente físico de Xaviel
+1. **Revisar el diff** en `csd-app-cq` (o pedir que se commitee si está de acuerdo) antes de que avance a dev.
+2. **Prueba real del Samsung** (2.51.0-dev → 2.54.0/2.55.0, con tus manos para el login) — instrucciones en `qa/release-2.55.0.md`. Sin esto, `release-check` sigue en rojo.
+3. Decidir si pedir al padre el fix de `importar_conductores` (`es_prueba`) ahora o dejarlo para la próxima ronda — no bloquea nada, es un campo admin-only de dato de prueba.
+4. OK para: mergear `feature/cq-ronda` → `dev`, construir el APK dev, y (tras la prueba del teléfono) el release a prod.
+
+### Verify on resume
+- `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-cq` tiene el trabajo sin commitear; `C:\Users\xavie\Desktop\X Dev\dev2\csd-app` (el repo real) sigue limpio en `dev`=`25e27af`, sin tocar.
+- `npm run build && npm run test:canal` → verdes en el worktree.
+- `node scripts/release-check.mjs --version 2.55.0` → 🔴 (esperado — falta la prueba del teléfono).
+- Leer `PARIDAD.md` § CQ para el detalle técnico de cada fase antes de seguir.
+
+---
+
 ## 🟢 SESIÓN 16/10/2026 (2ª) — PROMPT-101 · Ronda **CP** — app **2.54.0 PUBLICADA A PROD** ✅
 > `feature/cp-ronda` (desde `dev`=`main`=`74c2cdb`, que YA incluía el import masivo de choferes/vehículos) → commit `16858eb` → merge `dev` → **otra sesión (Xaviel, `6ba638d`) commiteó encima** un fix del import (fotos por cédula/placa) y bumpeó a **2.54.0** porque 2.53.0 ya la había tomado esta ronda — el release final es 2.54.0 e incluye AMBOS (CP + el fix de import). Con el OK explícito de Xaviel (incluyendo saltar la prueba de dispositivo real, ver abajo): `dev → main` mergeado y pusheado directo (sin `gh` CLI disponible en esta sesión, PR no abierto formalmente), **APK prod 2.54.0** firmado (regla 18 + `release-check.mjs` en verde), subido al bucket prod + registrado, **PUBLICADA** (`2026-10-16-cp-publicar-2.54.0.mjs --env dev|prod`: 2.54.0 publicada, 2.51.0 despublicada, mínima sin cambios) en dev y prod.
 

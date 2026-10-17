@@ -40,7 +40,7 @@ export class NotasService {
         .from('notas')
         .select(
           'id, owner_id, titulo, contenido, color, pinned, archivada, created_at, updated_at, ' +
-            'ambito, formato, tags, ' + // BP5 — Dev notes
+            'ambito, formato, tags, enviada_a_ronda_at, ' + // BP5/CQ2 — Dev notes
             'compartidos:nota_compartidos(usuario_id, permiso)',
         )
         .order('updated_at', { ascending: false });
@@ -88,6 +88,7 @@ export class NotasService {
       ambito: ((r['ambito'] as string) ?? 'general') === 'dev' ? 'dev' : 'general',
       formato: ((r['formato'] as string) ?? 'html') === 'markdown' ? 'markdown' : 'html',
       tags: (r['tags'] as string[]) ?? [],
+      enviada_a_ronda_at: (r['enviada_a_ronda_at'] as string) ?? null, // CQ2
       es_mia: esMia,
       compartida: !esMia,
       permiso: esMia ? 'editar' : (miShare?.permiso ?? 'ver'),
@@ -107,7 +108,7 @@ export class NotasService {
       for (const op of ops) {
         const p = op.payload as Record<string, unknown>;
         const fallo = op.estado === 'error'; // AL14
-        map.set(p['id'] as string, {
+        const pendiente: Partial<Nota> = {
           id: p['id'] as string,
           titulo: (p['titulo'] as string) ?? '',
           contenido: (p['contenido'] as string) ?? '',
@@ -121,7 +122,15 @@ export class NotasService {
           permiso: 'editar',
           enviando: !fallo, // AL14 — solo "enviando" si sigue en cola/reintentos
           fallo, // AL14 — falló el envío (visible con acción de reintento en Pendientes)
-        });
+        };
+        // CQ2 — ambito/formato/tags son OPCIONALES en el payload (null = "no tocar").
+        // Solo se sobreescriben si el guardado los mandó explícitamente, para no
+        // "apagar" ambito='dev' de una nota existente mientras su edición normal
+        // (que no toca el ámbito) sigue pendiente en el outbox.
+        if (p['ambito'] != null) pendiente.ambito = p['ambito'] as 'general' | 'dev';
+        if (p['formato'] != null) pendiente.formato = p['formato'] as 'html' | 'markdown';
+        if (p['tags'] != null) pendiente.tags = p['tags'] as string[];
+        map.set(p['id'] as string, pendiente);
       }
     } catch {
       /* sin outbox legible → solo servidor */
@@ -143,6 +152,10 @@ export class NotasService {
         pinned: input.pinned,
         archivada: input.archivada,
         expected_updated_at: input.expectedUpdatedAt,
+        // CQ2 — null = "no tocar" (lo respeta guardar_nota vía COALESCE).
+        ambito: input.ambito ?? null,
+        formato: input.formato ?? null,
+        tags: input.tags ?? null,
       },
       resumen: { titulo: input.titulo || 'Nota' },
     });
@@ -163,9 +176,25 @@ export class NotasService {
       p_pinned: input.pinned,
       p_archivada: input.archivada,
       p_expected_updated_at: input.expectedUpdatedAt,
+      p_ambito: input.ambito ?? null,
+      p_formato: input.formato ?? null,
+      p_tags: input.tags ?? null,
     });
     if (error) throw new Error(error.message);
     await this.catalog.invalidate(CATALOG_NOTAS);
+  }
+
+  /**
+   * CQ2 — marca la nota como "enviada a ronda" (copiada al portapapeles en texto
+   * plano). Puramente informativo (no toca `contenido`); online, best-effort —
+   * el llamador no debe bloquear la copia si esto falla.
+   */
+  async marcarEnviadaARonda(notaId: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('nota_marcar_enviada_ronda', {
+      p_id: notaId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as { enviada_a_ronda_at: string })?.enviada_a_ronda_at;
   }
 
   // ---- Checklist estructurado (AD9) ----------------------------------------
@@ -327,6 +356,10 @@ export class NotasService {
         p_pinned: payload['pinned'] ?? null,
         p_archivada: payload['archivada'] ?? null,
         p_expected_updated_at: payload['expected_updated_at'] ?? null,
+        // CQ2 — Dev notes editable: null = "no tocar" (COALESCE en el RPC).
+        p_ambito: payload['ambito'] ?? null,
+        p_formato: payload['formato'] ?? null,
+        p_tags: payload['tags'] ?? null,
       });
       if (error) throwSyncError(error);
       // El contenido cambió en el servidor → refrescar la lista al drenar.

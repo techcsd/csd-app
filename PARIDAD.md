@@ -402,3 +402,52 @@ La burbuja de Compa era `{{ m.texto }}` plano — ningún enlace markdown/suelto
   Capability-safe: si el padre aún no lo aplica, el intento de guardar la foto
   falla y el outbox reintenta solo cuando esté — la nota de TEXTO se guarda igual
   (el RPC viejo sin `p_foto_path` también sigue funcionando por compatibilidad).
+
+## CQ (ronda 17/10/2026) — decisiones de paridad app↔web
+Backend (SGC) ya vivo en sgc-dev para toda la ronda (verificado por RPC probe antes de
+empezar) — `cp8c` también confirmado aplicado (`reunion_notas.foto_path` existe).
+- **CQ4 (Importar):** plantilla de vehículos/choferes ampliada a todos los campos reales
+  de `vehiculo-form.ts`/`conductor-form.ts` (VIN, kilometraje, seguro, matrícula,
+  mantenimiento, capacidad, alias, vehículo asignado, tags, activo). Revisión antes de
+  importar (miniaturas por fila vía `URL.createObjectURL`, fotos sin dueño asignables a
+  mano), detección de "no es la plantilla del SGC" (tasa de coincidencia de headers),
+  resultado en modal con fondo oscurecido/borroso + qué cambió por registro.
+  **Candado CQ4-g implementado** (`scripts/verify-import-template-paridad.mjs`, en
+  `prebuild`): compara los signals de dato real de ambos formularios contra
+  `ENTIDADES_IMPORTACION` — con un hueco real y aceptado: `conductor-form.ts` tiene
+  `esPrueba` pero `importar_conductores` (a diferencia de `importar_vehiculos`) NO lee
+  `v_fila->>'es_prueba'` en el RPC, ni en el INSERT ni en el UPDATE — agregar la columna
+  a la plantilla sin que el RPC la use engañaría al usuario. **Debe el padre:** espejar en
+  `importar_conductores` el mismo `case when v_fila ? 'es_prueba'...` que ya tiene
+  `importar_vehiculos`. **También simplificado:** choferes solo suben la foto de cédula
+  (`foto_path`); `licencia-frente`/`licencia-dorso` se detectan y etiquetan en la revisión
+  pero NO se suben — `sgc.conductores` no tiene columnas `licencia_frente_path`/
+  `licencia_dorso_path` (confirmado por lectura directa en sgc-dev).
+- **CQ2 (Dev notes):** editor nuevo en la app (`tecnologia/dev-notes/editor/`,
+  pantalla completa, toolbar fija bold/italic/H3/listas en vez del menú "/" del mock,
+  autoguardado 2s, "Texto simple" ⇄ con formato, "Mandar a ronda" a texto plano, agrupado
+  Hoy/Esta semana/Antes). Sin hueco de backend: `guardar_nota` ya soporta
+  `p_ambito/p_formato/p_tags` desde `sql/2026-09-14-bp5-notas-ambito-dev.sql` y
+  `nota_marcar_enviada_ronda` desde `sql/2026-10-16-cq2-dev-notes-enviada.sql` — ambos
+  confirmados ya en prod.
+- **CQ3 (Auditoría):** nueva pestaña "Actividad" (por defecto) consumiendo
+  `auditoria_actividad`/`auditoria_historia_registro` (línea de tiempo en español,
+  cursor-paginada, búsqueda+filtros, detalle con Campo·Antes·Después). Panel/Filas se
+  quedan intactos. **"Acciones de admin" NO existe en la app** (nunca se construyó esa
+  pantalla aquí) — el fix del bug `audit_log_listado` (`::text`) es 100% web/servidor, sin
+  acción del lado de la app.
+- **CQ1 (Compras tecnológicas):** la app SOLO actualizó la ficha de ver/aprobar (crear con
+  cotización sigue siendo trabajo de la web, decisión ya tomada). Nuevos campos del
+  servidor (`titulo`/`urgencia`/`subtotal`/`itbis`/`total`/`unidad` por renglón/
+  `fecha`+`lectura`+`lectura_costo_usd` por cotización) ya cableados; aviso si el total no
+  cuadra con la cotización elegida (±1%); todas las cotizaciones listadas, no solo la
+  elegida.
+- **CQ6 (sesiones concurrentes):** esta ronda se trabajó en `feature/cq-ronda` vía
+  `git worktree add ../csd-app-cq` (worktree dedicado, node_modules enlazado por junction
+  — no reinstalado). Los 4 módulos (importar/dev-notes/auditoría/compras-tec) se
+  repartieron entre 4 agentes en paralelo sobre archivos disjuntos dentro del MISMO
+  worktree — sin colisiones (confirmado por `git diff --stat` antes y después).
+- **CQ7 (prueba de teléfono):** `qa/release-2.55.0.md` dejado a propósito en rojo
+  (sin línea "OK:") — `release-check.mjs --version 2.55.0` da 🔴 en el check "breathe"
+  hasta que Xaviel haga la prueba real en el Samsung o dé su OK explícito. NO se publicó
+  nada a prod en esta sesión.

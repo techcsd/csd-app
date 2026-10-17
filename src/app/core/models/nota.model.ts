@@ -22,6 +22,8 @@ export interface Nota {
   ambito?: 'general' | 'dev';
   formato?: 'html' | 'markdown';
   tags?: string[];
+  /** CQ2 — cuándo se copió al portapapeles por última vez ("Mandar a ronda"); solo informativo. */
+  enviada_a_ronda_at?: string | null;
   // ---- Derivados en el cliente ----
   /** true si el usuario logueado es el dueño. */
   es_mia?: boolean;
@@ -87,6 +89,12 @@ export interface NotaCaptura {
   archivada: boolean;
   /** updated_at conocido (para detectar conflicto); null si es nueva. */
   expectedUpdatedAt: string | null;
+  // CQ2 — Dev notes editable: ámbito/formato/tags opcionales (omitidos ⇒ el RPC
+  // no los toca). El editor de Dev notes los manda SIEMPRE ('dev'/'markdown');
+  // el editor general (/notas) los omite.
+  ambito?: 'general' | 'dev';
+  formato?: 'html' | 'markdown';
+  tags?: string[];
 }
 
 /** Paleta de colores para las notas (claro; el default es sin color). */

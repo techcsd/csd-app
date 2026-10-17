@@ -5,9 +5,144 @@
   </header>
 
   <div class="screen__body">
-    @if (resultado(); as r) {
-      <!-- Éxito -->
-      <div class="imp__exito" appFadeIn>
+    <!-- Toggle de entidad -->
+    <div class="imp__tipos">
+      <button type="button" class="imp__tipo" [class.imp__tipo--on]="tipo() === 'conductores'" (click)="elegirTipo('conductores')">
+        {{ glyph.conductores }} {{ 'Choferes' | t }}
+      </button>
+      <button type="button" class="imp__tipo" [class.imp__tipo--on]="tipo() === 'vehiculos'" (click)="elegirTipo('vehiculos')">
+        {{ glyph.vehiculos }} {{ 'Vehículos' | t }}
+      </button>
+    </div>
+
+    <p class="imp__intro">
+      {{ 'Sube el Excel (.xlsx) ya lleno de' | t }} <b>{{ entidadActual().label }}</b> {{ '(generado desde la plantilla de SGC web) y, si aplica, el .zip con las fotos. Puedes elegir ambos archivos a la vez.' | t }}
+    </p>
+
+    <!-- CQ4 — un solo picker (.xlsx + .zip, multiple): sin drag&drop (no aplica en touch) -->
+    <label class="imp__file" appTapScale>
+      <input
+        type="file"
+        multiple
+        accept=".xlsx,.zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,application/x-zip-compressed"
+        (change)="onArchivos($event)"
+      />
+      <span class="imp__file-btn">
+        {{ glyph.archivo }} {{ (archivoNombre() ? 'Agregar o reemplazar archivos' : 'Elegir Excel (.xlsx) y/o .zip de fotos') | t }}
+      </span>
+    </label>
+
+    @if (archivoNombre()) { <p class="imp__archivo">{{ glyph.archivo }} {{ archivoNombre() }}</p> }
+    @if (zipNombre()) {
+      <p class="imp__archivo">
+        {{ glyph.foto }} {{ zipNombre() }}
+        <button type="button" class="imp__quitar-zip" (click)="quitarZip()">{{ 'Quitar' | t }}</button>
+      </p>
+    }
+    @if (parseando()) { <p class="imp__hint">{{ 'Leyendo el archivo…' | t }}</p> }
+
+    @if (faltantes().length) {
+      @if (noEsPlantilla()) {
+        <div class="imp__band imp__band--error">
+          {{ glyph.warn }} {{ 'Este archivo no es la plantilla del SGC. Descárgala desde la web o importa desde la web para mapear columnas.' | t }}
+        </div>
+      } @else {
+        <div class="imp__band imp__band--error">
+          {{ glyph.warn }} {{ 'Faltan columnas obligatorias:' | t }} {{ faltantesLabels() }}
+        </div>
+      }
+    }
+
+    @if (tieneArchivo()) {
+      <div class="imp__resumen">
+        <div class="imp__res-row"><span>{{ 'Filas detectadas' | t }}</span><b><span [appCountUp]="filas().length"></span></b></div>
+      </div>
+
+      @if (!zipNombre()) {
+        <p class="imp__hint">
+          {{ 'Nombra cada foto con la' | t }} {{ claveLabel() }} {{ 'de la fila (ej.: {ej}.jpg) y súbelas todas en un .zip — se emparejan solas, sin columna aparte en el Excel.' | t: { ej: claveEjemplo() } }}
+        </p>
+      }
+
+      <!-- CQ4 — Revisa y confirma: preview de emparejamiento foto-fila antes de importar -->
+      <section class="imp__revision">
+        <h2 class="imp__revision-tit">{{ 'Revisa y confirma' | t }}</h2>
+
+        <div class="imp__tabla-wrap">
+          <table class="imp__tabla">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ claveLabel() }}</th>
+                <th>{{ 'Nombre' | t }}</th>
+                <th>{{ 'Foto' | t }}</th>
+                @if (tipo() === 'conductores') {
+                  <th>{{ 'Licencia' | t }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of previewFilas(); track f.i) {
+                <tr>
+                  <td>{{ f.i }}</td>
+                  <td>{{ f.clave }}</td>
+                  <td>{{ f.nombre }}</td>
+                  <td>
+                    @if (urlFoto(f.principal); as url) {
+                      <img class="imp__thumb" [src]="url" alt="" />
+                    } @else {
+                      <span class="imp__sin-foto">{{ 'Sin foto' | t }}</span>
+                    }
+                  </td>
+                  @if (tipo() === 'conductores') {
+                    <td class="imp__licencia-cell">
+                      @if (f.licenciaFrente || f.licenciaDorso) {
+                        <span class="imp__licencia-detectada">
+                          {{ 'Detectada (no se sube en esta versión)' | t }}
+                        </span>
+                      } @else {
+                        <span class="imp__sin-foto">{{ 'Sin foto' | t }}</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (fotosOrfanas().length) {
+          <div class="imp__huerfanas">
+            <p class="imp__huerfanas-tit">{{ glyph.warn }} {{ 'Fotos sin dueño — ¿de cuál es?' | t }}</p>
+            @for (nombre of fotosOrfanas(); track nombre) {
+              <div class="imp__huerfana-row">
+                @if (urlFoto(nombre); as url) {
+                  <img class="imp__thumb imp__thumb--sm" [src]="url" alt="" />
+                }
+                <span class="imp__huerfana-nombre">{{ nombre }}</span>
+                <select class="imp__huerfana-select" (change)="asignarFotoOrfana(nombre, $any($event.target).value)">
+                  <option value="">{{ '— Elige la fila —' | t }}</option>
+                  @for (f of previewFilas(); track f.i) {
+                    <option [value]="f.i - 1">{{ f.i }}. {{ f.clave }} — {{ f.nombre }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <button type="button" class="btn-cta imp__importar" appTapScale [disabled]="importando()" (click)="confirmar()">
+        {{ importando() ? ('Importando…' | t) : ('Importar {n} fila(s)' | t: { n: filas().length }) }}
+      </button>
+    }
+  </div>
+
+  <!-- CQ4 — resultado como modal (fondo atenuado + blur), no inline -->
+  @if (resultado(); as r) {
+    <div class="imp__modal">
+      <div class="imp__modal-dim"></div>
+      <div class="imp__modal-box" appFadeIn>
         <span class="imp__exito-ico">{{ glyph.exito }}</span>
         <h2>{{ 'Importación completada' | t }}</h2>
         <div class="imp__resumen">
@@ -18,6 +153,29 @@
           }
           <div class="imp__res-row"><span>{{ 'Errores' | t }}</span><b>{{ r.errores.length }}</b></div>
         </div>
+
+        @if (r.filas.length) {
+          <div class="imp__filas-resultado">
+            @for (f of r.filas; track f.id) {
+              <div class="imp__fila-card">
+                <div class="imp__fila-card-head">
+                  <span class="imp__fila-card-clave">{{ f.clave }}<span class="imp__fila-card-nombre">{{ f.nombre ? ' — ' + f.nombre : '' }}</span></span>
+                  <span class="imp__fila-card-accion" [class.imp__fila-card-accion--nuevo]="f.accion === 'creado'">
+                    {{ (f.accion === 'creado' ? 'Nuevo' : 'Actualizado') | t }}
+                  </span>
+                </div>
+                @if (f.accion === 'actualizado' && f.cambios.length) {
+                  <ul class="imp__cambios">
+                    @for (c of f.cambios; track c.campo) {
+                      <li>{{ c.label }}: {{ textoValor(c.antes) }} → {{ textoValor(c.despues) }}</li>
+                    }
+                  </ul>
+                }
+                <button type="button" class="btn-ghost imp__abrir-perfil" appTapScale (click)="abrirPerfil(f)">{{ 'Abrir perfil' | t }}</button>
+              </div>
+            }
+          </div>
+        }
 
         @if (r.errores.length) {
           <div class="imp__errores">
@@ -37,61 +195,9 @@
           </div>
         }
 
-        <button type="button" class="btn-cta" appTapScale (click)="verLista()">{{ 'Ver lista' | t }}</button>
-        <button type="button" class="btn-ghost imp__otra" appTapScale (click)="nuevaImportacion()">{{ 'Nueva importación' | t }}</button>
+        <button type="button" class="btn-cta" appTapScale (click)="verLista()">{{ 'Ver en' | t }} {{ tipo() === 'conductores' ? ('Conductores' | t) : ('Vehículos' | t) }}</button>
+        <button type="button" class="btn-ghost imp__otra" appTapScale (click)="nuevaImportacion()">{{ 'Importar otro archivo' | t }}</button>
       </div>
-    } @else {
-      <!-- Toggle de entidad -->
-      <div class="imp__tipos">
-        <button type="button" class="imp__tipo" [class.imp__tipo--on]="tipo() === 'conductores'" (click)="elegirTipo('conductores')">
-          {{ glyph.conductores }} {{ 'Choferes' | t }}
-        </button>
-        <button type="button" class="imp__tipo" [class.imp__tipo--on]="tipo() === 'vehiculos'" (click)="elegirTipo('vehiculos')">
-          {{ glyph.vehiculos }} {{ 'Vehículos' | t }}
-        </button>
-      </div>
-
-      <p class="imp__intro">
-        {{ 'Sube el Excel (.xlsx) ya lleno de' | t }} <b>{{ entidadActual().label }}</b> {{ '(generado desde la plantilla de SGC web) y, si aplica, el .zip con las fotos.' | t }}
-      </p>
-
-      <label class="imp__file" appTapScale>
-        <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onArchivo($event)" />
-        <span class="imp__file-btn">{{ glyph.archivo }} {{ 'Elegir archivo Excel' | t }}</span>
-      </label>
-      @if (archivoNombre()) { <p class="imp__archivo">{{ archivoNombre() }}</p> }
-      @if (parseando()) { <p class="imp__hint">{{ 'Leyendo el archivo…' | t }}</p> }
-
-      @if (faltantes().length) {
-        <div class="imp__band imp__band--error">
-          {{ glyph.warn }} {{ 'Faltan columnas obligatorias:' | t }} {{ faltantesLabels() }}
-        </div>
-      }
-
-      @if (tieneArchivo()) {
-        <div class="imp__resumen">
-          <div class="imp__res-row"><span>{{ 'Filas detectadas' | t }}</span><b><span [appCountUp]="filas().length"></span></b></div>
-        </div>
-
-        <label class="imp__file imp__file--secundario" appTapScale>
-          <input type="file" accept=".zip,application/zip,application/x-zip-compressed" (change)="onZip($event)" />
-          <span class="imp__file-btn">{{ glyph.foto }} {{ 'Elegir .zip de fotos (opcional)' | t }}</span>
-        </label>
-        @if (zipNombre()) {
-          <p class="imp__archivo">
-            {{ zipNombre() }}
-            <button type="button" class="imp__quitar-zip" (click)="quitarZip()">{{ 'Quitar' | t }}</button>
-          </p>
-        } @else {
-          <p class="imp__hint">
-            {{ 'Nombra cada foto con la' | t }} {{ claveLabel() }} {{ 'de la fila (ej.: {ej}.jpg) y súbelas todas en un .zip — se emparejan solas, sin columna aparte en el Excel.' | t: { ej: claveEjemplo() } }}
-          </p>
-        }
-
-        <button type="button" class="btn-cta imp__importar" appTapScale [disabled]="importando()" (click)="confirmar()">
-          {{ importando() ? ('Importando…' | t) : ('Importar {n} fila(s)' | t: { n: filas().length }) }}
-        </button>
-      }
-    }
-  </div>
+    </div>
+  }
 </div>

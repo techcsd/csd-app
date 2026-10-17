@@ -33,9 +33,6 @@
     display: none;
   }
 }
-.imp__file--secundario {
-  margin-top: 14px;
-}
 .imp__file-btn {
   display: block;
   width: 100%;
@@ -104,14 +101,142 @@
   margin-top: 16px;
 }
 
-.imp__exito {
+// ── Revisa y confirma (CQ4) ───────────────────────────────────────────────────
+.imp__revision {
+  margin-top: 18px;
+}
+.imp__revision-tit {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+.imp__tabla-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+.imp__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  th,
+  td {
+    padding: 8px 10px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--color-border);
+  }
+  th {
+    color: var(--color-text-secondary);
+    font-weight: 700;
+    background: var(--color-surface-alt, var(--color-surface));
+  }
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+.imp__thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+.imp__thumb--sm {
+  width: 28px;
+  height: 28px;
+}
+.imp__sin-foto {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.imp__licencia-cell {
+  max-width: 160px;
+  white-space: normal;
+}
+.imp__licencia-detectada {
+  color: var(--color-warning);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.imp__huerfanas {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-warning-bg);
+}
+.imp__huerfanas-tit {
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: var(--color-warning);
+  font-size: 13px;
+}
+.imp__huerfana-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.imp__huerfana-nombre {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.imp__huerfana-select {
+  flex: 0 0 auto;
+  max-width: 48%;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+// ── Resultado como modal (CQ4) — dimmed + blur, centrado, sobre la cinta de
+// notificaciones (z-index 499) y bajo cámara/firma, mismo criterio que el resto
+// de la app (ver `documentos/plantillas`). Mirror del backdrop-filter de `celebracion.scss`.
+.imp__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.imp__modal-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.55); // tokens-allow-dark — velo de modal, no theming de contenido
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.imp__modal-box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-surface);
+  border-radius: 18px;
+  padding: 28px 20px;
   text-align: center;
-  padding: 32px 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+
   .imp__exito-ico {
     font-size: 48px;
   }
   h2 {
     margin: 12px 0 6px;
+    color: var(--color-text-primary);
   }
   .imp__resumen {
     text-align: left;
@@ -123,6 +248,63 @@
   .imp__otra {
     margin-top: 10px;
   }
+}
+
+.imp__filas-resultado {
+  text-align: left;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.imp__fila-card {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.imp__fila-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.imp__fila-card-clave {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+.imp__fila-card-nombre {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+.imp__fila-card-accion {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--color-info-bg, var(--color-surface-alt, var(--color-surface)));
+  color: var(--color-info, var(--color-text-secondary));
+}
+.imp__fila-card-accion--nuevo {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.imp__cambios {
+  margin: 8px 0 6px;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  li {
+    margin: 2px 0;
+  }
+}
+.imp__abrir-perfil {
+  margin-top: 6px;
+  min-height: 36px;
+  font-size: 13px;
 }
 
 .imp__errores {

@@ -6,28 +6,46 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { MarkdownView } from '../../../shared/ui/markdown-view/markdown-view';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { NotasService } from '../../../core/services/notas.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { Nota } from '../../../core/models/nota.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { markdownAPlano } from '../../../core/util/markdown';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type Tab = 'mias' | 'compartidas';
 
 const SGC_WEB = 'https://sgcconstructorasd.com';
 
+/** CQ2 — días (locales, medianoche a medianoche) entre una fecha y hoy. 0 = hoy. */
+function diasDesdeHoy(iso: string | null | undefined): number {
+  if (!iso) return 0;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return 0;
+  const hoy = new Date();
+  const dIni = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const hoyIni = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();
+  return Math.round((hoyIni - dIni) / 86_400_000);
+}
+
 /**
- * BP5 — "Dev notes" (Tecnología): lectura de las notas técnicas en Markdown
- * (ambito='dev'), personales y compartidas. Gate por rol es_tecnologia() (mismo
- * criterio del padre; la RLS ya limita la lectura a Tecnología). SOLO LECTURA en
- * la app esta tanda: escribir/editar es en la web (deep-link "Editar en SGC web").
+ * BP5/CQ2 — "Dev notes" (Tecnología): notas técnicas en Markdown (ambito='dev'),
+ * personales y compartidas. Gate por rol es_rol_desarrollador (mismo criterio del
+ * padre; la RLS ya limita la lectura a Tecnología).
+ *
+ * CQ2 añade edición real en la app (antes solo lectura con deep-link "Editar en
+ * SGC web"): agrupación Hoy/Esta semana/Antes, CTA "Nota nueva" y "Mandar a ronda"
+ * (copia en texto plano + marca informativa `enviada_a_ronda_at`).
  */
 @Component({
   selector: 'app-dev-notes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, MarkdownView, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, EmptyState, MarkdownView, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './dev-notes.html',
   styleUrl: './dev-notes.scss',
 })
@@ -37,6 +55,8 @@ export class DevNotesPage {
   private ctx = inject(UserContextService);
   private location = inject(Location);
   private router = inject(Router);
+  private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly fechaHora = formatFechaCortaHora;
 
@@ -92,6 +112,24 @@ export class DevNotesPage {
       );
   });
 
+  /** CQ2 — lista() agrupada por Hoy / Esta semana / Antes (orden preservado, incl. pines). */
+  grupos = computed<{ label: string; notas: Nota[] }[]>(() => {
+    const hoy: Nota[] = [];
+    const semana: Nota[] = [];
+    const antes: Nota[] = [];
+    for (const n of this.lista()) {
+      const dias = diasDesdeHoy(n.updated_at);
+      if (dias <= 0) hoy.push(n);
+      else if (dias <= 6) semana.push(n);
+      else antes.push(n);
+    }
+    const out: { label: string; notas: Nota[] }[] = [];
+    if (hoy.length) out.push({ label: this.i18n.t('Hoy'), notas: hoy });
+    if (semana.length) out.push({ label: this.i18n.t('Esta semana'), notas: semana });
+    if (antes.length) out.push({ label: this.i18n.t('Antes'), notas: antes });
+    return out;
+  });
+
   setTab(t: Tab): void {
     this.tab.set(t);
   }
@@ -107,10 +145,52 @@ export class DevNotesPage {
     this.abierta.set(null);
   }
 
-  /** BP5 — abre la nota en la web de SGC para editarla (sin editor en la app). */
-  editarEnWeb(n: Nota): void {
+  /** CQ2 — acción principal ahora: edición en la app (reemplaza "Editar en SGC web"). */
+  editar(n: Nota): void {
+    void this.router.navigate(['/tecnologia/dev-notes', n.id]);
+  }
+
+  /** CQ2 — "Nota nueva" (CTA naranja, una sola acción destacada por pantalla). */
+  nuevaNota(): void {
+    void this.router.navigate(['/tecnologia/dev-notes/nueva']);
+  }
+
+  /** Deep-link secundario: abre la nota en la web de SGC (respaldo, ya no es la vía principal). */
+  abrirEnWeb(n: Nota): void {
     const url = `${SGC_WEB}/tecnologia/dev-notes/${n.id}`;
     window.open(url, '_blank');
+  }
+
+  /**
+   * CQ2 — "Mandar a ronda": copia el contenido en texto plano (sin símbolos
+   * Markdown crudos) y marca `enviada_a_ronda_at` (informativo, best-effort).
+   * `ev` puede venir de un botón dentro de una tarjeta de lista — se detiene la
+   * propagación para no abrir el lector al mismo tiempo.
+   */
+  async mandarARonda(n: Nota, ev?: Event): Promise<void> {
+    ev?.stopPropagation();
+    const texto = markdownAPlano(n.contenido);
+    const cuerpo = n.titulo?.trim() ? `${n.titulo.trim()}\n\n${texto}` : texto;
+    try {
+      await navigator.clipboard.writeText(cuerpo);
+    } catch {
+      this.toast.error(this.i18n.t('No se pudo copiar. El navegador bloqueó el portapapeles.'));
+      return;
+    }
+    this.toast.success(this.i18n.t('Copiado. Pega el contenido en la conversación de la ronda.'));
+    if (n.es_mia && this.online) {
+      try {
+        const ts = await this.service.marcarEnviadaARonda(n.id);
+        const actualizar = (list: Nota[]) =>
+          list.map((x) => (x.id === n.id ? { ...x, enviada_a_ronda_at: ts } : x));
+        this.notas.update(actualizar);
+        if (this.abierta()?.id === n.id) {
+          this.abierta.update((cur) => (cur ? { ...cur, enviada_a_ronda_at: ts } : cur));
+        }
+      } catch {
+        /* no bloquea la copia — es solo informativo */
+      }
+    }
   }
 
   back(): void {
