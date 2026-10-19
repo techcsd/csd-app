@@ -2,15 +2,17 @@
  * CR · Data-fix VERSIONADO (regla 19) — publicar app **2.56.0** (móvil) en el entorno.
  *
  *   node scripts/data-fixes/2026-10-19-cr-publicar-2.56.0.mjs --env dev --yes
+ *   node scripts/data-fixes/2026-10-19-cr-publicar-2.56.0.mjs --env prod --yes
  *
  * Mismo patrón que 2026-10-17-cq-publicar-2.55.0.mjs: `marcar_version_publicada`
  * gatea por `es_tecnologia()` (el service_role no lo cumple) → UPDATE directo,
  * documentado aquí por regla 19. Idempotente.
  *
- * CR4 — a propósito SOLO `--env dev` por ahora: Xaviel necesita que el Samsung vea
- * 2.56.0 como "hay una versión nueva" para poder probar la actualización in-app de
- * verdad (qa/release-2.56.0.md). El `--env prod` de este mismo script NO se corre
- * hasta que esa hoja tenga una línea "OK:" real (regla CR4, no negociable esta ronda).
+ * CR4 — `--env prod` originalmente bloqueado aquí hasta que `qa/release-2.56.0.md`
+ * tuviera un `OK:` real. Esa hoja ya tiene el OK: **explícito de Xaviel, documentado a
+ * propósito, saltando la prueba física del Samsung una tercera vez** (ver el archivo —
+ * se le mostró el hueco en claro con una pregunta estructurada de dos opciones antes de
+ * que decidiera). Por eso este script ya permite `--env prod`.
  *
  * Qué hace (plataforma='movil'):
  *   1) despublica la versión publicada actual (publicada=true → false),
@@ -18,6 +20,9 @@
  *   3) NO toca `minima` (sigue en lo que estaba — no se fuerza actualización).
  */
 import { resolverEnv } from '../lib/entorno.mjs';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { okLineaValida } from '../lib/ok-linea.mjs';
 
 const VERSION = '2.56.0';
 const PLATAFORMA = 'movil';
@@ -25,9 +30,12 @@ const TECNOLOGIA_EMAIL = 'tecnologia@constructorasd.com';
 const TECNOLOGIA_ID_FALLBACK = '4b19cc4b-3dbe-40dc-8631-ef489cad0f45';
 
 const env = await resolverEnv(process.argv.slice(2));
-if (env.entorno !== 'dev') {
-  console.error('✗ CR4: este script solo corre --env dev hasta que qa/release-2.56.0.md tenga un OK: real de Xaviel.');
-  process.exit(1);
+if (env.entorno === 'prod') {
+  const okReal = okLineaValida(readFileSync(join(import.meta.dirname, '../../qa/release-2.56.0.md'), 'utf8'));
+  if (!okReal) {
+    console.error('✗ CR4: qa/release-2.56.0.md no tiene una línea OK: válida (con fecha, sin negaciones) — no se publica en prod.');
+    process.exit(1);
+  }
 }
 const URL = env.url;
 const KEY = env.serviceKey;
