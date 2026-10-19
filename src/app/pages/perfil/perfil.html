@@ -239,6 +239,12 @@
       </button>
     }
 
+    <!-- CR1 — Perfil › Claude: estado de la conexión + borradores pendientes (todos los
+         usuarios del SGC pueden conectarlo; conectar en sí es solo-web). -->
+    <button type="button" class="btn-ghost perfil__btn" (click)="claudeConector()">
+      🤖 {{ 'Claude y el SGC' | t }}
+    </button>
+
     <button type="button" class="btn-ghost perfil__btn" (click)="soporte()">
       🛟 {{ 'Soporte y ayuda' | t }}
     </button>

@@ -459,6 +459,11 @@ export class PerfilPage {
     void this.router.navigate(['/soporte']);
   }
 
+  /** CR1 — Perfil › Claude (estado de la conexión + borradores pendientes). */
+  claudeConector(): void {
+    void this.router.navigate(['/perfil/claude']);
+  }
+
   /** Z26 — el encabezado (avatar + nombre + rol) abre el detalle de mi propio usuario. */
   verMiDetalle(): void {
     void this.router.navigate(['/perfil/mi-detalle']);

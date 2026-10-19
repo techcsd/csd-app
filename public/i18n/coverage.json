@@ -195,6 +195,12 @@
       "en": 98,
       "ht": 1
     },
+    "pages/borrador": {
+      "conT": 13,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
     "pages/compa": {
       "conT": 19,
       "sinT": 0,
@@ -550,13 +556,19 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 72,
+      "conT": 73,
       "sinT": 0,
       "en": 100,
       "ht": 1
     },
     "pages/perfil/a-mi-cargo": {
       "conT": 7,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/perfil/claude": {
+      "conT": 19,
       "sinT": 0,
       "en": 100,
       "ht": 0

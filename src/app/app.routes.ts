@@ -921,6 +921,20 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/a-mi-cargo/a-mi-cargo').then((m) => m.AMiCargoPage),
   },
   {
+    // CR1 — Perfil › Claude: estado de la conexión + borradores pendientes. Todos
+    // los usuarios del SGC pueden conectarlo (su RLS manda); sin gate de módulo.
+    path: 'perfil/claude',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/perfil/claude/claude').then((m) => m.PerfilClaudePage),
+  },
+  {
+    // CR1 — `/borrador/:id`: revisar/confirmar/descartar un borrador que Claude
+    // Desktop preparó por MCP. Online-only (no pasa por el outbox).
+    path: 'borrador/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/borrador/borrador').then((m) => m.BorradorPage),
+  },
+  {
     path: 'pendientes',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/pendientes/pendientes').then((m) => m.PendientesPage),

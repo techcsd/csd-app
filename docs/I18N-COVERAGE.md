@@ -39,6 +39,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/orden-trabajo | 60 | 1 | 98% | 2% |  |
 | pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
 | pages/bitacora/parte | 186 | 4 | 98% | 1% |  |
+| pages/borrador | 13 | 0 | 100% | 0% |  |
 | pages/compa | 19 | 0 | 100% | 0% |  |
 | pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
 | pages/compa/compartidas | 6 | 0 | 100% | 0% |  |
@@ -98,8 +99,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 4% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 72 | 0 | 100% | 1% | ✅ |
+| pages/perfil | 73 | 0 | 100% | 1% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
+| pages/perfil/claude | 19 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/practica | 18 | 0 | 100% | 100% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |

@@ -40,12 +40,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Importar con fotos a la vista, Dev notes editable, Auditoría legible, Compras con ITBIS';
+const TITULO = 'Claude y el SGC en tu Perfil';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Importar', d: 'Importar choferes y vehículos ahora deja revisar cómo se emparejaron las fotos antes de subir, acepta el Excel y el .zip en una sola selección, avisa claro si el archivo no es la plantilla del SGC, y la plantilla ya pide todo lo que el formulario usa (VIN, kilometraje, seguro, matrícula, mantenimiento…). El resultado se ve en una pantalla aparte con lo que cambió en cada registro.' },
-  { t: 'nuevo', m: 'Dev notes', d: 'Ya se escribe desde el teléfono: pantalla completa, formato visible mientras escribes, guardado automático, y funciona sin conexión.' },
-  { t: 'mejora', m: 'Auditoría', d: 'Nueva pestaña Actividad: lo que hizo cada quien, en español y por día, con buscador y el detalle de qué cambió.' },
-  { t: 'mejora', m: 'Compras tecnológicas', d: 'La ficha ahora muestra unidad, subtotal, ITBIS y total de cada compra, todas las cotizaciones comparadas, y un aviso si el total no cuadra.' },
+  { t: 'nuevo', m: 'Perfil', d: 'Nueva sección "Claude y el SGC": ves si tienes Claude Desktop conectado, cuándo lo usaste por última vez, y puedes desconectarlo cuando quieras. Conectar Claude Desktop se hace desde la web (es cosa de computadora), pero desde el teléfono ya puedes revisar el estado y cortar el acceso.' },
+  { t: 'nuevo', m: 'Borradores de Claude', d: 'Cuando le pides algo a Claude Desktop (crear una requisición, una tarea, un conduce o una ruta), prepara un borrador que tú revisas y confirmas desde el teléfono antes de que exista de verdad en el sistema — nada se crea solo.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

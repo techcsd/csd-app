@@ -11,8 +11,10 @@
 //
 // 4 checks, cada uno imprime PASS/FAIL (nunca un salto silencioso):
 //   1. `dev` tuvo tiempo de "respirar" (≥24h desde el último commit) O hay un OK
-//      explícito de Xaviel en qa/release-<version>.md (línea que empieza con "OK:" o
-//      "**OK de Xaviel**").
+//      explícito de Xaviel en qa/release-<version>.md: una línea que EMPIEZA con "OK:"
+//      o "**OK de Xaviel**", con FECHA, y sin "pendiente/falta/no/skip" cerca (CR3 —
+//      antes un "OK de Xaviel (pendiente)" pasaba igual que un OK real porque solo se
+//      buscaba el texto; ver scripts/lib/ok-linea.mjs, mismo fix que en SGC PROMPT-104).
 //   2. qa/release-<version>.md existe, no es un stub, y documenta la prueba de
 //      actualización in-app (CL4): exige una línea "Versión de origen:" (la versión de
 //      prod anterior desde la que se probó actualizar) además del resto del registro.
@@ -27,6 +29,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { okLineaValida } from './lib/ok-linea.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const argv = process.argv.slice(2);
@@ -63,24 +66,25 @@ function git(cmd) {
 // ── Check 1 — dev respiró, o hay OK explícito ────────────────────────────────
 function check1() {
   const ts = git('log -1 --format=%ct dev') ?? git('log -1 --format=%ct origin/dev');
-  const okRegex = /^(OK:|\*\*OK de Xaviel\*\*)/im;
+  // CR3 — okLineaValida() exige fecha en la línea y rechaza negaciones cerca
+  // ("pendiente/falta/no/skip"); el regex viejo solo miraba el prefijo.
   let okMarcado = false;
   if (existsSync(RELEASE_PATH)) {
-    try { okMarcado = okRegex.test(readFileSync(RELEASE_PATH, 'utf8')); } catch { /* noop */ }
+    try { okMarcado = okLineaValida(readFileSync(RELEASE_PATH, 'utf8')); } catch { /* noop */ }
   }
 
   if (!ts) {
     if (okMarcado) return reportar('breathe', "Dev tuvo tiempo de respirar / OK explícito", 'PASS', [`no se pudo leer la fecha del último commit de 'dev', pero hay un OK explícito en ${RELEASE_PATH}.`]);
     return reportar('breathe', "Dev tuvo tiempo de respirar / OK explícito", 'FAIL', [
       `no se pudo determinar la fecha del último commit de 'dev' (ni local ni origin/dev) y no hay OK explícito en qa/release-${VERSION}.md.`,
-      'Convención del OK: una línea que empiece con "OK:" o "**OK de Xaviel**" en ese archivo.',
+      'Convención del OK: una línea que empiece con "OK:" o "**OK de Xaviel**", CON FECHA y sin "pendiente/falta/no/skip" cerca.',
     ]);
   }
   const horas = (Date.now() / 1000 - Number(ts)) / 3600;
   if (horas >= 24) return reportar('breathe', "Dev tuvo tiempo de respirar / OK explícito", 'PASS', [`último commit de 'dev' hace ${horas.toFixed(1)}h (≥24h).`]);
   if (okMarcado) return reportar('breathe', "Dev tuvo tiempo de respirar / OK explícito", 'PASS', [`último commit de 'dev' hace solo ${horas.toFixed(1)}h, pero hay OK explícito en qa/release-${VERSION}.md.`]);
   return reportar('breathe', "Dev tuvo tiempo de respirar / OK explícito", 'FAIL', [
-    `último commit de 'dev' hace solo ${horas.toFixed(1)}h (<24h) y no hay OK explícito.`,
+    `último commit de 'dev' hace solo ${horas.toFixed(1)}h (<24h) y no hay OK explícito (o la línea que hay no trae fecha, o dice "pendiente/falta/no/skip" — ver scripts/lib/ok-linea.mjs).`,
     `Esperar, o agregar una línea "OK: <quién, qué probó, fecha>" en qa/release-${VERSION}.md.`,
   ]);
 }
