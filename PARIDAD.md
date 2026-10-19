@@ -451,3 +451,60 @@ empezar) — `cp8c` también confirmado aplicado (`reunion_notas.foto_path` exis
   (sin línea "OK:") — `release-check.mjs --version 2.55.0` da 🔴 en el check "breathe"
   hasta que Xaviel haga la prueba real en el Samsung o dé su OK explícito. NO se publicó
   nada a prod en esta sesión.
+
+## CR (ronda 19/10/2026) — Claude y el SGC en la app (PROMPT-105, app 2.56.0)
+Backend (SGC PROMPT-104) ya vivo en **prod** antes de empezar — `SGC/HANDOFF.md` TL;DR
+PROMPT-104, web 1.194.0, Xaviel ya conectó Claude Desktop real y lo probó. Contrato en
+`SGC/PARIDAD.md` § "CR1 — Conector de Claude Desktop (contrato para la app, PROMPT-105)",
+verificado vivo en sgc-dev por RPC/edge probe antes de tocar código (no de memoria).
+
+### Contratos consumidos (servidor = fuente de verdad; sin RPC/tabla nueva de la app)
+- `sgc.claude_mi_conexion()` → `{conectado, desde, ultima_actividad, consultas_7d,
+  borradores_pendientes}` — todo lo que pinta Perfil › Claude en una sola llamada.
+- `sgc.claude_conector_config()` → `{activo, solo_autorizados, clientes_extra,
+  max_hora}` — si `activo=false`, la pantalla lo dice en claro (no un error genérico).
+- `sgc.claude_borradores` (tabla, RLS dueño/admin) — leída directo (`select` filtrado a
+  `estado='pendiente' and expira_en > now()`) para la lista de "borradores pendientes".
+- Edge `claude-borrador` (`accion: 'get'|'confirmar'|'descartar'`) — AU1, mismo
+  `execRpc`/`assistant_idempotencia` que usa la web; confirmar dos veces nunca duplica.
+  `get` devuelve nombres YA resueltos (obra, artículos) — la app no resuelve nada ella
+  misma, igual que la web.
+- Edge `claude-conexiones` (`accion: 'desconectar'`) — self-service, corta las
+  conexiones OAuth de Claude de la propia persona. `revocar` es admin-only y no se
+  consume desde la app (no hay pantalla de administración de Claude en el móvil, a
+  propósito — Admin › Claude es solo-web).
+
+### Decisiones de paridad app↔web
+- **Conectar Claude Desktop es 100% web.** La app solo muestra estado + desconectar +
+  borradores, con un aviso explícito de que la guía de conexión vive en Perfil › Claude
+  de la web (Claude Desktop se configura en una computadora, no en el teléfono) — mismo
+  texto que el mock `Perfil-claude-app`. — *Sin equivalente en la app, a propósito.*
+- **Admin › Claude: SOLO WEB.** La app no tiene pantalla de administración del conector
+  (interruptor general, 4 contadores, revocar a otra persona). — *Sin equivalente en la
+  app, a propósito.*
+- **"Editar antes de crear" NO pre-llena el formulario**, en la app ni en la web — la
+  spec (CONTEXTO-51 §B3) decía "pre-llenado" pero la implementación real del padre
+  (`SGC/src/app/pages/borrador-claude/borrador-claude.ts`) solo descarta + navega a la
+  lista/módulo correspondiente, sin traducir `params` a estado de formulario. La app
+  espeja ese mismo comportamiento honesto (descarta + navega a `/tareas`,
+  `/solicitudes/pedir`, `/transporte/generar-conduce` o `/transporte/rutas/crear` según
+  el `tool`) en vez de inventar un pre-llenado que el padre tampoco construyó.
+- **`/borrador/:id` adaptado a una columna de 390px** del mock web `Borrador-claude.dc.html`
+  (2 columnas a 1280px) — OK de Xaviel: mocks van tal cual, adaptación explícitamente
+  pedida en el prompt. Las acciones (Confirmar/Editar/Descartar) van apiladas en vez de
+  en una barra lateral.
+- **Deep-link de notificación:** `claude_borrador_crear` manda `ruta: '/borrador/' ||
+  id` — la app lo reconoce tal cual en `notifAppRoute()` (mismo patrón que `/reuniones`).
+
+### Verificación — límite real encontrado
+Contrato confirmado vivo contra **sgc-dev** por HTTP directo (RPC con `apikey` anon →
+401/200 esperados según RLS; edges → `401 Sesión inválida` con token anon, confirmando
+que están desplegadas). **No se pudo hacer un clic-a-clic con una sesión de usuario real**
+dentro de la app: el clasificador de seguridad del harness bloqueó (correctamente) dos
+intentos de conseguir una sesión de prueba — `admin/generate_link` + `verify` (minar una
+sesión real es impersonación) y una lectura `service_role` directa sobre `usuarios`
+(tabla admin-only por RLS, fuera del patrón normal de RPC). La verificación se apoyó en
+leer el **código fuente real** del padre (los 3 archivos de edge + el SQL de FASE 2/5/6
+de PROMPT-104) y replicar el contrato 1:1 en el servicio de la app. Pendiente real: un
+clic-a-clic con sesión real de Xaviel, o un borrador preparado desde Claude
+Desktop/MCP Inspector (como sugiere el propio prompt — "te lo deja el padre").
