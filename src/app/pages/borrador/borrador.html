@@ -1,0 +1,78 @@
+<div class="screen bdc">
+  <header class="bdc__header">
+    <button type="button" class="bdc__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="bdc__title">{{ titulo() }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (cargando()) {
+      <div class="bdc__skeleton"></div>
+    } @else if (error()) {
+      <app-empty-state
+        icon="📭"
+        [title]="'No pudimos cargar el borrador' | t"
+        [message]="error()!"
+        [ctaLabel]="'Reintentar' | t"
+        (action)="recargar()"
+      />
+    } @else if (borrador(); as b) {
+      <div class="bdc__banner">
+        <b>{{ 'Preparado por Claude Desktop' | t }}</b>
+        <span>· {{ fmtRelativa(b.creado_en) }} · {{ 'a tu nombre' | t }}</span>
+        @if (b.estado === 'pendiente') {
+          <span>· {{ 'caduca en' | t }} {{ tiempoRestante() }}</span>
+        }
+      </div>
+
+      @if (b.estado === 'caducado') {
+        <app-empty-state
+          icon="⏳"
+          [title]="'Este borrador ya caducó' | t"
+          [message]="'Pídele a Claude que lo prepare de nuevo.' | t"
+        />
+      } @else if (b.estado === 'descartado') {
+        <app-empty-state icon="🗑️" [title]="'Este borrador fue descartado' | t" />
+      } @else if (b.estado === 'confirmado') {
+        <app-empty-state
+          icon="✅"
+          [title]="'Ya se creó' | t"
+          [message]="resultado()?.mensaje || ''"
+        />
+      } @else {
+        <div class="bdc__card">
+          @if (b.resumen) {
+            <p class="bdc__resumen">{{ b.resumen }}</p>
+          }
+          <div class="bdc__detalle" appStagger>
+            @for (linea of detalle(); track linea.etiqueta + linea.valor) {
+              <div class="bdc__linea">
+                <span class="bdc__linea-etiqueta">{{ linea.etiqueta }}</span>
+                <span class="bdc__linea-valor">{{ linea.valor }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (resultado(); as r) {
+          @if (!r.ok) {
+            <div class="bdc__error-decidir">{{ r.mensaje }}</div>
+          }
+        }
+
+        <div class="bdc__acciones">
+          <span class="bdc__acciones-titulo">{{ '¿Lo creamos?' | t }}</span>
+          <span class="bdc__acciones-nota">{{ 'Se crea con la misma validación de siempre. Si algo no cumple, te lo dice aquí.' | t }}</span>
+          <button type="button" class="bdc__confirmar" [disabled]="enviando()" (click)="confirmar()">
+            {{ (enviando() ? 'Creando…' : 'Confirmar y crear') | t }}
+          </button>
+          <button type="button" class="bdc__editar" [disabled]="enviando()" (click)="editarAntesDeCrear()">
+            {{ 'Editar antes de crear' | t }}
+          </button>
+          <button type="button" class="bdc__descartar" [disabled]="enviando()" (click)="descartar()">
+            {{ 'Descartar borrador' | t }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

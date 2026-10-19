@@ -1,0 +1,95 @@
+<div class="screen claude">
+  <header class="claude__header">
+    <button type="button" class="claude__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="claude__title">{{ 'Claude y el SGC' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    <p class="claude__intro">
+      {{ 'Conecta Claude Desktop al SGC desde una computadora. Desde aquí ves el estado y puedes cortar el acceso.' | t }}
+    </p>
+
+    @if (!online()) {
+      <div class="claude__aviso">{{ 'Necesitas conexión para ver el estado de Claude.' | t }}</div>
+    } @else if (loading()) {
+      <div class="claude__card claude__skeleton"></div>
+    } @else if (cargaFallida()) {
+      <div class="claude__aviso">
+        {{ 'No pudimos cargar tu conexión con Claude.' | t }}
+        <button type="button" class="claude__reintentar" (click)="recargar()">{{ 'Reintentar' | t }}</button>
+      </div>
+    } @else {
+      @if (conectorApagado()) {
+        <div class="claude__aviso claude__aviso--apagado">
+          {{ 'El conector de Claude está apagado para todo el SGC por ahora. Pregúntale a Tecnología.' | t }}
+        </div>
+      }
+
+      @if (conexion(); as c) {
+        <div class="claude__card">
+          <div class="claude__card-head">
+            <b class="claude__card-title">{{ 'Tu conexión' | t }}</b>
+            @if (c.conectado) {
+              <span class="claude__badge claude__badge--on">{{ 'CONECTADO' | t }}</span>
+            } @else {
+              <span class="claude__badge claude__badge--off">{{ 'NO CONECTADO' | t }}</span>
+            }
+          </div>
+
+          @if (c.conectado) {
+            <span class="claude__meta">
+              {{ 'Última consulta' | t }} {{ fmtRelativa(c.ultima_actividad) }} · {{ c.consultas_7d }} {{ 'esta semana' | t }}
+            </span>
+            @if (c.borradores_pendientes > 0) {
+              <span class="claude__meta">
+                {{ c.borradores_pendientes }}
+                {{ (c.borradores_pendientes === 1 ? 'borrador pendiente de confirmar' : 'borradores pendientes de confirmar') | t }}
+              </span>
+            }
+            <button type="button" class="claude__desconectar" [disabled]="desconectando()" (click)="pedirDesconectar()">
+              {{ (desconectando() ? 'Desconectando…' : 'Desconectar Claude') | t }}
+            </button>
+          } @else {
+            <span class="claude__meta">{{ 'Todavía no has conectado Claude Desktop.' | t }}</span>
+          }
+        </div>
+      }
+
+      @if (borradores(); as lista) {
+        @if (lista.length) {
+          <div class="claude__card">
+            <b class="claude__card-title">{{ 'Borradores de Claude' | t }}</b>
+            <div class="claude__lista" appStagger>
+              @for (b of lista; track b.id) {
+                <div class="claude__borrador">
+                  <b class="claude__borrador-resumen">{{ b.resumen || b.tool }}</b>
+                  <span class="claude__borrador-meta">
+                    {{ fmtRelativa(b.creado_en) }} · {{ caducaEn(b.expira_en) }}
+                  </span>
+                  <button type="button" class="claude__revisar" (click)="abrirBorrador(b.id)">
+                    {{ 'Revisar y confirmar' | t }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+    }
+
+    <div class="claude__nota">
+      {{ 'Para conectar Claude Desktop usa la guía en Perfil › Claude de la web del SGC (tiene el enlace para copiar).' | t }}
+    </div>
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmDesconectar()"
+    [title]="'Desconectar Claude' | t"
+    [message]="'Claude Desktop dejará de tener acceso a tu cuenta del SGC. Puedes volver a conectarlo cuando quieras desde la web.' | t"
+    [confirmLabel]="'Sí, desconectar' | t"
+    [cancelLabel]="'Cancelar' | t"
+    tone="danger"
+    (confirmed)="desconectar()"
+    (cancelled)="cancelarDesconectar()"
+  />
+</div>

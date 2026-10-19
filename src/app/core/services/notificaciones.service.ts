@@ -419,6 +419,7 @@ export function notifAppRoute(n: {
   }
   // Rutas que ya coinciden con el router de la app. CP8 — reunion_invitacion/
   // reunion_minuta mandan '/reuniones/<id>' tal cual (mismo formato en la app).
+  // CR1 — claude_borrador_crear manda '/borrador/<id>' tal cual (mismo formato).
   if (
     r.startsWith('/transporte') ||
     r.startsWith('/inventario') ||
@@ -428,7 +429,8 @@ export function notifAppRoute(n: {
     r.startsWith('/notas') ||
     r.startsWith('/tareas') ||
     r.startsWith('/mensajes') ||
-    r.startsWith('/reuniones')
+    r.startsWith('/reuniones') ||
+    r.startsWith('/borrador')
   ) {
     return r;
   }
