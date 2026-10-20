@@ -15,12 +15,74 @@ import DOMPurify from 'dompurify';
  * siguiente guardado. El modo "Texto simple" (textarea cruda) evita esa pérdida.
  */
 
-/** Markdown → HTML saneado, para hidratar el `contenteditable` al abrir una nota. */
+/**
+ * CS2 — esquema que el editor de notas de la web usa para imágenes pegadas:
+ * `![alt](nota-img:<ruta-en-el-bucket>)`. No es una URL cargable (la ruta vive en
+ * el bucket privado `notas-imagenes`, requiere una URL firmada) — se guarda así en
+ * el Markdown para no "pesar" el contenido con URLs que vencen.
+ */
+const NOTA_IMG_SCHEME = 'nota-img:';
+
+/** Markdown → HTML saneado, para hidratar el `contenteditable`/vista al abrir una nota.
+ *  Las imágenes `nota-img:` quedan SIN `src` (ruta inválida para el navegador) y con
+ *  `data-nota-img-path` — `resolverImagenesNota` las completa con la URL firmada real.
+ *
+ *  OJO (bug real, encontrado probando en un Samsung real): `nota-img:` no es un esquema
+ *  de URI que DOMPurify reconozca como seguro — `DOMPurify.sanitize()` se come el `src`
+ *  ENTERO antes de que este código pueda leerlo, si se saneara DESPUÉS de convertir.
+ *  Por eso la conversión a `data-nota-img-path` pasa ANTES del saneo (sobre el HTML
+ *  crudo de `marked`, con una sustitución de texto simple — no ejecuta nada, DOMPurify
+ *  sigue limpiando todo lo demás después).
+ */
 export function markdownToHtml(md: string): string {
   const raw = md ?? '';
   if (!raw.trim()) return '';
   const rendered = marked.parse(raw, { async: false, breaks: true }) as string;
-  return DOMPurify.sanitize(rendered);
+  const pre = rendered.replace(
+    /<img([^>]*)\ssrc="nota-img:([^"]*)"([^>]*)>/g,
+    '<img$1 class="nota-img-pendiente" data-nota-img-path="$2"$3>',
+  );
+  return DOMPurify.sanitize(pre, { ADD_ATTR: ['data-nota-img-path'] });
+}
+
+/**
+ * CS2 — resuelve las imágenes `nota-img:` ya hidratadas en el DOM (`data-nota-img-path`)
+ * a su URL firmada real, vía el `resolver` (normalmente `NotasService.resolverImagenUrl`,
+ * que pide la URL firmada al bucket privado `notas-imagenes`). Si el bucket/ruta no
+ * existe o falla, la imagen queda oculta (nunca una ruta rota visible). Idempotente
+ * (marca `data-resuelta` para no repetir la llamada en re-renders).
+ */
+export async function resolverImagenesNota(
+  root: HTMLElement,
+  resolver: (path: string) => Promise<string | null>,
+): Promise<void> {
+  const imgs = Array.from(root.querySelectorAll<HTMLImageElement>('img[data-nota-img-path]:not([data-resuelta])'));
+  await Promise.all(
+    imgs.map(async (img) => {
+      const path = img.getAttribute('data-nota-img-path') ?? '';
+      img.setAttribute('data-resuelta', '1');
+      const url = path ? await resolver(path).catch(() => null) : null;
+      img.classList.remove('nota-img-pendiente');
+      if (url) {
+        // El signed URL puede "existir" aunque el objeto ya no esté en el bucket
+        // (createSignedUrl no siempre valida existencia) — si la carga real falla,
+        // se oculta igual (nunca una ruta rota visible).
+        img.onerror = () => img.classList.add('nota-img-rota');
+        img.src = url;
+      } else {
+        img.classList.add('nota-img-rota');
+      }
+    }),
+  );
+}
+
+/** CS2 — `![alt](nota-img:<ruta>)` de vuelta, a partir del `data-nota-img-path` que
+ *  `markdownToHtml` dejó (NUNCA la `src` resuelta — esa es una URL firmada que vence
+ *  y no debe guardarse). null si la imagen no tiene ruta (no debería pasar). */
+function imgToMd(e: Element): string | null {
+  const path = e.getAttribute('data-nota-img-path');
+  if (!path) return null;
+  return `![${e.getAttribute('alt') ?? ''}](${NOTA_IMG_SCHEME}${path})`;
 }
 
 /** Texto inline (negrita/cursiva/saltos) dentro de un bloque — recursivo. */
@@ -44,6 +106,9 @@ function inlineToMd(el: Element): string {
       case 'I':
       case 'EM':
         out += `*${inlineToMd(e)}*`;
+        break;
+      case 'IMG':
+        out += imgToMd(e) ?? '';
         break;
       default:
         out += inlineToMd(e); // U y demás: sin equivalente Markdown simple → pasa el texto
@@ -94,6 +159,13 @@ function blockToMd(el: Element): string[] {
         // bloques anidados reales en este editor) → cada uno es una línea nueva.
         lines.push(...blockToMd(e));
         break;
+      case 'IMG': {
+        // CS2 — imagen pegada en la web (`nota-img:`): se preserva tal cual, nunca
+        // se pisa ni se "aplana" al editar el resto de la nota desde el móvil.
+        const md = imgToMd(e);
+        if (md) lines.push(md);
+        break;
+      }
       case 'BR':
         lines.push('');
         break;

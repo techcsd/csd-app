@@ -40,7 +40,7 @@ export class NotasService {
         .from('notas')
         .select(
           'id, owner_id, titulo, contenido, color, pinned, archivada, created_at, updated_at, ' +
-            'ambito, formato, tags, enviada_a_ronda_at, ' + // BP5/CQ2 — Dev notes
+            'ambito, formato, tags, enviada_a_ronda_at, grupo_id, ' + // BP5/CQ2/CS2 — Dev notes
             'compartidos:nota_compartidos(usuario_id, permiso)',
         )
         .order('updated_at', { ascending: false });
@@ -67,6 +67,43 @@ export class NotasService {
   /** Una nota por id (desde la lista combinada; funciona offline). */
   async getNota(id: string): Promise<Nota | null> {
     return (await this.getNotas()).find((n) => n.id === id) ?? null;
+  }
+
+  /**
+   * CS2 — grupos anidados del dueño logueado (`sgc.nota_grupos`, select directo,
+   * RLS `usuario_id = auth.uid()`). Solo lectura en la app (mostrar sin romper —
+   * crear/mover/renombrar grupos sigue siendo de la web, PROMPT-106). Online-only
+   * (catálogo pequeño, no vale la pena cachear offline).
+   */
+  async getGrupos(): Promise<{ id: string; nombre: string; parent_id: string | null }[]> {
+    try {
+      const { data, error } = await this.supabase.client
+        .from('nota_grupos')
+        .select('id, nombre, parent_id')
+        .order('orden', { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data as { id: string; nombre: string; parent_id: string | null }[]) ?? [];
+    } catch {
+      return []; // offline / sin RLS: la nota se ve igual, solo sin la etiqueta de grupo
+    }
+  }
+
+  /**
+   * CS2 — URL firmada (1h) de una imagen pegada en una nota (`nota-img:<ruta>` en
+   * el Markdown), bucket privado `notas-imagenes`. null si la ruta no existe o no
+   * hay permiso (la RLS de Storage ya resuelve quién puede verla) — nunca una ruta
+   * rota visible, el llamador oculta la imagen en ese caso.
+   */
+  async resolverImagenUrl(path: string): Promise<string | null> {
+    try {
+      const { data, error } = await this.supabase.client.storage
+        .from('notas-imagenes')
+        .createSignedUrl(path, 3600);
+      if (error) return null;
+      return data?.signedUrl ?? null;
+    } catch {
+      return null;
+    }
   }
 
   private mapNota(r: Record<string, unknown>, uid: string): Nota {

@@ -86,6 +86,16 @@
     height: auto;
     border-radius: 8px;
   }
+  // CS2 — imagen pegada (web) mientras se resuelve su URL firmada / si no se pudo
+  // resolver: nunca una ruta rota visible (8ª regla — el estado se ve, no se adivina).
+  img.nota-img-pendiente {
+    min-height: 120px;
+    background: var(--color-surface-2);
+    display: block;
+  }
+  img.nota-img-rota {
+    display: none;
+  }
 
   hr {
     border: 0;

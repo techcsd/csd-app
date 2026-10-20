@@ -256,7 +256,7 @@ export class AdminService {
     const { error } = await this.supabase.client.functions.invoke('admin-create-user', {
       body: { email: email.trim(), fullName: fullName.trim(), roleId, redirectTo: SET_PASSWORD_URL },
     });
-    if (error) throw new Error(this.fnError(error));
+    if (error) throw new Error(await this.fnError(error));
   }
 
   async actualizarNombre(id: string, nombre: string): Promise<void> {
@@ -277,14 +277,14 @@ export class AdminService {
     const { error } = await this.supabase.client.functions.invoke('admin-deactivate-user', {
       body: { userId, activo },
     });
-    if (error) throw new Error(this.fnError(error));
+    if (error) throw new Error(await this.fnError(error));
   }
 
   async resetPassword(userId: string): Promise<void> {
     const { error } = await this.supabase.client.functions.invoke('admin-reset-user-password', {
       body: { userId, redirectTo: SET_PASSWORD_URL },
     });
-    if (error) throw new Error(this.fnError(error));
+    if (error) throw new Error(await this.fnError(error));
   }
 
   /**
@@ -312,7 +312,7 @@ export class AdminService {
           if (inner instanceof Error && inner.message) throw inner;
         }
       }
-      throw new Error(this.fnError(error));
+      throw new Error(await this.fnError(error));
     }
     const b = (data ?? {}) as { ok?: boolean; password?: string; debeCambiar?: boolean; error?: string };
     if (b.error) throw new Error(b.error);
@@ -325,7 +325,7 @@ export class AdminService {
     const { data, error } = await this.supabase.client.functions.invoke('acceso-cedula', {
       body: { usuarioId, pin },
     });
-    if (error) throw new Error(this.fnError(error));
+    if (error) throw new Error(await this.fnError(error));
     if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
   }
 
@@ -333,7 +333,7 @@ export class AdminService {
     const { error } = await this.supabase.client.functions.invoke('admin-resend-invite', {
       body: { userId, redirectTo: SET_PASSWORD_URL },
     });
-    if (error) throw new Error(this.fnError(error));
+    if (error) throw new Error(await this.fnError(error));
   }
 
   // ── AL2 — Roles / permisos (matriz AG12) ──────────────────
@@ -373,7 +373,20 @@ export class AdminService {
     if (error) throw new Error(error.message);
   }
 
-  private fnError(error: unknown): string {
+  /** CS7 — igual que `leerErrorEdge`/AU16 de otros servicios: supabase-js mete el
+   *  cuerpo real de la edge en `error.context` (Response) en vez de en `data`/
+   *  `error.message` cuando el status no es 2xx. Sin esto se ve el genérico "Edge
+   *  Function returned a non-2xx status code" en vez del motivo real del servidor. */
+  private async fnError(error: unknown): Promise<string> {
+    try {
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        const b = (await ctx.json()) as { error?: string };
+        if (b?.error) return b.error;
+      }
+    } catch {
+      /* cuerpo no-JSON: se queda el message genérico */
+    }
     const m = (error as { message?: string })?.message ?? '';
     return m || 'No se pudo completar la operación.';
   }

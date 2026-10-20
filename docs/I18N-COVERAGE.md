@@ -117,9 +117,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/rrhh/empleado | 23 | 0 | 100% | 0% |  |
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
-| pages/solicitudes/bandeja | 16 | 0 | 100% | 0% |  |
+| pages/solicitudes/bandeja | 20 | 0 | 100% | 0% |  |
 | pages/solicitudes/detalle | 74 | 12 | 76% | 1% |  |
-| pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
+| pages/solicitudes/mis | 15 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |

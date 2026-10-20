@@ -23,7 +23,7 @@ import { NetworkService } from '../../../../core/services/network.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { Nota } from '../../../../core/models/nota.model';
 import { formatFechaCortaHora } from '../../../../core/util/fecha';
-import { htmlToMarkdown, markdownAPlano, markdownToHtml } from '../../../../core/util/markdown';
+import { htmlToMarkdown, markdownAPlano, markdownToHtml, resolverImagenesNota } from '../../../../core/util/markdown';
 
 const AUTOSAVE_DEBOUNCE_MS = 2000;
 
@@ -119,6 +119,9 @@ export class DevNotaEditorPage implements OnDestroy {
       if (el && el !== this.lastBodyEl && !this.loading() && !this.modoSimple()) {
         el.innerHTML = markdownToHtml(this.contenido());
         this.lastBodyEl = el;
+        // CS2 — `el.innerHTML` ya es DOM real (escritura directa, no binding de
+        // Angular): las imágenes `nota-img:` ya están ahí, listas para resolver.
+        void resolverImagenesNota(el, (path) => this.service.resolverImagenUrl(path));
       }
       if (!el) this.lastBodyEl = null;
     });

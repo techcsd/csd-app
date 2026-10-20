@@ -40,10 +40,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Claude y el SGC en tu Perfil';
+const TITULO = 'Orden de requisiciones y notas técnicas con imágenes';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Perfil', d: 'Nueva sección "Claude y el SGC": ves si tienes Claude Desktop conectado, cuándo lo usaste por última vez, y puedes desconectarlo cuando quieras. Conectar Claude Desktop se hace desde la web (es cosa de computadora), pero desde el teléfono ya puedes revisar el estado y cortar el acceso.' },
-  { t: 'nuevo', m: 'Borradores de Claude', d: 'Cuando le pides algo a Claude Desktop (crear una requisición, una tarea, un conduce o una ruta), prepara un borrador que tú revisas y confirmas desde el teléfono antes de que exista de verdad en el sistema — nada se crea solo.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'En "Todas las requisiciones" y "Mis requisiciones" ya puedes elegir cómo ordenar las activas: por Fecha o por Necesidad, tocando de nuevo para invertir el orden. Se recuerda en tu teléfono.' },
+  { t: 'mejora', m: 'Dev notes', d: 'Las notas técnicas que tienen imágenes pegadas desde la computadora ahora se ven bien en el teléfono (antes salía la imagen rota); si la nota está dentro de una carpeta, se ve su ruta.' },
+  { t: 'arreglo', m: 'Administración', d: 'Al crear/activar/desactivar un usuario, resetear su contraseña, fijar su PIN o reenviarle la invitación, si algo falla ahora se ve el motivo real (antes salía un error genérico sin explicar qué pasó).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

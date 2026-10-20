@@ -68,6 +68,9 @@
                   >📋</button><!-- tropes-allow: 📋 = mismo icono de "Mandar a ronda" que el pie del lector -->
                 }
               </div>
+              @if (grupoRuta(n); as ruta) {
+                <span class="dnotes__item-grupo">📁 {{ ruta }}</span><!-- tropes-allow: 📁 = icono de carpeta/grupo (CS2) -->
+              }
               @if (n.tags?.length) {
                 <div class="dnotes__item-tags">
                   @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
@@ -99,10 +102,13 @@
             @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
           </div>
         }
+        @if (grupoRuta(n); as ruta) {
+          <p class="dnotes__reader-hint">📁 {{ ruta }}</p><!-- tropes-allow: 📁 = icono de carpeta/grupo (CS2) -->
+        }
         @if (n.enviada_a_ronda_at) {
           <p class="dnotes__reader-hint">📋 Enviada a ronda · {{ fechaHora(n.enviada_a_ronda_at) }}</p><!-- tropes-allow: 📋 = mismo icono de "Mandar a ronda" del pie -->
         }
-        <app-markdown-view [source]="n.contenido" />
+        <app-markdown-view [source]="n.contenido" [resolverImagen]="resolverImagen" />
       </div>
       <footer class="dnotes__reader-foot">
         @if (n.es_mia) {
