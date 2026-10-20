@@ -508,3 +508,133 @@ leer el **código fuente real** del padre (los 3 archivos de edge + el SQL de FA
 de PROMPT-104) y replicar el contrato 1:1 en el servicio de la app. Pendiente real: un
 clic-a-clic con sesión real de Xaviel, o un borrador preparado desde Claude
 Desktop/MCP Inspector (como sugiere el propio prompt — "te lo deja el padre").
+
+## CS (ronda 20/10/2026) — app 2.57.0, PUBLICADA EN DEV (prod pendiente del OK del teléfono)
+Consume PROMPT-106 del padre — **ya mergeado a `SGC` main** (web 1.195.0 en prod,
+`SGC/HANDOFF.md` "cierra la ronda CS"). Backend verificado vivo en **sgc-dev** por
+HTTP directo (no de memoria) antes de tocar código: `notas.grupo_id` existe (select
+con service_role → `[{"grupo_id":null}]`), `sgc.nota_grupos` existe (RLS propia,
+`authenticated` con grant select/insert/update/delete directo — sin RPC), bucket
+privado `notas-imagenes` existe (confirmado por `storage/v1/bucket` con
+service_role — el anon-key probe inicial dio un falso "Bucket not found": Supabase
+Storage responde así para cualquier bucket al que el rol no tenga acceso, exista o
+no, como medida anti-enumeración), `mis_sesiones()`/`cerrar_mi_sesion(p_id)` responden
+200/500-de-negocio reales (no 404).
+
+### CS1 — orden de requisiciones por columna
+`solicitudes/bandeja` (equivalente de Inventario — "quien surte", ve todas) y
+`solicitudes/mis` (equivalente de Ingeniería — "quien pide") NO tenían ningún selector
+de orden: la pestaña Activas estaba fija en Necesidad ascendente, sin poder elegir
+Fecha (ni siquiera el toggle que sí tenía la web de Inventario). Añadido
+`OrdenRequisicion {clave: 'fecha'|'necesidad', direccion}` + `compararPorOrden()`
+(`core/models/inventario.model.ts`, compartido por las dos pantallas) y un selector de
+chips **Fecha / Necesidad** (▲▼ al tocar de nuevo la misma), recordado por dispositivo
+(`requis_orden_bandeja` / `requis_orden_mis`). Solo en la pestaña Activas — Historial
+sigue fijo por cierre (`cerrada_en` desc), igual que siempre (no es elegible en ninguna
+de las dos pantallas de la web tampoco). — *Primera vez que la app tiene este control;
+antes solo existía en el código, nunca expuesto al usuario.*
+
+### CS2 — Dev notes: grupos e imágenes (mostrar, sin romper — NO gestión)
+Alcance explícito de esta ronda para la app: **mostrar** sin romper, no construir
+gestión de carpetas (eso sigue siendo de la web). Cambios reales:
+- **Imágenes (`![](nota-img:<ruta>)`):** `core/util/markdown.ts` ahora, en
+  `markdownToHtml()`, deja esas imágenes SIN `src` (esquema inválido para el
+  navegador) con `data-nota-img-path` — nueva `resolverImagenesNota(root, resolver)`
+  las completa con la URL firmada real (`NotasService.resolverImagenUrl`, 1h,
+  bucket `notas-imagenes`). Si falla/no hay permiso, la imagen queda OCULTA
+  (`.nota-img-rota`), nunca una ruta rota visible (8ª regla). Cableado en el
+  **editor** (`dev-nota-editor.ts`, tras hidratar el `contenteditable`) y en el
+  **lector** (`shared/ui/markdown-view` ganó un input opcional `resolverImagen` —
+  sin él, p. ej. en Compa, el componente se comporta exactamente igual que antes;
+  CERO regresión para los otros 2 consumidores del componente).
+  - **Bug real encontrado y corregido:** `htmlToMarkdown()` (round-trip del
+    editor) no tenía ningún caso para `<img>` — si el usuario editaba el resto de
+    una nota que ya tenía una imagen pegada desde la web, la imagen se **perdía**
+    silenciosamente (se aplanaba a texto vacío) en el siguiente autoguardado.
+    Corregido con un caso `IMG` en `blockToMd`/`inlineToMd` que reconstruye
+    `![alt](nota-img:<ruta>)` desde `data-nota-img-path` — NUNCA desde el `src`
+    resuelto (esa URL firmada vence).
+- **Grupos:** `Nota.grupo_id` añadido al modelo + al `select` de
+  `NotasService.getNotas()`; nuevo `NotasService.getGrupos()` (select directo a
+  `nota_grupos`, solo lectura). Dev notes muestra la ruta del grupo ("Carpeta /
+  Sub", hasta 4 niveles) como una línea de metadatos en la lista y en el lector —
+  **sin** crear/mover/renombrar grupos (eso sigue siendo de la web, PROMPT-106).
+- **Reportes de la app:** sin cambios — cámara/galería como siempre (Ctrl+V/
+  arrastrar es de computadora, fuera de alcance a propósito, igual que el
+  prompt lo pedía).
+- **General Notas (`/notas`, `nota-editor.ts`) — fuera de alcance, con un gap
+  anotado:** su `sanitizeNoteHtml()` whitelist de tags NO incluye `IMG` (lo
+  reemplaza por su `textContent`, que para una imagen es vacío) — si el editor de
+  notas GENERALES de la web algún día permite pegar imágenes con el mismo esquema
+  `nota-img:`, desaparecerían silenciosamente al editar desde el móvil. Hoy no es
+  un bug activo (CS2 es explícitamente de Dev notes); dejar anotado para cuando/si
+  se extienda a Notas generales.
+
+### CS3 — nota nueva que no aparece en el listado
+**El bug NO reproduce en la app** — arquitectura distinta a la de la web:
+`DevNotesPage`/`NotasPage` se reconstruyen en cada navegación a la ruta (sin
+`RouteReuseStrategy` propia) y llaman `load()` desde cero, que llama
+`NotasService.getNotas()` — este SIEMPRE re-consulta el servidor
+(`CatalogService.refresh()` llama al loader primero, cae a caché solo si falla) y
+superpone las notas pendientes del outbox con un `Map.set()` incondicional (agrega
+si falta, no solo reemplaza si ya está — a diferencia del `actualizarEnListaLocal`
+de la web, que solo hacía `.map()`). Y `DevNotaEditorPage.back()` SÍ guarda lo
+pendiente antes de volver (`autoguardar().finally(() => location.back())`).
+Verificado leyendo el código real de ambos archivos — sin cambios necesarios.
+
+### CS4 — Sesión y dispositivos
+**No existe esa pantalla en la app.** Perfil/Configuración de la app solo tiene un
+botón «Cerrar sesión en otros dispositivos» (edge `auth-signout-others`), sin lista.
+Contratos del padre verificados vivos en sgc-dev: `mis_sesiones()` responde 200
+`[]` (anon, sin match) y `cerrar_mi_sesion(p_id)` responde el error de negocio real
+("Esa sesión no existe o no es tuya", no un 404) — listos para consumir cuando se
+decida construir la pantalla. **No se construyó esta ronda** (instrucción explícita
+del prompt: "si no existe esa pantalla, no la crees") — queda como decisión de
+Xaviel, no bloquea el release.
+
+### CS5 — Cobertura del conector de Claude
+No aplica a la app (Claude Desktop se configura en una computadora). Perfil ›
+Claude (`pages/perfil/claude/`, de la ronda CR) sigue consumiendo exactamente el
+mismo contrato de antes (`claude_mi_conexion`/`claude_conector_config`/
+`claude_borradores`) — las 12 herramientas nuevas del conector son 100% del lado
+servidor/MCP, invisibles para la app. Sin cambios.
+
+### CS6/CS7 — "Entrar como" / mensaje real del edge
+**"Entrar como" de la app (`impersonation.service.ts`) YA leía el cuerpo real del
+edge** (`leerErrorEdge`, patrón AU16, de una ronda anterior) — el bug de CS6 (el
+guard de `rechazar_si_cliente_oauth` convirtiendo cualquier error en un 403
+engañoso) es 100% del lado del servidor/edge, ya arreglado por PROMPT-106; la app
+automáticamente muestra el mensaje real sin tocar nada.
+**Se encontró y arregló el MISMO hueco de CS7 en otro sitio real:**
+`admin.service.ts`'s `fnError()` solo leía `error.message` (el genérico "Edge
+Function returned a non-2xx status code"), usado en **5 llamadas**: crear usuario
+(`admin-create-user`), activar/desactivar (`admin-deactivate-user`), resetear
+contraseña (`admin-reset-user-password`), fijar PIN de cédula (`acceso-cedula`,
+`fijarPinUsuario`) y reenviar invitación (`admin-resend-invite`). Ahora lee
+`error.context.json()` igual que los otros 6 servicios que ya lo hacían bien
+(`auth.service.ts`, `conductores.service.ts`, `combustible.service.ts`,
+`claude-conector.service.ts`, `geocoding.service.ts`, `proyectos.service.ts`,
+`impersonation.service.ts`) — barrido completo de `functions.invoke` en el repo,
+sin huecos restantes.
+
+### CS10 — Calendario de Google en Reuniones
+**Default NO aplicado a la app esta ronda** (decisión ya tomada en CONTEXTO-52 §3
+B7, antes de ejecutar). Verificado que `pages/reuniones/*` no se rompe con
+`google_event_id` (campo opcional, ignorado por el cliente) ni con eventos creados
+vía "Llevar al SGC" del lector de calendario de la web. Pendiente de decisión de
+Xaviel si se quiere "Mi calendario de Google" en el móvil en una ronda futura —
+el contrato del padre (edge `reuniones-mi-calendario`, scope `calendar.readonly`)
+queda disponible para consumir cuando se decida, aunque el padre reportó que la
+cuenta de servicio de Google aún no está configurada ni en dev ni en prod (hallazgo
+de CS10, ver `SGC/PARIDAD.md`).
+
+### Release — dev, con el gate honesto en rojo (CS9)
+`npm run build` + `npm run test:canal` + `release-check.mjs --version 2.57.0`: 3/4
+en verde (registro/versión/build), **1/4 en rojo a propósito** ("breathe" — sin OK
+de Xaviel ni 24h). APK dev firmado + publicado + registrado + **publicado en dev**
+(`scripts/data-fixes/2026-10-20-cs-publicar-2.57.0.mjs --env dev`). El Samsung sigue
+en 2.51.0-dev (van **4 rondas seguidas** sin probar el updater en hardware real:
+2.54.0, 2.55.0, 2.56.0, ahora 2.57.0) — `qa/release-2.57.0.md` dejado con
+instrucciones exactas para Xaviel, sin línea `OK:` (a diferencia de 2.56.0, el
+data-fix de publicar en PROD de esta ronda NO se reabrió para permitir saltarla —
+queda bloqueado hasta que la pruebe o dé su OK explícito).

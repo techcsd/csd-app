@@ -20,6 +20,19 @@
     }
   </div>
 
+  <!-- CS1 — orden elegible (solo Activas; Historial sigue fijo por cierre). -->
+  @if (tab() === 'activas') {
+    <div class="mis-sol__orden" role="group" [attr.aria-label]="'Ordenar por' | t">
+      <span class="mis-sol__orden-label">{{ 'Ordenar:' | t }}</span>
+      <button type="button" class="mis-sol__tab" appTapScale [class.mis-sol__tab--on]="orden().clave === 'fecha'" (click)="setOrden('fecha')">
+        {{ 'Fecha' | t }}@if (orden().clave === 'fecha') { {{ orden().direccion === 'asc' ? '▲' : '▼' }} }
+      </button>
+      <button type="button" class="mis-sol__tab" appTapScale [class.mis-sol__tab--on]="orden().clave === 'necesidad'" (click)="setOrden('necesidad')">
+        {{ 'Necesidad' | t }}@if (orden().clave === 'necesidad') { {{ orden().direccion === 'asc' ? '▲' : '▼' }} }
+      </button>
+    </div>
+  }
+
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="5" />

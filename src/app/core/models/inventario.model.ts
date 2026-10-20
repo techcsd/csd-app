@@ -303,6 +303,29 @@ export function necesidadOrden(fecha: string | null | undefined): number {
   return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
 }
 
+/**
+ * CS1 — orden elegible de la pestaña Activas: Fecha (created_at) o Necesidad
+ * (fecha_necesidad), cada una ▲/▼. Se recuerda por dispositivo (misma forma que
+ * la web: clave + dirección) — Historial sigue fijo por cierre (cerrada_en desc),
+ * no es elegible (mismo criterio en Inventario y en Ingeniería).
+ */
+export type OrdenClave = 'fecha' | 'necesidad';
+export interface OrdenRequisicion {
+  clave: OrdenClave;
+  direccion: 'asc' | 'desc';
+}
+export function compararPorOrden(
+  a: { created_at: string; fecha_necesidad?: string | null },
+  b: { created_at: string; fecha_necesidad?: string | null },
+  orden: OrdenRequisicion,
+): number {
+  const signo = orden.direccion === 'asc' ? 1 : -1;
+  if (orden.clave === 'necesidad') {
+    return signo * (necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
+  }
+  return signo * ((Date.parse(a.created_at) || 0) - (Date.parse(b.created_at) || 0));
+}
+
 /** BC4 — código citable de la requisición (REQ-XXXXXX) a partir del folio.
  *  Espejo de `requisicionCodigo` de la web (SGC/src/shared/models/solicitud.model.ts). */
 export function requisicionCodigo(folio: number | null | undefined): string {

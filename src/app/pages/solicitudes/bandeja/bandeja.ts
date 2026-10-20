@@ -10,11 +10,13 @@ import {
   RequisicionBandeja,
   grupoRequisicion,
   necesidadInfo,
-  necesidadOrden,
   GRUPO_ORDEN,
   GRUPO_LABEL,
   RequisicionGrupo,
   NecesidadInfo,
+  OrdenClave,
+  OrdenRequisicion,
+  compararPorOrden,
 } from '../../../core/models/inventario.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
@@ -63,20 +65,55 @@ export class RequisicionesBandejaPage {
   grupoDe = (f: RequisicionBandeja): RequisicionGrupo => grupoRequisicion(f.estado, f.fase);
   necesidad = (f: RequisicionBandeja): NecesidadInfo => necesidadInfo(f.fecha_necesidad, this.hoyISO);
 
+  // CS1 — orden elegible de Activas (Fecha/Necesidad ▲▼), recordado por dispositivo.
+  // Historial sigue fijo por cierre (no es elegible, mismo criterio de siempre).
+  private static readonly ORDEN_KEY = 'requis_orden_bandeja';
+  orden = signal<OrdenRequisicion>(this.leerOrdenGuardado());
+  private leerOrdenGuardado(): OrdenRequisicion {
+    try {
+      const raw = localStorage.getItem(RequisicionesBandejaPage.ORDEN_KEY);
+      if (raw) {
+        const v = JSON.parse(raw) as OrdenRequisicion;
+        if ((v.clave === 'fecha' || v.clave === 'necesidad') && (v.direccion === 'asc' || v.direccion === 'desc')) return v;
+      }
+    } catch {
+      /* best-effort */
+    }
+    return { clave: 'necesidad', direccion: 'asc' };
+  }
+  /** Toca la misma clave → alterna dirección; toca la otra → cambia de clave (con un
+   *  default de dirección sensato: necesidad asc = más próxima primero, fecha desc = más
+   *  reciente primero). */
+  setOrden(clave: OrdenClave): void {
+    this.orden.update((cur) => {
+      const next: OrdenRequisicion =
+        cur.clave === clave
+          ? { clave, direccion: cur.direccion === 'asc' ? 'desc' : 'asc' }
+          : { clave, direccion: clave === 'necesidad' ? 'asc' : 'desc' };
+      try {
+        localStorage.setItem(RequisicionesBandejaPage.ORDEN_KEY, JSON.stringify(next));
+      } catch {
+        /* best-effort */
+      }
+      return next;
+    });
+  }
+
   conteos = computed<Record<RequisicionGrupo, number>>(() => {
     const c: Record<RequisicionGrupo, number> = { activas: 0, historial: 0 };
     for (const f of this.filas()) c[this.grupoDe(f)]++;
     return c;
   });
 
-  // BY3/BZ0 — el grupo elegido: Activas por entrega más cercana (necesidad asc); Historial
-  // por cierre más reciente (cerrada_en, ya expuesto por requisiciones_bandeja; created_at
-  // de respaldo para filas viejas sin cierre).
+  // BY3/BZ0 — el grupo elegido: Activas por el orden elegido (CS1, default necesidad asc);
+  // Historial por cierre más reciente (cerrada_en, ya expuesto por requisiciones_bandeja;
+  // created_at de respaldo para filas viejas sin cierre).
   filasVisibles = computed(() => {
     const g = this.tab();
     const rows = this.filas().filter((f) => this.grupoDe(f) === g);
     if (g === 'activas') {
-      return rows.sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
+      const o = this.orden();
+      return rows.sort((a, b) => compararPorOrden(a, b, o));
     }
     return rows.sort((a, b) => (Date.parse(b.cerrada_en ?? b.created_at ?? '') || 0) - (Date.parse(a.cerrada_en ?? a.created_at ?? '') || 0));
   });

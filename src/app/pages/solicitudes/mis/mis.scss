@@ -207,6 +207,19 @@
   font-size: 11px;
   text-align: center;
 }
+
+// CS1 — fila de orden (Fecha/Necesidad ▲▼), solo visible en Activas.
+.mis-sol__orden {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px 0;
+}
+.mis-sol__orden-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
 // BV10 — fecha de necesidad como 1ª línea.
 .sol-card__nec {
   display: flex;

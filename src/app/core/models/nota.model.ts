@@ -22,6 +22,9 @@ export interface Nota {
   ambito?: 'general' | 'dev';
   formato?: 'html' | 'markdown';
   tags?: string[];
+  /** CS2 — grupo anidado (Dev notes, `sgc.nota_grupos`, solo lectura en la app).
+   *  null/undefined = "Sin grupo". */
+  grupo_id?: string | null;
   /** CQ2 — cuándo se copió al portapapeles por última vez ("Mandar a ronda"); solo informativo. */
   enviada_a_ronda_at?: string | null;
   // ---- Derivados en el cliente ----

@@ -147,6 +147,14 @@
     font-size: 16px;
   }
 
+  // CS2 — ruta de grupo ("Improvements / Octubre 2026"), solo lectura.
+  &__item-grupo {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+
   &__item-tags {
     display: flex;
     flex-wrap: wrap;

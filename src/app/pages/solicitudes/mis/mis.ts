@@ -11,11 +11,13 @@ import {
   requisicionCodigo,
   grupoRequisicion,
   necesidadInfo,
-  necesidadOrden,
   GRUPO_ORDEN,
   GRUPO_LABEL,
   RequisicionGrupo,
   NecesidadInfo,
+  OrdenClave,
+  OrdenRequisicion,
+  compararPorOrden,
 } from '../../../core/models/inventario.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
@@ -72,20 +74,53 @@ export class MisSolicitudesPage {
   grupoDe = (s: Solicitud): RequisicionGrupo => grupoRequisicion(s.estado, s.fase);
   /** BV10 — info de la fecha de necesidad de una requisición (para la 1ª línea). */
   necesidad = (s: Solicitud): NecesidadInfo => necesidadInfo(s.fecha_necesidad, this.hoyISO);
+
+  // CS1 — orden elegible de Activas (Fecha/Necesidad ▲▼), recordado por dispositivo.
+  // Historial sigue fijo por cierre (no es elegible, mismo criterio de siempre).
+  private static readonly ORDEN_KEY = 'requis_orden_mis';
+  orden = signal<OrdenRequisicion>(this.leerOrdenGuardado());
+  private leerOrdenGuardado(): OrdenRequisicion {
+    try {
+      const raw = localStorage.getItem(MisSolicitudesPage.ORDEN_KEY);
+      if (raw) {
+        const v = JSON.parse(raw) as OrdenRequisicion;
+        if ((v.clave === 'fecha' || v.clave === 'necesidad') && (v.direccion === 'asc' || v.direccion === 'desc')) return v;
+      }
+    } catch {
+      /* best-effort */
+    }
+    return { clave: 'necesidad', direccion: 'asc' };
+  }
+  setOrden(clave: OrdenClave): void {
+    this.orden.update((cur) => {
+      const next: OrdenRequisicion =
+        cur.clave === clave
+          ? { clave, direccion: cur.direccion === 'asc' ? 'desc' : 'asc' }
+          : { clave, direccion: clave === 'necesidad' ? 'asc' : 'desc' };
+      try {
+        localStorage.setItem(MisSolicitudesPage.ORDEN_KEY, JSON.stringify(next));
+      } catch {
+        /* best-effort */
+      }
+      return next;
+    });
+  }
+
   /** Conteo por grupo (para los badges de las tabs). */
   conteos = computed<Record<RequisicionGrupo, number>>(() => {
     const c: Record<RequisicionGrupo, number> = { activas: 0, historial: 0 };
     for (const s of this.solicitudes()) c[this.grupoDe(s)]++;
     return c;
   });
-  // BY3/BZ0 — el grupo elegido, ordenado: Activas por entrega más cercana (necesidad asc,
-  // vencidas arriba, sin fecha al final); Historial por cierre más reciente (cerrada_en,
-  // con created_at de respaldo para filas viejas sin cierre).
+  // BY3/BZ0 — el grupo elegido, ordenado: Activas por el orden elegido (CS1, default
+  // necesidad asc, vencidas arriba, sin fecha al final); Historial por cierre más
+  // reciente (cerrada_en, con created_at de respaldo para filas viejas sin cierre).
   visibles = computed(() => {
     const g = this.tab();
     const rows = this.solicitudes().filter((s) => this.grupoDe(s) === g);
     if (g === 'activas') {
-      return rows.sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
+      const o = this.orden();
+      return rows.sort((a, b) => compararPorOrden(a, b, o));
     }
     return rows.sort((a, b) => (Date.parse(b.cerrada_en ?? b.created_at ?? '') || 0) - (Date.parse(a.cerrada_en ?? a.created_at ?? '') || 0));
   });
