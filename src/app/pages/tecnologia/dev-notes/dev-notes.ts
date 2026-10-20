@@ -67,6 +67,11 @@ export class DevNotesPage {
   tagFiltro = signal<string | null>(null);
   abierta = signal<Nota | null>(null);
 
+  /** CS2 — grupos del dueño (id → {nombre, parent_id}), para la ruta "Carpeta / Sub". */
+  private gruposPorId = signal<Map<string, { nombre: string; parent_id: string | null }>>(new Map());
+  /** CS2 — resuelve `nota-img:<ruta>` a su URL firmada (pasado a app-markdown-view). */
+  readonly resolverImagen = (path: string): Promise<string | null> => this.service.resolverImagenUrl(path);
+
   constructor() {
     // BX1 — Gate cliente = es_rol_desarrollador (la RLS de notas ambito='dev' lo
     // respalda): admin/tecnología/encargado/Developer. NO gerencia/direccion (verían
@@ -90,6 +95,28 @@ export class DevNotesPage {
     } finally {
       this.loading.set(false);
     }
+    // CS2 — best-effort, no bloquea la lista si falla (offline / RLS).
+    const grupos = await this.service.getGrupos();
+    this.gruposPorId.set(new Map(grupos.map((g) => [g.id, { nombre: g.nombre, parent_id: g.parent_id }])));
+  }
+
+  /** CS2 — ruta legible del grupo ("Improvements / Octubre 2026"), o null sin grupo.
+   *  Solo lectura — crear/mover grupos sigue siendo de la web (PROMPT-106). */
+  grupoRuta(n: Nota): string | null {
+    const id = n.grupo_id;
+    if (!id) return null;
+    const mapa = this.gruposPorId();
+    const partes: string[] = [];
+    let cursor: string | null = id;
+    let guarda = 0;
+    while (cursor && guarda < 6) {
+      const g = mapa.get(cursor);
+      if (!g) break;
+      partes.unshift(g.nombre);
+      cursor = g.parent_id;
+      guarda++;
+    }
+    return partes.length ? partes.join(' / ') : null;
   }
 
   tagsDisponibles = computed(() => {

@@ -59,6 +59,19 @@
   color: var(--color-danger, #d32f2f);
 }
 
+// CS1 — fila de orden (Fecha/Necesidad ▲▼), solo visible en Activas.
+.bandeja__orden {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+.bandeja__orden-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
 .req-card {
   width: 100%;
   display: flex;

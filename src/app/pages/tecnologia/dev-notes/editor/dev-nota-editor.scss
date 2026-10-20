@@ -143,6 +143,21 @@
     padding-left: 22px;
     margin: 4px 0;
   }
+  // CS2 — imagen pegada en la web (`nota-img:`), resuelta a su URL firmada real.
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin: 6px 0;
+  }
+  img.nota-img-pendiente {
+    min-height: 120px;
+    background: var(--color-surface-2);
+  }
+  img.nota-img-rota {
+    display: none;
+  }
 }
 
 .dneditor__textarea {

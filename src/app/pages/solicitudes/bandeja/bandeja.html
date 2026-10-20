@@ -21,6 +21,18 @@
       }
       <button type="button" class="bandeja__chip bandeja__chip--urg" appTapScale [class.bandeja__chip--on]="urgencia() === 'urgente'" (click)="toggleUrgente()">🔴 {{ 'Urgentes' | t }}</button>
     </div>
+    <!-- CS1 — orden elegible (solo Activas; Historial sigue fijo por cierre). -->
+    @if (tab() === 'activas') {
+      <div class="bandeja__orden" role="group" [attr.aria-label]="'Ordenar por' | t">
+        <span class="bandeja__orden-label">{{ 'Ordenar:' | t }}</span>
+        <button type="button" class="bandeja__chip" appTapScale [class.bandeja__chip--on]="orden().clave === 'fecha'" (click)="setOrden('fecha')">
+          {{ 'Fecha' | t }}@if (orden().clave === 'fecha') { {{ orden().direccion === 'asc' ? '▲' : '▼' }} }
+        </button>
+        <button type="button" class="bandeja__chip" appTapScale [class.bandeja__chip--on]="orden().clave === 'necesidad'" (click)="setOrden('necesidad')">
+          {{ 'Necesidad' | t }}@if (orden().clave === 'necesidad') { {{ orden().direccion === 'asc' ? '▲' : '▼' }} }
+        </button>
+      </div>
+    }
   </div>
 
   <div class="screen__body">
