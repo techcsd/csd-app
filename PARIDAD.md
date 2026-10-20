@@ -628,13 +628,29 @@ queda disponible para consumir cuando se decida, aunque el padre reportó que la
 cuenta de servicio de Google aún no está configurada ni en dev ni en prod (hallazgo
 de CS10, ver `SGC/PARIDAD.md`).
 
-### Release — dev, con el gate honesto en rojo (CS9)
-`npm run build` + `npm run test:canal` + `release-check.mjs --version 2.57.0`: 3/4
+### Release — dev, con el gate honesto en rojo (CS9) — y la prueba del teléfono, por fin real
+`npm run build` + `npm run test:canal` + `release-check.mjs --version 2.57.1`: 3/4
 en verde (registro/versión/build), **1/4 en rojo a propósito** ("breathe" — sin OK
 de Xaviel ni 24h). APK dev firmado + publicado + registrado + **publicado en dev**
-(`scripts/data-fixes/2026-10-20-cs-publicar-2.57.0.mjs --env dev`). El Samsung sigue
-en 2.51.0-dev (van **4 rondas seguidas** sin probar el updater en hardware real:
-2.54.0, 2.55.0, 2.56.0, ahora 2.57.0) — `qa/release-2.57.0.md` dejado con
-instrucciones exactas para Xaviel, sin línea `OK:` (a diferencia de 2.56.0, el
-data-fix de publicar en PROD de esta ronda NO se reabrió para permitir saltarla —
-queda bloqueado hasta que la pruebe o dé su OK explícito).
+(`scripts/data-fixes/2026-10-20-cs-publicar-2.57.1.mjs --env dev`).
+
+**CS9, a diferencia de las 4 rondas anteriores (2.54.0-2.57.0, todas saltadas):**
+con el OK explícito de Xaviel en el chat, esta sesión manejó el Samsung real por
+`adb` (cuenta `qa-desarrollador@dev.constructorasd.local`, nunca la cuenta real de
+Xaviel) — confirmó de punta a punta que el updater (CO1) funciona en hardware real:
+2.51.0-dev → 2.57.0-dev, descarga, diálogo nativo de instalación, Google Play
+Protect (análisis obligatorio para un APK sideloaded), instalación **sin** el error
+"Aplicación no instalada", sesión y PIN de dispositivo sobreviven la actualización.
+Probado también el toggle de orden de CS1 (funciona). **Durante la prueba de CS2 se
+encontró un bug real**: el arreglo original perdía la imagen de una nota al editar
+el resto del contenido — causa real: `DOMPurify.sanitize()` se come el `src` con
+esquema `nota-img:` (protocolo no reconocido) ANTES de que el código pudiera
+etiquetarlo como `data-nota-img-path`. Corregido en `core/util/markdown.ts`
+(convertir a atributo seguro ANTES de sanear, no después) + un `onerror` de
+respaldo para ocultar una imagen cuya URL firmada "resuelve" pero da 404 al
+cargarla de verdad. Verificado dos veces contra el `contenido` real guardado en
+`sgc.notas` de sgc-dev que la imagen sobrevive la edición — **2.57.0 (ya publicada
+en dev) todavía tenía el bug; 2.57.1 lo corrige** y es la que queda publicada.
+`qa/release-2.57.1.md` documenta la prueba completa; la línea `OK:` final queda
+para que Xaviel decida si la acepta como válida para CL4/CS9 (hecha por Claude, no
+por él con sus manos) — prod sigue bloqueada hasta entonces.
