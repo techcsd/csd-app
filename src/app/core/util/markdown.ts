@@ -25,24 +25,24 @@ const NOTA_IMG_SCHEME = 'nota-img:';
 
 /** Markdown → HTML saneado, para hidratar el `contenteditable`/vista al abrir una nota.
  *  Las imágenes `nota-img:` quedan SIN `src` (ruta inválida para el navegador) y con
- *  `data-nota-img-path` — `resolverImagenesNota` las completa con la URL firmada real. */
+ *  `data-nota-img-path` — `resolverImagenesNota` las completa con la URL firmada real.
+ *
+ *  OJO (bug real, encontrado probando en un Samsung real): `nota-img:` no es un esquema
+ *  de URI que DOMPurify reconozca como seguro — `DOMPurify.sanitize()` se come el `src`
+ *  ENTERO antes de que este código pueda leerlo, si se saneara DESPUÉS de convertir.
+ *  Por eso la conversión a `data-nota-img-path` pasa ANTES del saneo (sobre el HTML
+ *  crudo de `marked`, con una sustitución de texto simple — no ejecuta nada, DOMPurify
+ *  sigue limpiando todo lo demás después).
+ */
 export function markdownToHtml(md: string): string {
   const raw = md ?? '';
   if (!raw.trim()) return '';
   const rendered = marked.parse(raw, { async: false, breaks: true }) as string;
-  const clean = DOMPurify.sanitize(rendered);
-  if (!clean.includes(NOTA_IMG_SCHEME)) return clean;
-  const div = document.createElement('div');
-  div.innerHTML = clean;
-  div.querySelectorAll('img').forEach((img) => {
-    const src = img.getAttribute('src') ?? '';
-    if (src.startsWith(NOTA_IMG_SCHEME)) {
-      img.setAttribute('data-nota-img-path', src.slice(NOTA_IMG_SCHEME.length));
-      img.removeAttribute('src');
-      img.classList.add('nota-img-pendiente');
-    }
-  });
-  return div.innerHTML;
+  const pre = rendered.replace(
+    /<img([^>]*)\ssrc="nota-img:([^"]*)"([^>]*)>/g,
+    '<img$1 class="nota-img-pendiente" data-nota-img-path="$2"$3>',
+  );
+  return DOMPurify.sanitize(pre, { ADD_ATTR: ['data-nota-img-path'] });
 }
 
 /**
@@ -64,6 +64,10 @@ export async function resolverImagenesNota(
       const url = path ? await resolver(path).catch(() => null) : null;
       img.classList.remove('nota-img-pendiente');
       if (url) {
+        // El signed URL puede "existir" aunque el objeto ya no esté en el bucket
+        // (createSignedUrl no siempre valida existencia) — si la carga real falla,
+        // se oculta igual (nunca una ruta rota visible).
+        img.onerror = () => img.classList.add('nota-img-rota');
         img.src = url;
       } else {
         img.classList.add('nota-img-rota');
