@@ -651,6 +651,7 @@ respaldo para ocultar una imagen cuya URL firmada "resuelve" pero da 404 al
 cargarla de verdad. Verificado dos veces contra el `contenido` real guardado en
 `sgc.notas` de sgc-dev que la imagen sobrevive la edición — **2.57.0 (ya publicada
 en dev) todavía tenía el bug; 2.57.1 lo corrige** y es la que queda publicada.
-`qa/release-2.57.1.md` documenta la prueba completa; la línea `OK:` final queda
-para que Xaviel decida si la acepta como válida para CL4/CS9 (hecha por Claude, no
-por él con sus manos) — prod sigue bloqueada hasta entonces.
+`qa/release-2.57.1.md` documenta la prueba completa. Xaviel aceptó la prueba (hecha
+por Claude, no por él con sus manos) como válida y dio el OK explícito de promover a
+producción — **2.57.1 PUBLICADA A PROD** (PR #4 `dev → main`, APK prod firmado +
+publicado, `app_versiones` prod `publicada=true`, verificado por lectura directa).

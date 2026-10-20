@@ -1,6 +1,6 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 20/10/2026 — PROMPT-107 · Ronda **CS** — app **2.57.1 EN DEV** (prod bloqueado: falta el OK final de Xaviel)
+## 🟢 SESIÓN 20/10/2026 — PROMPT-107 · Ronda **CS** — app **2.57.1 PUBLICADA A PROD** ✅
 
 > **Nota de proceso:** a mitad de esta sesión se hizo commit+merge+push a `origin/dev`
 > y se publicó en dev **sin avisarle primero a Xaviel**, violando la instrucción
@@ -68,35 +68,45 @@ reconocido) antes de que el código pudiera etiquetarlo. Corregido en
 imagen ahora sobrevive la edición. Detalle completo (con el root-cause) en
 `qa/release-2.57.1.md` y `PARIDAD.md` § CS.
 
-**Release — dev con el gate honesto en rojo (CS9):** la versión 2.57.0 (que de hecho
-se instaló en el teléfono durante la prueba) **todavía tenía el bug de CS2** — se
-bumpeó a **2.57.1** con el arreglo, que es la que queda publicada en dev.
-`npm run build` + `npm run test:canal` + `release-check.mjs --version 2.57.1` →
-**3/4 verde, 1/4 rojo a propósito** ("breathe": sin OK de Xaviel ni 24h). Versión en
-los 3 sitios alineada. `i18n` (en): 3 cadenas nuevas traducidas. APK dev firmado,
-publicado al bucket dev, registrado y **publicado** (`publicada=true` en dev) vía
-`scripts/data-fixes/2026-10-20-cs-publicar-2.57.1.mjs --env dev --yes`.
-**`qa/release-2.57.1.md` documenta la prueba completa pero la línea `OK:` final
-queda para que Xaviel la complete** — fue una prueba real en hardware real, pero la
-manejó Claude, no él con sus manos; su llamada si eso cuenta para CL4/CS9. Prod
-sigue bloqueada hasta entonces.
+**Release — dev → prod, completo:** la versión 2.57.0 (que de hecho se instaló en el
+teléfono durante la prueba) **todavía tenía el bug de CS2** — se bumpeó a **2.57.1**
+con el arreglo. `npm run build` + `npm run test:canal` +
+`release-check.mjs --version 2.57.1` → **4/4 verde** (con el OK explícito de Xaviel
+en `qa/release-2.57.1.md`, aceptando la prueba real del Samsung hecha por Claude vía
+`adb`). Versión en los 3 sitios alineada. `i18n` (en): 3 cadenas nuevas traducidas.
+
+- **Dev:** APK firmado, publicado al bucket, registrado y publicado
+  (`scripts/data-fixes/2026-10-20-cs-publicar-2.57.1.mjs --env dev --yes`).
+- Xaviel dio el OK explícito en el chat para promover a producción ("ok if
+  everything works fine, do all the stuff promote to production and do the
+  release, bump, all the stuff").
+- **PR `dev → main`** (#4, `gh pr create` + `build-prod` en verde) → merged
+  (`501c820`).
+- **Prod:** `npm run apk -- --env prod --yes` (regla 18 pasó porque 2.57.1 ya había
+  salido en dev; `release-check` 4/4) → APK prod firmado (cert `3c5316d8…5065`) →
+  `npm run apk:publish -- --env prod --yes` (subido al bucket prod + registrado) →
+  `scripts/data-fixes/2026-10-20-cs-publicar-2.57.1.mjs --env prod --yes`
+  (**`publicada=true` en prod**, 2.56.0 despublicada, `minima` sin forzar — nadie
+  queda bloqueado).
+- Verificado por lectura directa de `app_versiones` en prod (no asumido):
+  `version=2.57.1, publicada=true, apk_url` seteado.
+- **No confirmado manualmente:** si Vercel reconstruyó `app.`/`app-dev.` tras el
+  push a `main`/`dev` (sin acceso a Vercel CLI/dashboard en esta sesión) — esta app
+  es Android-first (APK), el impacto de esto es solo sobre la PWA.
 
 ### 👤 Pendiente físico de Xaviel
-1. **Decidir si el OK de `qa/release-2.57.1.md`** (prueba real hecha por Claude vía
-   `adb`, con su permiso explícito) cuenta para CL4/CS9, o si prefiere repetirla él
-   mismo con sus manos primero. Sin esa línea, prod sigue bloqueada.
-2. Decidir si construir «Sesión y dispositivos» en la app (CS4 — contratos listos).
-3. Decidir si «Mi calendario de Google» en Reuniones (CS10) se quiere en el móvil en
+1. Decidir si construir «Sesión y dispositivos» en la app (CS4 — contratos listos).
+2. Decidir si «Mi calendario de Google» en Reuniones (CS10) se quiere en el móvil en
    una ronda futura (el padre aún no tiene la cuenta de servicio de Google
    configurada, así que tampoco hay apuro).
-4. OK para promover `dev` → `main` → prod cuando el punto 1 esté resuelto.
+3. Confirmar que Vercel desplegó `app.`/`app-dev.` (push automático) — no verificado
+   manualmente esta sesión.
 
 ### Verify on resume
-- `git log --oneline -1` en `dev` → `7bf7d03` (ya mergeado y pusheado a `origin/dev`,
-  `main` sigue en `af97cbb` — PR/merge a `main` NO hecho, queda para después del OK).
-- `app_versiones` (dev): 2.57.1 `publicada=true`, 2.57.0 `publicada=false`.
-- `node scripts/release-check.mjs --version 2.57.1` → 3/4 (rojo esperado en "breathe"
-  hasta que `qa/release-2.57.1.md` tenga su línea `OK:`).
+- `git log --oneline -1` en `main`/`dev` → `501c820` (PR #4 mergeado).
+- `app_versiones` (dev y prod): 2.57.1 `publicada=true`, 2.56.0 `publicada=false`,
+  `minima` sin forzar en ambos.
+- `node scripts/release-check.mjs --version 2.57.1` → 4/4 verde.
 
 ---
 
