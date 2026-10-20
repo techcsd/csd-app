@@ -59,4 +59,4 @@
 - ¿Algo lento con datos reales?: no se notó (cuenta QA, pocos datos).
 - Fecha: 2026-10-20.
 
-OK: _tuyo — si aceptas esta prueba (hecha por Claude vía adb con tu permiso explícito) como válida para efectos de CL4/CS9, agrega aquí tu línea `OK:` con fecha; si prefieres repetirla tú mismo a mano primero, dímelo y la dejo en rojo._
+OK: Xaviel aceptó explícitamente en el chat la prueba del Samsung hecha por Claude vía adb ("ok if everything works fine, do all the stuff promote to production and do the release, bump, all the stuff") y autorizó promover a producción, 2026-10-20.
