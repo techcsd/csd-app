@@ -77,12 +77,24 @@
 
 ## Resultado
 
-- ¿Se reprodujo el crash?: <sí/no/a veces — detalle>
-- ¿El banner de "recepción sin terminar" apareció y "Retomar" funcionó?: <sí/no>
-- ¿El borrador de "Pedir material" se retomó bien?: <sí/no>
-- ¿"Ver conduce" funcionó sin crear un borrador?: <sí/no>
-- ¿El aviso de duplicado en requisiciones se vio y tiene sentido?: <sí/no>
-- Archivo de logcat adjunto: <sí/no — dónde quedó>
-- Fecha: <pendiente>
+- **¿Se reprodujo el crash de la cámara 0.6x?: SÍ** — Xaviel confirmó que la app
+  se cerró y se reinició al probarlo ("the app just got closed and restart"),
+  igual que le pasó a Jhonatan. Esto confirma que el crash es real y sigue
+  presente en 2.58.1 (los cambios de esta ronda son una red de seguridad —
+  galería + cámara de la app tras 2 fallos, y el borrador de recepción para no
+  perder lo capturado — no una corrección puntual del crash en sí).
+- **Logcat: no se capturó.** La causa técnica exacta (OOM, Activity destruida,
+  excepción del plugin de cámara) queda sin confirmar. Xaviel aceptó
+  explícitamente esta brecha: "yes, i acept the gap, u can fix it."
+- Banner de "recepción sin terminar", "Ver conduce" y el borrador de "Pedir
+  material": no reportados con detalle individual.
+- Fecha: 2026-10-21.
 
-OK: <pendiente — tu línea de autorización explícita para promover a producción, con fecha>
+**Decisión:** Xaviel acepta promover a producción SABIENDO que el crash de la
+cámara 0.6x se confirmó reproducible y que su causa técnica sigue sin
+diagnosticarse (sin `logcat`) — la red de seguridad (galería/cámara de la app)
+mitiga el impacto (no deja el flujo colgado) pero no es una corrección del
+crash. Diagnosticarlo de verdad queda pendiente para una ronda futura, con
+`logcat` real.
+
+OK: Xaviel aceptó explícitamente la brecha del diagnóstico del crash y autorizó promover a producción de todas formas ("yes, i acept the gap, u can fix it"), 2026-10-21.
