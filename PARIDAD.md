@@ -656,7 +656,7 @@ por Claude, no por él con sus manos) como válida y dio el OK explícito de pro
 producción — **2.57.1 PUBLICADA A PROD** (PR #4 `dev → main`, APK prod firmado +
 publicado, `app_versiones` prod `publicada=true`, verificado por lectura directa).
 
-## CT (ronda 21/10/2026, `feature/ct-ronda`) — app 2.58.0, EN CÓDIGO sin commitear
+## CT (ronda 21/10/2026, `feature/ct-ronda`) — app 2.58.1 en dev
 Consume PROMPT-108 (web) solo donde hace falta un contrato — verificado vivo en
 sgc-dev: `crear_solicitud_app` acepta `p_forzar` (confirmado por probe directo con
 `service_role`: la llamada pasó la validación de firma del RPC y llegó al cuerpo).
@@ -683,7 +683,7 @@ sgc-dev: `crear_solicitud_app` acepta `p_forzar` (confirmado por probe directo c
   agregar ahí; el perfil de compresión `evidencia` (1280px/0.72, compartido con la
   web, decisión BJ1 de Xaviel) **no se tocó** sin evidencia real de que sea la
   causa. **La causa del crash queda sin confirmar** — depende de un `adb logcat`
-  real (guía en `qa/release-2.58.0.md`).
+  real (guía en `qa/release-2.58.1.md`).
   - Red de seguridad: `InAppCameraService`/`app-in-app-camera` (overlay
     `getUserMedia`, ya existía en el repo **sin usarse en ningún sitio**) ahora se
     ofrece junto con "Subir de la galería" (CK3) tras 2 fallos de cámara nativa en
@@ -718,11 +718,12 @@ sgc-dev: `crear_solicitud_app` acepta `p_forzar` (confirmado por probe directo c
   materiales" (dejó de ser cierto).
 - **Release:** commit → push `feature/ct-ronda` → merge a `dev` → push, con el OK
   explícito de Xaviel en el chat para avanzar con commit/push/APK ("continue
-  working, do all the stuff. i give u my ok"). APK dev construido/firmado
-  (mismo cert de prod) y **publicado** vía `scripts/data-fixes/2026-10-21-ct-
-  publicar-2.58.0.mjs --env dev` (2.57.1 despublicada, `minima` sin tocar).
-  `release-check.mjs --version 2.58.0` → 3/4 en verde (registro/versión/build);
+  working, do all the stuff. i give u my ok"). Primero se registró/publicó como
+  2.58.0; con el borrador de "Pedir material" ya agregado se bumpeó a **2.58.1**
+  y se repitió build+publish+APK en dev — `scripts/data-fixes/2026-10-21-ct-
+  publicar-2.58.1.mjs --env dev` despublicó 2.58.0 automáticamente (`minima` sin
+  tocar). `release-check.mjs --version 2.58.1` → 3/4 en verde (registro/versión/build);
   **"breathe" en rojo a propósito**. Xaviel probó en el Samsung ("yes i tried")
-  pero sin los detalles que pide `qa/release-2.58.0.md` — se le preguntó
+  pero sin los detalles que pide `qa/release-2.58.1.md` — se le preguntó
   explícitamente (¿se reprodujo el crash? ¿hay logcat?) y no respondió; **no se
   fabricó ningún `OK:` en su nombre**. **Prod sigue sin tocar** (`main`=`ae00551`).

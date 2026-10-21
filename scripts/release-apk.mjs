@@ -47,6 +47,7 @@ const CAMBIOS_CURADOS = [
   { t: 'nuevo', m: 'Requisiciones', d: 'Si ya enviaste una requisición muy parecida en las últimas 24 horas, la app te avisa antes de mandarla de nuevo y te deja ver la anterior o enviarla igual.' },
   { t: 'mejora', m: 'Recibir material', d: 'Si la cámara falla dos veces seguidas al recibir material, ahora puedes elegir una foto de la galería o usar la cámara propia de la app, sin quedarte atascado.' },
   { t: 'mejora', m: 'Recibir material', d: 'Una recepción de conduce a medias (cantidades, fotos, notas) ahora aparece en "Documentación en proceso" y en un aviso en el inicio para retomarla o descartarla, y se puede recuperar incluso sin señal.' },
+  { t: 'mejora', m: 'Pedir material', d: 'Si armas una requisición y cierras la app antes de enviarla, al volver la encuentras lista para terminar (antes se perdía el carrito).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

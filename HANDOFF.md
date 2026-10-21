@@ -1,6 +1,13 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 21/10/2026 — PROMPT-109 · Ronda **CT** — app **2.58.0 en dev, pendiente prueba del Samsung**
+## 🟡 SESIÓN 21/10/2026 — PROMPT-109 · Ronda **CT** — app **2.58.1 en dev, pendiente prueba del Samsung**
+
+> **Nota de versión:** el round se registró primero como 2.58.0 y se publicó en
+> dev; horas después, con el borrador de "Pedir material" ya agregado (follow-up,
+> mismo día), se bumpeó a **2.58.1** y se repitió build+publish en dev —
+> `app_versiones` (dev) despublicó 2.58.0 automáticamente. 2.58.0 **nunca llegó a
+> prod** (sigue en `ae00551`/2.57.1). `qa/release-2.58.1.md` reemplaza a
+> `qa/release-2.58.0.md` (se deja como historial, no se borra).
 
 > CQ6 aplicado: `git status`+`git worktree list` verificados limpios (main=dev=
 > `ae00551`, 2.57.1 en prod) antes de tocar nada. Worktree dedicado
@@ -22,14 +29,14 @@ pushear/construir el APK, la sesión se detuvo y le avisó a Xaviel (regla del
 prompt); con su OK explícito en el chat ("continue working, do all the stuff. i
 give u my ok") se completó: commit → push `feature/ct-ronda` → merge a `dev` →
 push `dev` → `npm run apk -- --env dev` → `npm run apk:publish -- --env dev`.
-**Prod sigue gateado** — falta la prueba real del Samsung (`qa/release-2.58.0.md`,
+**Prod sigue gateado** — falta la prueba real del Samsung (`qa/release-2.58.1.md`,
 especialmente la cámara 0.6x con `adb logcat`) y el `OK:` con fecha de Xaviel.
 Xaviel confirmó "yes i tried, continue working" pero sin los detalles que pide
-`qa/release-2.58.0.md` (¿se reprodujo el crash?, ¿hay logcat?); se le preguntó
+`qa/release-2.58.1.md` (¿se reprodujo el crash?, ¿hay logcat?); se le preguntó
 explícitamente y no hubo respuesta — **no se fabricó ninguna línea `OK:` en su
 nombre** (regla de la casa, ver incidente de CS). La sesión siguió con trabajo que
 no depende de esa respuesta: cerró el pendiente del borrador de requisición (abajo).
-`qa/release-2.58.0.md` sigue sin `OK:` — prod sigue bloqueado hasta que la ponga él.
+`qa/release-2.58.1.md` sigue sin `OK:` — prod sigue bloqueado hasta que la ponga él.
 
 ### FASE 1 — CT3a: "Ver conduce" sin empezar el proceso ✅
 `inventario/recibir`: nuevo signal `viendoSolo` + método `verConduce()` (hoja de
@@ -78,7 +85,7 @@ refrescaba `misSolicitudes()` **antes** de que existiera algo que mostrar.
 tocó** — no hay evidencia real (sin `logcat`) de que sea la causa, y bajarlo
 afectaría la paridad/calidad de TODAS las fotos de evidencia de la app sin
 confirmación. **No se pudo confirmar la causa real sin el teléfono** — `adb logcat`
-queda pedido en `qa/release-2.58.0.md` (guía paso a paso, sin contraseñas ni
+queda pedido en `qa/release-2.58.1.md` (guía paso a paso, sin contraseñas ni
 `monkey`).
 - **Red de seguridad (sí implementada)**: se descubrió que `InAppCameraService`/
   `app-in-app-camera` (overlay `getUserMedia`, más liviano en memoria que decodificar
@@ -137,9 +144,9 @@ queda pedido en `qa/release-2.58.0.md` (guía paso a paso, sin contraseñas ni
   (sube al bucket + publica). Hecho con el OK explícito de Xaviel en el chat
   ("continue working, do all the stuff. i give u my ok").
 - **En prod:** nada — bloqueado hasta que Xaviel pruebe en el Samsung
-  (`qa/release-2.58.0.md`, sobre todo el punto 3: cámara 0.6x + `adb logcat`, único
+  (`qa/release-2.58.1.md`, sobre todo el punto 3: cámara 0.6x + `adb logcat`, único
   camino para confirmar la causa real del crash) y deje su `OK:` con fecha.
-  `release-check.mjs --version 2.58.0` seguirá en 🔴 "breathe" hasta entonces.
+  `release-check.mjs --version 2.58.1` seguirá en 🔴 "breathe" hasta entonces.
 
 ## 🟢 SESIÓN 20/10/2026 — PROMPT-107 · Ronda **CS** — app **2.57.1 PUBLICADA A PROD** ✅
 
