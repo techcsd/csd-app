@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { db } from '../db/app-db';
 import { Proyecto } from '../models/bitacora.model';
 import { MiOrdenCompra, RequisicionAvanceItem, RequisicionBandeja, RequisicionCobertura, RequisicionDetalle, RequisicionEdicion, RequisicionEditar, Solicitud, Urgencia } from '../models/inventario.model';
 
@@ -20,6 +21,8 @@ const CAT_MIS_ORDENES = 'mis_ordenes_compra';
 
 export interface SolicitudCaptura {
   proyectoId: string;
+  /** CT4/CT7 — para pintar la fila optimista "Enviando…" sin esperar al servidor. */
+  proyectoNombre?: string | null;
   urgencia: Urgencia;
   notas: string | null;
   // BO8 — fecha en que se NECESITA el material (YYYY-MM-DD local, opcional). Es DATO
@@ -74,6 +77,95 @@ export class SolicitudesService {
       return (data as unknown as Solicitud[]) ?? [];
     });
     return data ?? [];
+  }
+
+  /**
+   * CT4/CT7 — "Mis requisiciones" real: antepone las requisiciones que están
+   * en el outbox local (aún no confirmadas por el servidor) como filas
+   * "Enviando…"/"Con problema", para que el chofer/ingeniero vea de inmediato
+   * que SÍ se guardó, en vez de confiar en que el próximo refresco del servidor
+   * la muestre. Una vez el servidor la confirma, la op sale del outbox y la fila
+   * local desaparece sola (la real ya viene en `misSolicitudes()`).
+   */
+  async misSolicitudesConPendientes(): Promise<Solicitud[]> {
+    const servidor = await this.misSolicitudes();
+    const serverIds = new Set(servidor.map((s) => s.id));
+    const ops = (await db.outbox.where('estado').anyOf('pending', 'syncing', 'error').toArray()).filter(
+      (o) => o.tipo_op === 'solicitud' && !serverIds.has(o.id),
+    );
+    if (!ops.length) return servidor;
+    const locales: Solicitud[] = ops
+      .sort((a, b) => b.created_local - a.created_local)
+      .map((op) => {
+        const p = op.payload as Record<string, unknown>;
+        const items = (p['items'] as Array<{ descripcion: string; cantidad: number; unidad: string }>) ?? [];
+        return {
+          id: op.id,
+          estado: 'pendiente',
+          urgencia: (p['urgencia'] as string) ?? 'normal',
+          notas: (p['notas'] as string | null) ?? null,
+          created_at: new Date(op.created_local).toISOString(),
+          fecha_necesidad: (p['fecha_necesidad'] as string | null) ?? null,
+          proyecto: p['proyecto_nombre'] ? { nombre: p['proyecto_nombre'] as string } : null,
+          items: items.map((it) => ({ descripcion: it.descripcion, cantidad: it.cantidad, unidad: it.unidad })),
+          local: op.estado === 'error' ? 'error' : 'enviando',
+        } satisfies Solicitud;
+      });
+    return [...locales, ...servidor];
+  }
+
+  /** CT4 — firma estable de los renglones (orden-independiente) para comparar
+   *  dos requisiciones sin depender de articulo_id (el servidor no lo devuelve). */
+  private firmaItems(items: Array<{ descripcion: string | null; cantidad: number; unidad: string | null }>): string {
+    return items
+      .map((it) => `${(it.descripcion ?? '').trim().toLowerCase()}|${it.cantidad}|${(it.unidad ?? '').trim().toLowerCase()}`)
+      .sort()
+      .join(';');
+  }
+
+  /**
+   * CT4 — ¿ya se envió una requisición casi igual (misma obra + mismos renglones)
+   * en las últimas 24h? Compara contra lo que YA está en el outbox (aún sin
+   * confirmar) y contra el caché de `misSolicitudes()` (confirmadas recientes).
+   * Nunca bloquea: es un aviso antes de enviar, no una validación dura.
+   */
+  async duplicadoReciente(
+    proyectoId: string,
+    proyectoNombre: string | null,
+    items: Array<{ descripcion: string; cantidad: number; unidad: string }>,
+  ): Promise<{ id: string; folio: number | null; minutos: number; local: boolean } | null> {
+    const firma = this.firmaItems(items);
+    const ahora = Date.now();
+    const VENTANA_MS = 24 * 60 * 60 * 1000;
+
+    const ops = (await db.outbox.where('estado').anyOf('pending', 'syncing', 'error').toArray()).filter(
+      (o) => o.tipo_op === 'solicitud',
+    );
+    for (const op of ops) {
+      const p = op.payload as Record<string, unknown>;
+      if (p['proyecto_id'] !== proyectoId) continue;
+      if (ahora - op.created_local > VENTANA_MS) continue;
+      const opItems = (p['items'] as Array<{ descripcion: string; cantidad: number; unidad: string }>) ?? [];
+      if (this.firmaItems(opItems) !== firma) continue;
+      return { id: op.id, folio: null, minutos: Math.round((ahora - op.created_local) / 60000), local: true };
+    }
+
+    const obraNombre = (proyectoNombre ?? '').trim().toLowerCase();
+    try {
+      const servidor = await this.misSolicitudes();
+      for (const s of servidor) {
+        if (!s.items) continue;
+        // El server no manda proyecto_id en esta lista — compara por nombre de obra.
+        if (obraNombre && (s.proyecto?.nombre ?? '').trim().toLowerCase() !== obraNombre) continue;
+        const creado = Date.parse(s.created_at);
+        if (!Number.isFinite(creado) || ahora - creado > VENTANA_MS) continue;
+        if (this.firmaItems(s.items) !== firma) continue;
+        return { id: s.id, folio: s.folio ?? null, minutos: Math.round((ahora - creado) / 60000), local: false };
+      }
+    } catch {
+      /* best-effort: el aviso de duplicado nunca debe bloquear el envío */
+    }
+    return null;
   }
 
   /**
@@ -299,7 +391,9 @@ export class SolicitudesService {
     }
   }
 
-  async enqueueSolicitud(input: SolicitudCaptura): Promise<void> {
+  /** CT4 — `forzar=true` cuando el usuario ya vio el aviso de duplicado y decidió
+   *  enviar igual (se manda como `p_forzar` al RPC del padre). */
+  async enqueueSolicitud(input: SolicitudCaptura, forzar = false): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     await this.sync.enqueue({
@@ -309,16 +403,22 @@ export class SolicitudesService {
       payload: {
         id,
         proyecto_id: input.proyectoId,
+        // CT4/CT7 — solo para pintar la fila "Enviando…" en Mis requisiciones
+        // mientras no hay confirmación del servidor; el RPC no lo necesita.
+        proyecto_nombre: input.proyectoNombre ?? null,
         urgencia: input.urgencia,
         notas: input.notas,
         items: input.items,
         // BO8 — congela la fecha elegida (o null si no se especificó). Ya viene como
         // YYYY-MM-DD local del date input; el sync no la recalcula.
         fecha_necesidad: input.fechaNecesidad || null,
+        forzar,
       },
       resumen: { tipo: 'solicitud', capturado_en, items: input.items.length },
     });
-    void this.misSolicitudes();
+    // CT4/CT7 — NO se refresca aquí: el servidor todavía no la tiene. La fila
+    // "Enviando…" sale de `misSolicitudesConPendientes()` (lee el outbox local);
+    // la pantalla se refresca sola cuando `sync.changed` avisa que el outbox cambió.
   }
 
   private registerHandler(): void {
@@ -340,6 +440,8 @@ export class SolicitudesService {
         p_notas: payload['notas'] ?? null,
         p_items: payload['items'],
         p_fecha_necesidad: payload['fecha_necesidad'] ?? null, // BO8
+        // CT4 — el usuario ya vio el aviso de posible duplicado y decidió enviar igual.
+        p_forzar: payload['forzar'] ?? false,
       });
       if (error) throwSyncError(error);
 

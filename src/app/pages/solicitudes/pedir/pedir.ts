@@ -15,7 +15,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { Proyecto } from '../../../core/models/bitacora.model';
-import { ArticuloCat, CartLinea, CategoriaInv, Urgencia } from '../../../core/models/inventario.model';
+import { ArticuloCat, CartLinea, CategoriaInv, requisicionCodigo, Urgencia } from '../../../core/models/inventario.model';
 import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
@@ -57,6 +57,7 @@ export class PedirPage implements OnDestroy {
   private motion = inject(MotionService);
 
   hoja = signal<'seleccion' | 'resumen' | 'exito'>('seleccion');
+  codigo = requisicionCodigo; // CT4 — REQ-XXXXXX en el aviso de duplicado
 
   proyectos = signal<Proyecto[]>([]);
   proyectoId = signal('');
@@ -73,6 +74,8 @@ export class PedirPage implements OnDestroy {
   readonly hoyISO = fechaLocalISO();
   submitting = signal(false);
   confirmSalir = signal(false);
+  /** CT4 — posible duplicado detectado antes de enviar (null = sin aviso pendiente). */
+  duplicado = signal<{ id: string; folio: number | null; minutos: number; local: boolean } | null>(null);
 
   obraOptions = computed(() => this.proyectos().map((p) => ({ id: p.id, label: p.nombre })));
 
@@ -198,23 +201,66 @@ export class PedirPage implements OnDestroy {
       this.toast.error(this.i18n.t('Agrega al menos un material.'));
       return;
     }
+    // CT4 — ¿ya se envió una requisición casi igual en las últimas 24h? Avisa
+    // ANTES de encolar (nunca bloquea: el usuario decide "Enviar igual").
+    try {
+      const obraNombre = this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? null;
+      const dup = await this.solicitudes.duplicadoReciente(
+        this.proyectoId(),
+        obraNombre,
+        items.map((l) => ({ descripcion: this.descripcionDe(l), cantidad: l.cantidad, unidad: l.unidad })),
+      );
+      if (dup) {
+        this.duplicado.set(dup);
+        return;
+      }
+    } catch {
+      /* el aviso de duplicado nunca debe bloquear el envío real */
+    }
+    await this.enviarAhora(items, false);
+  }
+
+  /** CT4 — "Enviar igual" en el aviso de duplicado: envía con `p_forzar`. */
+  async confirmarEnvioForzado(): Promise<void> {
+    this.duplicado.set(null);
+    await this.enviarAhora(this.cart().filter((l) => l.cantidad > 0), true);
+  }
+
+  /** CT4 — "Ver la anterior": abre la requisición que parece duplicada. */
+  verAnterior(): void {
+    const dup = this.duplicado();
+    if (!dup) return;
+    this.duplicado.set(null);
+    if (dup.local) void this.router.navigate(['/pendientes', dup.id]);
+    else void this.router.navigate(['/solicitudes/requisicion', dup.id]);
+  }
+
+  cancelarDuplicado(): void {
+    this.duplicado.set(null);
+  }
+
+  private async enviarAhora(items: CartLinea[], forzar: boolean): Promise<void> {
     this.submitting.set(true);
     try {
-      await this.solicitudes.enqueueSolicitud({
-        proyectoId: this.proyectoId(),
-        urgencia: this.urgencia(),
-        notas: this.notas().trim() || null,
-        fechaNecesidad: this.fechaNecesidad() || null, // BO8
+      await this.solicitudes.enqueueSolicitud(
+        {
+          proyectoId: this.proyectoId(),
+          proyectoNombre: this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? null,
+          urgencia: this.urgencia(),
+          notas: this.notas().trim() || null,
+          fechaNecesidad: this.fechaNecesidad() || null, // BO8
 
-        items: items.map((l) => ({
-          articulo_id: this.esCustom(l) ? null : l.articulo_id,
-          descripcion: this.descripcionDe(l),
-          cantidad: l.cantidad, // BM5 — SIEMPRE en unidad base
-          unidad: l.unidad,
-          unidad_capturada: l.unidad_capturada ?? null,
-          factor_aplicado: l.factor_aplicado ?? 1,
-        })),
-      });
+          items: items.map((l) => ({
+            articulo_id: this.esCustom(l) ? null : l.articulo_id,
+            descripcion: this.descripcionDe(l),
+            cantidad: l.cantidad, // BM5 — SIEMPRE en unidad base
+            unidad: l.unidad,
+            unidad_capturada: l.unidad_capturada ?? null,
+            factor_aplicado: l.factor_aplicado ?? 1,
+          })),
+        },
+        forzar,
+      );
       this.hoja.set('exito');
       this.motion.momento('entrada'); // CL2 F4 — requisición enviada (también offline, ya encolada)
     } catch (e) {

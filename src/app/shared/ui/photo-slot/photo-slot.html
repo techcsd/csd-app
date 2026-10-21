@@ -21,11 +21,17 @@
         </button>
       }
     </div>
-    <!-- CK3 — último recurso: tras 2 fallos de cámara en una casilla solo-cámara. -->
+    <!-- CK3/CT5 — último recurso: tras 2 fallos de cámara en una casilla solo-cámara,
+         ofrece galería y/o la cámara embebida de la app (nunca deja el slot colgado). -->
     @if (mostrarGaleriaFallback()) {
       <button type="button" class="photo-slot__cta" (click)="subirDesdeGaleria()" [disabled]="busy()">
         {{ 'Subir foto desde la galería' | t }}
       </button>
+      @if (camaraAppDisponible()) {
+        <button type="button" class="photo-slot__cta" (click)="usarCamaraApp()" [disabled]="busy()">
+          {{ 'Usar la cámara de la app' | t }}
+        </button>
+      }
       <p class="photo-slot__nota-galeria">{{ 'Esta foto la revisará Logística.' | t }}</p>
     }
     <!-- AT9 — ayuda/fallback en web (PWA/iOS): la cámara puede no abrir por permisos. -->

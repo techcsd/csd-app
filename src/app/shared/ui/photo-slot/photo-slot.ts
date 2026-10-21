@@ -11,8 +11,11 @@ import {
 import { CameraService, CapturedPhoto, CameraRestore } from '../../../core/services/camera.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { InAppCameraService } from '../../../core/services/in-app-camera.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { BottomSheet } from '../bottom-sheet/bottom-sheet';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * A guided photo slot. Shows the example/silhouette of the required shot;
@@ -58,6 +61,9 @@ export class PhotoSlot implements OnDestroy {
   private camera = inject(CameraService);
   private autosave = inject(AutosaveService);
   private ctx = inject(UserContextService);
+  private inAppCamera = inject(InAppCameraService);
+  private toast = inject(ToastService);
+  private i18n = inject(I18nService);
   preview = signal<string | null>(null);
   busy = signal(false);
   /** AT9 — hoja de ayuda "la cámara no abre" (iOS/PWA). */
@@ -89,6 +95,10 @@ export class PhotoSlot implements OnDestroy {
   mostrarGaleriaFallback = computed(
     () => this.fallosCamara() >= 2 && this.camera.isNative && !this.showGallery(),
   );
+
+  /** CT5 — ¿el navegador/WebView soporta la cámara embebida (getUserMedia)? Si no,
+   *  no tiene sentido ofrecerla como red de seguridad. */
+  camaraAppDisponible = computed(() => this.mostrarGaleriaFallback() && this.inAppCamera.supported);
 
   /** W6 — tomar con la cámara (nativa del sistema en Android, `<input capture>` en web). */
   async capture(): Promise<void> {
@@ -124,6 +134,26 @@ export class PhotoSlot implements OnDestroy {
       const [photo] = await this.camera.pickFromGallery(1);
       if (photo) this.galeriaFallback.emit();
       return photo ?? null;
+    });
+  }
+
+  /**
+   * CT5 — segunda red de seguridad tras 2 fallos de la cámara NATIVA (p. ej. el
+   * crash reportado con el lente 0.6x): abre la cámara EMBEBIDA de la app
+   * (overlay getUserMedia, `shared/ui/in-app-camera`) en vez de volver a salir al
+   * sistema. Captura un frame a canvas (más liviano en memoria que decodificar la
+   * foto de un sensor de altísima resolución) — nunca deja el slot colgado.
+   */
+  usarCamaraApp(): Promise<void> {
+    return this.run(async () => {
+      await this.autosave.flushAll();
+      const r = await this.inAppCamera.open();
+      if (r === null) return null; // el usuario canceló
+      if (r === 'fallback') {
+        this.toast.error(this.i18n.t('La cámara de la app no está disponible en este teléfono.'));
+        return null;
+      }
+      return { blob: r, previewUrl: URL.createObjectURL(r) };
     });
   }
 

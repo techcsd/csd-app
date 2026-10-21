@@ -294,6 +294,65 @@
   color: var(--color-error);
   font-weight: 800;
 }
+// CT4 — aviso de posible duplicado (requisición pedir.html). Diálogo propio de
+// 3 acciones (app-confirm-dialog solo tiene 2) — mismo lenguaje visual de
+// confirm-dialog.scss (cfd__*) para no introducir un estilo nuevo.
+.dup-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(18, 18, 18, 0.55);
+}
+.dup-dialog__card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 24px 20px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-lift);
+}
+.dup-dialog__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.dup-dialog__msg {
+  margin: 0 0 20px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.dup-dialog__btn {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 10px;
+}
+.dup-dialog__btn--primary {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+.dup-dialog__btn--ghost {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+.dup-dialog__btn--text {
+  background: none;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
 .mov__band-exceso {
   margin-top: 14px;
   padding: 10px 14px;

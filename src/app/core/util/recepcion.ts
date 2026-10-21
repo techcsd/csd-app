@@ -1,5 +1,6 @@
 import type { EntregaPorConfirmar } from '../services/conduces.service';
 import type { FirmaPendiente } from '../services/inventario.service';
+import type { Conduce } from '../models/transporte.model';
 
 /** BD2 — de qué bandeja de origen viene una entrega por recibir. */
 export type FuenteRecepcion = 'confirmar' | 'firmar';
@@ -60,4 +61,28 @@ export function fusionarEntregasPorRecibir(
     });
   }
   return [...map.values()];
+}
+
+/**
+ * CT5 — decide qué conduce usar para retomar el borrador de "Recibir material"
+ * (`inventario:recibir`):
+ * 1) si el conduce sigue en la lista de pendientes (online o cache fresco) →
+ *    esa copia, la más actualizada.
+ * 2) si no está en la lista pero el borrador guardó una copia del conduce
+ *    (`conduceSnapshot`) y NO hay señal → el snapshot: sin red no se puede
+ *    confirmar nada, así que NO se descarta (antes se perdía el borrador solo
+ *    por no verlo en una lista que, offline, puede venir vacía o desactualizada).
+ * 3) si no está en la lista Y hay señal → null: el servidor confirma que ya no
+ *    está pendiente (alguien más lo recibió, o ya se envió) → se descarta.
+ */
+export function resolverConduceDeBorrador(
+  expandedId: string,
+  conduceSnapshot: Conduce | null,
+  conducesEnLista: Conduce[],
+  online: boolean,
+): Conduce | null {
+  const enLista = conducesEnLista.find((c) => c.id === expandedId) ?? null;
+  if (enLista) return enLista;
+  if (!online && conduceSnapshot) return conduceSnapshot;
+  return null;
 }

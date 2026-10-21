@@ -3,7 +3,7 @@ import { db, OutboxOp } from '../db/app-db';
 import { SyncService } from '../sync/sync.service';
 
 /** V1 — módulos que tienen "documentación en proceso" (borradores + envíos). */
-export type EnProcesoModulo = 'bitacora' | 'flota' | 'rrhh' | 'mensajes';
+export type EnProcesoModulo = 'bitacora' | 'flota' | 'rrhh' | 'mensajes' | 'inventario';
 
 /** Un ítem "en proceso": un borrador (Dexie) o un envío en la cola (outbox). */
 export interface EnProcesoItem {
@@ -34,6 +34,10 @@ const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
   flota: ['checklist', 'vehiculo', 'conductor', 'conduce', 'combustible', 'conduce_externo'],
   rrhh: [],
   mensajes: [],
+  // CT5 — la recepción de un conduce a medias (cantidades/fotos/firma) también
+  // cuenta como "en proceso": alimenta el badge del tile Inventario + el banner
+  // de "retomar" del home.
+  inventario: ['recibir'],
 };
 const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
   bitacora: ['bitacora', 'cl_liberacion', 'orden_trabajo', 'cartilla'],
@@ -75,6 +79,9 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
   ],
   rrhh: ['rrhh_asignar_item', 'rrhh_asignacion_estado'],
   mensajes: ['mensaje_enviar'],
+  // CT5 — el envío de la recepción (conduce_recepcion) ya se contaba en 'flota'
+  // (histórico); no se duplica aquí para no inflar dos badges con el mismo envío.
+  inventario: [],
 };
 
 const OP_LABEL: Record<string, string> = {
@@ -129,6 +136,7 @@ const BORRADOR_LABEL: Record<string, string> = {
   conductor: 'Conductor',
   combustible: 'Registrar combustible',
   conduce_externo: 'Conduce externo',
+  recibir: 'Recepción de conduce',
 };
 
 const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion', 'orden_trabajo', 'cartilla']);
@@ -156,11 +164,12 @@ export class EnProcesoService {
 
   /** Recalcula los contadores por módulo (para los badges del home/hub). */
   async refresh(): Promise<void> {
-    const [bitacora, flota] = await Promise.all([
+    const [bitacora, flota, inventario] = await Promise.all([
       this.list('bitacora'),
       this.list('flota'),
+      this.list('inventario'),
     ]);
-    this._counts.set({ bitacora: bitacora.length, flota: flota.length });
+    this._counts.set({ bitacora: bitacora.length, flota: flota.length, inventario: inventario.length });
   }
 
   async count(modulo: EnProcesoModulo): Promise<number> {
@@ -172,10 +181,14 @@ export class EnProcesoService {
    * duplicados. Para la pantalla /en-proceso cuando no se filtra por módulo.
    */
   async listAll(): Promise<EnProcesoItem[]> {
-    const [bitacora, flota] = await Promise.all([this.list('bitacora'), this.list('flota')]);
+    const [bitacora, flota, inventario] = await Promise.all([
+      this.list('bitacora'),
+      this.list('flota'),
+      this.list('inventario'),
+    ]);
     const seen = new Set<string>();
     const merged: EnProcesoItem[] = [];
-    for (const it of [...bitacora, ...flota]) {
+    for (const it of [...bitacora, ...flota, ...inventario]) {
       const key = `${it.kind}:${it.id}`;
       if (seen.has(key)) continue;
       seen.add(key);
