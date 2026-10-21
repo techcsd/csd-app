@@ -37,8 +37,41 @@
   margin-bottom: 12px;
   text-align: left;
 }
-.con-card:active {
-  border-color: var(--color-primary);
+.con-card__body {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+// CT3a/B2 — miniatura de la foto del despacho (identificar sin abrir nada).
+.con-card__thumb {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+.con-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.con-card__acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.con-card__ver {
+  flex: 1;
+  width: auto;
+  height: 52px;
+}
+.con-card__recibir {
+  flex: 1;
+  width: auto;
+  height: 52px;
 }
 .con-card__top {
   display: flex;
@@ -228,6 +261,13 @@
   padding: 12px 0;
   border-bottom: 1px solid var(--color-border);
   min-width: 0;
+}
+// CT3a — "Ver conduce": fila simple nombre + cantidad esperada, sin stepper.
+.con-item--lectura {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 .con-item--dif {
   border: 1px solid var(--color-warning, #b45309);

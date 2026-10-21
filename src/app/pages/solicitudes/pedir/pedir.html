@@ -80,9 +80,12 @@
     <div class="screen__body">
       <div class="mov__ok" appFadeIn>
         <span class="mov__ok-check">✓</span>
-        <h1 class="mov__ok-title">{{ 'Requisición enviada' | t }}</h1>
+        <!-- CT4/CT7 — honesto: a esta altura solo sabemos que se GUARDÓ en el
+             teléfono, no que el servidor ya la tiene. La confirmación real se ve
+             en "Mis requisiciones" (Enviando… → Enviada · REQ-xxxxxx). -->
+        <h1 class="mov__ok-title">{{ 'Requisición guardada' | t }}</h1>
         <p class="mov__ok-sub">
-          {{ online ? ('Llegó al módulo de Solicitudes.' | t) : ('Sin señal. Se enviará sola al reconectar.' | t) }}
+          {{ online ? ('Se está enviando. La verás en Mis requisiciones en un momento.' | t) : ('Sin señal. Se enviará sola al reconectar.' | t) }}
         </p>
       </div>
 
@@ -118,4 +121,34 @@
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"
   />
+
+  <!-- CT4 — aviso de posible duplicado antes de enviar (nunca bloquea).
+       3 acciones reales → diálogo propio (app-confirm-dialog es solo 2 botones
+       y el tap en el fondo dispara "cancelled": no queremos que eso navegue). -->
+  @if (duplicado(); as d) {
+    <div class="dup-dialog" role="alertdialog" aria-modal="true" (click)="cancelarDuplicado()">
+      <div class="dup-dialog__card" (click)="$event.stopPropagation()">
+        <h2 class="dup-dialog__title">{{ '¿Esta requisición ya la enviaste?' | t }}</h2>
+        <p class="dup-dialog__msg">
+          @if (d.local) {
+            {{ 'Ya enviaste una muy parecida hace {n} min y todavía se está enviando.' | t: { n: d.minutos } }}
+          } @else if (d.folio) {
+            {{ 'Ya enviaste una muy parecida hace {n} min ({codigo}).' | t: { n: d.minutos, codigo: codigo(d.folio) } }}
+          } @else {
+            {{ 'Ya enviaste una muy parecida hace {n} min.' | t: { n: d.minutos } }}
+          }
+          {{ '¿Enviar de todas formas?' | t }}
+        </p>
+        <button type="button" class="dup-dialog__btn dup-dialog__btn--primary" (click)="confirmarEnvioForzado()">
+          {{ 'Enviar igual' | t }}
+        </button>
+        <button type="button" class="dup-dialog__btn dup-dialog__btn--ghost" (click)="verAnterior()">
+          {{ 'Ver la anterior' | t }}
+        </button>
+        <button type="button" class="dup-dialog__btn dup-dialog__btn--text" (click)="cancelarDuplicado()">
+          {{ 'Cancelar' | t }}
+        </button>
+      </div>
+    </div>
+  }
 </div>

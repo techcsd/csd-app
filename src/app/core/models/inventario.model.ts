@@ -239,6 +239,9 @@ export interface Solicitud {
   // deriva en cliente con `faseRequisicion`).
   fecha_necesidad?: string | null;
   fase?: string | null;
+  /** CT4/CT7 — fila optimista nacida del outbox local, aún sin confirmar por el
+   *  servidor ("Enviando…" / "Con problema"). Ausente = fila real del servidor. */
+  local?: 'enviando' | 'error';
 }
 
 /** BV9 — fase de la requisición para las tabs (pendiente/en_proceso/completada/rechazada). */

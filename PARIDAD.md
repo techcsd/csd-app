@@ -655,3 +655,67 @@ en dev) todavía tenía el bug; 2.57.1 lo corrige** y es la que queda publicada.
 por Claude, no por él con sus manos) como válida y dio el OK explícito de promover a
 producción — **2.57.1 PUBLICADA A PROD** (PR #4 `dev → main`, APK prod firmado +
 publicado, `app_versiones` prod `publicada=true`, verificado por lectura directa).
+
+## CT (ronda 21/10/2026, `feature/ct-ronda`) — app 2.58.0, EN CÓDIGO sin commitear
+Consume PROMPT-108 (web) solo donde hace falta un contrato — verificado vivo en
+sgc-dev: `crear_solicitud_app` acepta `p_forzar` (confirmado por probe directo con
+`service_role`: la llamada pasó la validación de firma del RPC y llegó al cuerpo).
+
+- **CT3a (Ver conduce):** `inventario/recibir` separa "Ver conduce" (hoja de solo
+  lectura — folio/origen/obra/fecha/artículos/foto del despacho, sin cámara/firma)
+  de "Recibir" (única acción que crea el borrador). Miniatura de la foto del
+  despacho en la tarjeta de la lista. **CT3b/CT3c son del padre** (externos antes de
+  confirmar + reconciliación de OC) — la app no tiene pantalla de reconciliación de
+  OC, es solo-web; nada tocado aquí.
+- **CT4/CT7 (requisición honesta):** `SolicitudesService.misSolicitudesConPendientes()`
+  antepone en "Mis requisiciones" las filas del outbox local sin confirmar
+  (`local:'enviando'|'error'`), leídas directo de `db.outbox` — desaparecen solas
+  cuando el servidor confirma (la op sale de la cola). La hoja de éxito de
+  `pedir.ts` ya no dice "enviada"/"llegó al módulo" sin confirmación real ("Guardada.
+  Se está enviando…"). Nuevo `duplicadoReciente()` compara contra el outbox local Y
+  el caché de `misSolicitudes()` (misma obra + misma firma de renglones — descripción+
+  cantidad+unidad, orden-independiente — en 24h); diálogo propio de 3 acciones
+  (**no** `app-confirm-dialog`: su tap-fuera dispara `cancelled`, que hubiera
+  navegado a "Ver la anterior" por accidente). `enqueueSolicitud(input, forzar)`
+  manda `p_forzar` al RPC cuando el usuario decide enviar igual.
+- **CT5 (cámara 0.6x + borrador de recepción):** diagnóstico de manifest
+  (`configChanges`/`largeHeap`) confirma que **ya estaban presentes** — nada que
+  agregar ahí; el perfil de compresión `evidencia` (1280px/0.72, compartido con la
+  web, decisión BJ1 de Xaviel) **no se tocó** sin evidencia real de que sea la
+  causa. **La causa del crash queda sin confirmar** — depende de un `adb logcat`
+  real (guía en `qa/release-2.58.0.md`).
+  - Red de seguridad: `InAppCameraService`/`app-in-app-camera` (overlay
+    `getUserMedia`, ya existía en el repo **sin usarse en ningún sitio**) ahora se
+    ofrece junto con "Subir de la galería" (CK3) tras 2 fallos de cámara nativa en
+    `photo-slot.ts` — cubre recibir material y cualquier otra casilla solo-cámara
+    nativa sin tocar su lógica propia.
+  - Borrador: nuevo módulo `'inventario'` en `EnProcesoService.BORRADOR_TIPOS` (tipo
+    `recibir`) — el tile Inventario del home ya sumaba por módulo genérico, así que
+    el badge lo recoge solo. El banner "Pendiente de terminar" del home (BV5, ya
+    existía para otros borradores) lo lista sin cambios; se le agregó un botón
+    "✕ Descartar" inline (antes solo vivía dentro de `/en-proceso`).
+    `restoreDraft()` ya no descarta el borrador solo por no ver el conduce en
+    `conducesPorRecibir()` (exactamente lo que pasaba offline, lista cacheada vacía/
+    vieja): guarda un `conduceSnapshot` y una función pura nueva
+    `resolverConduceDeBorrador()` (`core/util/recepcion.ts`, con spec de 5 casos)
+    decide si usar la lista, el snapshot (sin señal → no descarta) o descartar
+    (con señal y sin match → el servidor confirma que ya no está pendiente).
+  - **Auditoría** (vía fork, read-only): de 39 pantallas con `app-photo-slot`, 13 ya
+    tenían borrador Y registrado en `BORRADOR_TIPOS`, 11 tenían borrador pero NO
+    registrado (invisibles en "Documentación en proceso" — los 4 `obra_*` no tienen
+    ni módulo propio en el mapa), y 15 **no tienen ningún borrador** (más expuestas:
+    pierden el formulario entero, no solo la foto) — `mensajes/thread`, `reportar`,
+    `tecnologia-inventario/equipo-form`, `reuniones/reunion-detalle`,
+    `proyectos/personal-expediente`, `inventario/articulo-nuevo|editar` entre las
+    más notorias (ninguna pasa `restore:{clave,slot}` a `camera.takePhoto`, tampoco
+    hay recuperación a nivel de foto). No se amplió el alcance esta ronda.
+- **Pendiente (no hecho esta ronda):** borrador de "Pedir material" (si se cierra la
+  app con el carrito armado, hoy se pierde) — sin presupuesto esta sesión, mismo
+  patrón que `recibir.ts`/`combustible.ts` si se retoma.
+- **Release:** build + `test:canal` + `release-check.mjs --version 2.58.0` → 3/4 en
+  verde (registro/versión/build); **"breathe" en rojo a propósito** (dev con ~21h,
+  sin OK de Xaviel). `qa/release-2.58.0.md` dejado como guía para la prueba real del
+  Samsung (especialmente el punto de la cámara 0.6x + `adb logcat`). **Nada
+  commiteado/pusheado/publicado todavía** — el prompt pide avisar antes de
+  commit/push/deploy; la sesión se detuvo ahí a propósito, a la espera del visto
+  bueno de Xaviel.

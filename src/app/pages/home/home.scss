@@ -287,6 +287,39 @@
   color: var(--text);
   border: 1px solid var(--Hub, #ffb300);
 }
+// CT5 — el banner "Pendiente de terminar" ahora es un contenedor (tap para
+// retomar + botón aparte para descartar), no todo un único <button>.
+.home__firmar--row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+}
+.home__firmar-tap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+}
+.home__firmar-descartar {
+  flex: 0 0 auto;
+  width: 52px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  font-weight: 700;
+}
 .home__firmar-icon {
   font-size: 24px;
 }

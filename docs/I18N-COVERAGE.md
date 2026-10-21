@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 92%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 91%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -51,7 +51,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
-| pages/home | 14 | 0 | 100% | 14% | ✅ |
+| pages/home | 19 | 0 | 100% | 11% | ✅ |
 | pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
@@ -69,7 +69,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/existencias | 6 | 0 | 100% | 0% |  |
 | pages/inventario/kardex | 24 | 0 | 100% | 0% |  |
 | pages/inventario/material-no-catalogado | 33 | 0 | 100% | 18% |  |
-| pages/inventario/recibir | 53 | 0 | 100% | 2% |  |
+| pages/inventario/recibir | 56 | 0 | 98% | 2% |  |
 | pages/inventario/retiro-detalle | 20 | 0 | 100% | 0% |  |
 | pages/inventario/retiro-nuevo | 4 | 19 | 17% | 4% |  |
 | pages/inventario/retiros | 6 | 0 | 100% | 0% |  |
@@ -119,8 +119,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
 | pages/solicitudes/bandeja | 20 | 0 | 100% | 0% |  |
 | pages/solicitudes/detalle | 74 | 12 | 76% | 1% |  |
-| pages/solicitudes/mis | 15 | 0 | 100% | 0% |  |
-| pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
+| pages/solicitudes/mis | 18 | 0 | 89% | 0% |  |
+| pages/solicitudes/pedir | 31 | 0 | 71% | 0% |  |
 | pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
 | pages/tecnologia | 11 | 12 | 43% | 26% |  |
@@ -219,7 +219,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/notif-health-band | 22 | 3 | 36% | 8% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
-| shared/ui/photo-slot | 18 | 1 | 95% | 5% |  |
+| shared/ui/photo-slot | 19 | 1 | 90% | 5% |  |
 | shared/ui/photo-viewer | 3 | 0 | 100% | 100% |  |
 | shared/ui/select-list | 0 | 1 | 0% | 0% |  |
 | shared/ui/selector-categorias | 28 | 1 | 97% | 3% |  |
