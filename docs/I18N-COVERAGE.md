@@ -120,7 +120,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/bandeja | 20 | 0 | 100% | 0% |  |
 | pages/solicitudes/detalle | 74 | 12 | 76% | 1% |  |
 | pages/solicitudes/mis | 18 | 0 | 89% | 0% |  |
-| pages/solicitudes/pedir | 31 | 0 | 71% | 0% |  |
+| pages/solicitudes/pedir | 31 | 0 | 68% | 0% |  |
 | pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
 | pages/tecnologia | 11 | 12 | 43% | 26% |  |

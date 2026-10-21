@@ -114,10 +114,10 @@
   <app-confirm-dialog
     [open]="confirmSalir()"
     [title]="'¿Salir de la requisición?' | t"
-    [message]="'Perderás los materiales que llevas seleccionados.' | t"
+    [message]="'Se guarda lo que llevas armado — puedes retomarla después desde el inicio.' | t"
     [confirmLabel]="'Sí, salir' | t"
     [cancelLabel]="'Seguir aquí' | t"
-    tone="danger"
+    tone="default"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"
   />

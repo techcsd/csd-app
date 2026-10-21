@@ -24,6 +24,12 @@ give u my ok") se completó: commit → push `feature/ct-ronda` → merge a `dev
 push `dev` → `npm run apk -- --env dev` → `npm run apk:publish -- --env dev`.
 **Prod sigue gateado** — falta la prueba real del Samsung (`qa/release-2.58.0.md`,
 especialmente la cámara 0.6x con `adb logcat`) y el `OK:` con fecha de Xaviel.
+Xaviel confirmó "yes i tried, continue working" pero sin los detalles que pide
+`qa/release-2.58.0.md` (¿se reprodujo el crash?, ¿hay logcat?); se le preguntó
+explícitamente y no hubo respuesta — **no se fabricó ninguna línea `OK:` en su
+nombre** (regla de la casa, ver incidente de CS). La sesión siguió con trabajo que
+no depende de esa respuesta: cerró el pendiente del borrador de requisición (abajo).
+`qa/release-2.58.0.md` sigue sin `OK:` — prod sigue bloqueado hasta que la ponga él.
 
 ### FASE 1 — CT3a: "Ver conduce" sin empezar el proceso ✅
 `inventario/recibir`: nuevo signal `viendoSolo` + método `verConduce()` (hoja de
@@ -55,7 +61,15 @@ refrescaba `misSolicitudes()` **antes** de que existiera algo que mostrar.
   anterior" / "Cancelar"; no se reutilizó `app-confirm-dialog` porque su tap-fuera
   dispara "cancelled" y hubiera navegado por accidente). `p_forzar` se manda al RPC
   cuando el usuario decide "Enviar igual" (contrato ya verificado vivo arriba).
-- **Borrador de requisición**: NO se implementó — ver "Pendiente" abajo.
+- **Borrador de requisición (añadido en el follow-up del 21-oct, ver abajo):**
+  `pedir.ts` ahora guarda el carrito armado (mismo patrón `BorradorService`/
+  `AutosaveService` de `recibir.ts`, clave fija `solicitudes:pedir`); si la app se
+  cierra con material seleccionado, al volver se retoma directo en el resumen.
+  Se descarta al enviar, al vaciar el carrito o al tocar "Nueva requisición". Nuevo
+  módulo `'compras'` en `EnProcesoService.BORRADOR_TIPOS` (tipo `solicitud_pedir`)
+  — alimenta el badge del tile "Requisición" y el banner del home. El diálogo de
+  "¿Salir de la requisición?" ya no dice "perderás los materiales" (ya no es
+  cierto) — ahora dice que se guarda y se puede retomar.
 
 ### FASE 3 — CT5: cámara 0.6x + borrador de recepción ✅ (crash sin confirmar)
 **Diagnóstico del crash**: `android:configChanges` y `android:largeHeap="true"` en
@@ -113,10 +127,6 @@ queda pedido en `qa/release-2.58.0.md` (guía paso a paso, sin contraseñas ni
   de código (mismo patrón mecánico que ya usan `bitacora`/`flota`).
 
 ### Pendiente / no hecho esta ronda
-- **Borrador de requisición** (FASE 2, punto 4 del prompt): si la app se cierra con
-  el carrito armado en "Pedir material", hoy se pierde (no hay `BorradorService`
-  wireado en `pedir.ts`). No se implementó por presupuesto de la sesión — mismo
-  patrón que `recibir.ts`/`combustible.ts` si se retoma.
 - **CT3b/CT3c** (web): nada tocado, son del padre.
 - **CT1/CT2/CT6** (Google Calendar, imágenes de Dev notes, Excel de combustible):
   son de `PROMPT-108` (web), fuera de este repo.

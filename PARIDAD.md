@@ -709,13 +709,20 @@ sgc-dev: `crear_solicitud_app` acepta `p_forzar` (confirmado por probe directo c
     `proyectos/personal-expediente`, `inventario/articulo-nuevo|editar` entre las
     más notorias (ninguna pasa `restore:{clave,slot}` a `camera.takePhoto`, tampoco
     hay recuperación a nivel de foto). No se amplió el alcance esta ronda.
-- **Pendiente (no hecho esta ronda):** borrador de "Pedir material" (si se cierra la
-  app con el carrito armado, hoy se pierde) — sin presupuesto esta sesión, mismo
-  patrón que `recibir.ts`/`combustible.ts` si se retoma.
-- **Release:** build + `test:canal` + `release-check.mjs --version 2.58.0` → 3/4 en
-  verde (registro/versión/build); **"breathe" en rojo a propósito** (dev con ~21h,
-  sin OK de Xaviel). `qa/release-2.58.0.md` dejado como guía para la prueba real del
-  Samsung (especialmente el punto de la cámara 0.6x + `adb logcat`). **Nada
-  commiteado/pusheado/publicado todavía** — el prompt pide avisar antes de
-  commit/push/deploy; la sesión se detuvo ahí a propósito, a la espera del visto
-  bueno de Xaviel.
+- **Borrador de "Pedir material" (follow-up, mismo día):** `pedir.ts` guarda el
+  carrito armado (mismo patrón `BorradorService`/`AutosaveService`, clave fija
+  `solicitudes:pedir`); al volver con un carrito a medias salta directo al resumen.
+  Se descarta al enviar, al vaciar el carrito o en "Nueva requisición". Nuevo módulo
+  `EnProcesoService.BORRADOR_TIPOS.compras = ['solicitud_pedir']` (tile
+  "Requisición", `modulo:'compras'`). El diálogo de salir ya no dice "perderás los
+  materiales" (dejó de ser cierto).
+- **Release:** commit → push `feature/ct-ronda` → merge a `dev` → push, con el OK
+  explícito de Xaviel en el chat para avanzar con commit/push/APK ("continue
+  working, do all the stuff. i give u my ok"). APK dev construido/firmado
+  (mismo cert de prod) y **publicado** vía `scripts/data-fixes/2026-10-21-ct-
+  publicar-2.58.0.mjs --env dev` (2.57.1 despublicada, `minima` sin tocar).
+  `release-check.mjs --version 2.58.0` → 3/4 en verde (registro/versión/build);
+  **"breathe" en rojo a propósito**. Xaviel probó en el Samsung ("yes i tried")
+  pero sin los detalles que pide `qa/release-2.58.0.md` — se le preguntó
+  explícitamente (¿se reprodujo el crash? ¿hay logcat?) y no respondió; **no se
+  fabricó ningún `OK:` en su nombre**. **Prod sigue sin tocar** (`main`=`ae00551`).
