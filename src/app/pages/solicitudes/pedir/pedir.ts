@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -14,8 +14,10 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import { Proyecto } from '../../../core/models/bitacora.model';
-import { ArticuloCat, CartLinea, CategoriaInv, Urgencia } from '../../../core/models/inventario.model';
+import { ArticuloCat, CartLinea, CategoriaInv, requisicionCodigo, Urgencia } from '../../../core/models/inventario.model';
 import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
@@ -27,6 +29,16 @@ import { MOTION_DIRECTIVES } from '../../../shared/motion';
 interface GrupoResumen {
   categoria: string;
   lineas: CartLinea[];
+}
+
+/** CT5 (FASE 2.4) — estado serializable del carrito a medio armar (regla 4 —
+ *  autosave/borrador), mismo patrón que `recibir.ts`. */
+interface PedirDraft {
+  proyectoId: string;
+  urgencia: Urgencia;
+  notas: string;
+  fechaNecesidad: string;
+  cart: CartLinea[];
 }
 
 /**
@@ -55,8 +67,16 @@ export class PedirPage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private i18n = inject(I18nService);
   private motion = inject(MotionService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
+
+  /** CT5 (FASE 2.4) — un solo carrito a medio armar a la vez (mismo patrón que
+   *  la clave fija de `recibir.ts`). */
+  private readonly clave = 'solicitudes:pedir';
+  private hydrated = false;
 
   hoja = signal<'seleccion' | 'resumen' | 'exito'>('seleccion');
+  codigo = requisicionCodigo; // CT4 — REQ-XXXXXX en el aviso de duplicado
 
   proyectos = signal<Proyecto[]>([]);
   proyectoId = signal('');
@@ -73,6 +93,8 @@ export class PedirPage implements OnDestroy {
   readonly hoyISO = fechaLocalISO();
   submitting = signal(false);
   confirmSalir = signal(false);
+  /** CT4 — posible duplicado detectado antes de enviar (null = sin aviso pendiente). */
+  duplicado = signal<{ id: string; folio: number | null; minutos: number; local: boolean } | null>(null);
 
   obraOptions = computed(() => this.proyectos().map((p) => ({ id: p.id, label: p.nombre })));
 
@@ -101,6 +123,23 @@ export class PedirPage implements OnDestroy {
   constructor() {
     void this.init();
     this.navGuard.register(this.backHandler);
+    // CT5 (FASE 2.4) — autosave: no perder el carrito armado si la app se
+    // cierra/mata antes de enviar (mismo patrón que `recibir.ts`).
+    effect(() => {
+      const snap: PedirDraft = {
+        proyectoId: this.proyectoId(),
+        urgencia: this.urgencia(),
+        notas: this.notas(),
+        fechaNecesidad: this.fechaNecesidad(),
+        cart: this.cart(),
+      };
+      if (!this.hydrated || this.submitting() || !snap.cart.length) return;
+      this.autosave.queue(this.clave, snap, {
+        tipo: 'solicitud_pedir',
+        etiqueta: this.i18n.t('Requisición de materiales'),
+        ruta: this.location.path(),
+      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -126,8 +165,27 @@ export class PedirPage implements OnDestroy {
       const obra = this.ctx.obraActiva();
       if (obra) this.proyectoId.set(obra.id);
       else if (p.length === 1) this.proyectoId.set(p[0].id);
+      await this.restoreDraft();
     } finally {
       this.loadingCat.set(false);
+    }
+  }
+
+  /** CT5 (FASE 2.4) — retoma el carrito a medio armar, si hay uno. Salta directo
+   *  al resumen (ahí es donde se quedó) en vez de obligar a rearmar la selección. */
+  private async restoreDraft(): Promise<void> {
+    try {
+      const d = await this.borrador.load<PedirDraft>(this.clave);
+      if (d?.cart?.length) {
+        this.proyectoId.set(d.proyectoId || this.proyectoId());
+        this.urgencia.set(d.urgencia ?? 'normal');
+        this.notas.set(d.notas ?? '');
+        this.fechaNecesidad.set(d.fechaNecesidad ?? '');
+        this.cart.set(d.cart);
+        this.hoja.set('resumen');
+      }
+    } finally {
+      this.hydrated = true;
     }
   }
 
@@ -161,7 +219,10 @@ export class PedirPage implements OnDestroy {
   }
   quitar(articuloId: string): void {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
-    if (!this.cart().length) this.hoja.set('seleccion');
+    if (!this.cart().length) {
+      this.hoja.set('seleccion');
+      void this.autosave.discard(this.clave); // CT5 — carrito vacío, nada que retomar
+    }
   }
 
   /** BC2 — cambia la unidad de un renglón no catalogado (dropdown AU13 + libre). */
@@ -198,23 +259,67 @@ export class PedirPage implements OnDestroy {
       this.toast.error(this.i18n.t('Agrega al menos un material.'));
       return;
     }
+    // CT4 — ¿ya se envió una requisición casi igual en las últimas 24h? Avisa
+    // ANTES de encolar (nunca bloquea: el usuario decide "Enviar igual").
+    try {
+      const obraNombre = this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? null;
+      const dup = await this.solicitudes.duplicadoReciente(
+        this.proyectoId(),
+        obraNombre,
+        items.map((l) => ({ descripcion: this.descripcionDe(l), cantidad: l.cantidad, unidad: l.unidad })),
+      );
+      if (dup) {
+        this.duplicado.set(dup);
+        return;
+      }
+    } catch {
+      /* el aviso de duplicado nunca debe bloquear el envío real */
+    }
+    await this.enviarAhora(items, false);
+  }
+
+  /** CT4 — "Enviar igual" en el aviso de duplicado: envía con `p_forzar`. */
+  async confirmarEnvioForzado(): Promise<void> {
+    this.duplicado.set(null);
+    await this.enviarAhora(this.cart().filter((l) => l.cantidad > 0), true);
+  }
+
+  /** CT4 — "Ver la anterior": abre la requisición que parece duplicada. */
+  verAnterior(): void {
+    const dup = this.duplicado();
+    if (!dup) return;
+    this.duplicado.set(null);
+    if (dup.local) void this.router.navigate(['/pendientes', dup.id]);
+    else void this.router.navigate(['/solicitudes/requisicion', dup.id]);
+  }
+
+  cancelarDuplicado(): void {
+    this.duplicado.set(null);
+  }
+
+  private async enviarAhora(items: CartLinea[], forzar: boolean): Promise<void> {
     this.submitting.set(true);
     try {
-      await this.solicitudes.enqueueSolicitud({
-        proyectoId: this.proyectoId(),
-        urgencia: this.urgencia(),
-        notas: this.notas().trim() || null,
-        fechaNecesidad: this.fechaNecesidad() || null, // BO8
+      await this.solicitudes.enqueueSolicitud(
+        {
+          proyectoId: this.proyectoId(),
+          proyectoNombre: this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? null,
+          urgencia: this.urgencia(),
+          notas: this.notas().trim() || null,
+          fechaNecesidad: this.fechaNecesidad() || null, // BO8
 
-        items: items.map((l) => ({
-          articulo_id: this.esCustom(l) ? null : l.articulo_id,
-          descripcion: this.descripcionDe(l),
-          cantidad: l.cantidad, // BM5 — SIEMPRE en unidad base
-          unidad: l.unidad,
-          unidad_capturada: l.unidad_capturada ?? null,
-          factor_aplicado: l.factor_aplicado ?? 1,
-        })),
-      });
+          items: items.map((l) => ({
+            articulo_id: this.esCustom(l) ? null : l.articulo_id,
+            descripcion: this.descripcionDe(l),
+            cantidad: l.cantidad, // BM5 — SIEMPRE en unidad base
+            unidad: l.unidad,
+            unidad_capturada: l.unidad_capturada ?? null,
+            factor_aplicado: l.factor_aplicado ?? 1,
+          })),
+        },
+        forzar,
+      );
+      void this.autosave.discard(this.clave); // CT5 — borrador enviado → limpiar
       this.hoja.set('exito');
       this.motion.momento('entrada'); // CL2 F4 — requisición enviada (también offline, ya encolada)
     } catch (e) {
@@ -263,6 +368,7 @@ export class PedirPage implements OnDestroy {
     this.urgencia.set('normal');
     this.fechaNecesidad.set(''); // BO8
     this.hoja.set('seleccion');
+    void this.autosave.discard(this.clave); // CT5 — "Nueva requisición" empieza limpio
   }
 
   back(): void {

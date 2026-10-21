@@ -5,11 +5,14 @@ import { BigButton } from '../../shared/ui/big-button/big-button';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { Onboarding } from '../../shared/components/onboarding/onboarding';
+import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 import { UserContextService } from '../../core/services/user-context.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService, EnProcesoItem } from '../../core/services/en-proceso.service';
+import { AutosaveService } from '../../core/services/autosave.service';
 import { InventarioService } from '../../core/services/inventario.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { MensajesService } from '../../core/services/mensajes.service';
@@ -134,7 +137,7 @@ interface HomeGrupoRender extends HomeGroup {
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, EmptyState, SyncBar, Onboarding, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [BigButton, EmptyState, SyncBar, Onboarding, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -150,6 +153,8 @@ export class HomePage implements OnDestroy {
   private notificaciones = inject(NotificacionesService);
   private push = inject(PushService);
   private moduleOrder = inject(ModuleOrderService);
+  private autosave = inject(AutosaveService);
+  private i18n = inject(I18nService);
   private toast = inject(ToastService);
   avisosNoLeidos = this.notificaciones.noLeidas;
 
@@ -415,6 +420,24 @@ export class HomePage implements OnDestroy {
     } catch {
       /* best-effort */
     }
+  }
+
+  /** CT5 — confirmación antes de descartar el borrador desde el banner del home
+   *  (mismo patrón que EnProcesoPage.pedirDescartar/descartar). */
+  confirmarDescartePendiente = signal(false);
+  pedirDescartarPendiente(): void {
+    this.confirmarDescartePendiente.set(true);
+  }
+  cancelarDescartePendiente(): void {
+    this.confirmarDescartePendiente.set(false);
+  }
+  async descartarPendiente(): Promise<void> {
+    this.confirmarDescartePendiente.set(false);
+    const b = this.pendienteTerminar();
+    if (!b) return;
+    await this.autosave.discard(b.id); // b.id = clave del borrador
+    this.pendienteTerminar.set(null);
+    this.toast.show(this.i18n.t('Borrador descartado.'), 'info');
   }
 
   /** BV5 — reabre la pantalla con el borrador (mirror de EnProcesoPage.retomar). */

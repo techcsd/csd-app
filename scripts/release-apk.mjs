@@ -40,11 +40,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Orden de requisiciones y notas técnicas con imágenes';
+const TITULO = 'Ver conduce sin recibir, requisiciones honestas y cámara más segura';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Requisiciones', d: 'En "Todas las requisiciones" y "Mis requisiciones" ya puedes elegir cómo ordenar las activas: por Fecha o por Necesidad, tocando de nuevo para invertir el orden. Se recuerda en tu teléfono.' },
-  { t: 'mejora', m: 'Dev notes', d: 'Las notas técnicas que tienen imágenes pegadas desde la computadora ahora se ven bien en el teléfono (antes salía la imagen rota); si la nota está dentro de una carpeta, se ve su ruta.' },
-  { t: 'arreglo', m: 'Administración', d: 'Al crear/activar/desactivar un usuario, resetear su contraseña, fijar su PIN o reenviarle la invitación, si algo falla ahora se ve el motivo real (antes salía un error genérico sin explicar qué pasó).' },
+  { t: 'nuevo', m: 'Recibir material', d: 'Nuevo botón "Ver conduce" para identificar el conduce (folio, origen, obra, artículos, foto del despacho) sin empezar el proceso de recepción; "Recibir" sigue siendo la acción que de verdad inicia la recepción.' },
+  { t: 'arreglo', m: 'Mis requisiciones', d: 'Al enviar una requisición ahora se ve de inmediato como "Enviando…" y pasa a "Enviada" solo cuando el servidor la confirma (antes decía "enviada" aunque solo se hubiera guardado en el teléfono, lo que llevaba a enviarla dos veces por error).' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Si ya enviaste una requisición muy parecida en las últimas 24 horas, la app te avisa antes de mandarla de nuevo y te deja ver la anterior o enviarla igual.' },
+  { t: 'mejora', m: 'Recibir material', d: 'Si la cámara falla dos veces seguidas al recibir material, ahora puedes elegir una foto de la galería o usar la cámara propia de la app, sin quedarte atascado.' },
+  { t: 'mejora', m: 'Recibir material', d: 'Una recepción de conduce a medias (cantidades, fotos, notas) ahora aparece en "Documentación en proceso" y en un aviso en el inicio para retomarla o descartarla, y se puede recuperar incluso sin señal.' },
+  { t: 'mejora', m: 'Pedir material', d: 'Si armas una requisición y cierras la app antes de enviarla, al volver la encuentras lista para terminar (antes se perdía el carrito).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

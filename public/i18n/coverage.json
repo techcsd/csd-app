@@ -1,5 +1,5 @@
 {
-  "en": 92,
+  "en": 91,
   "ht": 3,
   "alcance": true,
   "byScreen": {
@@ -268,10 +268,10 @@
       "ht": 0
     },
     "pages/home": {
-      "conT": 14,
+      "conT": 19,
       "sinT": 0,
       "en": 100,
-      "ht": 14
+      "ht": 11
     },
     "pages/incentivos": {
       "conT": 40,
@@ -376,9 +376,9 @@
       "ht": 18
     },
     "pages/inventario/recibir": {
-      "conT": 53,
+      "conT": 56,
       "sinT": 0,
-      "en": 100,
+      "en": 98,
       "ht": 2
     },
     "pages/inventario/retiro-detalle": {
@@ -676,15 +676,15 @@
       "ht": 1
     },
     "pages/solicitudes/mis": {
-      "conT": 15,
+      "conT": 18,
       "sinT": 0,
-      "en": 100,
+      "en": 89,
       "ht": 0
     },
     "pages/solicitudes/pedir": {
-      "conT": 23,
+      "conT": 31,
       "sinT": 0,
-      "en": 100,
+      "en": 68,
       "ht": 0
     },
     "pages/soporte": {
@@ -1354,9 +1354,9 @@
       "ht": 0
     },
     "shared/ui/photo-slot": {
-      "conT": 18,
+      "conT": 19,
       "sinT": 1,
-      "en": 95,
+      "en": 90,
       "ht": 5
     },
     "shared/ui/photo-viewer": {

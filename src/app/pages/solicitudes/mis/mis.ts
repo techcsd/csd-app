@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
+import { SyncService } from '../../../core/sync/sync.service';
 import {
   MiOrdenCompra,
   Solicitud,
@@ -33,6 +34,7 @@ import { MOTION_DIRECTIVES } from '../../../shared/motion';
 })
 export class MisSolicitudesPage {
   private service = inject(SolicitudesService);
+  private sync = inject(SyncService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -42,8 +44,14 @@ export class MisSolicitudesPage {
     void this.router.navigate(['/solicitudes/pedir']);
   }
 
-  /** BC1 — abre el detalle completo de la requisición tocada. */
+  /** BC1 — abre el detalle completo de la requisición tocada.
+   *  CT4 — si todavía es una fila local (sin confirmar), abre su envío en
+   *  "Pendientes de envío" (el detalle real del servidor aún no existe). */
   abrir(s: Solicitud): void {
+    if (s.local) {
+      void this.router.navigate(['/pendientes', s.id]);
+      return;
+    }
     void this.router.navigate(['/solicitudes/requisicion', s.id]);
   }
 
@@ -126,13 +134,20 @@ export class MisSolicitudesPage {
   });
 
   constructor() {
-    void this.load();
+    // CT4/CT7 — refresca sola cuando el outbox cambia (encolar/drenar/confirmar),
+    // así "Enviando…" pasa a "Enviada" sin que el usuario tenga que salir y volver.
+    // El effect ya corre una vez al inicio (no hace falta un `load()` aparte).
+    effect(() => {
+      this.sync.changed();
+      void this.load();
+    });
   }
 
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      this.solicitudes.set(await this.service.misSolicitudes());
+      // CT4 — antepone las requisiciones aún en el outbox local (sin confirmar).
+      this.solicitudes.set(await this.service.misSolicitudesConPendientes());
     } finally {
       this.loading.set(false);
     }

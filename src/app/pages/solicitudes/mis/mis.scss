@@ -121,6 +121,15 @@
   background: var(--color-error-bg);
   color: var(--color-error);
 }
+// CT4/CT7 — fila optimista: "Enviando…" / "Con problema" (aún en el outbox local).
+.sol-card__estado--local {
+  background: var(--color-info-bg);
+  color: var(--color-info);
+}
+.sol-card__estado--local-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
 .sol-card__meta {
   display: flex;
   gap: 12px;

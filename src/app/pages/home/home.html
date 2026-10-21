@@ -18,15 +18,19 @@
   </header>
 
   <!-- BV5 — tarjeta "Pendiente de terminar": una captura a medias (p. ej. una echada
-       de combustible sin enviar) se retoma con un toque. Abre la pantalla con el borrador. -->
+       de combustible sin enviar) se retoma con un toque. Abre la pantalla con el borrador.
+       CT5 — ahora con "Descartar" inline (antes solo vivía dentro de /en-proceso). -->
   @if (pendienteTerminar(); as p) {
-    <button type="button" class="home__firmar home__firmar--draft" appTapScale (click)="abrirPendiente()">
-      <span class="home__firmar-icon">📝</span>
-      <span class="home__firmar-txt">
-        {{ 'Pendiente de terminar:' | t }} {{ p.etiqueta | t }}
-      </span>
-      <span class="home__firmar-go">›</span>
-    </button>
+    <div class="home__firmar home__firmar--draft home__firmar--row">
+      <button type="button" class="home__firmar-tap" appTapScale (click)="abrirPendiente()">
+        <span class="home__firmar-icon">📝</span>
+        <span class="home__firmar-txt">
+          {{ 'Pendiente de terminar:' | t }} {{ p.etiqueta | t }}
+        </span>
+        <span class="home__firmar-go">›</span>
+      </button>
+      <button type="button" class="home__firmar-descartar" (click)="pedirDescartarPendiente()" [attr.aria-label]="'Descartar' | t">✕</button>
+    </div>
   }
 
   <!-- BD2 — banner ÚNICO: entregas por recibir (fusión firmar + confirmar) -->
@@ -178,4 +182,16 @@
   <app-sync-bar data-tour="sync" />
 
   <app-onboarding />
+
+  <!-- CT5 — confirmación antes de descartar el borrador del banner "Pendiente de terminar". -->
+  <app-confirm-dialog
+    [open]="confirmarDescartePendiente()"
+    [title]="'¿Descartar este borrador?' | t"
+    [message]="'Perderás lo que llevas capturado (cantidades, notas y fotos sin enviar).' | t"
+    [confirmLabel]="'Sí, descartar' | t"
+    [cancelLabel]="'Seguir con él' | t"
+    tone="danger"
+    (confirmed)="descartarPendiente()"
+    (cancelled)="cancelarDescartePendiente()"
+  />
 </div>

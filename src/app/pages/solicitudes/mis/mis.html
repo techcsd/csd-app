@@ -39,7 +39,7 @@
     } @else {
       <div appStagger style="display:contents">
       @for (s of visibles(); track s.id) {
-        <button type="button" class="sol-card" appTapScale [attr.data-estado]="s.estado" (click)="abrir(s)">
+        <button type="button" class="sol-card" appTapScale [attr.data-estado]="s.local ? 'local-' + s.local : s.estado" (click)="abrir(s)">
           <!-- BV10 — la fecha de necesidad es la PRIMERA línea de la tarjeta -->
           @let ni = necesidad(s);
           <div class="sol-card__nec" [class.sol-card__nec--venc]="ni.estado === 'vencida'" [class.sol-card__nec--none]="ni.estado === 'sin_fecha'">
@@ -53,10 +53,18 @@
           </div>
           <div class="sol-card__top">
             <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? ('Obra' | t) }}</span>
-            <span class="sol-card__estado" [appEstadoPulse]="s.estado">{{ estadoLabel(s.estado) }}</span>
+            <!-- CT4/CT7 — mientras no hay confirmación del servidor, el estado real
+                 es "Enviando…"/"Con problema", no el "Enviada" (pendiente) del server. -->
+            @if (s.local === 'enviando') {
+              <span class="sol-card__estado sol-card__estado--local">{{ 'Enviando…' | t }}</span>
+            } @else if (s.local === 'error') {
+              <span class="sol-card__estado sol-card__estado--local-error">{{ 'Con problema' | t }}</span>
+            } @else {
+              <span class="sol-card__estado" [appEstadoPulse]="s.estado">{{ estadoLabel(s.estado) }}</span>
+            }
           </div>
           <div class="sol-card__meta">
-            <span class="sol-card__code">{{ codigo(s.folio) }}</span>
+            <span class="sol-card__code">{{ s.local ? ('Sin folio aún' | t) : codigo(s.folio) }}</span>
             <span>{{ fmtFecha(s.created_at) }}</span>
             @if (s.urgencia === 'urgente') { <span class="sol-card__urg">🔴 {{ 'Urgente' | t }}</span> }
           </div>

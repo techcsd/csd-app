@@ -14,16 +14,26 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { NetworkService } from '../../../core/services/network.service';
 import { Conduce } from '../../../core/models/transporte.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { resolverConduceDeBorrador } from '../../../core/util/recepcion';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
-/** Estado serializable de la recepción abierta (regla 4 — autosave/borrador). */
+/** Estado serializable de la recepción abierta (regla 4 — autosave/borrador).
+ *  CT5 — `conduceSnapshot` es una copia liviana (folio + renglones) del conduce
+ *  en el momento de abrirlo: permite retomar el borrador SIN SEÑAL aunque
+ *  `conducesPorRecibir()` no responda (antes se descartaba como "huérfano" solo
+ *  por no verlo en la lista, perdiendo cantidades/fotos/notas ya capturadas).
+ *  `receptorNombre` se guarda para no perder quién recibía (la firma SÍ se vuelve
+ *  a pedir siempre, a propósito). */
 interface RecibirDraft {
   expandedId: string;
   cantidades: Record<string, number>;
   notas: string;
+  receptorNombre: string;
+  conduceSnapshot: Conduce | null;
 }
 
 /** Z20 — bodeguero/chofer confirma la recepción de un conduce despachado.
@@ -48,6 +58,7 @@ export class RecibirConducePage {
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
   private motion = inject(MotionService);
+  private network = inject(NetworkService);
 
   private sig = viewChild(SignaturePad);
 
@@ -67,6 +78,11 @@ export class RecibirConducePage {
   loading = signal(true);
   /** Conduce abierto en la hoja de detalle (null = vista lista). */
   activo = signal<Conduce | null>(null);
+  /** CT3a — true mientras la hoja está en modo "Ver conduce" (solo lectura,
+   *  sin borrador: tocar un conduce para identificarlo no debe crear nada). */
+  viendoSolo = signal(false);
+  /** CT3a — miniatura de la foto del despacho por conduce, para la tarjeta de la lista. */
+  fotoThumbs = signal<Record<string, string>>({});
   cantidades = signal<Record<string, number>>({});
   // AF30 — varias fotos de evidencia de la descarga (mínimo 2). `nuevaFoto` es el
   // slot "agregar" (siempre vacío: al capturar se empuja al array y se limpia).
@@ -105,11 +121,19 @@ export class RecibirConducePage {
         expandedId: c?.id ?? '',
         cantidades: this.cantidades(),
         notas: this.notas(),
+        receptorNombre: this.receptorNombre(),
+        // CT5 — copia liviana del conduce para poder retomar sin señal.
+        conduceSnapshot: c,
       };
-      if (!this.hydrated || this.submitting() || !snap.expandedId) return;
+      // CT3a — "Ver conduce" nunca escribe un borrador (solo mirar no es un proceso iniciado).
+      if (!this.hydrated || this.submitting() || !snap.expandedId || this.viendoSolo()) return;
       this.autosave.queue(this.clave, snap, {
         tipo: 'recibir',
-        etiqueta: this.i18n.t('Recepción de conduce'),
+        // CT5 — el folio en la etiqueta identifica DE CUÁL conduce es el borrador
+        // (el banner del home y "Documentación en proceso" la muestran tal cual).
+        etiqueta: c?.codigo
+          ? this.i18n.t('Recepción de conduce {codigo}', { codigo: c.codigo })
+          : this.i18n.t('Recepción de conduce'),
         ruta: this.location.path(),
       });
     });
@@ -156,8 +180,23 @@ export class RecibirConducePage {
       this.conduces.set(conduces);
       this.entradasFerreteria.set(entradas);
       await this.restoreDraft();
+      void this.cargarMiniaturas(conduces);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** CT3a/B2 — miniatura de la foto del despacho en la tarjeta de la lista
+   *  (identificar el conduce sin abrir nada). Best-effort, no bloquea la lista. */
+  private async cargarMiniaturas(conduces: Conduce[]): Promise<void> {
+    const conFoto = conduces.filter((c) => c.foto_path);
+    for (const c of conFoto) {
+      try {
+        const url = await this.inventario.getFotoUrl(c.foto_path);
+        if (url) this.fotoThumbs.update((m) => ({ ...m, [c.id]: url }));
+      } catch {
+        /* sin miniatura: la tarjeta igual muestra folio/origen/fecha */
+      }
     }
   }
 
@@ -180,22 +219,41 @@ export class RecibirConducePage {
     }
   }
 
+  /**
+   * CT5 — retoma el borrador de recepción. Antes se consideraba "huérfano" (y se
+   * DESCARTABA, perdiendo cantidades/fotos/notas ya capturadas) con solo no
+   * encontrar el conduce en `conducesPorRecibir()` — exactamente lo que pasaba
+   * offline (la lista cacheada puede no traerlo todavía). Ahora:
+   *  1) si el conduce sigue en la lista (online o cache fresco) → se usa esa copia
+   *     (la más actualizada);
+   *  2) si no está en la lista pero el borrador guardó una copia del conduce
+   *     (`conduceSnapshot`) y NO hay señal → se restaura de todas formas desde
+   *     el snapshot (no se puede confirmar nada sin red, así que no se descarta);
+   *  3) si no está en la lista Y hay señal → el servidor confirma que ya no está
+   *     pendiente (alguien más lo recibió, o ya se envió) → se descarta.
+   */
   private async restoreDraft(): Promise<void> {
     const d = await this.borrador.load<RecibirDraft>(this.clave);
-    // Solo se retoma si el conduce sigue pendiente de recibir.
-    const c = d?.expandedId ? this.conduces().find((x) => x.id === d.expandedId) : null;
-    if (d && c) {
-      this.cantidades.set(d.cantidades ?? {});
-      this.notas.set(d.notas ?? '');
-      this.abrir(c, true);
-      // BT4 — recupera también las fotos ya tomadas (antes se re-tomaban al reabrir).
-      const fotos = await this.borrador.loadFotos(this.clave);
-      if (fotos.length) {
-        const orden = [...fotos].sort((a, b) => Number(a.slot) - Number(b.slot));
-        this.fotos.set(orden.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
+    if (d) {
+      const candidato = d.expandedId
+        ? resolverConduceDeBorrador(d.expandedId, d.conduceSnapshot ?? null, this.conduces(), this.network.online())
+        : null;
+      if (candidato) {
+        this.cantidades.set(d.cantidades ?? {});
+        this.notas.set(d.notas ?? '');
+        this.receptorNombre.set(d.receptorNombre ?? '');
+        this.abrir(candidato, true);
+        // BT4 — recupera también las fotos ya tomadas (antes se re-tomaban al reabrir).
+        const fotos = await this.borrador.loadFotos(this.clave);
+        if (fotos.length) {
+          const orden = [...fotos].sort((a, b) => Number(a.slot) - Number(b.slot));
+          this.fotos.set(orden.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
+        }
+      } else {
+        // Con señal y sin match: el servidor ya no lo tiene pendiente. Sin señal
+        // y sin snapshot (borrador viejo, anterior a CT5): no hay nada que ofrecer.
+        void this.autosave.discard(this.clave);
       }
-    } else if (d) {
-      void this.autosave.discard(this.clave); // borrador huérfano
     }
     this.hydrated = true;
   }
@@ -211,9 +269,27 @@ export class RecibirConducePage {
     }
   }
 
+  /** CT3a — "Ver conduce": hoja de solo lectura para identificarlo (folio, origen,
+   *  obra, fecha, artículos, foto del despacho). Sin borrador, sin cámara, sin firma. */
+  verConduce(c: Conduce): void {
+    this.viendoSolo.set(true);
+    this.activo.set(c);
+    this.despachoFotoUrl.set(null);
+    this.lightbox.set(false);
+    void this.resolveDespachoFoto(c);
+  }
+
+  /** CT3a — desde "Ver conduce", pasa al flujo real de recepción (nace el borrador). */
+  empezarRecibir(): void {
+    const c = this.activo();
+    if (!c) return;
+    this.abrir(c);
+  }
+
   /** Z20 — abre la hoja de detalle de un conduce. `retomando` conserva las
    *  cantidades/notas del borrador; en apertura normal se pre-llena con lo esperado. */
   abrir(c: Conduce, retomando = false): void {
+    this.viendoSolo.set(false);
     if (!retomando) {
       const init: Record<string, number> = {};
       for (const it of c.items) init[it.detalle_id] = it.cantidad;
@@ -243,6 +319,7 @@ export class RecibirConducePage {
   /** Vuelve a la lista desde la hoja de detalle. */
   cerrarDetalle(): void {
     this.activo.set(null);
+    this.viendoSolo.set(false);
     this.lightbox.set(false);
   }
 

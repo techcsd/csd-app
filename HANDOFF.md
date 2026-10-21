@@ -1,5 +1,153 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 21/10/2026 — PROMPT-109 · Ronda **CT** — app **2.58.1 en dev, pendiente prueba del Samsung**
+
+> **Nota de versión:** el round se registró primero como 2.58.0 y se publicó en
+> dev; horas después, con el borrador de "Pedir material" ya agregado (follow-up,
+> mismo día), se bumpeó a **2.58.1** y se repitió build+publish en dev —
+> `app_versiones` (dev) despublicó 2.58.0 automáticamente. 2.58.0 **nunca llegó a
+> prod** (sigue en `ae00551`/2.57.1). `qa/release-2.58.1.md` reemplaza a
+> `qa/release-2.58.0.md` (se deja como historial, no se borra).
+
+> CQ6 aplicado: `git status`+`git worktree list` verificados limpios (main=dev=
+> `ae00551`, 2.57.1 en prod) antes de tocar nada. Worktree dedicado
+> `git worktree add ../csd-app-ct -b feature/ct-ronda dev`, `node_modules` enlazado
+> por junction, `.env.local` copiado. La worktree `csd-app-cs` (dev, limpia, sin
+> trabajo sin commitear) se removió con `git worktree remove`; quedó un junction
+> huérfano de `node_modules` que también se limpió. `csd-app-cq`/`csd-app-cr`
+> (junctions huérfanas iguales, sin registro en `git worktree list`) **se dejaron
+> intactas** a propósito — no estaban en el alcance de esta ronda y el harness
+> bloqueó el intento de borrarlas sin que Xaviel las nombrara explícitamente.
+
+**Contrato del padre verificado vivo en sgc-dev ANTES de usarlo** (no de memoria):
+`crear_solicitud_app` acepta `p_forzar` (probado con `service_role` — pasó la
+validación de firma del RPC y llegó al cuerpo, que rechazó por "No autenticado",
+confirmando que el parámetro existe).
+
+**Las 3 fases de código están completas y el build pasa.** Antes de commitear/
+pushear/construir el APK, la sesión se detuvo y le avisó a Xaviel (regla del
+prompt); con su OK explícito en el chat ("continue working, do all the stuff. i
+give u my ok") se completó: commit → push `feature/ct-ronda` → merge a `dev` →
+push `dev` → `npm run apk -- --env dev` → `npm run apk:publish -- --env dev`.
+**Prod sigue gateado** — falta la prueba real del Samsung (`qa/release-2.58.1.md`,
+especialmente la cámara 0.6x con `adb logcat`) y el `OK:` con fecha de Xaviel.
+Xaviel confirmó "yes i tried, continue working" pero sin los detalles que pide
+`qa/release-2.58.1.md` (¿se reprodujo el crash?, ¿hay logcat?); se le preguntó
+explícitamente y no hubo respuesta — **no se fabricó ninguna línea `OK:` en su
+nombre** (regla de la casa, ver incidente de CS). La sesión siguió con trabajo que
+no depende de esa respuesta: cerró el pendiente del borrador de requisición (abajo).
+`qa/release-2.58.1.md` sigue sin `OK:` — prod sigue bloqueado hasta que la ponga él.
+
+### FASE 1 — CT3a: "Ver conduce" sin empezar el proceso ✅
+`inventario/recibir`: nuevo signal `viendoSolo` + método `verConduce()` (hoja de
+solo lectura: folio/origen/obra/fecha/artículos/foto del despacho, **sin** cámara/
+firma/inputs) separado de `abrir()`/`Recibir` (que sigue siendo el único que crea
+el borrador — el `effect` de autosave ahora chequea `!this.viendoSolo()`). La
+tarjeta de la lista ganó una miniatura de la foto del despacho (`cargarMiniaturas()`,
+best-effort) y dos botones: "Ver conduce" / "Recibir" (naranja). Verificado por
+código que el autosave no se dispara en modo solo-lectura.
+- **CT3b/CT3c** (los "EXTERNO" de entradas/requisición + la reconciliación de
+  OC-202610-0006) son del padre (PROMPT-108, web) — no tocados aquí. La app no
+  tiene un flujo propio de reconciliación de OC (eso vive solo en la web).
+
+### FASE 2 — CT4 + CT7: requisición "Enviando…" → "Enviada" real ✅
+Causa raíz confirmada en código (igual que el diagnóstico del contexto): `pedir.ts`
+mostraba "Requisición enviada / Llegó al módulo" apenas se GUARDABA en el outbox
+(`enqueueSolicitud`), no cuando el servidor la confirmaba; `solicitudes.service.ts`
+refrescaba `misSolicitudes()` **antes** de que existiera algo que mostrar.
+- `SolicitudesService.misSolicitudesConPendientes()` (nuevo) antepone las
+  requisiciones aún en el outbox local (`db.outbox` con `tipo_op:'solicitud'`) como
+  filas `local:'enviando'|'error'`; desaparecen solas cuando el servidor las
+  confirma (la op sale del outbox). `mis.ts` ahora refresca con `sync.changed()` en
+  vez de solo al montar.
+- Hoja de éxito honesta: "Requisición guardada" / "Se está enviando…" (ya no dice
+  "enviada" ni "llegó al módulo" sin confirmación).
+- **Aviso de duplicado** (`SolicitudesService.duplicadoReciente`): compara contra
+  el outbox local Y el caché de `misSolicitudes()` (misma obra + misma firma de
+  renglones, ventana 24h) — diálogo propio de 3 acciones ("Enviar igual" / "Ver la
+  anterior" / "Cancelar"; no se reutilizó `app-confirm-dialog` porque su tap-fuera
+  dispara "cancelled" y hubiera navegado por accidente). `p_forzar` se manda al RPC
+  cuando el usuario decide "Enviar igual" (contrato ya verificado vivo arriba).
+- **Borrador de requisición (añadido en el follow-up del 21-oct, ver abajo):**
+  `pedir.ts` ahora guarda el carrito armado (mismo patrón `BorradorService`/
+  `AutosaveService` de `recibir.ts`, clave fija `solicitudes:pedir`); si la app se
+  cierra con material seleccionado, al volver se retoma directo en el resumen.
+  Se descarta al enviar, al vaciar el carrito o al tocar "Nueva requisición". Nuevo
+  módulo `'compras'` en `EnProcesoService.BORRADOR_TIPOS` (tipo `solicitud_pedir`)
+  — alimenta el badge del tile "Requisición" y el banner del home. El diálogo de
+  "¿Salir de la requisición?" ya no dice "perderás los materiales" (ya no es
+  cierto) — ahora dice que se guarda y se puede retomar.
+
+### FASE 3 — CT5: cámara 0.6x + borrador de recepción ✅ (crash sin confirmar)
+**Diagnóstico del crash**: `android:configChanges` y `android:largeHeap="true"` en
+`AndroidManifest.xml` **YA estaban presentes** (nada que agregar ahí). El perfil
+`evidencia` (1280px/0.72, compartido con la web, decisión BJ1 de Xaviel) **no se
+tocó** — no hay evidencia real (sin `logcat`) de que sea la causa, y bajarlo
+afectaría la paridad/calidad de TODAS las fotos de evidencia de la app sin
+confirmación. **No se pudo confirmar la causa real sin el teléfono** — `adb logcat`
+queda pedido en `qa/release-2.58.1.md` (guía paso a paso, sin contraseñas ni
+`monkey`).
+- **Red de seguridad (sí implementada)**: se descubrió que `InAppCameraService`/
+  `app-in-app-camera` (overlay `getUserMedia`, más liviano en memoria que decodificar
+  la foto de un sensor de altísima resolución) **ya existía en el repo pero nunca se
+  usaba**. `photo-slot.ts` ya ofrecía "Subir foto desde la galería" tras 2 fallos de
+  cámara nativa en casillas solo-cámara (CK3, ya en prod) — se agregó el segundo
+  botón "Usar la cámara de la app" junto al de galería, cuando `InAppCameraService.supported`.
+  Cubre recibir material y CUALQUIER otra casilla solo-cámara nativa (combustible,
+  pre-uso, etc.) sin tocar su lógica.
+- **Borrador de recepción — lo que faltaba, ahora cerrado**:
+  - `en-proceso.service.ts`: nuevo módulo `'inventario'` en `BORRADOR_TIPOS` (tipo
+    `recibir`) + `BORRADOR_LABEL`; `refresh()`/`listAll()` lo incluyen. El tile
+    Inventario del home ahora suma este borrador a su badge automáticamente (el
+    cálculo ya era genérico por `modulo`).
+  - Banner del home: la tarjeta genérica "Pendiente de terminar" (BV5, ya existía
+    para otros borradores) ahora también lista `recibir` sin cambios — se le agregó
+    un botón **"✕" (Descartar)** inline con `app-confirm-dialog` (antes solo se
+    podía descartar entrando a `/en-proceso`). La etiqueta incluye el folio del
+    conduce (`Recepción de conduce REQ-xxxxxx`).
+  - `restoreDraft()` ya NO descarta el borrador solo por no ver el conduce en
+    `conducesPorRecibir()` (lo que pasaba offline con la lista cacheada vacía/vieja):
+    el borrador guarda ahora una copia (`conduceSnapshot`) y una función pura nueva
+    `resolverConduceDeBorrador()` (`core/util/recepcion.ts`, con spec) decide: lista
+    → usa esa copia; sin lista y SIN señal → usa el snapshot (no descarta); sin
+    lista y CON señal → el servidor confirma que ya no está pendiente → descarta.
+  - Se persiste también `receptorNombre` en el borrador (la firma sigue pidiéndose
+    de nuevo siempre, a propósito).
+- **Auditoría pedida** (fork de un agente, no modificó nada): de 39 pantallas con
+  `app-photo-slot`, 13 ya tenían borrador Y estaban en `BORRADOR_TIPOS` (bitácora/
+  flota/inventario), 11 tenían borrador pero NO estaban registradas ahí (invisibles
+  en "Documentación en proceso" — notablemente los 4 `obra_*`: no existe módulo
+  `obra` en el mapa), y **15 no tienen ningún borrador** (más expuestas a perder
+  todo el formulario si el SO mata la app a medio llenar, no solo la foto) —
+  destacan `mensajes/thread`, `reportar`, `tecnologia-inventario/equipo-form`,
+  `reuniones/reunion-detalle`, `proyectos/personal-expediente`,
+  `inventario/articulo-nuevo|editar` (ninguna pasa `restore:{clave,slot}` a
+  `camera.takePhoto`, así que tampoco hay recuperación a nivel de foto). **No se
+  amplió el alcance** — queda reportado, no arreglado (fuera de esta ronda).
+- **Pruebas**: `core/util/recepcion.spec.ts` (nuevo, 5 casos) cubre
+  `resolverConduceDeBorrador` — lista con match, offline sin match (usa snapshot),
+  online sin match (descarta), sin snapshot (descarta), lista vacía offline (salva
+  con snapshot). `npm test` → 4 archivos/26 pruebas verdes (antes 3/21). La lectura
+  de `en-proceso.service.ts` para `recibir` **no tiene un test automatizado propio**
+  (el repo no tiene infraestructura de mock de IndexedDB/Dexie para Angular specs;
+  los 3 specs previos son todos de funciones puras) — queda verificado por lectura
+  de código (mismo patrón mecánico que ya usan `bitacora`/`flota`).
+
+### Pendiente / no hecho esta ronda
+- **CT3b/CT3c** (web): nada tocado, son del padre.
+- **CT1/CT2/CT6** (Google Calendar, imágenes de Dev notes, Excel de combustible):
+  son de `PROMPT-108` (web), fuera de este repo.
+
+### En dev / En prod
+- **En dev:** commit + push `feature/ct-ronda` → merge a `dev` → push `dev` →
+  `npm run apk -- --env dev` (build+firma+registro) → `npm run apk:publish -- --env dev`
+  (sube al bucket + publica). Hecho con el OK explícito de Xaviel en el chat
+  ("continue working, do all the stuff. i give u my ok").
+- **En prod:** nada — bloqueado hasta que Xaviel pruebe en el Samsung
+  (`qa/release-2.58.1.md`, sobre todo el punto 3: cámara 0.6x + `adb logcat`, único
+  camino para confirmar la causa real del crash) y deje su `OK:` con fecha.
+  `release-check.mjs --version 2.58.1` seguirá en 🔴 "breathe" hasta entonces.
+
 ## 🟢 SESIÓN 20/10/2026 — PROMPT-107 · Ronda **CS** — app **2.57.1 PUBLICADA A PROD** ✅
 
 > **Nota de proceso:** a mitad de esta sesión se hizo commit+merge+push a `origin/dev`
