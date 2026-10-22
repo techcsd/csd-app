@@ -119,14 +119,31 @@
             }
           </ul>
         }
-        <div class="compa__prop-acts">
-          <button type="button" class="btn-cta" [disabled]="ejecutando()" (click)="confirmarPropuesta()">
-            {{ (ejecutando() ? 'Confirmando…' : 'Confirmar') | t }}
-          </button>
-          <button type="button" class="btn-ghost" [disabled]="ejecutando()" (click)="cancelarPropuesta()">
-            {{ 'Cancelar' | t }}
-          </button>
-        </div>
+        @if (p.accion === 'abrir') {
+          @if (p.faltan?.length) {
+            <div class="compa__prop-faltan">
+              <span class="compa__prop-faltan-dot"></span>
+              <span>{{ 'Faltan' | t }}: {{ faltanTexto(p.faltan) }}.</span>
+            </div>
+          }
+          <div class="compa__prop-acts compa__prop-acts--abrir">
+            <button type="button" class="btn-cta" (click)="abrirFormularioPropuesta()">
+              {{ 'Abrir formulario' | t }}
+            </button>
+            <button type="button" class="compa__prop-descartar" (click)="cancelarPropuesta()">
+              {{ 'Descartar' | t }}
+            </button>
+          </div>
+        } @else {
+          <div class="compa__prop-acts">
+            <button type="button" class="btn-cta" [disabled]="ejecutando()" (click)="confirmarPropuesta()">
+              {{ (ejecutando() ? 'Confirmando…' : 'Confirmar') | t }}
+            </button>
+            <button type="button" class="btn-ghost" [disabled]="ejecutando()" (click)="cancelarPropuesta()">
+              {{ 'Cancelar' | t }}
+            </button>
+          </div>
+        }
       </div>
     }
   </app-bottom-sheet>

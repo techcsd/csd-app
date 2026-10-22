@@ -40,7 +40,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
 | pages/bitacora/parte | 186 | 4 | 98% | 1% |  |
 | pages/borrador | 13 | 0 | 100% | 0% |  |
-| pages/compa | 19 | 0 | 100% | 0% |  |
+| pages/compa | 22 | 0 | 100% | 0% |  |
 | pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
 | pages/compa/compartidas | 6 | 0 | 100% | 0% |  |
 | pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
@@ -139,7 +139,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 3% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 127 | 2 | 87% | 2% |  |
+| pages/transporte/combustible | 129 | 2 | 87% | 2% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 71 | 1 | 85% | 6% |  |
 | pages/transporte/conduce-externo | 81 | 1 | 80% | 4% |  |
