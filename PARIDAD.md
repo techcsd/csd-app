@@ -803,3 +803,104 @@ pasó la validación de firma y llegó al cuerpo (devolvió "No autenticado", el
 
 Sin cambios de código → **sin versión nueva** (regla del prompt: "si nada aplica,
 no hay versión"). `release-check.mjs` no corrido (nada que verificar).
+
+## CV (ronda 21-22/10/2026, `feature/cv-ronda`) — app **2.58.2 en dev**, pendiente prueba del teléfono
+
+Worktree propia desde `dev` (CQ6); se limpiaron `csd-app-ct`/`csd-app-cu`
+(`git worktree remove`, ya fusionadas — el `dev` local estaba desalineado de
+`origin/dev` al crear la worktree de CU; se corrigió apuntando `refs/heads/dev`
+a `origin/dev` antes de ramificar). Contrato del padre verificado **vivo en
+sgc-dev** (no de memoria): probe real a la edge `assistant` con `qa_admin`
+("Registra una echada: la Suburban, 12 galones, 3360 pesos") devolvió
+`propuesta.accion==='abrir'`, `destino.vehiculo_id`/`destino.query` y `faltan[]`
+exactamente como lo documentó el padre en `SGC-cv/PARIDAD.md § Ronda CV`.
+
+### CV1 — Compa prepara la echada (app)
+- **Modelo:** `Propuesta` (`core/models/compa.model.ts`) gana `accion?:'abrir'`,
+  `destino?`, `faltan?` (opcionales — una propuesta vieja sigue funcionando).
+- **Hoja de Compa** (`compa.ts`/`.html`/`.scss`): si `accion==='abrir'`, oculta
+  "Confirmar" y pinta el aviso ámbar "Faltan: …" + un solo botón naranja "Abrir
+  formulario" + "Descartar" (texto plano, sin borde — igual que el mock
+  `mock-cv/CV1-compa-echada.dc.html`). "Abrir formulario" navega a
+  `/transporte/combustible/:vehiculoId` con `destino.query` como queryParams
+  (ya trae `desde=compa`) y cierra la hoja — **sin** llamar a `compa.ejecutar`.
+- **Formulario** (`transporte/combustible/combustible.ts`): nuevo
+  `aplicarPrefillCompa()`, llamado tras `cargarVehiculo()` cuando
+  `?desde=compa` y NO se restauró un borrador para ese mismo vehículo (la
+  prioridad real es corregir > reenviar > **borrador CON contenido** > Compa —
+  `restoreDraft` ya decide esto por el `hydrated` existente; solo se agregó el
+  aviso "Compa había preparado otra echada; no se aplicó" cuando aplica).
+  - Validación de entrada NO confiable (CV1.5) extraída a una función PURA
+    `validarPrefillCompa()` (`core/models/combustible.model.ts`) + 15 pruebas
+    unitarias nuevas (`core/models/combustible-compa-prefill.spec.ts`): basura,
+    negativos, fuera de rango, vehículo ajeno, km inválido (se deja en blanco,
+    nunca se inventa), estación >60 chars, producto fuera del enum. El check de
+    "vehículo en el pool visible" (`getVehiculosDisponibles()`) sí vive en el
+    componente (necesita el servicio) — si el pool no resuelve (sin red, etc.)
+    el prellenado se descarta ENTERO, nunca parcial.
+  - Prellena galones/monto (obligatorios) + km/estación/producto (si vinieron),
+    con chip "Compa" por campo (se quita al editar — nuevo `onKmChange`/
+    `pickProducto` wrappers, y `quitarChipCompa()` en los handlers ya
+    existentes de galones/monto/estación) y el banner
+    "Compa llenó estos datos…" (`--brand-soft`/`--brand`, CONTEXTO-55 §3).
+    Las fotos y el odómetro (si no vino) se dejan en blanco — no se tocó
+    `fotosCompletas()` ni el gate de "Guardar echada".
+  - Quita los parámetros de la URL al consumirlos (`router.navigate([], {
+    queryParams:{}, replaceUrl:true })`).
+  - "Arranca en el primer paso incompleto": **no hizo falta código nuevo** — el
+    wizard ya es foto-primero (AE6: `bomba` es el paso 1) y Compa nunca llena
+    fotos, así que el paso 1 YA es el primer incompleto por diseño existente.
+- **CV1.7 (OCR, verificado — hallazgo, no corregido aquí):** el supuesto del
+  prompt (`sobrescribir=false` ya protege el prellenado) **no es exacto**:
+  `onFotoRecibo`/`onFotoTablero` llaman `leerReciboAuto()` **sin argumento**,
+  que por default es `sobrescribir=true` — el OCR SIEMPRE pisa lo que hubiera
+  antes (Compa o lo que el chofer haya tecleado a mano), y como también
+  actualiza `lecturaCruda` al mismo valor, el aviso "No coincide con el recibo"
+  (`discrepanciaRecibo`) **no llega a mostrarse** en ese instante (solo detecta
+  ediciones POSTERIORES a la lectura). Esto es **preexistente** a Compa (pasaría
+  igual si el chofer tecleaba antes de fotografiar) y, en la práctica, es el
+  comportamiento correcto para conciliación (el recibo real manda sobre
+  cualquier estimado previo) — no se tocó. Reportado para que quede explícito.
+- **Compuerta módulo vs. submódulo:** verificado — `moduleGuard('flota')` es
+  la única guardia de `/transporte/combustible` (sin submódulo granular), igual
+  que la herramienta del padre (`flota` basta). Nada que alinear.
+- **Retrocompatibilidad (e):** una propuesta vieja (sin `accion`) sigue cayendo
+  en la rama `@else` (Confirmar/Cancelar) sin cambios. Un cliente viejo que
+  intente `ejecutar` una propuesta `accion:'abrir'` recibe el mensaje amable del
+  padre (`ejecutado:false, respuesta:"..."`) y la UI ya lo pinta como cualquier
+  respuesta de texto — nada que tocar, es robusto por construcción.
+- **Offline (6):** no se tocó el outbox — la echada prellenada usa los MISMOS
+  signals que una normal, así que el mismo camino de envío (sync.register,
+  idempotencia por UUID) aplica igual, prellenada o no. Verificado por lectura
+  de código (no hay ningún `if` que distinga el origen de los datos en el envío).
+
+### CV2/CV3 — Dev notes: paridad (solo verificación, sin código)
+La app sigue sin pantalla de grupos (CS2 solo lectura) — correcto, no se agregó
+nada (default CV3.9). Verificado **vivo contra sgc-dev** (datos de prueba
+propios, con la sesión de `qa_admin`, limpiados al terminar — nunca se tocaron
+notas/grupos reales de nadie):
+- Crear grupo raíz + renombrarlo + crear subgrupo: `grupoRuta()`
+  (`dev-notes.ts`) arma la ruta correcta ("Abuelo / Padre-renombrado / Hijo")
+  leyendo `nota_grupos` en vivo (sin caché — "online-only" ya documentado).
+- **Eliminar un grupo intermedio**: el trigger del padre
+  (`tg_nota_grupos_reparentar_antes_borrar`) reparenta el hijo al abuelo
+  correctamente, y `grupoRuta()` recalcula la ruta sin romperse ("Abuelo /
+  Hijo") — **sin `undefined` ni ruta rota**, confirmado en vivo.
+- Nota sin grupo (`grupo_id=null`): `grupoRuta()` devuelve `null` de inmediato
+  (primera línea de la función) → no pinta ruta. Verificado por lectura de
+  código (el caso de una nota real moviéndose dentro/fuera de un grupo no se
+  pudo probar en vivo — un `insert` de prueba en `sgc.notas` chocó con una
+  restricción de RLS/trigger no identificada, ajena a `grupo_id`; no se
+  persiguió más al no ser necesario: la lectura de `grupo_id` no tiene ninguna
+  lógica especial más allá de lo ya verificado con los grupos).
+
+Sin cambios de código en CV2/CV3 → entrada solo informativa en `PARIDAD.md`.
+
+### Cierre
+`npm run build` + `npm test` + `release-check.mjs --version 2.58.2`: **3/4
+en verde** (`registro`/`version`/`build`); el único rojo es **`breathe`**
+(dev <24h sin OK explícito — exactamente lo que falta: la prueba del teléfono
+de Xaviel). Versión **2.58.2** en los 3 sitios. `qa/release-2.58.2.md` creado
+con la guía de prueba, **sin ningún `OK:` inventado**. `CAMBIOS_CURADOS`/
+`TITULO` de `release-apk.mjs` actualizados para esta ronda. Nada comiteado/
+empujado/publicado todavía — a la espera del OK de Xaviel (regla de la casa).

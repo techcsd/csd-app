@@ -116,6 +116,27 @@ app-option-button {
   color: var(--color-warning);
   font-weight: 700;
 }
+// CV1 — prellenado por Compa: banner arriba del formulario + chip por campo.
+.comb__compa-banner {
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.comb__compa-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+}
 // BM1 — aviso de comprobación provisional sin señal (no promete que el envío pasará)
 .comb__prov {
   margin-top: 8px;

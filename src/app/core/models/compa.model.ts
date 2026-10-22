@@ -23,6 +23,16 @@ export interface Propuesta {
   params: Record<string, unknown>;
   titulo: string;
   lineas: string[];
+  /**
+   * CV1 — presente SOLO en propuestas "preparar + abrir" (p.ej. `preparar_echada`).
+   * La hoja no ofrece "Confirmar"/`ejecutar`: un solo botón "Abrir formulario" que
+   * navega con `destino.query` como queryParams. Compa nunca guarda ni sube fotos.
+   */
+  accion?: 'abrir';
+  /** CV1 — a dónde navegar y con qué queryParams cuando `accion === 'abrir'`. */
+  destino?: { vehiculo_id: string; query: Record<string, string | number> };
+  /** CV1 — lo que falta para completar (p.ej. ['Foto del recibo', 'Foto del tablero', 'Lectura del odómetro']). */
+  faltan?: string[];
 }
 
 /** CP3 — un archivo generado por el asistente (PDF u otro) adjunto a la respuesta. */
