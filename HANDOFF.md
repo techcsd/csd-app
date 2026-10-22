@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 21/10/2026 — PROMPT-111 · Ronda **CU** — solo diagnóstico, SIN versión nueva
+
+Ronda aparte de CT (CQ6 respetado: worktree propia `csd-app-cu` desde `dev` vía
+`git worktree add ../csd-app-cu -b feature/cu-ronda dev`, `node_modules` por
+junction, `.env.local` copiado; no se tocó la worktree `csd-app-ct`). Al arrancar,
+`main`=`dev`=`48261be` (CT ya fusionada a `main` vía PR #5, `aea214f` —
+`qa/release-2.58.1.md` ya tenía el `OK:` de Xaviel para prod, pendiente solo el
+build/publish del APK en prod, que es trabajo de CT no de esta ronda).
+
+Alcance: PROMPT-111 (CU1 paridad del botón "Cambiar despachante" de CT8/web, CU2
+seguridad de tablas `public`, CU3 interruptor de envíos automáticos) — ver detalle
+completo en `PARIDAD.md § CU`. Resumen:
+- **CU1:** la app no necesita pantalla de cambio (default: Raykler lo hace en la
+  web); verificado que no se puede quedar firmando por error (servidor + cliente).
+  **Gap encontrado en el padre** (no corregido aquí, no es mi repo esta ronda):
+  `sgc.conduce_cambiar_despachante` notifica con `tipo='firma'` → la app enruta
+  eso a la bandeja del RECEPTOR, no a la del despachante (`conduce_firma`). Fix:
+  cambiar el tipo en las 2 llamadas a `sgc.notificar` de
+  `sql/2026-10-20-ct8-conduce-cambiar-despachante.sql` (líneas 116 y 122) en el
+  repo del padre.
+- **CU2:** cero riesgo — el cliente Supabase de la app está fijo a `db:{schema:
+  'sgc'}`, ningún código depende de `public`.
+- **CU3:** **gap encontrado** — 3 de las 4 familias del interruptor (`cronograma`,
+  `avisos_reporte_semanal`, `incentivo_semanal`) cortan también el aviso in-app/
+  push al apagarse, no solo el correo/reporte externo (solo `resumen_operaciones`
+  es limpio). Con DEV naciendo con las 4 apagadas, cronograma/flota/incentivo no
+  avisarán en dev hasta encenderlas a mano. Pendiente para el padre separar
+  "aviso interno" de "envío externo".
+
+**Sin cambios de código en la app → sin versión nueva** (regla del prompt: "si
+nada aplica, no hay versión"). `npm run build` no corrido (nada que compilar).
+
+### En dev / En prod
+- **Dev:** sin cambios de esta ronda (solo documentación). CT sigue siendo lo más
+  reciente en dev (2.58.1).
+- **Prod:** sin cambios de esta ronda. CT tiene el `OK:` de Xaviel pero el
+  build/publish del APK a prod sigue sin ejecutarse (fuera del alcance de CU).
+
+---
+
 ## 🟡 SESIÓN 21/10/2026 — PROMPT-109 · Ronda **CT** — app **2.58.1 en dev, pendiente prueba del Samsung**
 
 > **Nota de versión:** el round se registró primero como 2.58.0 y se publicó en

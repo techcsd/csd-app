@@ -727,3 +727,79 @@ sgc-dev: `crear_solicitud_app` acepta `p_forzar` (confirmado por probe directo c
   pero sin los detalles que pide `qa/release-2.58.1.md` — se le preguntó
   explícitamente (¿se reprodujo el crash? ¿hay logcat?) y no respondió; **no se
   fabricó ningún `OK:` en su nombre**. **Prod sigue sin tocar** (`main`=`ae00551`).
+
+## CU (ronda 20-oct/21-oct-2026, `feature/cu-ronda`) — ronda aparte de CT, SIN versión nueva
+Ronda de solo verificación/diagnóstico (PROMPT-111 F1/F2): no se tocó código de la
+app. Worktree `csd-app-cu` desde `dev` (que ya incluía CT fusionada — `main`=`dev`=
+`48261be` al arrancar). Contrato del padre verificado vivo en sgc-dev (no de
+memoria): probe directo con `service_role` a `sgc.conduce_cambiar_despachante`
+pasó la validación de firma y llegó al cuerpo (devolvió "No autenticado", el primer
+`raise` de la función) — confirma que CT8 está desplegada en dev.
+
+- **CU1 (#268, "Despachado por"):** la app **no tiene** pantalla de cambio — el
+  despachante solo se fija al emitir (AI2, `crear_conduce_simple`/`_devolucion`).
+  Correcto no agregar nada (default del contexto-54: lo hace Raykler en la web vía
+  CT8). Lo que SÍ tiene la app y queda verificado como seguro:
+  - El despachante removido **no puede quedar firmando por error**:
+    `sgc.conduce_firmar_despachante` rechaza con "Sólo el despachante designado
+    puede firmar... " si `auth.uid() <> despachante_usuario_id` (servidor), y el
+    cliente recalcula `soyDespachanteDesignado`/`despachanteElegible` en cada
+    fetch del detalle (`conduce-detalle.ts`) — no se ofrece el pad a quien ya no
+    es el designado.
+  - La bandeja **"Conduces por firmar"** (`mis_conduces_por_firmar`) es una
+    consulta en vivo filtrada por `despachante_usuario_id = auth.uid()`: al
+    cambiar el despachante vía CT8, el conduce desaparece solo de la bandeja del
+    anterior y aparece solo en la del nuevo — nada que sincronizar a mano.
+  - **GAP encontrado (del padre, no tocado aquí — fuera de mi repo esta ronda):**
+    `sgc.conduce_cambiar_despachante` (CT8, `sql/2026-10-20-ct8-conduce-cambiar-
+    despachante.sql` líneas 116 y 122) notifica al nuevo y al anterior despachante
+    con `tipo='firma'`. Pero la app enruta **todo** `tipo==='firma'` a
+    `/transporte/por-confirmar` (la bandeja del RECEPTOR — patrón BD2/CK4,
+    `notificaciones.service.ts` línea ~335). La bandeja real del despachante usa
+    `tipo='conduce_firma'` (establecido por AS2/AU1/AV3, línea ~357). Resultado:
+    el aviso **llega** con el texto correcto ("Te asignaron como despachante" /
+    "Ya no eres el despachante de este conduce"), pero el deep-link del push
+    aterriza al despachante en la pantalla equivocada (la de recepción, no la de
+    firma). Fix de 2 líneas en el repo del padre: cambiar `'firma'` → `'conduce_
+    firma'` en esas dos llamadas a `sgc.notificar`. No es un bug de la app — la
+    app ya enruta `conduce_firma` correctamente, es el emisor el que usa el tipo
+    equivocado.
+
+- **CU2 (#269, seguridad `rls_disabled_in_public`):** la app **no depende de
+  ninguna tabla de `public`**. El cliente Supabase se crea una sola vez con
+  `db: { schema: 'sgc' }` (`core/services/supabase.service.ts`); un grep completo
+  de `src/` no encontró ningún `.schema(` override ni ninguna referencia directa a
+  `public.*`. Cero riesgo para la app de lo que el padre vaya a bloquear en CU2 —
+  nada que cambiar.
+
+- **CU3 (#269, interruptor de envíos automáticos):** el supuesto del default
+  ("solo se apagan los reportes automáticos, las notificaciones de uso diario NO")
+  **no se cumple en 3 de las 4 familias** desplegadas por el padre (`sql/2026-10-
+  20-ct10-envios-automaticos.sql`, OJO: archivo nombrado `ct10` aunque es CU3):
+  cada función-cron corta TODO al inicio si la familia está apagada, incluyendo el
+  paso que genera el aviso in-app/push, no solo el correo/webhook externo:
+  - `cronograma` → `evaluar_avisos_cronograma()` corta antes de `insert into
+    avisos_proyecto` + `sgc.notificar(...)` a los responsables de obra.
+  - `avisos_reporte_semanal` → `sweep_avisos_reporte_semanal()` corta antes de
+    `insert into avisos_flota` (la fuente de `VehiculosService.getAvisosFlota()`,
+    pantalla Flota de la app).
+  - `incentivo_semanal` → `incentivo_cron_lunes()` corta `incentivo_enviar_
+    semana()`, que manda `sgc.notificar(...)` in-app "Incentivo aprobado"/
+    "Resultado de tu incentivo" a cada chofer (no solo el correo).
+  - Solo `resumen_operaciones` es limpio (puro correo, sin aviso in-app).
+  - **Consecuencia práctica:** con DEV naciendo con las 4 apagadas (el propio
+    default de CU3), cualquiera probando en dev las pantallas de Cronograma,
+    Flota (avisos semanales) o Mi rendimiento/incentivo **no verá avisos ni push**
+    hasta encender esas 3 familias a mano en Admin › Tecnología › "Envíos
+    automáticos". No es un bug de la app (muestra fielmente lo que el servidor
+    manda o no manda); es un acoplamiento no documentado en CU3 — el interruptor
+    se diseñó para "reportes automáticos" pero el cron genera el aviso interno en
+    el mismo paso que el envío externo. Reportado a Xaviel; separar "generar aviso
+    interno" de "enviar email/push externo" (cada uno con su propio gate) queda
+    pendiente para quien retome CU3 en el repo del padre.
+  - Las notificaciones push NATIVAS de la app (FCM/web-push) no dependen del
+    interruptor en sí — dependen de que exista una fila en `sgc.notificar`, que es
+    justo lo que estas 3 familias dejan de crear cuando están apagadas.
+
+Sin cambios de código → **sin versión nueva** (regla del prompt: "si nada aplica,
+no hay versión"). `release-check.mjs` no corrido (nada que verificar).
