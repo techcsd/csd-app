@@ -57,6 +57,7 @@ import {
   EchadaValidacion,
   capacidadTanqueEfectiva,
   validarEchadaCliente,
+  validarPrefillCompa,
 } from '../../../core/models/combustible.model';
 import { parseNumeroFlexible } from '../../../core/util/numero';
 import { formatFechaCortaHora, fechaLocalISO } from '../../../core/util/fecha';
@@ -187,6 +188,23 @@ export class CombustiblePage extends GuardedWizard {
   // locale). El valor numérico (galones/monto) se deriva con parseNumeroFlexible.
   galonesRaw = signal('');
   montoRaw = signal('');
+
+  /**
+   * CV1 — campos que Compa prellenó (`?desde=compa`), para el chip "Compa" junto
+   * al campo. Se quita al editar (nunca se vuelve a poner). Vacío = flujo normal.
+   */
+  compaCampos = signal<ReadonlySet<string>>(new Set());
+  esDeCompa(campo: string): boolean {
+    return this.compaCampos().has(campo);
+  }
+  /** CV1 — banner "Compa llenó estos datos…" mientras queden campos marcados. */
+  prellenadoPorCompa = computed(() => this.compaCampos().size > 0);
+  private quitarChipCompa(campo: string): void {
+    if (!this.compaCampos().has(campo)) return;
+    const next = new Set(this.compaCampos());
+    next.delete(campo);
+    this.compaCampos.set(next);
+  }
 
   // AW3 — umbrales de tanque/precio (flota_config) + capacidad del vehículo, para
   // el bloqueo/confirmación EN VIVO al digitar (el servidor revalida).
@@ -355,12 +373,24 @@ export class CombustiblePage extends GuardedWizard {
     this.galonesRaw.set(v);
     this.galones.set(parseNumeroFlexible(v, 'decimal'));
     this.confirmado.set(false); // cambió la cantidad → re-confirmar si vuelve a ser inusual
+    this.quitarChipCompa('galones');
   }
   /** AW3 — texto de monto: parsea como pesos ("10.000" = 10000). */
   onMontoInput(v: string): void {
     this.montoRaw.set(v);
     this.monto.set(parseNumeroFlexible(v, 'monto'));
     this.confirmado.set(false);
+    this.quitarChipCompa('monto');
+  }
+  /** CV1 — km editado a mano tras el prellenado de Compa: se quita el chip. */
+  onKmChange(v: number | null): void {
+    this.km.set(v);
+    this.quitarChipCompa('km');
+  }
+  /** Z23-app/AA20 — producto elegido a mano: se quita el chip de Compa. */
+  pickProducto(p: 'diesel' | 'gasolina'): void {
+    this.producto.set(p);
+    this.quitarChipCompa('producto');
   }
 
   /** true when km isn't greater than the vehicle's last fill-up. */
@@ -428,13 +458,25 @@ export class CombustiblePage extends GuardedWizard {
       return;
     }
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
+    // CV1 — ¿venimos de la hoja de Compa ("Abrir formulario")? Se lee ANTES de
+    // restaurar el borrador porque la prioridad es corregir > reenviar > borrador
+    // CON contenido > Compa (CV1.6): si `restoreDraft` restaura un borrador para
+    // ESTE MISMO vehículo, `hydrated` queda true y el prellenado de Compa se omite.
+    const desdeCompa = this.route.snapshot.queryParamMap.get('desde') === 'compa';
     // BT4 — recupera un borrador a medias (formulario + fotos) si lo hay. Solo aplica
     // fuera del modo corrección; respeta el deep-link (no restaura otro vehículo).
     void this.restoreDraft(this.vehiculoId).then(() => {
-      if (this.hydrated) return; // restoreDraft ya arrancó el vehículo desde el borrador
+      if (this.hydrated) {
+        // CV1.6 — un borrador vigente manda; los datos de Compa NO se aplican.
+        if (desdeCompa) {
+          this.toast.show(this.i18n.t('Compa había preparado otra echada; no se aplicó.'));
+        }
+        return; // restoreDraft ya arrancó el vehículo desde el borrador
+      }
       // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
       if (this.vehiculoId) {
         this.cargarVehiculo();
+        if (desdeCompa) void this.aplicarPrefillCompa();
       } else {
         this.necesitaVehiculo.set(true);
         this.loading.set(false);
@@ -767,6 +809,73 @@ export class CombustiblePage extends GuardedWizard {
     this.step.set(idx >= 0 ? idx + 1 : 1);
   }
 
+  /**
+   * CV1 — venimos de la hoja de Compa ("Abrir formulario", `?desde=compa`). Los
+   * parámetros de la URL son entrada NO confiable (CV1.5): se validan a fondo antes
+   * de tocar un solo signal; si algo no cuadra, el prellenado se descarta entero y
+   * el formulario queda igual que un deep-link por vehículo normal (vacío). Compa
+   * nunca autoenvía ni toca fotos/odómetro inventado: solo galones/monto (obligatorios
+   * en la propuesta) y, si vinieron, km/estación/producto.
+   */
+  private async aplicarPrefillCompa(): Promise<void> {
+    const qp = this.route.snapshot.queryParamMap;
+    const abortar = (): void => {
+      this.toast.error(this.i18n.t('Compa no pudo identificar el vehículo.'));
+    };
+
+    const datos = validarPrefillCompa(
+      {
+        galones: qp.get('galones'),
+        monto: qp.get('monto'),
+        km: qp.get('km'),
+        estacion: qp.get('estacion'),
+        producto: qp.get('producto'),
+        vehiculo: qp.get('vehiculo'),
+      },
+      this.vehiculoId,
+    );
+    if (!datos) return abortar();
+
+    // El vehículo debe además existir en el pool visible del usuario (CV1.5):
+    // la validación de forma de arriba no confirma que sea SUYO.
+    try {
+      const pool = await this.vehiculos.getVehiculosDisponibles();
+      if (!pool.some((v) => v.vehiculo_id === this.vehiculoId)) return abortar();
+    } catch {
+      return abortar(); // sin certeza del pool (p.ej. sin red) → no se aplica
+    }
+
+    const nuevosCampos = new Set<string>(['vehiculo', 'galones', 'monto']);
+    this.galones.set(datos.galones);
+    this.galonesRaw.set(String(datos.galones));
+    this.monto.set(datos.monto);
+    this.montoRaw.set(String(datos.monto));
+
+    if (datos.km != null) {
+      this.km.set(datos.km);
+      nuevosCampos.add('km');
+    }
+    if (datos.estacionTexto) {
+      if (this.estaciones().some((e) => e.toLowerCase() === datos.estacionTexto!.toLowerCase())) {
+        this.pickEstacion(datos.estacionTexto);
+      } else {
+        this.pickEstacionOtro();
+        this.estacionOtroTexto.set(datos.estacionTexto);
+      }
+      nuevosCampos.add('estacion');
+    }
+    if (datos.producto) {
+      this.producto.set(datos.producto);
+      nuevosCampos.add('producto');
+    }
+
+    this.compaCampos.set(nuevosCampos);
+    this.toast.show(this.i18n.t('Compa llenó estos datos con lo que le dijiste. Revísalos antes de guardar.'));
+
+    // CV1.5 — los parámetros ya se consumieron: se quitan de la URL.
+    void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+  }
+
   /** B1 — vehículo elegido del pool: continúa el registro con ese vehículo. */
   onVehiculoElegido(v: VehiculoDisponible): void {
     this.vehiculoId = v.vehiculo_id;
@@ -824,11 +933,13 @@ export class CombustiblePage extends GuardedWizard {
   pickEstacion(nombre: string): void {
     this.estacion.set(nombre);
     this.estacionOtro.set(false);
+    this.quitarChipCompa('estacion');
   }
   /** T4 — "Otro": escribir una estación fuera del catálogo. */
   pickEstacionOtro(): void {
     this.estacionOtro.set(true);
     this.estacion.set('');
+    this.quitarChipCompa('estacion');
   }
   /** Estación final que viaja en el payload (texto, retrocompatible). */
   private estacionFinal(): string {

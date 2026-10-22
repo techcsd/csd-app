@@ -1,5 +1,60 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 22/10/2026 — PROMPT-113 · Ronda **CV** — app **2.58.2 en dev, pendiente prueba del teléfono**
+
+CQ6: worktree propia `csd-app-cv` desde `dev`; se limpiaron `csd-app-ct`/
+`csd-app-cu` (`git worktree remove`, ya fusionadas) y se corrigió `refs/heads/
+dev` local (estaba 1 commit detrás de `origin/dev` desde la ronda CU). Contrato
+del padre (`preparar_echada`/`accion:'abrir'`/`destino`/`faltan`) verificado
+**vivo en sgc-dev** con un probe real a la edge `assistant` antes de consumirlo.
+
+**CV1 — Compa prepara una echada (#270):** si Felix (o cualquiera con Flota) le
+dice a Compa "Registra una echada", la hoja de Compa ya no ofrece "Confirmar"
+para este tipo de propuesta — muestra la tarjeta "Echada preparada" + el aviso
+"Faltan: foto del recibo, foto del tablero y lectura del odómetro" + un solo
+botón "Abrir formulario". Ese botón navega a Transporte › Combustible con el
+vehículo, galones y monto ya puestos (chip "Compa" por campo, banner arriba),
+odómetro vacío y las 2 fotos obligatorias — "Guardar echada" sigue bloqueado
+hasta completarlas. Compa nunca guarda ni sube fotos. Detalle técnico completo,
+incluido un hallazgo sobre el OCR del recibo (pisa cualquier prellenado por
+diseño, no solo el de Compa — correcto para conciliación, no se tocó) en
+`PARIDAD.md § CV`.
+
+**CV2/CV3 (#271/#272):** solo verificación — la app sigue sin pantalla de
+grupos en Dev notes (correcto, CS2 es de solo lectura). Verificado EN VIVO
+contra sgc-dev (datos de prueba propios, limpiados al terminar) que crear/
+renombrar/crear-subgrupo/**eliminar un grupo intermedio** se refleja bien en la
+ruta "Carpeta / Sub" de la app, sin romperse ni mostrar "undefined".
+
+**Cierre:** `npm run build` + `npm test` (41 pruebas, incluidas 15 nuevas de
+`validarPrefillCompa`) + `release-check.mjs --version 2.58.2` → **3/4 en
+verde** (registro/versión/build); el único rojo es "breathe" — exactamente la
+prueba del teléfono que falta. `qa/release-2.58.2.md` creado con la guía de
+prueba, sin ningún `OK:` inventado. **Nada comiteado/empujado/publicado
+todavía** — a la espera de que Xaviel pruebe en el Samsung y dé su OK.
+
+### Lo físico de Xaviel (CONTEXTO-55 §7)
+1. Probar CV1 en el Samsung: pedirle a Compa "Registra una echada" (con un
+   usuario que tenga Flota — "Entrar como" Felix si se puede) → confirmar que
+   no deja guardar sin fotos ni odómetro.
+2. Confirmar con Felix qué rol/módulos tiene (si no tiene el módulo Flota,
+   Compa no le ofrecerá la herramienta — avisar si debería poder).
+3. CV2/CV3 ya quedaron verificadas por esta sesión contra dev real; si quieres
+   verlo con tus propios ojos: crear/mover/eliminar un grupo en Dev notes (web)
+   y confirmar que la app lo refleja bien.
+4. Con el OK (línea `OK:` con fecha en `qa/release-2.58.2.md`): commit → push
+   `feature/cv-ronda` → merge a `dev` → `npm run apk -- --env dev` →
+   `npm run apk:publish -- --env dev`. Prod solo después de probar la
+   actualización in-app real.
+
+### Del padre (si algo faltaba)
+Nada pendiente del padre para esta ronda — el contrato de `preparar_echada` ya
+estaba desplegado y se verificó vivo antes de consumirlo. Gaps heredados de CU
+(notificación `tipo` del despachante, interruptor de envíos automáticos) siguen
+sin tocar, no son de esta ronda.
+
+---
+
 ## 🟢 SESIÓN 21/10/2026 — PROMPT-111 · Ronda **CU** — solo diagnóstico, SIN versión nueva
 
 Ronda aparte de CT (CQ6 respetado: worktree propia `csd-app-cu` desde `dev` vía

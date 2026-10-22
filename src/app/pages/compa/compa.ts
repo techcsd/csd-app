@@ -335,6 +335,29 @@ export class CompaPage {
     this.propuesta.set(null);
   }
 
+  /**
+   * CV1 — propuestas "preparar + abrir" (`accion==='abrir'`, p.ej. `preparar_echada`):
+   * Compa nunca guarda ni sube fotos. Navega al formulario real con los datos como
+   * queryParams y cierra la hoja; no hay llamada a `compa.ejecutar`.
+   */
+  abrirFormularioPropuesta(): void {
+    const p = this.propuesta();
+    if (!p || p.accion !== 'abrir' || !p.destino) return;
+    const destino = p.destino;
+    this.propuesta.set(null);
+    void this.router.navigate(['/transporte/combustible', destino.vehiculo_id], {
+      queryParams: destino.query,
+    });
+  }
+
+  /** CV1 — "Faltan: a, b y c." a partir de `faltan[]` (ya viene en español desde el servidor). */
+  faltanTexto(items: string[] | undefined | null): string {
+    if (!items?.length) return '';
+    const bajado = items.map((s) => s.charAt(0).toLowerCase() + s.slice(1));
+    if (bajado.length === 1) return bajado[0];
+    return `${bajado.slice(0, -1).join(', ')} ${this.i18n.t('y')} ${bajado[bajado.length - 1]}`;
+  }
+
   // ── Voz (nota → transcripción → composer) ───────────────────────────────────
   abrirVoz(): void {
     if (!this.online) {

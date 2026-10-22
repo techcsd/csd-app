@@ -612,3 +612,47 @@ export function calcularCombustible(
     rangoOrigen: rango.origen,
   };
 }
+
+/** CV1 — datos ya validados de `?desde=compa` listos para prellenar el wizard. */
+export interface CompaPrefillDatos {
+  galones: number;
+  monto: number;
+  /** null = no vino, o vino pero fuera de rango (nunca se inventa — se deja en blanco). */
+  km: number | null;
+  /** Texto crudo tal como vino (recortado a 60); el llamador decide si matchea el catálogo. */
+  estacionTexto: string | null;
+  producto: 'diesel' | 'gasolina' | null;
+}
+
+/**
+ * CV1.5 — valida los query params de la hoja de Compa como entrada NO CONFIABLE
+ * (función pura, sin acceso a red/servicios: la verificación del pool de vehículos
+ * visibles vive en el componente, que sí puede llamar al servicio). `null` = algo
+ * no cuadró (basura, fuera de rango, o el vehículo del query no es el de la ruta)
+ * y el prellenado se descarta ENTERO — nunca parcial.
+ */
+export function validarPrefillCompa(
+  params: { galones: string | null; monto: string | null; km: string | null; estacion: string | null; producto: string | null; vehiculo: string | null },
+  vehiculoIdRuta: string,
+): CompaPrefillDatos | null {
+  // El vehículo del query (si vino) debe coincidir con el de la ruta — nunca
+  // confiar en un parámetro de URL que señale a otro vehículo.
+  if (params.vehiculo && params.vehiculo !== vehiculoIdRuta) return null;
+
+  const galones = Number(params.galones);
+  if (!Number.isFinite(galones) || !(galones > 0 && galones <= 500)) return null;
+  const monto = Number(params.monto);
+  if (!Number.isFinite(monto) || monto < 0) return null;
+
+  let km: number | null = null;
+  if (params.km != null) {
+    const k = Number(params.km);
+    if (Number.isFinite(k) && Number.isInteger(k) && k >= 0) km = k;
+    // km inválido → se deja en blanco (el odómetro nunca se inventa, CV1.3).
+  }
+
+  const estacionTexto = params.estacion?.trim().slice(0, 60) || null;
+  const producto = params.producto === 'diesel' || params.producto === 'gasolina' ? params.producto : null;
+
+  return { galones, monto, km, estacionTexto, producto };
+}

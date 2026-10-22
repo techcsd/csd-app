@@ -335,3 +335,43 @@
     flex: 0 0 auto;
   }
 }
+
+// CV1 — propuestas "preparar + abrir" (una sola acción + "Descartar" en texto plano).
+.compa__prop-acts--abrir {
+  flex-direction: column;
+  gap: 12px;
+
+  .btn-cta {
+    flex: none;
+  }
+}
+.compa__prop-descartar {
+  background: none;
+  border: none;
+  padding: 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.compa__prop-faltan {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--warning-bg);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--warning);
+}
+.compa__prop-faltan-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot-warning);
+  margin-top: 4px;
+  flex: none;
+}

@@ -40,14 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Ver conduce sin recibir, requisiciones honestas y cámara más segura';
+const TITULO = 'Compa ya puede ayudarte a registrar una echada';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Recibir material', d: 'Nuevo botón "Ver conduce" para identificar el conduce (folio, origen, obra, artículos, foto del despacho) sin empezar el proceso de recepción; "Recibir" sigue siendo la acción que de verdad inicia la recepción.' },
-  { t: 'arreglo', m: 'Mis requisiciones', d: 'Al enviar una requisición ahora se ve de inmediato como "Enviando…" y pasa a "Enviada" solo cuando el servidor la confirma (antes decía "enviada" aunque solo se hubiera guardado en el teléfono, lo que llevaba a enviarla dos veces por error).' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'Si ya enviaste una requisición muy parecida en las últimas 24 horas, la app te avisa antes de mandarla de nuevo y te deja ver la anterior o enviarla igual.' },
-  { t: 'mejora', m: 'Recibir material', d: 'Si la cámara falla dos veces seguidas al recibir material, ahora puedes elegir una foto de la galería o usar la cámara propia de la app, sin quedarte atascado.' },
-  { t: 'mejora', m: 'Recibir material', d: 'Una recepción de conduce a medias (cantidades, fotos, notas) ahora aparece en "Documentación en proceso" y en un aviso en el inicio para retomarla o descartarla, y se puede recuperar incluso sin señal.' },
-  { t: 'mejora', m: 'Pedir material', d: 'Si armas una requisición y cierras la app antes de enviarla, al volver la encuentras lista para terminar (antes se perdía el carrito).' },
+  { t: 'nuevo', m: 'Compa', d: 'Si le dices a Compa "Registra una echada" (vehículo, galones, monto), te deja la echada preparada y te abre el formulario de Combustible con esos datos ya puestos — tú sigues poniendo las fotos del recibo y del tablero y la lectura del odómetro, y tú le das a "Guardar". Compa nunca guarda ni sube fotos por su cuenta.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
