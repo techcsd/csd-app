@@ -43,10 +43,12 @@ solo una comprobación de más si quieres verla con tus propios ojos.
 
 ## Resultado
 
-<pendiente — Xaviel>
+OK — Xaviel probó CV1 (Compa → tarjeta "Echada preparada" → "Abrir formulario"
+→ wizard de Combustible) en su Samsung y confirmó que funciona ("i test it on
+my phone, its ok").
 
 ## Fecha
 
-<pendiente>
+2026-10-22
 
-<!-- La línea "OK:" (con fecha) la agrega Xaviel después de probar en el teléfono. -->
+OK: Xaviel probó en su Samsung y confirmó que funciona, 2026-10-22.
