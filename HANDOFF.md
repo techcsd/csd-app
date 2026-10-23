@@ -83,9 +83,13 @@ usa desde la web).
 **Cierre:** `npm run build` verde en cada fase (routes/guards, conduce-detalle,
 combustible, traducciones en.json agregadas para `pages/transporte` — el
 alcance i18n exige 100% en inglés). `qa/release-2.58.3.md` creado con la guía
-de prueba, sin ningún `OK:` inventado. **Nada comiteado/empujado/publicado
-todavía más allá de esta rama `feature/cw-ronda`** — a la espera de que
-Xaviel pruebe en el Samsung y dé su OK antes de PR a `main`.
+de prueba, sin ningún `OK:` inventado. **`feature/cw-ronda` ya se fusionó a
+`dev` y se empujó a `origin/dev`** (regla 18: publicar en dev no está
+gateado) — Vercel debe estar construyendo `app-dev.` con esto. `main`/prod
+**no** se tocó. Corrección post-cierre: el bump de versión solo había tocado
+`environment.prod.ts` y `build.gradle`; `environment.dev.ts` se quedó en
+2.58.2 (gotcha conocido, memoria `cl-round-app.md`) — ya corregido a 2.58.3
+en los 3 sitios antes de empujar esta corrección.
 
 ### Lo físico de Xaviel
 1. Entrar como un chofer privado puro (Carlos/Dallin si quieres el caso real)
@@ -98,9 +102,10 @@ Xaviel pruebe en el Samsung y dé su OK antes de PR a `main`.
 4. Responder: ¿Carlos y Dallin son choferes privados de verdad, o en la
    práctica hacen trabajo de transportista? (si es lo segundo, usa el
    interruptor "Choferes privados" del padre, ya construido en la web).
-5. Con el OK: commit → push `feature/cw-ronda` → merge a `dev` → avisar →
-   cuando toque, `npm run apk -- --env dev` → `npm run apk:publish -- --env
-   dev`. Prod solo después de probar la actualización in-app real.
+5. Con tu OK tras probar en dev: `npm run apk -- --env dev` → `npm run
+   apk:publish -- --env dev` (registra la versión + sube el APK de prueba) →
+   cuando quieras, PR `dev → main`. Prod solo después de probar la
+   actualización in-app real en el Samsung.
 
 ### Del padre (si algo faltaba)
 Nada pendiente del padre para esta ronda — PROMPT-114 ya está completo y en
