@@ -91,31 +91,41 @@ gateado) — Vercel debe estar construyendo `app-dev.` con esto. `main`/prod
 2.58.2 (gotcha conocido, memoria `cl-round-app.md`) — ya corregido a 2.58.3
 en los 3 sitios antes de empujar esta corrección.
 
+**APK de dev ya construido y publicado** (paso 2 del flujo obligatorio, no
+gateado por regla 18): `npm run apk -- --env dev` firmó el APK (certificado
+`3c5316d8…5065`, el mismo de siempre — se actualiza sobre la instalación
+existente), candado canal:"apk"+version:"2.58.3" verde, historial (dev)
+registrado vía RPC. `npm run apk:publish -- --env dev` subió
+`csd-app-2.58.3.apk`/`csd-app-latest.apk`/`version.json` al bucket de dev y
+actualizó `apk_url`. (Se revirtieron dos archivos gradle que `cap sync`
+reescribió con la ruta del junction de este worktree — ruido, no un cambio
+real — antes de dejar todo commiteado.)
+
 ### Lo físico de Xaviel
-1. Entrar como un chofer privado puro (Carlos/Dallin si quieres el caso real)
+1. Actualiza tu APK dev (in-app o descargando de nuevo) y confirma que
+   reconoce la 2.58.3.
+2. Entrar como un chofer privado puro (Carlos/Dallin si quieres el caso real)
    y confirmar el aviso + que un enlace directo a conduces/rutas ya no deja
    pasar a un formulario roto.
-2. Si tienes o puedes armar un conduce atascado solo-local: confirmar que su
+3. Si tienes o puedes armar un conduce atascado solo-local: confirmar que su
    ficha ahora ofrece Reintentar/Descartar en vez de un callejón sin salida.
-3. Probar la lectura de una echada real (con foto) en el Samsung, con y sin
+4. Probar la lectura de una echada real (con foto) en el Samsung, con y sin
    señal — nunca se probó con un recibo real desde la app (ver `qa/release-2.58.3.md`).
-4. Responder: ¿Carlos y Dallin son choferes privados de verdad, o en la
+5. Responder: ¿Carlos y Dallin son choferes privados de verdad, o en la
    práctica hacen trabajo de transportista? (si es lo segundo, usa el
    interruptor "Choferes privados" del padre, ya construido en la web).
-5. Con tu OK tras probar en dev: `npm run apk -- --env dev` → `npm run
-   apk:publish -- --env dev` (registra la versión + sube el APK de prueba) →
-   cuando quieras, PR `dev → main`. Prod solo después de probar la
-   actualización in-app real en el Samsung.
+6. Con tu OK tras probar en el Samsung: PR `dev → main`. Prod solo después.
 
 ### Del padre (si algo faltaba)
 Nada pendiente del padre para esta ronda — PROMPT-114 ya está completo y en
 prod (web 1.199.0) desde antes de que esta sesión empezara.
 
 ### En dev / En prod
-- **En dev:** app 2.58.3 (esta ronda, CW1/CW2/CW6/CW7/CW5 — pendiente de
-  build+publish del APK y de la prueba del teléfono). Web 1.199.0 ya en prod.
+- **En dev:** app 2.58.3 (esta ronda, CW1/CW2/CW6/CW7/CW5) — código en `dev`,
+  APK construido y publicado en el bucket de dev, versión registrada.
+  **Pendiente: que Xaviel la pruebe en el Samsung.** Web 1.199.0 ya en prod.
 - **En prod:** app sigue en la versión publicada antes de esta ronda (no se
-  tocó prod desde aquí). Web 1.199.0.
+  tocó prod desde aquí; ni código ni APK ni registro). Web 1.199.0.
 
 ---
 
