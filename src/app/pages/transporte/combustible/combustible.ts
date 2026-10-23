@@ -1103,6 +1103,13 @@ export class CombustiblePage extends GuardedWizard {
   async leerReciboAuto(sobrescribir = true): Promise<void> {
     const recibo = this.fotoRecibo();
     if (!recibo || this.leyendoRecibo()) return;
+    // CW5 — sin señal, la lectura automática no puede intentarse (es una edge
+    // function): avisa claro y deja llenar a mano SIN perder la foto, en vez de
+    // un "no se pudo leer" genérico tras un intento condenado a fallar.
+    if (!this.network.online()) {
+      this.lecturaError.set(this.i18n.t('Necesitas conexión para leer el recibo automáticamente. Llena los datos a mano; tu foto se conserva y podrás reintentar la lectura al reconectar.'));
+      return;
+    }
     if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA (lectura de recibos)
     this.leyendoRecibo.set(true);
     this.lecturaError.set('');

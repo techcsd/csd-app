@@ -13,12 +13,15 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { UserContextService } from '../../../core/services/user-context.service';
-import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
+import { formatFecha, formatFechaHumana, formatFechaRelativa } from '../../../core/util/fecha';
 // AU15 — etiquetas desde el diccionario central (ya no mapas locales por pantalla).
 import { CONDUCE_MOTIVO_LABELS, humanizarEnum, traducir } from '../../../core/util/dominio-labels';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { SyncService } from '../../../core/sync/sync.service';
+import { OutboxOp } from '../../../core/db/app-db';
+import { tipoOpLabel } from '../../../core/util/outbox-labels';
 
 /**
  * AL9/AL13/AL4 — Detalle de un conduce (documento). Fuente única abierta desde
@@ -44,14 +47,21 @@ export class ConduceDetallePage {
   private network = inject(NetworkService);
   private userCtx = inject(UserContextService);
   private i18n = inject(I18nService);
+  private sync = inject(SyncService);
 
   fmtFecha = formatFecha;
   fmtFechaHora = formatFechaHumana;
+  fmtFechaRelativa = formatFechaRelativa;
 
   salidaId = this.route.snapshot.paramMap.get('salidaId') ?? '';
   loading = signal(true);
   detalle = signal<ConduceDetalle | null>(null);
   generando = signal(false);
+  /** CW1 — este conduce no existe en el servidor (nunca se aceptó la creación):
+   *  la op RAÍZ sigue en el outbox. Null = no aplica (se cargó bien o aún no se sabe). */
+  soloLocal = signal<OutboxOp | null>(null);
+  tipoLabel = tipoOpLabel;
+  descartandoLocal = signal(false);
 
   // BZ2 — ¿puede gestionar la bandeja de material no catalogado? (mismo gate que el RPC).
   puedeGestionarLibres = computed(() => this.userCtx.esFlotaElevado() || this.userCtx.hasModulo('inventario'));
@@ -306,6 +316,7 @@ export class ConduceDetallePage {
       return;
     }
     this.loading.set(true);
+    this.soloLocal.set(null);
     try {
       const d = await this.conduces.conduceDetalleApp(this.salidaId);
       this.detalle.set(d);
@@ -323,9 +334,55 @@ export class ConduceDetallePage {
         }
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar el conduce.'));
+      // CW1 — el servidor no tiene este conduce. Antes de mostrar un error genérico
+      // sin salida, revisa si la CREACIÓN sigue atascada en el outbox local: si es
+      // así, esto no es "sin conexión", es un conduce que nunca se aceptó — hay que
+      // darle al chofer una forma real de verlo/descartarlo desde aquí mismo (antes
+      // no la tenía: el detalle solo existía si el servidor ya lo confirmaba).
+      const op = await this.sync.getOp(this.salidaId);
+      if (op && (op.tipo_op === 'conduce_simple' || op.tipo_op === 'conduce_transportista')) {
+        this.soloLocal.set(op);
+      } else {
+        this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar el conduce.'));
+      }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** CW1 — mensaje para el callejón sin salida de un conduce solo-local (nunca
+   *  llegó al servidor): qué se guardó, cuándo, y por qué sigue atascado. */
+  mensajeLocal(op: OutboxOp): string {
+    const base = this.i18n.t('Se guardó en tu teléfono como {tipo}. Nunca llegó a registrarse en el servidor.', {
+      tipo: this.tipoLabel(op.tipo_op),
+    });
+    if (op.error_msg) return `${base} ${op.error_msg}`;
+    return `${base} ${this.i18n.t('Creado {cuando}.', { cuando: this.fmtFechaRelativa(op.capturado_en) })}`;
+  }
+
+  /** CW1 — reintenta ahora mismo el envío de la creación atascada. */
+  reintentarLocal(): void {
+    const op = this.soloLocal();
+    if (!op) return;
+    void this.sync.retry(op.id);
+    this.toast.show(this.i18n.t('Reintentando el envío…'), 'info');
+    this.navGuard.back('/transporte/conduces-hub');
+  }
+
+  /** CW1 — descarta la creación local (y cualquier op dependiente, p. ej.
+   *  "entregado") que nunca llegó al servidor. No hay nada que anular allá. */
+  async descartarLocal(): Promise<void> {
+    const op = this.soloLocal();
+    if (!op || this.descartandoLocal()) return;
+    this.descartandoLocal.set(true);
+    try {
+      await this.conduces.eliminarConduce(op.id);
+      this.toast.success(this.i18n.t('Conduce descartado. Nunca llegó a registrarse en el servidor.'));
+      this.navGuard.back('/transporte/conduces-hub');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo descartar.'));
+    } finally {
+      this.descartandoLocal.set(false);
     }
   }
 

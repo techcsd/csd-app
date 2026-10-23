@@ -1,5 +1,119 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 23/10/2026 — PROMPT-115 · Ronda **CW** — app **2.58.3 en dev, pendiente prueba del teléfono**
+
+CQ6: worktree propia `csd-app-cw` desde `dev` (`node_modules` por junction,
+`.env.local` copiado). El padre (SGC) ya corrió PROMPT-114 completo ESTA MISMA
+ronda y llegó hasta prod (web 1.199.0) antes de que esta sesión empezara — se
+leyó `SGC/docs/PARIDAD.md § 9 "Ronda CW"` y `SGC/HANDOFF.md` para los
+contratos reales en vez de adivinar.
+
+**Diagnóstico de fondo (confirmado por el padre, solo lectura de prod):**
+Carlos y Dallin (ambos `chofer_privado`) tienen fila activa en `conductores`
+pero **cero vehículo en cualquier lado** y **cero conduces en el servidor,
+nunca, ni uno** — los conduces "fantasma" que Carlos ve en su teléfono NO
+EXISTEN en el servidor. Esto descartó la hipótesis de "rol mal puesto": el
+problema es 100% del lado cliente.
+
+**CW1/CW2 — conduces fantasma de Carlos (causa raíz encontrada en el código,
+`sync.service.ts`/`conduces.service.ts`):** cuando una creación de conduce es
+rechazada de forma PERMANENTE por el servidor (clasificación 'dato' del
+contrato BG1), el registro queda guardado solo en el teléfono para siempre —
+correcto por diseño (no se pierde el dato) — pero **`conduce-detalle.ts` solo
+sabía mostrar un conduce que el servidor pudiera devolver**: al abrir uno que
+nunca se aceptó, se veía "No pudimos abrir el conduce" sin ninguna salida. Y
+`eliminarConduce` (`conduces.service.ts` l.1495) SIEMPRE mandaba un
+`anular_conduce` al servidor, que fallaría para siempre contra un `salida_id`
+que el servidor jamás conoció — compuesto por cualquier op dependiente
+("marcar entregado") encolada después, que también quedaba atascada igual.
+**Arreglo:** `conduce-detalle.ts` ahora detecta el caso "solo local" (la op
+raíz sigue en el outbox) y muestra una pantalla real con **Reintentar** /
+**Descartar**; `SyncService.cancelarCadenaLocal()` (nuevo) limpia la creación
+Y cualquier op dependiente de una sola vez; `eliminarConduce` usa esto en vez
+de llamar al servidor cuando nunca hubo nada que anular allá. Nada de esto
+toca datos de producción — son cambios de cómo la app LEE/LIMPIA su propio
+outbox local.
+
+**CW6/CW7 — chofer privado entrando por enlace directo:** `moduleGuard('flota')`
+no distinguía al privado restringido (SÍ tiene el módulo flota, solo no debe
+usar conduces/rutas de empresa) — un enlace directo a
+`/transporte/conduces-hub` o `/transporte/rutas/crear` lo dejaba pasar a un
+formulario condenado a fallar sin explicar. Nuevo guard `noConducesPrivadoGuard`
+(`core/guards/module.guard.ts`) sumado a las 14 rutas de conduces/rutas de
+empresa → pantalla con el texto fijo D6 ("Tu rol (chofer privado) no usa
+conduces ni rutas. Si debes hacerlo, pídelo a Central."). Mismo texto como
+aviso discreto arriba del hub de Transporte para el privado (nunca lo
+necesitaba adivinar). Las pantallas que el privado SÍ usa (Uso de vehículo,
+Combustible, Mantenimientos, Aviso, Inspección) **no** llevan el guard nuevo —
+verificado ruta por ruta. El interruptor nuevo del padre
+(`chofer_privado_permitir_transporte`) ya refresca el contexto al reconectar
+(no hace falta reinstalar) porque `user-context.service.ts` ya recarga roles
+en cada sesión — no se necesitó ningún cambio adicional para eso.
+
+**CW5 — lectura de foto de echada (paridad):** la app YA estaba a la par con
+la web (mismos campos: galones/monto/km/producto/estación/N° recibo/tarjeta/
+fecha, mismo umbral 0.9, mismo cuidado con `producto` de texto libre, y
+`p_numero_recibo` ya se manda desde la ronda CC — confirmado que el padre
+expone el parámetro desde CO15, ya en prod). Único gap real: sin señal, el
+error era genérico ("No se pudo leer el recibo") en vez de explicar que hace
+falta conexión; ahora avisa claro y deja llenar a mano sin perder la foto.
+
+**CW3/CW4 — verificación, sin cambios de código:** Dev notes en la app sigue
+siendo de solo lectura por diseño (no se toca); el wizard de combustible YA
+exige kilometraje (salvo echadas de equipo por horas) y galones antes de
+avanzar, así que el reporte de rendimiento del padre no se queda sin datos por
+culpa de la app.
+
+**CW8 — auditoría por rol y flujo:** `AUDITORIA-ROLES-CW8-APP.md` (carpeta de
+la ronda) — 10 roles × 13 flujos, mismo método que el padre (código + datos,
+sin navegador). **Cero ❌** encontrados; 7 celdas ⚠️ son preguntas honestas sin
+confirmar (p. ej. si Logística/Almacén tienen el submódulo
+`compras.solicitudes` — no se volvió a consultar `sgc.roles` para esto, se
+dejó como pregunta para Xaviel en vez de adivinar). Las 14 rutas con el guard
+nuevo se revisaron una por una: ninguna perdió su `moduleGuard` original, y
+las rutas que el privado SÍ usa no llevan el guard nuevo.
+
+**Defaults aplicados (D1-D10, de `CONTEXTO-ACTUALIZACION-56.md`):** D1 (no se
+tocó el rol de Carlos/Dallin), D6 (texto fijo del aviso), D9 (umbral 0.9 ya
+cumplido), D10 (versión app 2.58.3, solo a dev). D2/D3/D4/D7/D8 son del lado
+padre (ya resueltos por PROMPT-114). D5 (interruptor "Choferes privados") ya
+está construido por el padre; la app no necesita pantalla propia (Central lo
+usa desde la web).
+
+**Cierre:** `npm run build` verde en cada fase (routes/guards, conduce-detalle,
+combustible, traducciones en.json agregadas para `pages/transporte` — el
+alcance i18n exige 100% en inglés). `qa/release-2.58.3.md` creado con la guía
+de prueba, sin ningún `OK:` inventado. **Nada comiteado/empujado/publicado
+todavía más allá de esta rama `feature/cw-ronda`** — a la espera de que
+Xaviel pruebe en el Samsung y dé su OK antes de PR a `main`.
+
+### Lo físico de Xaviel
+1. Entrar como un chofer privado puro (Carlos/Dallin si quieres el caso real)
+   y confirmar el aviso + que un enlace directo a conduces/rutas ya no deja
+   pasar a un formulario roto.
+2. Si tienes o puedes armar un conduce atascado solo-local: confirmar que su
+   ficha ahora ofrece Reintentar/Descartar en vez de un callejón sin salida.
+3. Probar la lectura de una echada real (con foto) en el Samsung, con y sin
+   señal — nunca se probó con un recibo real desde la app (ver `qa/release-2.58.3.md`).
+4. Responder: ¿Carlos y Dallin son choferes privados de verdad, o en la
+   práctica hacen trabajo de transportista? (si es lo segundo, usa el
+   interruptor "Choferes privados" del padre, ya construido en la web).
+5. Con el OK: commit → push `feature/cw-ronda` → merge a `dev` → avisar →
+   cuando toque, `npm run apk -- --env dev` → `npm run apk:publish -- --env
+   dev`. Prod solo después de probar la actualización in-app real.
+
+### Del padre (si algo faltaba)
+Nada pendiente del padre para esta ronda — PROMPT-114 ya está completo y en
+prod (web 1.199.0) desde antes de que esta sesión empezara.
+
+### En dev / En prod
+- **En dev:** app 2.58.3 (esta ronda, CW1/CW2/CW6/CW7/CW5 — pendiente de
+  build+publish del APK y de la prueba del teléfono). Web 1.199.0 ya en prod.
+- **En prod:** app sigue en la versión publicada antes de esta ronda (no se
+  tocó prod desde aquí). Web 1.199.0.
+
+---
+
 ## 🟡 SESIÓN 22/10/2026 — PROMPT-113 · Ronda **CV** — app **2.58.2 en dev, pendiente prueba del teléfono**
 
 CQ6: worktree propia `csd-app-cv` desde `dev`; se limpiaron `csd-app-ct`/

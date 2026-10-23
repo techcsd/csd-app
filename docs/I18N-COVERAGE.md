@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 91%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 92%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -50,7 +50,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/documentos/historial | 7 | 0 | 43% | 0% |  |
 | pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
-| pages/forbidden | 0 | 4 | 0% | 0% |  |
+| pages/forbidden | 0 | 1 | 0% | 0% |  |
 | pages/home | 19 | 0 | 100% | 11% | ✅ |
 | pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
@@ -130,7 +130,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/tecnologia/compras-tec | 29 | 0 | 100% | 0% |  |
 | pages/tecnologia/dev-notes | 0 | 7 | 0% | 0% |  |
 | pages/tecnologia/dev-notes/editor | 8 | 0 | 100% | 0% |  |
-| pages/transporte | 16 | 0 | 100% | 6% | ✅ |
+| pages/transporte | 17 | 0 | 100% | 6% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
 | pages/transporte/apoyo-transporte | 53 | 0 | 91% | 0% |  |
 | pages/transporte/asignar | 35 | 0 | 100% | 3% |  |
@@ -141,7 +141,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 129 | 2 | 87% | 2% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 71 | 1 | 85% | 6% |  |
+| pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
 | pages/transporte/conduce-externo | 81 | 1 | 80% | 4% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 4% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 3% |  |
