@@ -15,7 +15,11 @@
       @if (atrasadas().length) {
         <h2 class="dp-group dp-group--warn">{{ glyphWarn }} {{ 'Esperando hace más de 2 días' | t }}</h2>
         @for (r of atrasadas(); track r.id) {
-          <button type="button" class="dp-card dp-card--atrasada" (click)="despachar(r)">
+          <!-- CX3.5 — toda la tarjeta abre la vista rápida (solo lectura); "Despachar" es
+               un botón aparte adentro, el único que empieza el proceso. -->
+          <div class="dp-card dp-card--atrasada" role="button" tabindex="0"
+               [attr.aria-label]="('Ver requisición' | t) + ' ' + (r.codigo || ('Sin código' | t))"
+               (click)="abrirVista(r)" (keydown)="onCardKeydown($event, r)">
             <div class="dp-card__top">
               <span class="dp-card__codigo">{{ r.codigo || ('Sin código' | t) }}</span>
               <span class="dp-card__fecha dp-card__fecha--warn">{{ fechaCard(r) }}</span>
@@ -24,15 +28,17 @@
             <span class="dp-card__meta">
               {{ r.renglones }} {{ 'renglón(es)' | t }}{{ r.solicitante ? ' · ' + r.solicitante : '' }}{{ necesidadTexto(r) ? ' · ' + necesidadTexto(r) : '' }}
             </span>
-            <span class="dp-card__cta">{{ 'Despachar' | t }} ›</span>
-          </button>
+            <button type="button" class="dp-card__cta" (click)="despachar(r, $event)">{{ 'Despachar' | t }} ›</button>
+          </div>
         }
       }
 
       @if (recientes().length) {
         @if (atrasadas().length) { <h2 class="dp-group">{{ 'Resto' | t }}</h2> }
         @for (r of recientes(); track r.id) {
-          <button type="button" class="dp-card" (click)="despachar(r)">
+          <div class="dp-card" role="button" tabindex="0"
+               [attr.aria-label]="('Ver requisición' | t) + ' ' + (r.codigo || ('Sin código' | t))"
+               (click)="abrirVista(r)" (keydown)="onCardKeydown($event, r)">
             <div class="dp-card__top">
               <span class="dp-card__codigo">{{ r.codigo || ('Sin código' | t) }}</span>
               <span class="dp-card__fecha">{{ fechaCard(r) }}</span>
@@ -41,8 +47,8 @@
             <span class="dp-card__meta">
               {{ r.renglones }} {{ 'renglón(es)' | t }}{{ r.solicitante ? ' · ' + r.solicitante : '' }}{{ necesidadTexto(r) ? ' · ' + necesidadTexto(r) : '' }}
             </span>
-            <span class="dp-card__cta">{{ 'Despachar' | t }} ›</span>
-          </button>
+            <button type="button" class="dp-card__cta" (click)="despachar(r, $event)">{{ 'Despachar' | t }} ›</button>
+          </div>
         }
       }
 
@@ -54,4 +60,58 @@
   </div>
 
   <app-sync-bar />
+
+  <!-- CX3.5 — vista rápida de solo lectura (D7): renglones, urgencia, necesidad,
+       notas y antigüedad. Abrirla NO despacha ni reserva nada. -->
+  @if (quickViewResumen(); as r) {
+    <app-bottom-sheet [open]="quickViewOpen()" [titulo]="r.codigo || ('Requisición' | t)" (closed)="cerrarVista()">
+      <div class="dpv">
+        <div class="dpv__top">
+          <span class="dpv__obra">🏗 {{ r.proyecto_nombre || ('Obra' | t) }}</span>
+          <span class="dpv__antiguedad">{{ antiguedadTexto(r) }}</span>
+        </div>
+
+        @if (quickViewLoading()) {
+          <app-skeleton [rows]="4" />
+        } @else if (quickViewError() && !quickViewDetalle()) {
+          <div class="dp-band dp-band--err">{{ quickViewError() }}</div>
+          <button type="button" class="btn-ghost dpv__retry" (click)="reintentarVista()">{{ 'Reintentar' | t }}</button>
+        } @else if (quickViewDetalle(); as d) {
+          <dl class="dpv__facts">
+            <div>
+              <dt>{{ 'Solicitante' | t }}</dt>
+              <dd>{{ d.solicitante_nombre || r.solicitante || '—' }}</dd>
+            </div>
+            <div>
+              <dt>{{ 'Urgencia' | t }}</dt>
+              <dd>{{ d.urgencia === 'urgente' ? ('🔴 Urgente' | t) : ('Normal' | t) }}</dd><!-- tropes-allow: mismo glifo que solicitudes/detalle (paridad) -->
+            </div>
+            @if (d.fecha_necesidad) {
+              <div><dt>{{ 'Necesita el' | t }}</dt><dd>{{ fmtFecha(d.fecha_necesidad) }}</dd></div>
+            }
+            @if (d.notas) { <div><dt>{{ 'Notas' | t }}</dt><dd>{{ d.notas }}</dd></div> }
+          </dl>
+
+          <h3 class="dpv__sec">{{ 'Renglones' | t }} ({{ d.items.length }})</h3>
+          <ul class="dpv__items">
+            @for (it of d.items; track it.id) {
+              <li class="dpv__item">
+                <span class="dpv__item-cant">{{ it.cantidad }} {{ it.unidad || '' }}</span>
+                <span class="dpv__item-desc">
+                  {{ it.descripcion }}
+                  @if (it.talla) { <span class="dpv__item-talla">{{ 'Talla' | t }} {{ it.talla }}</span> }
+                  @if (!it.articulo_id) { <span class="dpv__item-nc">{{ 'no catalogado' | t }}</span> }
+                </span>
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="dpv__acciones">
+          <button type="button" class="btn-cta" (click)="despacharDesdeVista()">{{ 'Despachar' | t }} ›</button>
+          <button type="button" class="btn-ghost" (click)="cerrarVista()">{{ 'Cerrar' | t }}</button>
+        </div>
+      </div>
+    </app-bottom-sheet>
+  }
 </div>

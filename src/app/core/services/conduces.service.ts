@@ -1493,6 +1493,17 @@ export class ConducesService {
    * el conduce desaparezca al instante y se materialice al drenar.
    */
   async eliminarConduce(salidaId: string, motivo?: string | null): Promise<void> {
+    // CW1 — si la CREACIÓN de este conduce sigue en el outbox, el servidor jamás
+    // la aceptó: no hay nada que anular allá (anular_conduce fallaría para siempre
+    // contra un salida_id que no existe). Se cancela la cadena local completa
+    // (la creación + cualquier op dependiente, p. ej. "entregado") en vez de
+    // encolar un envío condenado a quedar atascado.
+    if (await this.sync.esSoloLocal(salidaId)) {
+      await this.sync.cancelarCadenaLocal(salidaId);
+      void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+      void this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+      return;
+    }
     await this.sync.enqueue({
       id: crypto.randomUUID(),
       tipo_op: 'conduce_eliminar',

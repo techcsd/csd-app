@@ -40,9 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Compa ya puede ayudarte a registrar una echada';
+const TITULO = 'Ver el contenido de una requisición antes de despacharla';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Compa', d: 'Si le dices a Compa "Registra una echada" (vehículo, galones, monto), te deja la echada preparada y te abre el formulario de Combustible con esos datos ya puestos — tú sigues poniendo las fotos del recibo y del tablero y la lectura del odómetro, y tú le das a "Guardar". Compa nunca guarda ni sube fotos por su cuenta.' },
+  { t: 'nuevo', m: 'Por despachar', d: 'Tocar una tarjeta de "Por despachar" ya no empieza el despacho: abre una vista rápida de solo lectura con los renglones, cantidades, urgencia, fecha de necesidad y notas de la requisición, para identificarla sin arrancar el proceso. "Despachar" sigue siendo el único botón que de verdad empieza el despacho.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

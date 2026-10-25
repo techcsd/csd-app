@@ -501,6 +501,39 @@ export class SyncService {
     return true;
   }
 
+  /**
+   * CW1 — ¿esta captura (por id de la op RAÍZ, p. ej. un `salida_id` de conduce)
+   * sigue existiendo SOLO en el teléfono? `process()` BORRA la op del outbox en
+   * cuanto el servidor la confirma (línea 773 arriba), así que si la fila todavía
+   * está aquí (en cualquier estado: pending/syncing/error) es porque el servidor
+   * JAMÁS la aceptó — no hay nada que anular allá, solo que limpiar acá.
+   */
+  async esSoloLocal(id: string): Promise<boolean> {
+    return (await db.outbox.get(id)) != null;
+  }
+
+  /**
+   * CW1 — cancela una captura que nunca llegó al servidor Y toda op DEPENDIENTE
+   * encolada después (p. ej. "marcar entregado" de un conduce cuya creación
+   * sigue atascada): sin esto, `eliminarConduce` encolaba un `anular_conduce`
+   * contra un `salida_id` que el servidor nunca conoció (falla para siempre,
+   * igual de atascada) y el conduce "fantasma" no tenía forma real de borrarse.
+   * Solo toca ops que YA estaban en el outbox (nunca datos del servidor).
+   */
+  async cancelarCadenaLocal(rootId: string): Promise<boolean> {
+    const root = await db.outbox.get(rootId);
+    if (!root) return false;
+    const todas = await db.outbox.toArray();
+    const dependientes = todas.filter(
+      (o) => o.id !== rootId && (o.payload as Record<string, unknown> | null)?.['salida_id'] === rootId,
+    );
+    for (const dep of dependientes) {
+      if (dep.estado === 'syncing') continue; // en vuelo: no yancar a medio envío
+      await this.cancelPending(dep.id);
+    }
+    return this.cancelPending(rootId);
+  }
+
   /** AO3 — una op puntual (para reconstruir/corregir un conduce atascado). */
   async getOp(id: string): Promise<OutboxOp | null> {
     return (await db.outbox.get(id)) ?? null;

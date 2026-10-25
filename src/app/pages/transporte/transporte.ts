@@ -123,6 +123,8 @@ export class TransportePage {
   // AF28 — la barra de estado del chofer se muestra solo a choferes.
   esChofer = this.ctx.esChofer;
   esAdmin = () => this.ctx.esAdmin();
+  // CW6/CW7 (D6) — aviso discreto: por qué Conduce/Rutas no aparecen en su lista.
+  esPrivadoRestringido = this.ctx.esChoferPrivadoRestringido;
 
   // AI16 — orden de submódulos configurado por el admin (drag & drop).
   orderMap = signal<Record<string, number>>({});

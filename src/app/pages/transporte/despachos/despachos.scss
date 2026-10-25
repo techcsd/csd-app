@@ -42,8 +42,10 @@
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border);
   border-radius: 14px;
+  cursor: pointer; // CX3.5 — ahora es un div[role=button] (el botón Despachar vive adentro)
 }
 .dp-card:active { background: var(--color-bg); }
+.dp-card:focus-visible { outline: none; box-shadow: var(--focus-ring); } // CX4 — foco visible
 .dp-card--atrasada { border-color: var(--color-error, #d33); }
 .dp-card__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .dp-card__codigo { font-family: var(--font-mono, monospace); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); }
@@ -51,4 +53,39 @@
 .dp-card__fecha--warn { color: var(--color-error, #d33); font-weight: 700; }
 .dp-card__obra { font-size: 16px; font-weight: 700; color: var(--color-text); }
 .dp-card__meta { font-size: 13px; color: var(--color-text-secondary); }
-.dp-card__cta { align-self: flex-end; font-weight: 700; color: var(--color-primary, #ff5f00); margin-top: 4px; }
+.dp-card__cta {
+  align-self: flex-end;
+  padding: 6px 2px; // CX3.5 — objetivo de toque cómodo sin agrandar la tarjeta
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-primary, #ff5f00);
+  margin-top: 4px;
+}
+.dp-card__cta:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 6px; }
+
+// ── CX3.5 — vista rápida de solo lectura (bottom sheet) ─────────────────────
+.dpv__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.dpv__obra { font-size: 16px; font-weight: 700; color: var(--color-text); }
+.dpv__antiguedad { font-size: 13px; color: var(--color-text-secondary); }
+.dpv__facts {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  div { display: flex; justify-content: space-between; gap: 12px; }
+  dt { color: var(--color-text-secondary); font-size: 13px; }
+  dd { margin: 0; font-size: 14px; font-weight: 600; color: var(--color-text); text-align: right; }
+}
+.dpv__sec { font-size: 13px; font-weight: 800; color: var(--color-text-secondary); margin: 4px 0 8px; }
+.dpv__items { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dpv__item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border-radius: 10px;
+}
+.dpv__item-cant { flex: 0 0 auto; font-weight: 700; color: var(--color-text); white-space: nowrap; }
+.dpv__item-desc { font-size: 14px; color: var(--color-text); }
+.dpv__item-talla, .dpv__item-nc { margin-left: 6px; font-size: 12px; color: var(--color-text-secondary); }
+.dpv__retry { margin-bottom: 16px; }
+.dpv__acciones { display: flex; flex-direction: column; gap: 10px; }

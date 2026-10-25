@@ -14,6 +14,14 @@
       <app-estado-chofer-bar />
     }
 
+    <!-- CW6/CW7 (D6) — aviso discreto: por qué no ve Conduce/Rutas de empresa -->
+    @if (esPrivadoRestringido()) {
+      <div class="transporte__aviso-privado">
+        <span class="transporte__aviso-privado-icon">ℹ️</span><!-- tropes-allow: mismo patrón de ícono-emoji que el banner de doc-en-proceso (📄) -->
+        <span>{{ 'Tu rol (chofer privado) no usa conduces ni rutas. Si debes hacerlo, pídelo a Central.' | t }}</span>
+      </div>
+    }
+
     <!-- AI1 — banner "Doc. en proceso" (borradores/envíos pendientes), arriba -->
     @if (docEnProceso() > 0) {
       <button type="button" class="transporte__doc-banner" (click)="enProcesoAbrir()">

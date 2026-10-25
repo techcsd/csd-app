@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard, proyectosGestionGuard, flotaElevadoGuard } from './core/guards/module.guard';
+import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard, proyectosGestionGuard, flotaElevadoGuard, noConducesPrivadoGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -275,7 +275,8 @@ export const routes: Routes = [
   {
     path: 'transporte/rutas/crear',
     // AY11 — flota (chofer/jefe) O ingeniería (referente planifica una solicitud sin flota).
-    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'ingenieria'])],
+    // CW6/CW7 — el chofer_privado restringido no crea rutas de empresa (D6).
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'ingenieria']), noConducesPrivadoGuard],
     loadComponent: () => import('./pages/transporte/rutas/crear-ruta').then((m) => m.CrearRutaPage),
   },
   {
@@ -337,7 +338,8 @@ export const routes: Routes = [
   {
     // AE — el chofer GENERA un conduce (salida de material) desde el móvil.
     path: 'transporte/generar-conduce',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    // CW6/CW7 — el chofer_privado restringido no crea conduces de empresa (D6).
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/generar-conduce/generar-conduce').then((m) => m.GenerarConducePage),
   },
@@ -345,34 +347,34 @@ export const routes: Routes = [
     // BA/Transporte v3 (FASE 1) — conduce externo (un proveedor transporta). El
     // servidor exige puede_crear_conduce (admin/inventario/chofer) — defensa en capa.
     path: 'transporte/conduce-externo',
-    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario']), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduce-externo/conduce-externo').then((m) => m.ConduceExternoPage),
   },
   {
     // CC5 — "Mis conduces externos" (lista: servidor + pendientes del outbox).
     path: 'transporte/conduces-externos',
-    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario']), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduce-externo/conduce-externo-lista').then((m) => m.ConduceExternoListaPage),
   },
   {
     // CC5 — ficha del conduce externo (server por :id, o pendiente del outbox).
     path: 'transporte/conduce-externo/:id',
-    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario']), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduce-externo/conduce-externo-detalle').then((m) => m.ConduceExternoDetallePage),
   },
   {
     // BA/Transporte v3 (FASE 2) — requisiciones "por despachar" (el chofer jala).
     path: 'transporte/despachos',
-    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario']), noConducesPrivadoGuard],
     loadComponent: () => import('./pages/transporte/despachos/despachos').then((m) => m.DespachosPage),
   },
   {
     // AE — devolver material (obra→almacén) con doble firma.
     path: 'transporte/devolver-material',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/devolver-material/devolver-material').then((m) => m.DevolverMaterialPage),
   },
@@ -620,7 +622,7 @@ export const routes: Routes = [
   },
   {
     path: 'transporte/conduces',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),
   },
   {
@@ -628,13 +630,13 @@ export const routes: Routes = [
     // pantalla de ejecución de rutas (misma que /transporte/conduces, que se
     // conserva para deep-links viejos).
     path: 'transporte/mis-rutas',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),
   },
   {
     // AF22 — núcleo "Conduces" (sub-hub: crear/recibir/devolver/ferretería/por firmar/historial).
     path: 'transporte/conduces-hub',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduces-hub/conduces-hub').then((m) => m.ConducesHubPage),
   },
@@ -666,7 +668,7 @@ export const routes: Routes = [
   {
     // AF29 — Historial de conduces (listado filtrable + detalle).
     path: 'transporte/conduces-historial',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduces-historial/conduces-historial').then((m) => m.ConducesHistorialPage),
   },
@@ -680,7 +682,7 @@ export const routes: Routes = [
   {
     // AI2 — Pendiente entrega (conduces emitidos por entregar; entregar/transferir).
     path: 'transporte/conduces-pendientes',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduces-pendientes/conduces-pendientes').then((m) => m.ConducesPendientesPage),
   },
@@ -696,13 +698,13 @@ export const routes: Routes = [
   {
     // AH5 — inbox de transferencias de conduce (aceptar con foto+firma / rechazar).
     path: 'transporte/conduce-transferencias',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduce-transferencias/conduce-transferencias').then((m) => m.ConduceTransferenciasPage),
   },
   {
     path: 'transporte/conduces/:salidaId',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, moduleGuard('flota'), noConducesPrivadoGuard],
     loadComponent: () =>
       import('./pages/transporte/conduces/entrega/entrega').then((m) => m.ConduceEntregaPage),
   },

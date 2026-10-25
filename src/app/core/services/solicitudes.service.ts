@@ -219,6 +219,19 @@ export class SolicitudesService {
     return data ?? null;
   }
 
+  /** CX3.5 — como `detalle`, pero DISTINGUE "vacío" de "falló" (patrón BL2): la
+   *  vista rápida de despacho necesita saber si mostrar un error con reintento o
+   *  si de verdad la requisición no tiene datos. Comparte la misma clave de caché
+   *  que `detalle`, así que abre sin red si ya se consultó antes (p. ej. desde
+   *  "Mis requisiciones"). */
+  async detalleDetallado(id: string): Promise<{ data: RequisicionDetalle | null; failed: boolean; fromCache: boolean }> {
+    return this.catalog.refreshDetailed<RequisicionDetalle | null>(`req_detalle:${id}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('requisicion_detalle', { p_id: id });
+      if (error) throw new Error(error.message);
+      return (data as RequisicionDetalle) ?? null;
+    });
+  }
+
   /** BC1 — ¿cuándo se cargó por última vez el detalle cacheado? (null = nunca). */
   async detalleFetchedAt(id: string): Promise<number | null> {
     return this.catalog.fetchedAt(`req_detalle:${id}`);

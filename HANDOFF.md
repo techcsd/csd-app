@@ -1,5 +1,245 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 25/10/2026 — PROMPT-117 · Ronda **CX** (CX3.5) — app **2.58.4 en dev, pendiente prueba del teléfono**
+
+CQ6: worktree propia `csd-app-cx` desde `origin/dev` (`node_modules` por
+junction, `.env.local` y `android/keystore.properties` copiados). Esta ronda
+toca varias cosas en la **web** (CX1 módulo Claude, CX2 conector fase 1, CX3.1-
+CX3.4 web) que están en `PROMPT-116-SGC.md` y se resuelven en el repo **SGC**,
+no aquí. Esta sesión (repo app) solo hizo **FASE 0-2 de `PROMPT-117-CSD-APP.md`**:
+construir CX3.5 y verificar si el resto de CX3.x tiene equivalente en la app.
+
+**FASE 0 — verificación de arranque:** CW (PROMPT-115, 2.58.3) ya estaba
+construido, publicado a dev y registrado (`feature/cw-ronda` === `origin/dev`
+al empezar) — no hizo falta correrlo, esta ronda arrancó limpio sobre él.
+
+**CX3.5 — vista rápida de despacho (lo que se construyó):** en Transporte ›
+Despachos (`pages/transporte/despachos/`), tocar el CUERPO de una tarjeta
+("Por despachar") ya NO empieza el despacho — abre una hoja de solo lectura
+(`app-bottom-sheet`, reutilizado) con los renglones (cantidad/unidad/talla),
+solicitante, urgencia, fecha de necesidad, notas y "hace N días". El botón
+**"Despachar"** es ahora un `<button>` real DENTRO de la tarjeta (antes la
+tarjeta entera era el botón) — con `stopPropagation` para no abrir también la
+vista rápida — y se repite dentro de la hoja; es el ÚNICO que de verdad crea
+algo. Datos vía `SolicitudesService.detalleDetallado(id)` (método nuevo, mismo
+RPC `requisicion_detalle` y misma clave de caché que "Mis requisiciones" →
+abre sin red si ya se consultó antes, con el patrón BL2 vacío-vs-falló en vez
+de tragarse el error). Tarjeta pasó de `<button>` a `<div role="button"
+tabindex="0">` con manejo de teclado (Enter/Espacio) y `:focus-visible` — así
+puede contener el botón "Despachar" sin anidar `<button>` dentro de `<button>`.
+
+**Verificado server-side antes de consumir el RPC (solo lectura, `SGC/sql/
+2026-09-13-bo8b-*.sql`):** `requisicion_detalle` gatea por
+`puede_ver_todas_requisiciones()`, que incluye `tiene_modulo('inventario')` →
+Raykler (almacén, tiene Inventario) pasa sin tocar nada del lado servidor.
+
+**FASE 2 — verificación de paridad con los hallazgos web de CX3.1-CX3.4
+(solo lectura/grep, sin cambios donde no aplicaba):**
+- **CX3.1** (tile del home que lleva a una pantalla que el rol no puede abrir):
+  no tiene equivalente — `home.ts` ya gatea cada tile con el MISMO criterio que
+  el guard de su ruta (invariante documentado como AU8/AY5), y el tile más
+  parecido al caso web ("Por recibir" → `/transporte/por-confirmar`) no lleva
+  `moduleGuard` en absoluto (el RPC filtra por usuario). Sin hallazgos.
+- **CX3.2** (filtros que se pierden al volver de un detalle): no aplica — las
+  listas de la app (p. ej. `transporte/conduces`) no tienen buscador ni
+  paginación que perder; es deliberado (diseño "un botón = un trabajo").
+- **CX3.3** (`[value]="null"`): `grep -rn '\[value\]="null"' src --include=*.html`
+  → 0 resultados. No existe ese patrón en la app.
+- **CX3.4** (reasignar producto sigue mostrando el texto libre): el bug SÍ
+  llega a la app porque comparte el mismo RPC (`requisicion_detalle`): el
+  `jsonb_build_object` arma `descripcion` con
+  `coalesce(nullif(i.descripcion,''), a.nombre)` — si el renglón ya traía un
+  texto libre no vacío, ese COALESCE lo prioriza sobre el nombre del artículo
+  aunque `articulo_id` ya se haya reasignado. La app no tiene lógica propia que
+  arreglar (solo pinta `it.descripcion` tal cual, igual que
+  `solicitudes/detalle`) — el fix es 100% de servidor (SGC, PROMPT-116 §CX3.4,
+  fuera de este repo); en cuanto se corrija ahí, la app lo hereda sin tocar
+  código.
+
+**i18n:** 5 strings nuevas sin traducir al inglés (`hace 1 día`, `hace {n}
+días`, el mensaje de error sin señal, `Ver requisición`, `Necesita el`) — las
+demás (`Solicitante`, `Urgencia`, `Normal`, `Notas`, `Talla`, `no catalogado`,
+`Reintentar`, `Cerrar`, `Despachar`, `Requisición`, `🔴 Urgente`) ya existían en
+`public/i18n/en.json` de otras pantallas y se reutilizaron tal cual. Cobertura
+`en` del alcance sigue en 100%.
+
+**No se tocó (fuera del alcance de PROMPT-117-CSD-APP.md para este repo):**
+CX1 (módulo Claude en Administración), CX2 (conector fase 1), y la parte web
+de CX3.1/CX3.2/CX3.3/CX3.4 — todo eso vive en `PROMPT-116-SGC.md` (repo SGC).
+
+**Cierre:** `npm run build` verde (prebuild completo: tokens, no-ai-tropes con
+un `tropes-allow` nuevo para el 🔴 que ya existía en `solicitudes/detalle`,
+i18n-coverage/verify-i18n, dev-strings, envío-único). `qa/release-2.58.4.md`
+creado con la guía de prueba, sin ningún `OK:` inventado. `feature/cx-ronda`
+ya se fusionó a `dev` y se empujó a `origin/dev` (regla 18: publicar en dev no
+está gateado) — Vercel debe estar construyendo `app-dev.` con esto. `main`/
+prod **no** se tocó.
+
+**APK de dev ya construido y publicado** (paso 2 del flujo obligatorio, no
+gateado por regla 18): `npm run apk -- --env dev` firmó el APK (certificado
+`3c5316d8…5065`, el de siempre), candado canal:"apk"+version:"2.58.4" verde,
+historial (dev) registrado vía RPC. `npm run apk:publish -- --env dev` subió
+`csd-app-2.58.4.apk`/`csd-app-latest.apk`/`version.json` al bucket de dev y
+actualizó `apk_url`. (Gotcha de siempre: hubo que copiar
+`android/keystore.properties` del worktree principal a mano — los worktrees no
+lo traen, igual que `.env.local`.)
+
+### Lo físico de Xaviel
+1. Actualiza tu APK dev (in-app o descargando de nuevo) y confirma que
+   reconoce la 2.58.4.
+2. Sigue `qa/release-2.58.4.md`: tocar una tarjeta de "Por despachar" abre la
+   vista rápida sin iniciar nada; "Despachar" (tarjeta u hoja) sí inicia;
+   probar con y sin señal; cerrar con fondo/✕.
+3. Con tu OK tras probar en el Samsung: PR `dev → main`. Prod solo después.
+4. La parte de SGC de esta ronda (CX1/CX2/CX3.1-CX3.4 web, los 5 reportes de
+   Raykler) se prueba y aprueba por separado en el repo SGC — no depende de
+   este APK.
+
+### Del padre (si algo faltaba)
+`PROMPT-116-SGC.md` cubre CX3.4 (fix real de `requisicion_detalle` para que
+el COALESCE prefiera el artículo reasignado sobre el texto libre) — cuando se
+aplique en el repo SGC, la app lo recibe gratis (ya lee `it.descripcion` tal
+cual del RPC, sin lógica propia que tocar).
+
+### En dev / En prod
+- **En dev:** app 2.58.4 (esta ronda, CX3.5) — código en `dev`, APK construido
+  y publicado en el bucket de dev, versión registrada. **Pendiente: que
+  Xaviel la pruebe en el Samsung.**
+- **En prod:** app sigue en 2.58.2 (la última con OK de Xaviel) — ni 2.58.3
+  (CW) ni 2.58.4 (CX) se han promovido a prod todavía; ambas esperan PR
+  `dev → main` con su OK.
+
+---
+
+## 🟡 SESIÓN 23/10/2026 — PROMPT-115 · Ronda **CW** — app **2.58.3 en dev, pendiente prueba del teléfono**
+
+CQ6: worktree propia `csd-app-cw` desde `dev` (`node_modules` por junction,
+`.env.local` copiado). El padre (SGC) ya corrió PROMPT-114 completo ESTA MISMA
+ronda y llegó hasta prod (web 1.199.0) antes de que esta sesión empezara — se
+leyó `SGC/docs/PARIDAD.md § 9 "Ronda CW"` y `SGC/HANDOFF.md` para los
+contratos reales en vez de adivinar.
+
+**Diagnóstico de fondo (confirmado por el padre, solo lectura de prod):**
+Carlos y Dallin (ambos `chofer_privado`) tienen fila activa en `conductores`
+pero **cero vehículo en cualquier lado** y **cero conduces en el servidor,
+nunca, ni uno** — los conduces "fantasma" que Carlos ve en su teléfono NO
+EXISTEN en el servidor. Esto descartó la hipótesis de "rol mal puesto": el
+problema es 100% del lado cliente.
+
+**CW1/CW2 — conduces fantasma de Carlos (causa raíz encontrada en el código,
+`sync.service.ts`/`conduces.service.ts`):** cuando una creación de conduce es
+rechazada de forma PERMANENTE por el servidor (clasificación 'dato' del
+contrato BG1), el registro queda guardado solo en el teléfono para siempre —
+correcto por diseño (no se pierde el dato) — pero **`conduce-detalle.ts` solo
+sabía mostrar un conduce que el servidor pudiera devolver**: al abrir uno que
+nunca se aceptó, se veía "No pudimos abrir el conduce" sin ninguna salida. Y
+`eliminarConduce` (`conduces.service.ts` l.1495) SIEMPRE mandaba un
+`anular_conduce` al servidor, que fallaría para siempre contra un `salida_id`
+que el servidor jamás conoció — compuesto por cualquier op dependiente
+("marcar entregado") encolada después, que también quedaba atascada igual.
+**Arreglo:** `conduce-detalle.ts` ahora detecta el caso "solo local" (la op
+raíz sigue en el outbox) y muestra una pantalla real con **Reintentar** /
+**Descartar**; `SyncService.cancelarCadenaLocal()` (nuevo) limpia la creación
+Y cualquier op dependiente de una sola vez; `eliminarConduce` usa esto en vez
+de llamar al servidor cuando nunca hubo nada que anular allá. Nada de esto
+toca datos de producción — son cambios de cómo la app LEE/LIMPIA su propio
+outbox local.
+
+**CW6/CW7 — chofer privado entrando por enlace directo:** `moduleGuard('flota')`
+no distinguía al privado restringido (SÍ tiene el módulo flota, solo no debe
+usar conduces/rutas de empresa) — un enlace directo a
+`/transporte/conduces-hub` o `/transporte/rutas/crear` lo dejaba pasar a un
+formulario condenado a fallar sin explicar. Nuevo guard `noConducesPrivadoGuard`
+(`core/guards/module.guard.ts`) sumado a las 14 rutas de conduces/rutas de
+empresa → pantalla con el texto fijo D6 ("Tu rol (chofer privado) no usa
+conduces ni rutas. Si debes hacerlo, pídelo a Central."). Mismo texto como
+aviso discreto arriba del hub de Transporte para el privado (nunca lo
+necesitaba adivinar). Las pantallas que el privado SÍ usa (Uso de vehículo,
+Combustible, Mantenimientos, Aviso, Inspección) **no** llevan el guard nuevo —
+verificado ruta por ruta. El interruptor nuevo del padre
+(`chofer_privado_permitir_transporte`) ya refresca el contexto al reconectar
+(no hace falta reinstalar) porque `user-context.service.ts` ya recarga roles
+en cada sesión — no se necesitó ningún cambio adicional para eso.
+
+**CW5 — lectura de foto de echada (paridad):** la app YA estaba a la par con
+la web (mismos campos: galones/monto/km/producto/estación/N° recibo/tarjeta/
+fecha, mismo umbral 0.9, mismo cuidado con `producto` de texto libre, y
+`p_numero_recibo` ya se manda desde la ronda CC — confirmado que el padre
+expone el parámetro desde CO15, ya en prod). Único gap real: sin señal, el
+error era genérico ("No se pudo leer el recibo") en vez de explicar que hace
+falta conexión; ahora avisa claro y deja llenar a mano sin perder la foto.
+
+**CW3/CW4 — verificación, sin cambios de código:** Dev notes en la app sigue
+siendo de solo lectura por diseño (no se toca); el wizard de combustible YA
+exige kilometraje (salvo echadas de equipo por horas) y galones antes de
+avanzar, así que el reporte de rendimiento del padre no se queda sin datos por
+culpa de la app.
+
+**CW8 — auditoría por rol y flujo:** `AUDITORIA-ROLES-CW8-APP.md` (carpeta de
+la ronda) — 10 roles × 13 flujos, mismo método que el padre (código + datos,
+sin navegador). **Cero ❌** encontrados; 7 celdas ⚠️ son preguntas honestas sin
+confirmar (p. ej. si Logística/Almacén tienen el submódulo
+`compras.solicitudes` — no se volvió a consultar `sgc.roles` para esto, se
+dejó como pregunta para Xaviel en vez de adivinar). Las 14 rutas con el guard
+nuevo se revisaron una por una: ninguna perdió su `moduleGuard` original, y
+las rutas que el privado SÍ usa no llevan el guard nuevo.
+
+**Defaults aplicados (D1-D10, de `CONTEXTO-ACTUALIZACION-56.md`):** D1 (no se
+tocó el rol de Carlos/Dallin), D6 (texto fijo del aviso), D9 (umbral 0.9 ya
+cumplido), D10 (versión app 2.58.3, solo a dev). D2/D3/D4/D7/D8 son del lado
+padre (ya resueltos por PROMPT-114). D5 (interruptor "Choferes privados") ya
+está construido por el padre; la app no necesita pantalla propia (Central lo
+usa desde la web).
+
+**Cierre:** `npm run build` verde en cada fase (routes/guards, conduce-detalle,
+combustible, traducciones en.json agregadas para `pages/transporte` — el
+alcance i18n exige 100% en inglés). `qa/release-2.58.3.md` creado con la guía
+de prueba, sin ningún `OK:` inventado. **`feature/cw-ronda` ya se fusionó a
+`dev` y se empujó a `origin/dev`** (regla 18: publicar en dev no está
+gateado) — Vercel debe estar construyendo `app-dev.` con esto. `main`/prod
+**no** se tocó. Corrección post-cierre: el bump de versión solo había tocado
+`environment.prod.ts` y `build.gradle`; `environment.dev.ts` se quedó en
+2.58.2 (gotcha conocido, memoria `cl-round-app.md`) — ya corregido a 2.58.3
+en los 3 sitios antes de empujar esta corrección.
+
+**APK de dev ya construido y publicado** (paso 2 del flujo obligatorio, no
+gateado por regla 18): `npm run apk -- --env dev` firmó el APK (certificado
+`3c5316d8…5065`, el mismo de siempre — se actualiza sobre la instalación
+existente), candado canal:"apk"+version:"2.58.3" verde, historial (dev)
+registrado vía RPC. `npm run apk:publish -- --env dev` subió
+`csd-app-2.58.3.apk`/`csd-app-latest.apk`/`version.json` al bucket de dev y
+actualizó `apk_url`. (Se revirtieron dos archivos gradle que `cap sync`
+reescribió con la ruta del junction de este worktree — ruido, no un cambio
+real — antes de dejar todo commiteado.)
+
+### Lo físico de Xaviel
+1. Actualiza tu APK dev (in-app o descargando de nuevo) y confirma que
+   reconoce la 2.58.3.
+2. Entrar como un chofer privado puro (Carlos/Dallin si quieres el caso real)
+   y confirmar el aviso + que un enlace directo a conduces/rutas ya no deja
+   pasar a un formulario roto.
+3. Si tienes o puedes armar un conduce atascado solo-local: confirmar que su
+   ficha ahora ofrece Reintentar/Descartar en vez de un callejón sin salida.
+4. Probar la lectura de una echada real (con foto) en el Samsung, con y sin
+   señal — nunca se probó con un recibo real desde la app (ver `qa/release-2.58.3.md`).
+5. Responder: ¿Carlos y Dallin son choferes privados de verdad, o en la
+   práctica hacen trabajo de transportista? (si es lo segundo, usa el
+   interruptor "Choferes privados" del padre, ya construido en la web).
+6. Con tu OK tras probar en el Samsung: PR `dev → main`. Prod solo después.
+
+### Del padre (si algo faltaba)
+Nada pendiente del padre para esta ronda — PROMPT-114 ya está completo y en
+prod (web 1.199.0) desde antes de que esta sesión empezara.
+
+### En dev / En prod
+- **En dev:** app 2.58.3 (esta ronda, CW1/CW2/CW6/CW7/CW5) — código en `dev`,
+  APK construido y publicado en el bucket de dev, versión registrada.
+  **Pendiente: que Xaviel la pruebe en el Samsung.** Web 1.199.0 ya en prod.
+- **En prod:** app sigue en la versión publicada antes de esta ronda (no se
+  tocó prod desde aquí; ni código ni APK ni registro). Web 1.199.0.
+
+---
+
 ## 🟡 SESIÓN 22/10/2026 — PROMPT-113 · Ronda **CV** — app **2.58.2 en dev, pendiente prueba del teléfono**
 
 CQ6: worktree propia `csd-app-cv` desde `dev`; se limpiaron `csd-app-ct`/
