@@ -1,5 +1,116 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 25/10/2026 — PROMPT-117 · Ronda **CX** (CX3.5) — app **2.58.4 en dev, pendiente prueba del teléfono**
+
+CQ6: worktree propia `csd-app-cx` desde `origin/dev` (`node_modules` por
+junction, `.env.local` y `android/keystore.properties` copiados). Esta ronda
+toca varias cosas en la **web** (CX1 módulo Claude, CX2 conector fase 1, CX3.1-
+CX3.4 web) que están en `PROMPT-116-SGC.md` y se resuelven en el repo **SGC**,
+no aquí. Esta sesión (repo app) solo hizo **FASE 0-2 de `PROMPT-117-CSD-APP.md`**:
+construir CX3.5 y verificar si el resto de CX3.x tiene equivalente en la app.
+
+**FASE 0 — verificación de arranque:** CW (PROMPT-115, 2.58.3) ya estaba
+construido, publicado a dev y registrado (`feature/cw-ronda` === `origin/dev`
+al empezar) — no hizo falta correrlo, esta ronda arrancó limpio sobre él.
+
+**CX3.5 — vista rápida de despacho (lo que se construyó):** en Transporte ›
+Despachos (`pages/transporte/despachos/`), tocar el CUERPO de una tarjeta
+("Por despachar") ya NO empieza el despacho — abre una hoja de solo lectura
+(`app-bottom-sheet`, reutilizado) con los renglones (cantidad/unidad/talla),
+solicitante, urgencia, fecha de necesidad, notas y "hace N días". El botón
+**"Despachar"** es ahora un `<button>` real DENTRO de la tarjeta (antes la
+tarjeta entera era el botón) — con `stopPropagation` para no abrir también la
+vista rápida — y se repite dentro de la hoja; es el ÚNICO que de verdad crea
+algo. Datos vía `SolicitudesService.detalleDetallado(id)` (método nuevo, mismo
+RPC `requisicion_detalle` y misma clave de caché que "Mis requisiciones" →
+abre sin red si ya se consultó antes, con el patrón BL2 vacío-vs-falló en vez
+de tragarse el error). Tarjeta pasó de `<button>` a `<div role="button"
+tabindex="0">` con manejo de teclado (Enter/Espacio) y `:focus-visible` — así
+puede contener el botón "Despachar" sin anidar `<button>` dentro de `<button>`.
+
+**Verificado server-side antes de consumir el RPC (solo lectura, `SGC/sql/
+2026-09-13-bo8b-*.sql`):** `requisicion_detalle` gatea por
+`puede_ver_todas_requisiciones()`, que incluye `tiene_modulo('inventario')` →
+Raykler (almacén, tiene Inventario) pasa sin tocar nada del lado servidor.
+
+**FASE 2 — verificación de paridad con los hallazgos web de CX3.1-CX3.4
+(solo lectura/grep, sin cambios donde no aplicaba):**
+- **CX3.1** (tile del home que lleva a una pantalla que el rol no puede abrir):
+  no tiene equivalente — `home.ts` ya gatea cada tile con el MISMO criterio que
+  el guard de su ruta (invariante documentado como AU8/AY5), y el tile más
+  parecido al caso web ("Por recibir" → `/transporte/por-confirmar`) no lleva
+  `moduleGuard` en absoluto (el RPC filtra por usuario). Sin hallazgos.
+- **CX3.2** (filtros que se pierden al volver de un detalle): no aplica — las
+  listas de la app (p. ej. `transporte/conduces`) no tienen buscador ni
+  paginación que perder; es deliberado (diseño "un botón = un trabajo").
+- **CX3.3** (`[value]="null"`): `grep -rn '\[value\]="null"' src --include=*.html`
+  → 0 resultados. No existe ese patrón en la app.
+- **CX3.4** (reasignar producto sigue mostrando el texto libre): el bug SÍ
+  llega a la app porque comparte el mismo RPC (`requisicion_detalle`): el
+  `jsonb_build_object` arma `descripcion` con
+  `coalesce(nullif(i.descripcion,''), a.nombre)` — si el renglón ya traía un
+  texto libre no vacío, ese COALESCE lo prioriza sobre el nombre del artículo
+  aunque `articulo_id` ya se haya reasignado. La app no tiene lógica propia que
+  arreglar (solo pinta `it.descripcion` tal cual, igual que
+  `solicitudes/detalle`) — el fix es 100% de servidor (SGC, PROMPT-116 §CX3.4,
+  fuera de este repo); en cuanto se corrija ahí, la app lo hereda sin tocar
+  código.
+
+**i18n:** 5 strings nuevas sin traducir al inglés (`hace 1 día`, `hace {n}
+días`, el mensaje de error sin señal, `Ver requisición`, `Necesita el`) — las
+demás (`Solicitante`, `Urgencia`, `Normal`, `Notas`, `Talla`, `no catalogado`,
+`Reintentar`, `Cerrar`, `Despachar`, `Requisición`, `🔴 Urgente`) ya existían en
+`public/i18n/en.json` de otras pantallas y se reutilizaron tal cual. Cobertura
+`en` del alcance sigue en 100%.
+
+**No se tocó (fuera del alcance de PROMPT-117-CSD-APP.md para este repo):**
+CX1 (módulo Claude en Administración), CX2 (conector fase 1), y la parte web
+de CX3.1/CX3.2/CX3.3/CX3.4 — todo eso vive en `PROMPT-116-SGC.md` (repo SGC).
+
+**Cierre:** `npm run build` verde (prebuild completo: tokens, no-ai-tropes con
+un `tropes-allow` nuevo para el 🔴 que ya existía en `solicitudes/detalle`,
+i18n-coverage/verify-i18n, dev-strings, envío-único). `qa/release-2.58.4.md`
+creado con la guía de prueba, sin ningún `OK:` inventado. `feature/cx-ronda`
+ya se fusionó a `dev` y se empujó a `origin/dev` (regla 18: publicar en dev no
+está gateado) — Vercel debe estar construyendo `app-dev.` con esto. `main`/
+prod **no** se tocó.
+
+**APK de dev ya construido y publicado** (paso 2 del flujo obligatorio, no
+gateado por regla 18): `npm run apk -- --env dev` firmó el APK (certificado
+`3c5316d8…5065`, el de siempre), candado canal:"apk"+version:"2.58.4" verde,
+historial (dev) registrado vía RPC. `npm run apk:publish -- --env dev` subió
+`csd-app-2.58.4.apk`/`csd-app-latest.apk`/`version.json` al bucket de dev y
+actualizó `apk_url`. (Gotcha de siempre: hubo que copiar
+`android/keystore.properties` del worktree principal a mano — los worktrees no
+lo traen, igual que `.env.local`.)
+
+### Lo físico de Xaviel
+1. Actualiza tu APK dev (in-app o descargando de nuevo) y confirma que
+   reconoce la 2.58.4.
+2. Sigue `qa/release-2.58.4.md`: tocar una tarjeta de "Por despachar" abre la
+   vista rápida sin iniciar nada; "Despachar" (tarjeta u hoja) sí inicia;
+   probar con y sin señal; cerrar con fondo/✕.
+3. Con tu OK tras probar en el Samsung: PR `dev → main`. Prod solo después.
+4. La parte de SGC de esta ronda (CX1/CX2/CX3.1-CX3.4 web, los 5 reportes de
+   Raykler) se prueba y aprueba por separado en el repo SGC — no depende de
+   este APK.
+
+### Del padre (si algo faltaba)
+`PROMPT-116-SGC.md` cubre CX3.4 (fix real de `requisicion_detalle` para que
+el COALESCE prefiera el artículo reasignado sobre el texto libre) — cuando se
+aplique en el repo SGC, la app lo recibe gratis (ya lee `it.descripcion` tal
+cual del RPC, sin lógica propia que tocar).
+
+### En dev / En prod
+- **En dev:** app 2.58.4 (esta ronda, CX3.5) — código en `dev`, APK construido
+  y publicado en el bucket de dev, versión registrada. **Pendiente: que
+  Xaviel la pruebe en el Samsung.**
+- **En prod:** app sigue en 2.58.2 (la última con OK de Xaviel) — ni 2.58.3
+  (CW) ni 2.58.4 (CX) se han promovido a prod todavía; ambas esperan PR
+  `dev → main` con su OK.
+
+---
+
 ## 🟡 SESIÓN 23/10/2026 — PROMPT-115 · Ronda **CW** — app **2.58.3 en dev, pendiente prueba del teléfono**
 
 CQ6: worktree propia `csd-app-cw` desde `dev` (`node_modules` por junction,
