@@ -1,6 +1,6 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 25/10/2026 — PROMPT-117 · Ronda **CX** (CX3.5) — app **2.58.4 en dev, pendiente prueba del teléfono**
+## 🟢 SESIÓN 25/10/2026 — PROMPT-117 · Ronda **CX** (CX3.5) — app **2.58.4 EN PROD**
 
 CQ6: worktree propia `csd-app-cx` desde `origin/dev` (`node_modules` por
 junction, `.env.local` y `android/keystore.properties` copiados). Esta ronda
@@ -84,16 +84,25 @@ actualizó `apk_url`. (Gotcha de siempre: hubo que copiar
 `android/keystore.properties` del worktree principal a mano — los worktrees no
 lo traen, igual que `.env.local`.)
 
+**Cerrado a producción (misma sesión):** Xaviel probó en su teléfono y dio OK
+en el chat ("ok, ya lo testie, continue working"); se registró en
+`qa/release-2.58.4.md` (línea `OK:` con fecha, exigida por CP5). PR
+[`dev → main` #8](https://github.com/techcsd/csd-app/pull/8) — CI en verde
+(`build-prod` + Vercel preview) — mergeado (`ef2d9fa`). `npm run apk -- --env
+prod --yes` firmó el APK de prod (mismo certificado `3c5316d8…5065`), pasó el
+gate de regla 18 (v2.58.4 ya estaba en dev) y las 4 verificaciones de
+`release-check.mjs` (CP5), y registró el historial. `npm run apk:publish --
+env prod --yes` subió `csd-app-2.58.4.apk`/`csd-app-latest.apk`/`version.json`
+al bucket de **prod** y actualizó `apk_url`. No se tocaron los flags
+`publicada`/`minima` de `app_versiones` (eso es un paso aparte del admin en
+SGC; esta ronda no es una corrección urgente que amerite forzar mínima).
+
 ### Lo físico de Xaviel
-1. Actualiza tu APK dev (in-app o descargando de nuevo) y confirma que
-   reconoce la 2.58.4.
-2. Sigue `qa/release-2.58.4.md`: tocar una tarjeta de "Por despachar" abre la
-   vista rápida sin iniciar nada; "Despachar" (tarjeta u hoja) sí inicia;
-   probar con y sin señal; cerrar con fondo/✕.
-3. Con tu OK tras probar en el Samsung: PR `dev → main`. Prod solo después.
-4. La parte de SGC de esta ronda (CX1/CX2/CX3.1-CX3.4 web, los 5 reportes de
+1. La parte de SGC de esta ronda (CX1/CX2/CX3.1-CX3.4 web, los 5 reportes de
    Raykler) se prueba y aprueba por separado en el repo SGC — no depende de
-   este APK.
+   este APK ni de este merge.
+2. Si quieres que 2.58.4 se vuelva la versión **mínima** forzada (actualmente
+   no lo es), eso se marca desde Administración en el SGC web, no desde aquí.
 
 ### Del padre (si algo faltaba)
 `PROMPT-116-SGC.md` cubre CX3.4 (fix real de `requisicion_detalle` para que
@@ -102,12 +111,12 @@ aplique en el repo SGC, la app lo recibe gratis (ya lee `it.descripcion` tal
 cual del RPC, sin lógica propia que tocar).
 
 ### En dev / En prod
-- **En dev:** app 2.58.4 (esta ronda, CX3.5) — código en `dev`, APK construido
-  y publicado en el bucket de dev, versión registrada. **Pendiente: que
-  Xaviel la pruebe en el Samsung.**
-- **En prod:** app sigue en 2.58.2 (la última con OK de Xaviel) — ni 2.58.3
-  (CW) ni 2.58.4 (CX) se han promovido a prod todavía; ambas esperan PR
-  `dev → main` con su OK.
+- **En dev:** app 2.58.4 — código en `dev`, APK construido y publicado en el
+  bucket de dev, versión registrada. Probado y con OK de Xaviel.
+- **En prod:** app **2.58.4 EN PROD** (incluye también 2.58.3/CW, que iba en
+  el mismo merge) — PR #8 mergeado a `main` (`ef2d9fa`), APK firmado,
+  registrado y publicado al bucket de prod. `publicada`/`minima` sin tocar
+  (no forzada).
 
 ---
 
