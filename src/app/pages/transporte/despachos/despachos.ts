@@ -5,8 +5,11 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
+import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConducesService, RequisicionPorDespachar } from '../../../core/services/conduces.service';
+import { SolicitudesService } from '../../../core/services/solicitudes.service';
+import { RequisicionDetalle } from '../../../core/models/inventario.model';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
 import { formatFecha, formatFechaDespacho } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -31,12 +34,13 @@ function diasDesde(ts: string): number {
   selector: 'app-despachos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBar, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, EmptyState, SyncBar, BottomSheet, LiveRefreshDirective, TranslatePipe],
   templateUrl: './despachos.html',
   styleUrl: './despachos.scss',
 })
 export class DespachosPage {
   private conduces = inject(ConducesService);
+  private solicitudes = inject(SolicitudesService);
   private router = inject(Router);
   private location = inject(Location);
   private i18n = inject(I18nService);
@@ -84,8 +88,12 @@ export class DespachosPage {
     return '';
   }
 
-  /** Jala la requisición → abre el conduce con sus renglones (editables) y el vínculo. */
-  despachar(r: RequisicionPorDespachar): void {
+  /** Jala la requisición → abre el conduce con sus renglones (editables) y el vínculo.
+   *  CX3.5 — se le pasa el evento para no dejarlo subir a la tarjeta y abrir
+   *  también la vista rápida (el botón vive DENTRO de la tarjeta clicable). */
+  despachar(r: RequisicionPorDespachar, ev?: Event): void {
+    ev?.stopPropagation();
+    this.quickViewOpen.set(false);
     void this.router.navigate(['/transporte/generar-conduce'], {
       queryParams: { requisicion: r.id, obra: r.proyecto_id, origen: 'almacen' },
     });
@@ -93,5 +101,69 @@ export class DespachosPage {
 
   back(): void {
     this.location.back();
+  }
+
+  // ── CX3.5 — vista rápida de solo lectura (D7) ───────────────────────────────
+  // Tocar la tarjeta YA NO empieza el despacho: abre esta hoja de solo lectura con
+  // los renglones, urgencia, necesidad, notas y antigüedad. Solo el botón
+  // "Despachar" (en la tarjeta o dentro de la hoja) crea/avanza algo.
+  quickViewOpen = signal(false);
+  quickViewResumen = signal<RequisicionPorDespachar | null>(null);
+  quickViewDetalle = signal<RequisicionDetalle | null>(null);
+  quickViewLoading = signal(false);
+  quickViewError = signal('');
+
+  /** Fecha corta para la vista rápida (reusa el mismo formateador que `necesidadTexto`). */
+  fmtFecha(f: string | null | undefined): string {
+    return formatFecha(f);
+  }
+
+  /** Antigüedad legible ("hace 22 días" / "hoy") para la cabecera de la vista rápida. */
+  antiguedadTexto(r: RequisicionPorDespachar): string {
+    const d = diasDesde(r.created_at);
+    if (d <= 0) return this.i18n.t('Hoy');
+    if (d === 1) return this.i18n.t('hace 1 día');
+    return this.i18n.t('hace {n} días', { n: d });
+  }
+
+  abrirVista(r: RequisicionPorDespachar): void {
+    this.quickViewResumen.set(r);
+    this.quickViewDetalle.set(null);
+    this.quickViewError.set('');
+    this.quickViewOpen.set(true);
+    void this.cargarVista(r.id);
+  }
+
+  /** Teclado: Enter/Espacio abren la vista rápida igual que el clic (CX4 — foco visible,
+   *  toda la fila es accionable). Espacio no debe hacer scroll de la página. */
+  onCardKeydown(ev: KeyboardEvent, r: RequisicionPorDespachar): void {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    ev.preventDefault();
+    this.abrirVista(r);
+  }
+
+  private async cargarVista(id: string): Promise<void> {
+    this.quickViewLoading.set(true);
+    const { data, failed } = await this.solicitudes.detalleDetallado(id);
+    this.quickViewDetalle.set(data);
+    this.quickViewError.set(
+      failed && !data ? this.i18n.t('No pudimos cargar el contenido. Revisa la conexión e intenta de nuevo.') : '',
+    );
+    this.quickViewLoading.set(false);
+  }
+
+  reintentarVista(): void {
+    const r = this.quickViewResumen();
+    if (r) void this.cargarVista(r.id);
+  }
+
+  cerrarVista(): void {
+    this.quickViewOpen.set(false);
+  }
+
+  /** El botón "Despachar" dentro de la hoja reutiliza la fila resumen que la abrió. */
+  despacharDesdeVista(): void {
+    const r = this.quickViewResumen();
+    if (r) this.despachar(r);
   }
 }

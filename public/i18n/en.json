@@ -1,4 +1,9 @@
 {
+  "hace 1 día": "1 day ago",
+  "hace {n} días": "{n} days ago",
+  "No pudimos cargar el contenido. Revisa la conexión e intenta de nuevo.": "We couldn't load the content. Check your connection and try again.",
+  "Ver requisición": "View requisition",
+  "Necesita el": "Needed on",
   "En camino — podrás firmar cuando el chofer lo entregue": "On the way — you can sign once the driver delivers it",
   "Verificando si se puede transferir…": "Checking whether it can be transferred…",
   "Este conduce no se puede transferir ahora.": "This delivery note can’t be transferred right now.",

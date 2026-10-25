@@ -153,7 +153,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/conduces/entrega | 33 | 0 | 100% | 3% |  |
 | pages/transporte/conductores | 44 | 0 | 100% | 0% |  |
 | pages/transporte/confirmaciones | 28 | 0 | 100% | 0% |  |
-| pages/transporte/despachos | 11 | 0 | 100% | 0% |  |
+| pages/transporte/despachos | 24 | 0 | 100% | 4% |  |
 | pages/transporte/devolver-material | 44 | 0 | 100% | 2% |  |
 | pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
