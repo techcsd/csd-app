@@ -1,5 +1,36 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 26/10/2026 — CZ1 (combustible retroactivo) — app **2.58.5 publicada en dev**, falta prueba en teléfono real
+
+Xaviel pidió portar a la app el hotfix CZ1 que el repo SGC acababa de aplicar a prod (`sql/2026-10-26-cz1-fix-combustible-km-retroactivo.sql`): `registrar_combustible_app` rechazaba cualquier echada con fecha pasada si su km era menor al odómetro VIVO del vehículo (sin fecha), aunque fuera correcto para esa fecha — mismo bug que CH1 ya resolvió para mantenimientos, nunca portado a combustible. El servidor ya estaba arreglado (ahora usa `sgc.validar_km_vehiculo(vehiculo, km, fecha)`); faltaba revisar si la app tenía su propia copia del bug del lado cliente.
+
+**Sí la tenía.** `combustible.ts` bloqueaba en `canAdvance()` (paso "digits", antes de llegar al servidor) con dos checks sin fecha: `kmMenorOdometro` (km < odómetro vivo) y `kmInvalido` (km ≤ máximo histórico de echadas). Coincide con el grupo de error de 14 ocurrencias en prod 2.23.0-2.27.0 (`qa/cp4-dispositivos-prod.md`: "[combustible] La lectura (…) no puede ser menor a la lectura actual del vehículo (…)."). No había una segunda copia en el outbox/sync (`combustible.service.ts`/`validar.ts`) — el único bloqueo duro vivía en el wizard.
+
+**Arreglado** espejando el patrón CH1 que ya existe en `mantenimiento.ts` (no se inventó nada nuevo):
+- `combustible.service.ts` — nuevo `validarKm()` + tipo `ValidacionKm`, llama la misma RPC `validar_km_vehiculo`.
+- `combustible.ts` — effect debounced (online) que llama al servidor con `km`/`fecha` (respeta `fechaRetro` de BV1); `kmBloqueado` (online = veredicto real por fecha; offline = fallback conservador anterior); confirmación tipo checkbox para el nivel "aviso" (salto inverosímil, no bloqueante salvo que no se confirme). Eliminado `kmInvalido` (quedó muerto).
+- `combustible.html`/`.scss` — muestra el veredicto real del servidor (última lectura real con fecha/fuente, error, o aviso+checkbox) en vez del hint viejo sin fecha.
+
+**Build verde** (`npm run build`, incluye los gates de prebuild) en la rama y tras el merge a `dev`. **No se pudo probar end-to-end en un teléfono real** desde esta sesión (sin dispositivo conectado) — paso 3 del pedido de Xaviel queda pendiente de él.
+
+**Con el fix ya en `dev`, se armó el build completo de la ronda** (CZ1 + CY24d, que ya estaba en código en `dev` desde la sesión anterior, probado y revisado, solo le faltaba el bump/build/publish): versión **2.58.5**, `npm run apk -- --env dev` (firmado, canal apk, registrado) + `npm run apk:publish -- --env dev` (subido al bucket de dev, `apk_url` actualizado). `CAMBIOS_CURADOS`/`TITULO` de `scripts/release-apk.mjs` actualizados con ambos cambios (CY24d = nuevo, CZ1 = arreglo).
+
+### Pendiente — Xaviel (físico)
+1. Probar en su teléfono real: actualización in-app desde 2.58.4 → 2.58.5 (o instalar el APK dev a mano), y específicamente **registrar una echada con fecha pasada y km menor al odómetro actual pero correcto para esa fecha** — debe guardarse sin error. De paso, probar la pantalla de estado Odoo de CY24d (tarjeta "convertida" en Mis solicitudes de compra).
+2. Anotar el resultado en `qa/release-2.58.5.md` (plantilla en `qa/README.md`, CP5/CL4 — falta crear este archivo, no existe todavía).
+3. Con OK: PR `dev → main`, luego `npm run apk -- --env prod` + `npm run apk:publish -- --env prod` (regla 18 ya los deja pasar porque 2.58.5 salió primero en dev).
+
+### Gotchas de la sesión
+- `environment.prod.ts`/`environment.dev.ts` dicen "GENERADO — no editar a mano", pero el campo `version` es justo la fuente que `gen-environment.mjs` LEE de ahí mismo — bumpear la versión a mano editando ese campo en los dos archivos (+ `android/app/build.gradle` + `scripts/release-apk.mjs`) es el flujo real y ya usado en rondas anteriores (ver `277b2ca`, bump a 2.58.1). No regenerar con el script primero o pisa lo que acabas de escribir con el valor viejo.
+- `git status` mostraba `docs/I18N-COVERAGE.md`/`public/i18n/coverage.json`/los `.gradle` de capacitor como "modified" tras cada build sin ningún contenido distinto en `git diff` — es `core.autocrlf=true` normalizando LF→CRLF, no un cambio real; `git checkout -- <archivo>` los limpia sin perder nada.
+- Esta sesión empezó parada sobre `main` (no `dev`) con los cambios ya hechos sin commitear — se resolvió con `git stash` → `checkout dev` (fast-forward a `origin/dev`, traía la ronda CY) → `checkout -b feature/cz1-...` → `stash pop`, para no dejar el fix colgado de la rama equivocada.
+
+### En dev / En prod
+- **En dev:** app **2.58.5** construida, registrada y publicada (bucket + `app_versiones`). Incluye CZ1 (combustible retroactivo, esta sesión) + CY24d (estado Odoo en Mis solicitudes de compra, sesión anterior). `dev` = `origin/dev` al cierre.
+- **En prod:** sin cambios — sigue **2.58.4**. 2.58.5 necesita la prueba física de Xaviel (arriba) antes del PR `dev → main`.
+
+---
+
 ## 🟢 ADENDO 26/10/2026 — Full review (post-ronda CY), dispositivo real + backend — sin bugs encontrados
 
 A pedido de Xaviel ("test all the workflows... inventario, choferes, etc") tras cerrar la ronda CY, corrí el `full-review` skill del repo (compile gate → runtime → workflows → interconexión → seguridad). Con el teléfono de Xaviel conectado por USB (Samsung SM-A205U), usé **ADB** (screenshot → tap → screenshot, patrón ya documentado en memoria del proyecto) porque este entorno no tiene `chromium-cli`/Playwright/Puppeteer.
