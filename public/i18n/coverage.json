@@ -226,10 +226,10 @@
       "ht": 0
     },
     "pages/compras/solicitud-compra": {
-      "conT": 25,
+      "conT": 32,
       "sinT": 1,
-      "en": 96,
-      "ht": 0
+      "en": 97,
+      "ht": 3
     },
     "pages/documentos": {
       "conT": 6,
@@ -796,9 +796,9 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 129,
+      "conT": 130,
       "sinT": 2,
-      "en": 87,
+      "en": 86,
       "ht": 2
     },
     "pages/transporte/combustible-log": {

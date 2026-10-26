@@ -116,6 +116,29 @@ app-option-button {
   color: var(--color-warning);
   font-weight: 700;
 }
+// CZ1 — aviso ámbar del veredicto del km (salto inverosímil, requiere confirmar).
+.comb__km-aviso {
+  margin: 6px 0 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-warning);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+.comb__km-aviso-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 600;
+
+  input {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    accent-color: var(--color-primary);
+  }
+}
 // CV1 — prellenado por Compa: banner arriba del formulario + chip por campo.
 .comb__compa-banner {
   margin: 4px 0 10px;
