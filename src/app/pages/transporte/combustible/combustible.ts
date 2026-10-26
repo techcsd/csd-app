@@ -5,6 +5,7 @@ import {
   effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
@@ -33,7 +34,7 @@ import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
-import { CombustibleService, PermisoRetro, LecturaRecibo } from '../../../core/services/combustible.service';
+import { CombustibleService, PermisoRetro, LecturaRecibo, ValidacionKm } from '../../../core/services/combustible.service';
 import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConducesService } from '../../../core/services/conduces.service';
@@ -129,6 +130,11 @@ export class CombustiblePage extends GuardedWizard {
   /** U6 — odómetro efectivo (servidor + outbox) como referencia del KmInput. */
   odometro = computed(() => this.vehDetalle()?.kilometraje ?? null);
   private conductorId: string | null = null;
+
+  // ── CZ1 — validación del km contra las lecturas del vehículo (online) ───────
+  kmValidacion = signal<ValidacionKm | null>(null);
+  kmConfirmado = signal(false);
+  private kmValTimer: ReturnType<typeof setTimeout> | null = null;
 
   ultima = signal<UltimaEchada>({
     km: null,
@@ -393,13 +399,6 @@ export class CombustiblePage extends GuardedWizard {
     this.quitarChipCompa('producto');
   }
 
-  /** true when km isn't greater than the vehicle's last fill-up. */
-  kmInvalido = computed(() => {
-    const km = this.km();
-    const prev = this.ultima().km;
-    return km != null && prev != null && km <= prev;
-  });
-
   primeraEchada = computed(() => this.ultima().km == null);
 
   /** AF19 — el salto de km respecto a la última echada supera el umbral (irreal). */
@@ -517,6 +516,31 @@ export class CombustiblePage extends GuardedWizard {
       this.reciboPendienteDeLeer.set(false);
       void this.leerReciboAuto(false); // false = no pisar campos ya llenos
     });
+    // CZ1 — valida el km contra TODAS las lecturas con fecha del vehículo (online,
+    // con debounce). Espeja CH1 de mantenimientos: reemplaza el falso positivo
+    // "km < odómetro vivo" (un recibo retroactivo con menos km que el odómetro
+    // actual es NORMAL). Reinicia la confirmación del aviso al cambiar km/fecha.
+    effect(() => {
+      const km = this.km();
+      const fecha = this.fechaRetro() ?? this.hoyISO;
+      const on = this.network.online();
+      untracked(() => this.kmConfirmado.set(false));
+      if (this.kmValTimer) clearTimeout(this.kmValTimer);
+      if (!on || km == null || !this.vehiculoId || this.modoPersona() || this.esDeposito()) {
+        untracked(() => this.kmValidacion.set(null));
+        return;
+      }
+      this.kmValTimer = setTimeout(() => void this.validarKmServidor(km, fecha), 400);
+    });
+  }
+
+  /** CZ1 — pide el veredicto del km al servidor (ignora fallos: cae a la regla local). */
+  private async validarKmServidor(km: number, fecha: string): Promise<void> {
+    try {
+      this.kmValidacion.set(await this.combustible.validarKm(this.vehiculoId, km, fecha));
+    } catch {
+      this.kmValidacion.set(null);
+    }
   }
 
   /** BT4 — foto del formulario para persistir/recuperar. */
@@ -1174,12 +1198,30 @@ export class CombustiblePage extends GuardedWizard {
     this.step.update((s) => Math.max(1, s - 1));
   }
 
-  /** U6 — el km escrito es menor al odómetro registrado (regla no-retroceso). */
+  /**
+   * U6/CZ1 — fallback OFFLINE: solo bloquea si el km es menor al odómetro vivo
+   * cacheado (sin fecha). Online, el veredicto real lo da `kmValidacion` (CZ1),
+   * que compara contra la lectura con fecha más cercana — un km retroactivo menor
+   * al odómetro actual pero correcto para su fecha ya NO se bloquea.
+   */
   kmMenorOdometro = computed(() => {
     const km = this.km();
     const odo = this.odometro();
     return km != null && odo != null && km < odo;
   });
+
+  /** CZ1 — ¿el servidor bloquea el km? (retroceso real / exceso retroactivo imposible). */
+  kmBloqueado = computed(() => {
+    if (this.online) return this.kmValidacion()?.nivel === 'error';
+    return this.kmMenorOdometro(); // offline: regla local conservadora
+  });
+
+  /** CZ1 — mensaje a mostrar al bloquear el avance. */
+  kmMensajeBloqueo(): string {
+    const v = this.kmValidacion();
+    if (this.online && v?.nivel === 'error' && v.mensaje) return v.mensaje;
+    return this.i18n.t('El kilometraje no puede ser menor al registrado ({n} km).', { n: this.odometro() ?? 0 });
+  }
 
   private canAdvance(): boolean {
     switch (this.stepKey()) {
@@ -1202,12 +1244,15 @@ export class CombustiblePage extends GuardedWizard {
             this.toast.error(this.i18n.t('Escribe el kilometraje actual.'));
             return false;
           }
-          if (this.kmMenorOdometro()) {
-            this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({n} km).', { n: this.odometro() ?? 0 }));
+          // CZ1 — online, el veredicto real es contra la lectura con fecha más
+          // cercana (un km retroactivo menor al odómetro vivo pero correcto para su
+          // fecha ya NO bloquea); offline cae a la regla local (kmMenorOdometro).
+          if (this.kmBloqueado()) {
+            this.toast.error(this.kmMensajeBloqueo());
             return false;
           }
-          if (this.kmInvalido()) {
-            this.toast.error(this.i18n.t('El kilometraje debe ser mayor a la última echada ({n} km).', { n: this.ultima().km ?? 0 }));
+          if (this.online && this.kmValidacion()?.nivel === 'aviso' && !this.kmConfirmado()) {
+            this.toast.error(this.i18n.t('Confirma el kilometraje marcado o corrígelo.'));
             return false;
           }
           // BR1/AF19 (regla 15) — el salto de km ya NO bloquea a NADIE. El chofer echó

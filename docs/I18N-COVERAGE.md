@@ -44,7 +44,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
 | pages/compa/compartidas | 6 | 0 | 100% | 0% |  |
 | pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
-| pages/compras/solicitud-compra | 25 | 1 | 96% | 0% |  |
+| pages/compras/solicitud-compra | 32 | 1 | 97% | 3% |  |
 | pages/documentos | 6 | 0 | 50% | 0% |  |
 | pages/documentos/generar | 15 | 0 | 33% | 7% |  |
 | pages/documentos/historial | 7 | 0 | 43% | 0% |  |
@@ -139,7 +139,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 3% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 129 | 2 | 87% | 2% |  |
+| pages/transporte/combustible | 130 | 2 | 86% | 2% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
 | pages/transporte/conduce-externo | 81 | 1 | 80% | 4% |  |
