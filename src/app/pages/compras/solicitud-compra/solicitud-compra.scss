@@ -165,3 +165,46 @@
   color: var(--color-text-secondary);
   font-style: italic;
 }
+
+// ── CY24d (PROMPT-119 A4) — tarjeta "convertida" es tappable (estado Odoo) ──
+.solc-card--tappable {
+  cursor: pointer;
+}
+.solc-card--tappable:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.solc-card__ver-odoo {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-info);
+}
+.solc-odoo__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+.solc-odoo__facts dt {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.solc-odoo__facts dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.solc-odoo__motivo {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.solc-odoo__sin-info {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.solc-odoo__acciones {
+  display: flex;
+  justify-content: flex-end;
+}

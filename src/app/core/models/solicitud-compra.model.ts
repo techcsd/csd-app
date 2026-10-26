@@ -45,3 +45,16 @@ export const SOLICITUD_COMPRA_ESTADO_META: Record<
   convertida: { label: 'En orden de compra', icon: '🧾' },
   rechazada: { label: 'Rechazada', icon: '✕' },
 };
+
+/**
+ * CY24d (PROMPT-119 FASE A4) — estado Odoo de la OC en la que se convirtió una
+ * solicitud, para el solicitante original. Viene de `sgc.mi_solicitud_compra_odoo_estado`
+ * (SECURITY DEFINER, nunca expone IDs de Odoo). Todo en `null` = nunca se intentó
+ * publicar (piloto apagado, comportamiento de hoy — CY24-1) o la solicitud aún no
+ * se convirtió en OC.
+ */
+export interface SolicitudCompraOdooEstado {
+  odoo_estado: string | null;
+  alta_producto_estado: 'pendiente' | 'resuelta' | 'rechazada' | null;
+  alta_producto_motivo: string | null;
+}

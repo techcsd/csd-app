@@ -3,7 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
-import { MiSolicitudCompra, SolicitudCompraCaptura } from '../models/solicitud-compra.model';
+import { MiSolicitudCompra, SolicitudCompraCaptura, SolicitudCompraOdooEstado } from '../models/solicitud-compra.model';
 
 const CAT_MIS = 'mis_solicitudes_compra';
 
@@ -51,6 +51,25 @@ export class SolicitudesCompraService {
 
   async invalidarCache(): Promise<void> {
     await this.catalog.invalidate(CAT_MIS);
+  }
+
+  /**
+   * CY24d (PROMPT-119 FASE A4) — estado Odoo de la OC de una solicitud, solo
+   * lectura, sin caché (dato que cambia del lado de Compras/servidor, se
+   * pide fresco cada vez que se abre). `null` = no se pudo consultar (offline,
+   * RPC caída) — la pantalla lo trata como "sin info" sin romper el resto del
+   * detalle, nunca como un error bloqueante (es un dato complementario).
+   */
+  async obtenerEstadoOdoo(solicitudId: string): Promise<SolicitudCompraOdooEstado | null> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('mi_solicitud_compra_odoo_estado', {
+        p_solicitud_id: solicitudId,
+      });
+      if (error) throw new Error(error.message);
+      return (data as SolicitudCompraOdooEstado) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /**

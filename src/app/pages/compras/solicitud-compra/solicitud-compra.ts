@@ -5,6 +5,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
+import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SolicitudesCompraService } from '../../../core/services/solicitudes-compra.service';
@@ -14,6 +15,7 @@ import { Proyecto } from '../../../core/models/bitacora.model';
 import {
   MiSolicitudCompra,
   SolicitudCompraItem,
+  SolicitudCompraOdooEstado,
   SOLICITUD_COMPRA_ESTADO_META,
 } from '../../../core/models/solicitud-compra.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
@@ -38,7 +40,7 @@ interface DraftItem {
   selector: 'app-solicitud-compra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, QtyInput, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, QtyInput, BottomSheet, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './solicitud-compra.html',
   styleUrl: './solicitud-compra.scss',
 })
@@ -80,6 +82,47 @@ export class SolicitudCompraPage {
 
   get online(): boolean {
     return this.net.online();
+  }
+
+  // ── CY24d (PROMPT-119 FASE A4) — estado Odoo de la OC, solo lectura ─────────
+  // Tocar una tarjeta "convertida" abre esta hoja con el estado de la OC en
+  // Odoo (pendiente de producto/publicada/en conflicto/…) y el desenlace de
+  // una eventual alta de producto. Nunca crea ni cambia nada — sin botón de
+  // reintento (D-17: el reintento es de la web, rol Compras).
+  odooViewOpen = signal(false);
+  odooViewResumen = signal<MiSolicitudCompra | null>(null);
+  odooViewEstado = signal<SolicitudCompraOdooEstado | null>(null);
+  odooViewLoading = signal(false);
+
+  readonly altaProductoLabel: Record<'pendiente' | 'resuelta' | 'rechazada', string> = {
+    pendiente: 'Pendiente',
+    resuelta: 'Resuelta',
+    rechazada: 'Rechazada',
+  };
+
+  abrirEstadoOdoo(s: MiSolicitudCompra): void {
+    if (s.estado !== 'convertida') return;
+    this.odooViewResumen.set(s);
+    this.odooViewEstado.set(null);
+    this.odooViewOpen.set(true);
+    void this.cargarEstadoOdoo(s.id);
+  }
+
+  /** Teclado: Enter/Espacio igual que el clic (misma convención que despachos CX4). */
+  onCardKeydown(ev: KeyboardEvent, s: MiSolicitudCompra): void {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    ev.preventDefault();
+    this.abrirEstadoOdoo(s);
+  }
+
+  private async cargarEstadoOdoo(solicitudId: string): Promise<void> {
+    this.odooViewLoading.set(true);
+    this.odooViewEstado.set(await this.service.obtenerEstadoOdoo(solicitudId));
+    this.odooViewLoading.set(false);
+  }
+
+  cerrarEstadoOdoo(): void {
+    this.odooViewOpen.set(false);
   }
 
   async load(): Promise<void> {
