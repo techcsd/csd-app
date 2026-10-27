@@ -40,10 +40,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Estado en Odoo de tu solicitud + combustible retroactivo corregido';
+const TITULO = 'Cotizaciones de Tecnología y Vault de Administración';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Mis solicitudes de compra', d: 'Una solicitud ya convertida en orden de compra muestra, de solo lectura, su estado en Odoo y el de la alta de producto (si aplica), cuando el sistema ya la sincronizó.' },
-  { t: 'arreglo', m: 'Registrar combustible', d: 'Una echada con fecha pasada ya no se rechaza solo por tener menos kilometraje que el odómetro actual del vehículo; ahora se valida contra la lectura correcta para esa fecha, igual que ya pasaba con los mantenimientos.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'Nueva biblioteca de Cotizaciones: sube una cotización con foto o PDF (el sistema intenta leerla sola), búscala y, si quieres, ligala a una compra tecnológica.' },
+  { t: 'nuevo', m: 'Administración', d: 'Nuevo Vault para el administrador: guarda y consulta cuentas, llaves, códigos 2FA y notas seguras de la empresa, con pantalla protegida contra capturas y sesión de 2 minutos.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
