@@ -4335,5 +4335,11 @@
   "No se pudo descartar.": "Could not discard it.",
   "Se guardó en tu teléfono como {tipo}. Nunca llegó a registrarse en el servidor.": "It was saved on your phone as {tipo}. It never got registered on the server.",
   "Creado {cuando}.": "Created {cuando}.",
-  "Necesitas conexión para leer el recibo automáticamente. Llena los datos a mano; tu foto se conserva y podrás reintentar la lectura al reconectar.": "You need a connection to read the receipt automatically. Fill in the details by hand; your photo is kept and you can retry the reading once you reconnect."
+  "Necesitas conexión para leer el recibo automáticamente. Llena los datos a mano; tu foto se conserva y podrás reintentar la lectura al reconectar.": "You need a connection to read the receipt automatically. Fill in the details by hand; your photo is kept and you can retry the reading once you reconnect.",
+  "Resuelta": "Resolved",
+  "Ver estado de la orden": "View order status",
+  "Estado de la orden": "Order status",
+  "Alta de producto": "Product addition",
+  "Sin novedades en Odoo todavía.": "No updates from Odoo yet.",
+  "No pudimos consultar el estado ahora. Revisa la conexión.": "We couldn't check the status right now. Check your connection."
 }

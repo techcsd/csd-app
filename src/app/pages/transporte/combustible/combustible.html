@@ -302,8 +302,21 @@
             [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
             [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
           />
-          @if (!kmMenorOdometro() && kmInvalido()) {
-            <p class="comb__warn">{{ 'Debe ser mayor a la última echada' | t }} ({{ ultima().km | number: '1.0-0' }} km).</p>
+          <!-- CZ1 — veredicto del km contra las lecturas con fecha del vehículo (online) -->
+          @if (online && kmValidacion()?.nivel === 'error') {
+            <p class="comb__warn">{{ kmValidacion()!.mensaje }}</p>
+          } @else if (online && kmValidacion()?.nivel === 'aviso') {
+            <div class="comb__km-aviso">
+              <p class="comb__hint--warn">{{ kmValidacion()!.mensaje }}</p>
+              <label class="comb__km-aviso-check">
+                <input type="checkbox" [checked]="kmConfirmado()" (change)="kmConfirmado.set($any($event.target).checked)" />
+                <span>{{ 'Sí, es correcto' | t }}</span>
+              </label>
+            </div>
+          } @else if (online && kmValidacion()?.km_antes != null) {
+            <p class="comb__hint">{{ 'Última lectura' | t }}: {{ kmValidacion()!.km_antes | number: '1.0-0' }} {{ kmValidacion()!.unidad }} ({{ kmValidacion()!.fuente_antes }}, {{ kmValidacion()!.fecha_antes }})</p>
+          } @else if (!online && kmMenorOdometro()) {
+            <p class="comb__warn">{{ 'El kilometraje no puede ser menor al registrado' | t }} ({{ odometro() | number: '1.0-0' }} km).</p>
           } @else if (ultima().km != null) {
             <p class="comb__hint">{{ 'Última echada' | t }}: {{ ultima().km | number: '1.0-0' }} km</p>
           }

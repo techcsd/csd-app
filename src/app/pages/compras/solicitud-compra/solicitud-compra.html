@@ -71,7 +71,11 @@
       } @else {
         <div appStagger style="display:contents">
         @for (s of lista(); track s.id) {
-          <div class="solc-card" [attr.data-estado]="s.estado">
+          <div class="solc-card" [attr.data-estado]="s.estado"
+               [attr.role]="s.estado === 'convertida' ? 'button' : null"
+               [attr.tabindex]="s.estado === 'convertida' ? 0 : null"
+               [class.solc-card--tappable]="s.estado === 'convertida'"
+               (click)="abrirEstadoOdoo(s)" (keydown)="onCardKeydown($event, s)">
             <div class="solc-card__top">
               <span class="solc-card__obra">🏗️ {{ s.proyecto_nombre ?? ('Obra' | t) }}</span>
               <span class="solc-card__estado" [appEstadoPulse]="s.estado">{{ estadoMeta[s.estado].icon }} {{ estadoMeta[s.estado].label }}</span>
@@ -87,6 +91,9 @@
               }
             </ul>
             @if (s.notas) { <p class="solc-card__notas">{{ s.notas }}</p> }
+            @if (s.estado === 'convertida') {
+              <span class="solc-card__ver-odoo">{{ 'Ver estado de la orden' | t }} ›</span>
+            }
           </div>
         } @empty {
           <app-empty-state
@@ -101,4 +108,44 @@
       }
     }
   </div>
+
+  <!-- CY24d (PROMPT-119 A4) — estado Odoo de la OC, solo lectura. Nunca crea ni
+       cambia nada; sin botón de reintento (D-17: el reintento es de la web). -->
+  @if (odooViewResumen(); as s) {
+    <app-bottom-sheet [open]="odooViewOpen()" [titulo]="'Estado de la orden' | t" (closed)="cerrarEstadoOdoo()">
+      <div class="solc-odoo">
+        @if (odooViewLoading()) {
+          <app-skeleton [rows]="2" />
+        } @else if (odooViewEstado(); as e) {
+          @if (e.odoo_estado) {
+            <dl class="solc-odoo__facts">
+              <div>
+                <dt>{{ 'Estado' | t }}</dt>
+                <dd>{{ e.odoo_estado }}</dd>
+              </div>
+              @if (e.alta_producto_estado) {
+                <div>
+                  <dt>{{ 'Alta de producto' | t }}</dt>
+                  <dd>
+                    {{ altaProductoLabel[e.alta_producto_estado] | t }}
+                    @if (e.alta_producto_estado === 'rechazada' && e.alta_producto_motivo) {
+                      <span class="solc-odoo__motivo"> — {{ e.alta_producto_motivo }}</span>
+                    }
+                  </dd>
+                </div>
+              }
+            </dl>
+          } @else {
+            <p class="solc-odoo__sin-info">{{ 'Sin novedades en Odoo todavía.' | t }}</p>
+          }
+        } @else {
+          <p class="solc-odoo__sin-info">{{ 'No pudimos consultar el estado ahora. Revisa la conexión.' | t }}</p>
+        }
+
+        <div class="solc-odoo__acciones">
+          <button type="button" class="btn-ghost" (click)="cerrarEstadoOdoo()">{{ 'Cerrar' | t }}</button>
+        </div>
+      </div>
+    </app-bottom-sheet>
+  }
 </div>

@@ -49,6 +49,21 @@ export interface PermisoRetro {
   motivo: string | null;
 }
 
+/** CZ1 — veredicto del km de la echada contra las lecturas del vehículo (RPC validar_km_vehiculo). */
+export interface ValidacionKm {
+  ok: boolean;
+  nivel: 'ok' | 'aviso' | 'error';
+  unidad: string;
+  medida_uso: string;
+  km_antes: number | null;
+  fecha_antes: string | null;
+  fuente_antes: string | null;
+  km_despues: number | null;
+  fecha_despues: string | null;
+  fuente_despues: string | null;
+  mensaje: string | null;
+}
+
 /**
  * Fuel-log data + write path. The previous fill-up (for live km/rendimiento
  * validation) is read through the catalog cache (offline-friendly); the write
@@ -391,6 +406,24 @@ export class CombustibleService {
     if (!op || op.tipo_op !== 'combustible') return null;
     const fotos = await this.sync.getOpFotos(id);
     return { op, fotos };
+  }
+
+  /**
+   * CZ1 — valida el km de la echada contra TODAS las lecturas con fecha del
+   * vehículo (echadas, inspecciones, entregas, mantenimientos), misma RPC que ya
+   * usa Mantenimientos (CH1). Reemplaza la comparación contra el odómetro VIVO
+   * (sin fecha), que rechazaba cualquier echada retroactiva con km menor al
+   * actual aunque fuera correcta para su fecha. Solo online (el wizard cae a la
+   * regla local si falla); null = sin veredicto (no bloquea).
+   */
+  async validarKm(vehiculoId: string, km: number, fecha: string): Promise<ValidacionKm | null> {
+    const { data, error } = await this.supabase.client.rpc('validar_km_vehiculo', {
+      p_vehiculo: vehiculoId,
+      p_km: km,
+      p_fecha: fecha,
+    });
+    if (error) throw error;
+    return (data ?? null) as ValidacionKm | null;
   }
 
   /**

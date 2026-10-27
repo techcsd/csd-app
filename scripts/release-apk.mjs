@@ -40,9 +40,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Ver el contenido de una requisición antes de despacharla';
+const TITULO = 'Estado en Odoo de tu solicitud + combustible retroactivo corregido';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Por despachar', d: 'Tocar una tarjeta de "Por despachar" ya no empieza el despacho: abre una vista rápida de solo lectura con los renglones, cantidades, urgencia, fecha de necesidad y notas de la requisición, para identificarla sin arrancar el proceso. "Despachar" sigue siendo el único botón que de verdad empieza el despacho.' },
+  { t: 'nuevo', m: 'Mis solicitudes de compra', d: 'Una solicitud ya convertida en orden de compra muestra, de solo lectura, su estado en Odoo y el de la alta de producto (si aplica), cuando el sistema ya la sincronizó.' },
+  { t: 'arreglo', m: 'Registrar combustible', d: 'Una echada con fecha pasada ya no se rechaza solo por tener menos kilometraje que el odómetro actual del vehículo; ahora se valida contra la lectura correcta para esa fecha, igual que ya pasaba con los mantenimientos.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
