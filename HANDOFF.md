@@ -1,5 +1,17 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 26-27/10/2026 — PROMPT-121 · Ronda **CZ** (parte app, A0-A4) — app **2.59.0 EN DEV** (apk-dev publicado), NO en `main`/prod
+
+**Cierre (27/10/2026):** Xaviel probó y confirmó "everything good" → `feature/cz-ronda` mergeado a `dev` (push `0475a5f`), bump de versión **2.59.0** (commit `231d7da`, push a `origin/dev`), `npm run apk -- --env dev` (firmado, canal apk, registrado en `app_versiones` de dev) → con OK explícito de Xaviel tras una pausa del harness (regla de no-publicar-sin-OK aplicada correctamente), `npm run apk:publish -- --env dev` (subido al bucket de dev, `apk_url` actualizado). **2.59.0 está sirviendo en dev** (`app-dev.`/APK dev); usuarios en 2.58.5 verán el prompt de actualización in-app. `main`/prod sin tocar.
+
+**Nota de proceso (dos pausas reales del harness, ambas correctas):** (1) un intento de `git push` de la rama feature fue bloqueado antes de tener el OK de Xaviel — se pidió y se obtuvo antes de continuar; (2) tras "continue working", un intento de construir+publicar el APK sin una respuesta explícita a la pregunta de confirmación (`AskUserQuestion` expiró sin respuesta) fue correctamente señalado como cruzar el límite — se paró, se reportó el estado exacto, y se esperó la palabra real de Xaviel ("publish it") antes de subir el APK al bucket. Lección reafirmada: un timeout de pregunta NO es un "sí".
+
+### En dev / En prod
+- **En dev:** app **2.59.0** (Cotizaciones de Tecnología + Vault de Administración), `apk_url` del bucket dev apuntando a `csd-app-2.59.0.apk`. `dev` = `origin/dev` al cierre.
+- **En prod:** sin cambios, sigue en **2.58.5**. La pantalla protegida del Vault (`FLAG_SECURE` nativo) solo tiene efecto real en un APK — confirmado que compiló y firmó bien en este build de dev; falta la prueba en un teléfono real (instalar el APK dev, abrir el Vault, confirmar que bloquea capturas).
+
+---
+
 ## 🧪 SESIÓN 26-27/10/2026 — PROMPT-121 · Ronda **CZ** (parte app, A0-A4) — EN `feature/cz-ronda`, NO en `dev` ni `main`
 
 Contexto completo: `C:\developer\improvements\octubre 2026\imp 26102026\CONTEXTO-ACTUALIZACION-59.md` + `PROMPT-121-CSD-APP.md`. CQ6: worktree propia `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-cz`, rama `feature/cz-ronda` desde `origin/dev` (que YA trae la ronda CZ del padre mergeada — commit `8554b652`, v1.203.0 — con `tec_cotizaciones`, rol `subadmin`, Vault y la edge `boveda` en `sgc-dev`). La app va **después** de esa fase SGC, como pide el prompt. Sesión autónoma de principio a fin, sin preguntar (CLAUDE.md, auto mode).
