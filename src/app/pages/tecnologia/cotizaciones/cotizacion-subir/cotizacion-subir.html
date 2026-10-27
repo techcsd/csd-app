@@ -1,0 +1,86 @@
+<div class="screen cotsub" data-testid="cotizacion-subir">
+  <header class="cotsub__header">
+    <button type="button" class="cotsub__back" [disabled]="guardando()" (click)="cancelar()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="cotsub__title">{{ 'Subir cotización' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!archivo()) {
+      <div class="cotsub__pick">
+        <p class="cotsub__pick-hint">{{ 'Toma una foto o elige un PDF de la cotización.' | t }}</p>
+        <button type="button" class="btn-cta" appTapScale (click)="tomarFoto()">{{ 'Tomar foto' | t }}</button>
+        <button type="button" class="btn-ghost" appTapScale (click)="elegirArchivo()">{{ 'Elegir PDF' | t }}</button>
+      </div>
+    } @else {
+      <div class="cotsub__preview">
+        @if (archivo()!.esImagen && archivo()!.previewUrl) {
+          <img class="cotsub__preview-img" [src]="archivo()!.previewUrl" alt="" />
+        } @else {
+          <div class="cotsub__preview-pdf">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            {{ archivo()!.nombre }}
+          </div>
+        }
+      </div>
+
+      @if (leyendo()) {
+        <p class="cotsub__estado">{{ 'Leyendo la cotización…' | t }}</p>
+      } @else if (leido()) {
+        <p class="cotsub__estado cotsub__estado--ok">{{ 'Lo que el sistema leyó — revísalo' | t }}</p>
+      } @else if (leidoFallo()) {
+        <p class="cotsub__estado cotsub__estado--warn">{{ 'No pudimos leerla automáticamente. Llena los datos a mano.' | t }}</p>
+      }
+
+      <label class="field-label">{{ 'Título' | t }}</label>
+      <input class="field" type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)" [placeholder]="'Ej. Dell G16 Xaviel' | t" />
+
+      <label class="field-label">{{ 'Proveedor' | t }}</label>
+      <input class="field" type="text" [ngModel]="proveedor()" (ngModelChange)="proveedor.set($event)" />
+
+      <label class="field-label">{{ 'Fecha' | t }}</label>
+      <input class="field" type="date" [ngModel]="fecha()" (ngModelChange)="fecha.set($event)" />
+
+      <label class="field-label">{{ 'Moneda' | t }}</label>
+      <div class="cotsub__moneda">
+        <button type="button" class="cotsub__chip" [class.cotsub__chip--on]="moneda() === 'DOP'" (click)="moneda.set('DOP')">DOP</button>
+        <button type="button" class="cotsub__chip" [class.cotsub__chip--on]="moneda() === 'USD'" (click)="moneda.set('USD')">USD</button>
+      </div>
+
+      <div class="cotsub__montos">
+        <div>
+          <label class="field-label">{{ 'Subtotal' | t }}</label>
+          <input class="field" type="number" [ngModel]="subtotal()" (ngModelChange)="subtotal.set($event)" />
+        </div>
+        <div>
+          <label class="field-label">{{ 'ITBIS' | t }}</label>
+          <input class="field" type="number" [ngModel]="itbis()" (ngModelChange)="itbis.set($event)" />
+        </div>
+        <div>
+          <label class="field-label">{{ 'Total' | t }}</label>
+          <input class="field" type="number" [ngModel]="total()" (ngModelChange)="total.set($event)" />
+        </div>
+      </div>
+
+      <label class="field-label">{{ 'Notas' | t }}</label>
+      <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
+
+      <label class="field-label">{{ 'Ligar a una compra tecnológica (opcional)' | t }}</label>
+      <select class="field" [ngModel]="compraSeleccionada()" (ngModelChange)="compraSeleccionada.set($event)">
+        <option [ngValue]="null">{{ 'Sin vincular' | t }}</option>
+        @for (c of comprasTec(); track c.id) {
+          <option [ngValue]="c.id">{{ c.titulo || ('Compra tecnológica' | t) }}</option>
+        }
+      </select>
+
+      <button type="button" class="btn-ghost cotsub__cambiar" appTapScale (click)="archivo.set(null)">{{ 'Cambiar archivo' | t }}</button>
+    }
+  </div>
+
+  @if (archivo()) {
+    <footer class="cotsub__footer">
+      <button type="button" class="btn-cta" [disabled]="guardando() || leyendo()" appTapScale (click)="guardar()">
+        {{ (guardando() ? 'Guardando…' : 'Guardar') | t }}
+      </button>
+    </footer>
+  }
+</div>

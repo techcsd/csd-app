@@ -1,0 +1,152 @@
+.vente {
+  background: var(--color-bg);
+  min-height: 100%;
+}
+.vente__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.vente__back {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+}
+.vente__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vente__vencida {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 48px;
+  text-align: center;
+}
+.vente__vencida-icon {
+  font-size: 40px;
+}
+
+.vente__tipo {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+
+.vente__campo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.vente__campo-label {
+  flex: none;
+  width: 72px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.vente__campo-valor {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  overflow-wrap: break-word;
+}
+
+.vente__secreto {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.vente__valor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vente__valor {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  font-family: monospace;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+.vente__valor--2fa {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+.vente__copiar {
+  flex: none;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+.vente__barra {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+.vente__barra-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 1s linear;
+}
+.vente__cuenta {
+  align-self: flex-end;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.vente__solo-web {
+  margin: 14px 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.vente__etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.vente__etiqueta {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

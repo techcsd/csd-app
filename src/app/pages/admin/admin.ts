@@ -24,6 +24,10 @@ export class AdminPage {
    *  para no llevar a un 403 (regla AU8). */
   hasModulo = this.ctx.hasModulo.bind(this.ctx);
 
+  // CZ3/CZ7/DZ-08 — Vault: gate de ROL estricto (admin), independiente del
+  // módulo 'admin' que ya gatea este hub. Espejo de sgc.puede_ver_vault().
+  esAdmin = this.ctx.esAdmin;
+
   go(path: string): void {
     void this.router.navigate([path]);
   }

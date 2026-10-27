@@ -904,3 +904,57 @@ de Xaviel). Versión **2.58.2** en los 3 sitios. `qa/release-2.58.2.md` creado
 con la guía de prueba, **sin ningún `OK:` inventado**. `CAMBIOS_CURADOS`/
 `TITULO` de `release-apk.mjs` actualizados para esta ronda. Nada comiteado/
 empujado/publicado todavía — a la espera del OK de Xaviel (regla de la casa).
+
+## CZ1/CZ2/CZ6 — Cotizaciones de Tecnología (app, 26-27/10/2026)
+
+Biblioteca de Cotizaciones en la app, paridad **parcial a propósito** con la web
+(mockup CZ6, DZ-25): la app **ve, busca y sube** (foto o PDF) con lectura por IA
+(`leer-cotizacion`, sin cambios) y liga opcional a una compra tecnológica. **Ligar
+a equipos de inventario y corregir renglones son solo web** (el mockup lo dice
+explícito) — la app muestra esos vínculos en modo lectura si ya existen (creados
+desde la web) pero no ofrece crearlos. Mismas tablas/RPC que el padre
+(`sgc.tec_cotizaciones`, `tec_cotizacion_compras`, `tec_cotizacion_equipos`,
+`cotizacion_crear/setear_archivo/vincular_compra`) — nada nuevo server-side desde
+la app. Gate: mismo que Compras tecnológicas + permiso granular
+`tecnologia.cotizaciones` (Subadministrador). Requiere conexión (DZ-25, sin
+outbox). Hueco conocido: si `cotizacion_crear` falla justo después de crear la
+fila pero antes de `cotizacion_setear_archivo` (p. ej. se pierde la conexión a
+mitad de la subida), la cotización queda sin archivo — recuperable solo desde la
+web (editar/adjuntar es web-only), no hay una pantalla de "reintentar subida" en
+la app esta ronda.
+
+## CZ3/CZ9/CZ7 — Vault de Administración (app, 26-27/10/2026)
+
+Vault en la app, paridad **deliberadamente acotada** (mockup CZ7, DZ-19): **ver,
+buscar, revelar, copiar, código 2FA y generador**. **Crear, editar, eliminar,
+importar y exportar son SOLO web** — la app lo dice en pantalla
+("Crear, editar, borrar, importar y exportar solo desde la web."). Mismo gate de
+**rol estricto** que la web (`roleAnyGuard(['admin'])`, nunca `moduleGuard`
+— DZ-08) + reautenticación con contraseña real contra la edge `boveda`
+(`x-sgc-client: app` → sesión de **2 minutos**, vs. 5 en la web). Registro de
+accesos (`boveda_accesos`) **no tiene pantalla en la app** (solo visible/filtrado
+en la web) — la auditoría se sigue escribiendo igual (la edge audita toda acción
+sin importar la plataforma), simplemente no hay UI para leerla desde el teléfono
+esta ronda. Archivos del Vault (`tipo='archivo'`): la app muestra la entrada en la
+lista pero **no ofrece descargar/ver el contenido** (decisión de alcance de esta
+ronda, no un bloqueo técnico — `archivo_descargar` existe en la edge y podría
+exponerse después). Salvaguardas exclusivas de la app (sin equivalente en la web,
+porque el riesgo de un teléfono es distinto al de un navegador de oficina):
+pantalla protegida nativa (`FLAG_SECURE` dinámico, Android, vía
+`ScreenSecurityPlugin`/`android/.../ScreenSecurityPlugin.java` + directiva
+`appVaultSecure`), cierre de la sesión del Vault al pasar la app a segundo plano
+(`VaultSecureDirective` → `pause`/`visibilitychange`), y **nada se guarda nunca
+en el dispositivo** (ni Dexie, ni Preferences, ni `localStorage`) — todo secreto
+revelado vive solo en un signal de componente, limpiado al salir de la pantalla,
+al pasar a segundo plano o al vencer la sesión. **Generador de claves (DZ-13)**:
+mismo algoritmo EXACTO que la web (`boveda-generador.util.ts` portado 1:1,
+specs idénticos) — 100% cliente, `crypto.getRandomValues`, sin dependencias
+nuevas; en la app "usar esta" copia al portapapeles (no hay formulario de crear
+entrada donde insertarla, a diferencia de la web).
+
+**Pendiente físico (Xaviel, ambos):** reconstruir el APK (Android) para que el
+plugin nativo de pantalla protegida exista en el binario — el código ya está en
+el repo pero **no tiene efecto hasta el próximo build nativo** (`cap sync` +
+`npm run apk`). Probar en el teléfono: Cotizaciones (foto y PDF), Vault (abrir,
+copiar, 2FA, generar, que efectivamente bloquee la captura de pantalla, que a
+los 2 min se cierre sola).

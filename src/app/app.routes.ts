@@ -979,6 +979,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/admin').then((m) => m.AdminPage),
   },
   {
+    // CZ3/CZ7/DZ-08 — Vault: gate de ROL estricto (admin), NUNCA moduleGuard
+    // ('admin' solo abre el hub de Administración; un futuro rol con ese
+    // módulo no debe heredar el Vault — ver docs/SUBMODULOS-SENSIBLES.md).
+    path: 'admin/vault',
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['admin'])],
+    loadComponent: () => import('./pages/admin/vault/vault').then((m) => m.VaultPage),
+  },
+  {
+    path: 'admin/vault/generador',
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['admin'])],
+    loadComponent: () =>
+      import('./pages/admin/vault/vault-generador/vault-generador').then((m) => m.VaultGeneradorPage),
+  },
+  {
+    path: 'admin/vault/:id',
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['admin'])],
+    loadComponent: () =>
+      import('./pages/admin/vault/vault-entrada/vault-entrada').then((m) => m.VaultEntradaPage),
+  },
+  {
     // Z26 — Tecnología la ve TODO usuario (Historial de versiones, Guía, Dudas).
     // Los submódulos restringidos ("Versiones de App", "Reportes de errores") se
     // gatean POR ROL dentro de la página (ctx.esTecnologia), no por módulo.
@@ -1014,6 +1034,26 @@ export const routes: Routes = [
     path: 'tecnologia/compras-aprobar',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/compras-tec/compras-tec').then((m) => m.ComprasTecPage),
+  },
+  {
+    // CZ1/CZ2/CZ6 — Biblioteca de Cotizaciones de Tecnología. Mismo gate que
+    // Compras tecnológicas (RLS real = puede_ver_submodulo('tecnologia.cotizaciones'));
+    // esta ruta solo decide si se pinta el tile, igual que compras-aprobar arriba.
+    path: 'tecnologia/cotizaciones',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tecnologia/cotizaciones/cotizaciones').then((m) => m.CotizacionesPage),
+  },
+  {
+    path: 'tecnologia/cotizaciones/subir',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/cotizaciones/cotizacion-subir/cotizacion-subir').then((m) => m.CotizacionSubirPage),
+  },
+  {
+    path: 'tecnologia/cotizaciones/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/cotizaciones/cotizacion-detalle/cotizacion-detalle').then((m) => m.CotizacionDetallePage),
   },
   // CO13/CO11 — Legal (expedientes + contratos). Solo en línea; gate `legal` dentro
   // del hub/home (RLS real = is_admin() or tiene_modulo('legal')).

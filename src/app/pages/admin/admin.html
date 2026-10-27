@@ -49,5 +49,12 @@
       <span class="adm-action__icon">🗂️</span>
       <span class="adm-action__label">{{ 'Historial de versiones' | t }}</span>
     </button>
+    <!-- CZ3/CZ7 — Vault: gate de ROL (admin), no por módulo. -->
+    @if (esAdmin()) {
+      <button type="button" class="adm-action" appTapScale (click)="go('/admin/vault')">
+        <span class="adm-action__icon">🔐</span>
+        <span class="adm-action__label">{{ 'Vault' | t }}</span>
+      </button>
+    }
   </div>
 </div>

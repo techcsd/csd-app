@@ -1,0 +1,119 @@
+.cotd {
+  background: var(--color-bg);
+  min-height: 100%;
+}
+.cotd__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.cotd__back {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+}
+.cotd__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: #fff;
+}
+
+.cotd__preview {
+  margin-bottom: 14px;
+}
+.cotd__preview-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+.cotd__sin-archivo {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.cotd__nombre {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cotd__meta {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.cotd__totales {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+}
+.cotd__linea {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cotd__notas {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.cotd__vinculos {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+.cotd__vinculos-h {
+  margin: 12px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.cotd__sin-vinculo {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.cotd__vinculo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  border-top: 1px solid var(--color-border);
+}
+.cotd__vinculo-icon {
+  flex: none;
+  color: var(--color-text-secondary);
+}
+.cotd__vinculo:first-of-type {
+  border-top: none;
+}
+.cotd__vinculos-nota {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

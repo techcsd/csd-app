@@ -1,0 +1,32 @@
+<div class="screen vgen" data-testid="vault-generador" appVaultSecure (appVaultBackground)="alFondo()">
+  <header class="vgen__header">
+    <button type="button" class="vgen__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="vgen__title">{{ 'Generador de claves' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    <div class="vgen__chips">
+      <button type="button" class="vgen__chip" [class.vgen__chip--on]="modo() === 'password'" (click)="setModo('password')">{{ 'Contraseña' | t }}</button>
+      <button type="button" class="vgen__chip" [class.vgen__chip--on]="modo() === 'passphrase'" (click)="setModo('passphrase')">{{ 'Frase' | t }}</button>
+      <button type="button" class="vgen__chip" [class.vgen__chip--on]="modo() === 'api'" (click)="setModo('api')">{{ 'Llave API' | t }}</button>
+      <button type="button" class="vgen__chip" [class.vgen__chip--on]="modo() === '2fa'" (click)="setModo('2fa')">{{ 'Semilla 2FA' | t }}</button>
+    </div>
+
+    @if (modo() === 'password') {
+      <label class="field-label">{{ 'Largo' | t }}: {{ largo() }}</label>
+      <input class="vgen__range" type="range" min="8" max="64" [ngModel]="largo()" (ngModelChange)="largo.set($event); regenerar()" />
+    }
+
+    @if (resultado(); as r) {
+      <div class="vgen__resultado">
+        <code class="vgen__valor">{{ r.valor }}</code>
+        <span class="vgen__fuerza">{{ etiquetaFortaleza(r.bitsEntropia) | t }} · {{ r.bitsEntropia }} bits</span>
+      </div>
+    }
+
+    <div class="vgen__acciones">
+      <button type="button" class="btn-ghost" appTapScale (click)="regenerar()">{{ 'Generar otra' | t }}</button>
+      <button type="button" class="btn-cta" appTapScale (click)="copiar()">{{ 'Copiar' | t }}</button>
+    </div>
+  </div>
+</div>

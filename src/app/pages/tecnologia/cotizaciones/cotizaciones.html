@@ -1,0 +1,60 @@
+<div class="screen cot" data-testid="cotizaciones">
+  <header class="cot__header">
+    <button type="button" class="cot__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="cot__title">{{ 'Cotizaciones' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!online) {
+      <app-empty-state icon="📶" [title]="'Necesitas conexión' | t" [message]="'Cotizaciones requiere internet para ver y subir archivos.' | t" /><!-- tropes-allow: icono del patrón EmptyState (emoji, ya establecido en toda la app) -->
+    } @else if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (error()) {
+      <app-empty-state
+        [title]="'No pudimos cargar' | t"
+        [message]="'Revisa la conexión y vuelve a intentar.' | t"
+      />
+    } @else {
+      <input
+        class="field cot__search"
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        [placeholder]="'Buscar por proveedor o monto…' | t"
+        [attr.aria-label]="'Buscar cotizaciones' | t"
+      />
+
+      <div class="cot__chips">
+        <button type="button" class="cot__chip" [class.cot__chip--on]="filtro() === 'todas'" (click)="filtro.set('todas')">{{ 'Todas' | t }}</button>
+        <button type="button" class="cot__chip" [class.cot__chip--on]="filtro() === 'sin_vincular'" (click)="filtro.set('sin_vincular')">{{ 'Sin vincular' | t }}</button>
+        <button type="button" class="cot__chip" [class.cot__chip--on]="filtro() === 'con_compra'" (click)="filtro.set('con_compra')">{{ 'Con compra' | t }}</button>
+      </div>
+
+      @if (!filtradas().length) {
+        <app-empty-state icon="🧾" [title]="'Sin cotizaciones' | t" [message]="'Toca + para subir la primera.' | t" /><!-- tropes-allow: icono del patrón EmptyState (emoji, ya establecido en toda la app) -->
+      } @else {
+        <div class="cot__lista" appStagger>
+          @for (r of filtradas(); track r.id) {
+            <button type="button" class="cot__card" appTapScale (click)="abrir(r)">
+              <div class="cot__card-main">
+                <p class="cot__card-titulo">{{ r.proveedor || r.titulo }}</p>
+                <span class="cot__card-meta">
+                  @if (r.total) { RD$ {{ r.total | number:'1.0-0' }} }
+                  @if (r.fecha) { · {{ fmtFecha(r.fecha) }} }
+                </span>
+              </div>
+              <div class="cot__card-chips">
+                @if (r.compra_titulo) { <span class="cot__chip-link">{{ r.compra_titulo }}</span> }
+                @if (r.equipo_codigo) { <span class="cot__chip-link">{{ r.equipo_codigo }}</span> }
+              </div>
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  @if (online) {
+    <button type="button" class="cot__fab" appTapScale (click)="subir()" [attr.aria-label]="'Subir cotización' | t">+</button>
+  }
+</div>

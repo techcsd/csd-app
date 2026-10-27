@@ -63,6 +63,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AppSettingsPlugin.class);
         // AL6: alarma dominical autónoma (AlarmManager exacto + full-screen).
         registerPlugin(AlarmSchedulerPlugin.class);
+        // CZ7: FLAG_SECURE dinámico mientras el Vault muestra secretos.
+        registerPlugin(ScreenSecurityPlugin.class);
         super.onCreate(savedInstanceState);
 
         // AQ1 — canal de notificaciones de ALTA importancia (heads-up + sonido) para

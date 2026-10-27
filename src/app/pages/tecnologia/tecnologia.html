@@ -40,6 +40,21 @@
       </button>
     }
 
+    <!-- CZ1/CZ6 — Cotizaciones: mismo gate que Compras + permiso granular
+         'tecnologia.cotizaciones' (Subadministrador). -->
+    @if (verCotizaciones()) {
+      <button type="button" class="tec__devnotes" appTapScale (click)="abrirCotizaciones()">
+        <span class="tec__devnotes-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10a1 1 0 0 1 1 1v16l-2.5-1.5L13 20l-2.5-1.5L8 20l-2.5-1.5L3 20V6a1 1 0 0 1 1-1h1"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+        </span>
+        <span class="tec__devnotes-txt">
+          <span class="tec__devnotes-title">{{ 'Cotizaciones' | t }}</span>
+          <span class="tec__devnotes-sub">{{ 'Biblioteca de cotizaciones de tecnología' | t }}</span>
+        </span>
+        <span class="tec__devnotes-caret">›</span>
+      </button>
+    }
+
     <!-- Tabs — Versiones + Dudas para todos; "Reportes de errores" solo para
          roles de Tecnología (Z26/Z30). -->
     <div class="tec__tabs">
