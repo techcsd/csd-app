@@ -40,10 +40,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Cotizaciones de Tecnología y Vault de Administración';
+const TITULO = 'Inventario tecnológico: más campos, kits y clave del equipo';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Tecnología', d: 'Nueva biblioteca de Cotizaciones: sube una cotización con foto o PDF (el sistema intenta leerla sola), búscala y, si quieres, ligala a una compra tecnológica.' },
-  { t: 'nuevo', m: 'Administración', d: 'Nuevo Vault para el administrador: guarda y consulta cuentas, llaves, códigos 2FA y notas seguras de la empresa, con pantalla protegida contra capturas y sesión de 2 minutos.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'La ficha de un equipo ahora muestra situación y condición por separado, especificaciones técnicas según el tipo (computadora, radio, batería, dron), identificación (service tag, IMEI, etc.), responsable sin usuario en el sistema, origen del costo y alerta de garantía por vencer.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'Soporte para kits: un equipo compuesto por piezas (por ejemplo, un dron con su control y baterías) muestra si está completo, permite marcar una pieza como presente o faltante, quitarla del kit, y mover el kit completo de ubicación.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'La clave de acceso de un equipo compartido se puede ver por 30 segundos (solo quien tenga el permiso), con la pantalla protegida contra capturas.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
