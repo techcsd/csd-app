@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## 🧪 SESIÓN 29/10/2026 — PROMPT-123 · Ronda **DA** (parte app, A0-A4) — EN `feature/da-ronda` (worktree `csd-app-da`), NO en `dev` ni `main`
+## 🟡 SESIÓN 29/10/2026 — PROMPT-123 · Ronda **DA** (parte app, A0-A4) — app **2.60.0 EN DEV** (apk-dev publicado), NO en `main`/prod
+
+**Cierre (29/10/2026):** Xaviel dio el OK explícito ("eso lo puedes hacer tu, hazlo por favor") para hacer yo mismo lo que normalmente queda de su lado — build, merge y publish a **dev** (regla 18: dev no está gateado, solo prod lo está). `feature/da-ronda` → pusheada (`cc3f3ba`) → mergeada a `dev` (fast-forward, commit `cc3f3ba`) → bump de versión **2.60.0** (commit `37dc0ec`, push a `origin/dev`) → `npm run apk -- --env dev` (firmado con el cert de siempre `3c5316d8…5065`, canal apk, candado OK, registrado en `app_versiones` de dev) → `npm run apk:publish -- --env dev` (subido al bucket de dev, `apk_url` actualizado). **2.60.0 está sirviendo en dev** (`app-dev.`/APK dev); usuarios en 2.59.0 verán el prompt de actualización in-app. **No se tocó `main`/prod** — la prueba en un teléfono real (CP5/CL4) sigue siendo física, de Xaviel; sin ella no se abre el PR `dev → main`.
 
 Contexto completo: `C:\developer\improvements\octubre 2026\imp 27102026\CONTEXTO-ACTUALIZACION-60.md` + `PROMPT-123-CSD-APP.md`. Backend (PROMPT-122) confirmado **100% EN PRODUCCIÓN (v1.204.0)** antes de empezar — leído de `sql/2026-10-27-da{1..5}-*.sql` y el HANDOFF del padre (`SGC-da`), no asumido. CQ6: worktree propia `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-da`, rama `feature/da-ronda` desde `origin/dev` (que ya trae 2.59.0, ronda CZ). Sesión autónoma de principio a fin (defaults del contexto §4 aplicados y reportados, sin preguntar).
 
@@ -20,19 +22,19 @@ Ficha de un kit: "Completo"/"Incompleto: falta N" (derivado client-side del mism
 Chip de garantía por vencer en lista y ficha (`sgc.parametros.tec_garantia_alerta_dias`, cacheado). QR: **no se agregó dependencia de escaneo** (la app solo tenía `qrcode`, generador, no lector) — el listado soporta `?codigo=TEC-0002` como deep-link (precarga el buscador, navega directo si hay un único match) y el buscador normal ya cubría la búsqueda manual por código.
 
 ### Cierre
-`npm run build` verde (incluye los ~10 guards de prebuild — tuve que quitar varios emoji nuevos que `verify-no-ai-tropes` rechazó, sustituidos por texto plano, AW12), `npm test` verde (**59/59**, sin specs nuevos — no se agregó lógica pura nueva que lo amerite más allá de `tec-tono.util.ts`, cubierta indirectamente por los componentes), `npx cap sync android` verde (mismos 15 plugins, sin plugin nativo nuevo — se reutilizó el de CZ). `PARIDAD.md` actualizado con la sección `## DA`. **Nada commiteado, pusheado, ni generado como APK** (instrucción explícita del prompt). Nada en `dev` ni en `main`.
+`npm run build` verde (incluye los ~10 guards de prebuild — tuve que quitar varios emoji nuevos que `verify-no-ai-tropes` rechazó, sustituidos por texto plano, AW12), `npm test` verde (**59/59**, sin specs nuevos — no se agregó lógica pura nueva que lo amerite más allá de `tec-tono.util.ts`, cubierta indirectamente por los componentes), `npx cap sync android` verde (mismos 15 plugins, sin plugin nativo nuevo — se reutilizó el de CZ). `PARIDAD.md` actualizado con la sección `## DA`. Commit `cc3f3ba` en `feature/da-ronda` → mergeado a `dev` + bump **2.60.0** (`37dc0ec`) + APK dev construido y publicado (ver TL;DR arriba) con el OK explícito de Xaviel en esta misma sesión.
 
 **Regla B (cada nota literal de Xaviel cubierta o declarada fuera de alcance):** notas 1A-1E (specs/identificación) → A1. Nota 1F + 5.1 (clave) → A3 (app, alcance ver-solo). Nota 2 + 5.2 + 7.3 (estados) → A1 (catálogo + chips). Nota 5.3 (kits) → A2. Nota 7.1 (responsable externo) → A1. Nota 7.2/7.4 (costo/fecha "desconocida") → A1. Nota 4 (garantía, QR) → A4; lector de capturas/importador/lote → solo web, sin acción en la app (igual que decidió PROMPT-123). Nota 8 (paginación de Versiones de la app) → solo web, sin parte en la app (tal como aclara el prompt).
 
 ### PENDIENTE XAVIEL (físico)
-1. **Reconstruir el APK** (`npm run apk -- --env dev`) para probar de verdad: ficha nueva (specs/identificación/costo/garantía), kit incompleto (marcar presente/falta, mover kit, quitar pieza), clave del equipo (que "Mostrar 30 s" funcione, que la pantalla bloquee capturas, que se oculte sola), chip de garantía.
+1. **Instalar 2.60.0 en un teléfono real** (actualización in-app desde 2.59.0, o APK dev directo) y probar: ficha nueva (specs/identificación/costo/garantía), kit incompleto (marcar presente/falta, mover kit, quitar pieza), clave del equipo (que "Mostrar 30 s" funcione, que la pantalla bloquee capturas/que no deje ver el valor en "apps recientes", que se oculte sola), chip de garantía. Anotar el resultado en `qa/release-2.60.0.md` (CP5/CL4) — sin esto no se abre el PR `dev → main`.
 2. **Decidir quién recibe `tecnologia.claves_equipos`** (Administración › Roles) — por defecto nadie.
 3. **Probar con un usuario Subadministrador real** que ahora SÍ entra a `/tecnologia-inventario` (antes el guard lo bloqueaba) pero sigue sin ver el bloque de clave.
-4. **OK por escrito** antes de: merge `feature/da-ronda → dev`, build/publish del APK, o cualquier push a `main`.
+4. **OK por escrito** antes de: abrir PR `dev → main`, build/publish del APK de prod, o forzar la versión mínima.
 
 ### En dev / En prod
-- **En dev:** sin cambios de esta sesión — todo vive en `feature/da-ronda`, sin commitear.
-- **En prod:** sin cambios, sigue en **2.59.0** (CZ). El backend de esta ronda (DA) SÍ está en prod del lado SGC (v1.204.0) desde antes de esta sesión.
+- **En dev:** app **2.60.0** (inventario tecnológico: campos, kits, clave), `apk_url` del bucket dev apuntando a `csd-app-2.60.0.apk`. `dev` = `origin/dev` al cierre (`37dc0ec`).
+- **En prod:** sin cambios, sigue en **2.59.0** (CZ). El backend de esta ronda (DA) SÍ está en prod del lado SGC (v1.204.0) desde antes de esta sesión — solo falta la parte app.
 
 ---
 
