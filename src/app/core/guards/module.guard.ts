@@ -45,6 +45,23 @@ export const submoduleGuard = (clave: string, nivel: 'ver' | 'operar' = 'ver'): 
   };
 };
 
+/**
+ * DA-16/A0 — gate por módulo completo O un permiso granular de submódulo (mismo
+ * hallazgo+fix que el padre hizo en la web, CZ4 F3: `moduleGuard('tecnologia')` a
+ * secas bloqueaba al Subadministrador — tiene el permiso granular
+ * `tecnologia.inventario`, NO el módulo completo). `/tecnologia-inventario*` usa
+ * este guard en vez de `moduleGuard('tecnologia')` para que el Subadministrador
+ * entre igual que en la web; `puedeVerSubmodulo` ya cubre el atajo admin/módulo.
+ */
+export const moduleOrSubmoduleGuard = (modulo: string, clave: string, nivel: 'ver' | 'operar' = 'ver'): CanActivateFn => {
+  return () => {
+    const ctx = inject(UserContextService);
+    const router = inject(Router);
+    const ok = ctx.hasModulo(modulo) || (nivel === 'operar' ? ctx.puedeOperarSubmodulo(clave) : ctx.puedeVerSubmodulo(clave));
+    return ok ? true : router.createUrlTree(['/403']);
+  };
+};
+
 /** CSD-importar — gate por rol "flota elevado" (mirror de `UserContextService.esFlotaElevado`,
  *  que a su vez espeja `sgc.es_flota_elevado()`). NUNCA duplicar la lista de roles aquí. */
 export const flotaElevadoGuard: CanActivateFn = () => {

@@ -958,3 +958,111 @@ el repo pero **no tiene efecto hasta el próximo build nativo** (`cap sync` +
 `npm run apk`). Probar en el teléfono: Cotizaciones (foto y PDF), Vault (abrir,
 copiar, 2FA, generar, que efectivamente bloquee la captura de pantalla, que a
 los 2 min se cierre sola).
+
+## DA — Inventario tecnológico: campos, estados, kits, clave (app, 29/10/2026)
+
+Backend (PROMPT-122) **100% en producción (v1.204.0)** antes de empezar esta
+sesión — confirmado leyendo `sql/2026-10-27-da{1,2,3,4,5}-*.sql` y el HANDOFF
+del padre en `SGC-da`, no asumido. A0-A4 completos en `feature/da-ronda`
+(worktree `csd-app-da`), build + 59/59 tests + `cap sync android` verdes.
+**Nada commiteado/pusheado** (instrucción explícita del prompt).
+
+- **Situación/condición → catálogo** (`tec_equipo_estados`/`tec_equipo_condiciones`,
+  mismo patrón que `tec_equipo_tipos`): `TecEquipo.estado`/`.condicion` pasan de
+  union fijo a `string`; lista y ficha pintan ambos como chip "punto + palabra"
+  (`<app-estado-chip>` nuevo, `shared/ui/estado-chip`, tono por
+  `shared/utils/tec-tono.util.ts` — mismo criterio que `estado-tono.ts` del SGC).
+  Filtros por los dos en el listado.
+- **Specs por tipo** (`tec_equipo_specs`, 1:1, embebido en el mismo `select('*,
+  specs:tec_equipo_specs(*))` de `getEquipos()` — sin RPC ni llamada aparte) +
+  `tec_equipo_tipos.grupos_campos` decide qué bloque mostrar (computadora/radio/
+  batería/dron), igual que la web.
+- **Identificación** (service_tag, código de servicio, número de parte, modelo
+  regulatorio, año, código anterior, IMEI, etiqueta de taller), **responsable
+  externo**, **costo_origen** (compra/estimado/donado), **fecha de compra/
+  garantía "desconocida"** explícita, y **foto de especificaciones**
+  (`fotos_specs[]`, separada de la portada): todo visible en la ficha y
+  editable en el formulario (ahora 9 hojas en vez de 6).
+- **Ruta del gating corregida (hallazgo A0):** `/tecnologia-inventario*` usaba
+  `moduleGuard('tecnologia')` a secas — bloqueaba al Subadministrador (CZ4,
+  permiso granular `tecnologia.inventario`, SIN el módulo completo), el MISMO
+  hallazgo que el padre ya había corregido en la web (CZ4 F3). Nuevo
+  `moduleOrSubmoduleGuard` (`core/guards/module.guard.ts`) en las 4 rutas.
+- **Decisión de escritura (no documentada explícitamente por el padre para la
+  app):** `guardar_tec_equipo_app` (la RPC que ya usa el outbox) **no se tocó**
+  en esta ronda del SGC — sigue con su firma original (13 parámetros, sin
+  condición/specs/identificación/costo_origen/etc). En vez de inventar una RPC
+  nueva o adoptar las `_asistente` del conector (que por defecto escriben
+  "Cargado por Claude." en las notas — no apto para uso directo de la app), el
+  handler de `tec_equipo_guardar` (outbox) hace, DESPUÉS de
+  `guardar_tec_equipo_app`, un `update`/`upsert` directo a
+  `tec_equipos`/`tec_equipo_specs` — mismo patrón que ya usan ~85 handlers de
+  esta app (el "nunca directo" de ADR-002 es sobre la UI, no sobre el handler
+  que corre durante el sync). RLS de ambas tablas ya acepta `authenticated` con
+  el mismo gate del módulo/submódulo — no se cambió nada en el servidor.
+- **Kits (DA3/DA10):** ficha del equipo muestra "Kit — Completo / Incompleto:
+  falta N" cuando tiene componentes (derivado client-side del mismo caché de
+  `tec_equipos`, sin llamar a la vista `tec_kits_estado` ni a
+  `tec_equipo_detalle_asistente` — los componentes YA están en la lista
+  cacheada). Por componente: abrir (reutiliza la MISMA ficha/formulario —
+  un componente es un equipo), marcar presente/falta (directo a tabla, online),
+  quitar del kit (`tec_kit_mover_pieza`, online). "Mover kit completo" (bodega +
+  ubicación, online) vía `tec_kit_mover` — **el empleado asignado del kit se
+  preserva tal cual** (se pasa el actual, no uno nuevo): la app no tiene picker
+  de empleado para equipos en ningún punto de este módulo, y la RPC no hace
+  `coalesce` de `p_empleado_id` (lo pondría en null si se pasara null).
+  **No construido** (alcance reducido, reportado): mover una pieza SIN sacarla
+  del kit (cambiar su bodega/empleado quedándose en el kit) — la vía real hoy es
+  quitarla y luego reasignarla. Crear kits/agregar componentes: solo web, como
+  pide el prompt.
+- **Clave del equipo (DA4/DA6/A3) — alcance MÁS ESTRECHO que el que describe el
+  propio `PARIDAD.md` del padre** (que dice "ver y cambiar/quitar si tiene el
+  permiso"): PROMPT-123 (el prompt de esta ronda, más específico y más
+  reciente) pide explícitamente "Crear/editar/quitar la clave: solo web" — se
+  siguió el prompt, no la nota general del padre. La app SOLO llama
+  `accion:'ver'` de la edge `equipos-clave` (`core/services/tec-clave.service.ts`,
+  mismo patrón que `BovedaService`). Bloque visible solo con
+  `UserContextService.puedeVerClavesEquipos()` — **espejo exacto** de
+  `sgc.puede_ver_claves_equipos()`, a propósito SIN pasar por
+  `puedeVerSubmodulo`/`nivelSubmodulo` (esos dan `'operar'` a cualquiera con el
+  módulo `tecnologia` completo — el mismo atajo que el padre evitó a propósito
+  en el servidor). "Mostrar (30 s)" con cuenta regresiva, copiar limpia el
+  portapapeles a los 30 s, pantalla protegida reutilizando **tal cual**
+  `ScreenSecurityService`/`VaultSecureDirective` de CZ7 (sin crear nada nuevo,
+  como pedía el default DA-06/A3) — se apaga sola al salir de la ficha o pasar
+  la app a segundo plano. Nada del valor toca Dexie/Preferences/localStorage.
+  Requiere conexión (sin cola offline, igual que el Vault).
+- **Garantía por vencer (DA-18/A4):** chip "Garantía" en lista y ficha,
+  `tec.garantiaPorVencer()` compara `garantia_hasta` contra
+  `sgc.parametros.tec_garantia_alerta_dias` (lectura directa, mismo patrón ya
+  usado por `TiendasService` — cacheado, default 30 si falla).
+- **QR (DA-18/A4):** **no se agregó ninguna dependencia de escaneo** (la app
+  solo tenía `qrcode`, un generador, no un lector) — tal como pedía el prompt
+  si no hay plugin ya instalado. El listado soporta `?codigo=TEC-0002` como
+  query param (lo que generaría un QR apuntando a esta URL/deep-link): precarga
+  el buscador y, si hay un único match exacto, navega directo a la ficha. Sin
+  esto, el buscador normal (ya buscaba por código) sigue sirviendo de
+  fallback manual.
+- **Caché:** `CatalogService.invalidateOnVersionChange` ahora también incluye
+  el prefijo `'tec_equipo'` (cubre `tec_equipos`/`tec_equipo_tipos`/
+  `tec_equipo_estados`/`tec_equipo_condiciones`) — sin esto, un teléfono que ya
+  tenía el inventario cacheado de una versión anterior seguiría sin los campos
+  nuevos hasta que venciera el TTL normal.
+
+**No construido, con razón (Regla A, reportado — no bloqueó el resto):**
+- **Lector de capturas de Windows, carga en lote, importador de fichas:**
+  explícitamente "solo web" en el prompt (DA-19) — la app no los toca.
+- **Crear/editar/quitar la clave del equipo, crear kits, agregar componentes:**
+  solo web (ver arriba).
+- **Mover una pieza del kit sin sacarla** (cambiar su bodega/dueño quedándose
+  en el kit): no construido, ver nota de kits arriba.
+- **Asignar equipo a un empleado desde la app:** sigue sin existir (no es
+  nuevo de esta ronda — la app nunca tuvo picker de empleado para `tec_equipos`,
+  solo bodega; `responsable_externo` sí se agregó porque la ronda lo pedía
+  explícitamente).
+
+**Pendiente físico (Xaviel):** reconstruir el APK para probar la ficha nueva,
+kit, clave (30 s + pantalla protegida) y garantía en un teléfono real; decidir
+quién recibe `tecnologia.claves_equipos` (Administración › Roles, por defecto
+nadie); avisar OK antes de build/publish o de abrir el PR `feature/da-ronda →
+dev`.

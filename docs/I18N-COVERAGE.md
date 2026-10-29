@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 92%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 90%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -128,8 +128,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/tareas | 59 | 0 | 100% | 0% |  |
 | pages/tecnologia | 13 | 12 | 48% | 24% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
-| pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
-| pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
+| pages/tecnologia-inventario/equipo-detalle | 0 | 59 | 0% | 0% |  |
+| pages/tecnologia-inventario/equipo-form | 0 | 91 | 0% | 0% |  |
 | pages/tecnologia/compras-tec | 29 | 0 | 100% | 0% |  |
 | pages/tecnologia/cotizaciones | 14 | 0 | 100% | 0% |  |
 | pages/tecnologia/cotizaciones/cotizacion-detalle | 12 | 0 | 100% | 0% |  |

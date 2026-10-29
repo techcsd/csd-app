@@ -77,3 +77,15 @@
   color: var(--color-text-secondary);
   font-size: 14px;
 }
+.tecform__subsec {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: 18px 0 6px;
+}
+.tecform__fila2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}

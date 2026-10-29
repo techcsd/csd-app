@@ -24,13 +24,6 @@
         <input id="modelo" class="field" type="text" [ngModel]="modelo()" (ngModelChange)="modelo.set($event)" placeholder="Modelo" />
         <label class="field-label tecform__mt" for="serie">Serie</label>
         <input id="serie" class="field" type="text" [ngModel]="serie()" (ngModelChange)="serie.set($event)" placeholder="Número de serie" />
-
-        <label class="field-label tecform__mt">Estado</label>
-        <div class="tecform__estados" appStagger>
-          @for (e of estados; track e[0]) {
-            <app-option-button appTapScale [label]="e[1]" [selected]="estado() === e[0]" (pressed)="estado.set(e[0])" />
-          }
-        </div>
       }
 
       <!-- 2: tipo -->
@@ -44,16 +37,161 @@
         </div>
       }
 
-      <!-- 3: ubicación -->
+      <!-- 3: situación y condición (DA7) -->
       @if (step() === 3) {
+        <h1 class="screen__title" appWizardStep>Situación y condición</h1>
+        <p class="screen__subtitle">Dónde está / qué hace, y cómo está físicamente — son independientes.</p>
+        <label class="field-label">Situación</label>
+        <div class="tecform__estados" appStagger>
+          @for (e of estadoOptions(); track e[0]) {
+            <app-option-button appTapScale [label]="e[1]" [selected]="estado() === e[0]" (pressed)="estado.set(e[0])" />
+          }
+        </div>
+        <label class="field-label tecform__mt">Condición</label>
+        <div class="tecform__estados" appStagger>
+          @for (c of condicionOptions(); track c[0]) {
+            <app-option-button appTapScale [label]="c[1]" [selected]="condicion() === c[0]" (pressed)="condicion.set(c[0])" />
+          }
+        </div>
+      }
+
+      <!-- 4: identificación (DA-02) -->
+      @if (step() === 4) {
+        <h1 class="screen__title" appWizardStep>Identificación</h1>
+        <p class="screen__subtitle">Todo opcional — llena lo que tengas a la mano.</p>
+        <label class="field-label" for="serviceTag">Service Tag / código de servicio</label>
+        <input id="serviceTag" class="field" type="text" [ngModel]="serviceTag()" (ngModelChange)="serviceTag.set($event)" placeholder="Ej. 7X2K9L1" />
+        <label class="field-label tecform__mt" for="codigoServicio">Plan ID / Unit ID (Lenovo)</label>
+        <input id="codigoServicio" class="field" type="text" [ngModel]="codigoServicio()" (ngModelChange)="codigoServicio.set($event)" />
+        <label class="field-label tecform__mt" for="numeroParte">Número de parte (DP/N)</label>
+        <input id="numeroParte" class="field" type="text" [ngModel]="numeroParte()" (ngModelChange)="numeroParte.set($event)" />
+        <label class="field-label tecform__mt" for="modeloRegulatorio">Modelo regulatorio</label>
+        <input id="modeloRegulatorio" class="field" type="text" [ngModel]="modeloRegulatorio()" (ngModelChange)="modeloRegulatorio.set($event)" />
+        <label class="field-label tecform__mt" for="anioFabricacion">Año de fabricación</label>
+        <input id="anioFabricacion" class="field" type="number" inputmode="numeric" [ngModel]="anioFabricacion()" (ngModelChange)="anioFabricacion.set($event)" placeholder="Ej. 2022" />
+        <label class="field-label tecform__mt" for="codigoAnterior">Código de activo anterior</label>
+        <input id="codigoAnterior" class="field" type="text" [ngModel]="codigoAnterior()" (ngModelChange)="codigoAnterior.set($event)" placeholder="Etiqueta puesta antes de este inventario" />
+        <label class="field-label tecform__mt" for="imei">IMEI</label>
+        <input id="imei" class="field" type="text" inputmode="numeric" [ngModel]="imei()" (ngModelChange)="imei.set($event)" />
+        <label class="field-label tecform__mt" for="etiquetaTaller">Etiqueta de taller / orden de servicio</label>
+        <input id="etiquetaTaller" class="field" type="text" [ngModel]="etiquetaTaller()" (ngModelChange)="etiquetaTaller.set($event)" />
+      }
+
+      <!-- 5: especificaciones por tipo (DA2/DA-03) -->
+      @if (step() === 5) {
+        <h1 class="screen__title" appWizardStep>Especificaciones</h1>
+        @if (!tieneSpecs()) {
+          <p class="screen__subtitle">Este tipo de equipo no tiene bloque de especificaciones técnicas.</p>
+        }
+        @if (tieneComputadora()) {
+          <h3 class="tecform__subsec">Computadora</h3>
+          <label class="field-label" for="procesador">Procesador</label>
+          <input id="procesador" class="field" type="text" [ngModel]="procesador()" (ngModelChange)="procesador.set($event)" placeholder="Ej. Intel Core i7-1165G7" />
+          <div class="tecform__fila2">
+            <div>
+              <label class="field-label tecform__mt" for="ramGb">RAM (GB)</label>
+              <input id="ramGb" class="field" type="number" inputmode="numeric" [ngModel]="ramGb()" (ngModelChange)="ramGb.set($event)" />
+            </div>
+            <div>
+              <label class="field-label tecform__mt" for="ramVel">Velocidad</label>
+              <input id="ramVel" class="field" type="text" [ngModel]="ramVelocidad()" (ngModelChange)="ramVelocidad.set($event)" />
+            </div>
+          </div>
+          <label class="field-label tecform__mt">Almacenamiento</label>
+          <div class="tecform__estados">
+            @for (t of ['SSD', 'HDD', 'NVMe']; track t) {
+              <app-option-button [label]="t" [selected]="almacenamientoTipo() === t" (pressed)="almacenamientoTipo.set($any(t))" />
+            }
+          </div>
+          <input class="field tecform__mt" type="number" inputmode="numeric" [ngModel]="almacenamientoGb()" (ngModelChange)="almacenamientoGb.set($event)" placeholder="Capacidad (GB)" />
+          <label class="field-label tecform__mt" for="gpuInt">GPU integrada</label>
+          <input id="gpuInt" class="field" type="text" [ngModel]="gpuIntegrada()" (ngModelChange)="gpuIntegrada.set($event)" />
+          <label class="field-label tecform__mt" for="gpuDed">GPU dedicada</label>
+          <input id="gpuDed" class="field" type="text" [ngModel]="gpuDedicada()" (ngModelChange)="gpuDedicada.set($event)" placeholder="Ej. RTX 3050 4GB" />
+          <label class="field-label tecform__mt" for="so">Sistema operativo</label>
+          <input id="so" class="field" type="text" [ngModel]="so()" (ngModelChange)="so.set($event)" placeholder="Ej. Windows 11 Pro" />
+          <div class="tecform__fila2">
+            <div>
+              <label class="field-label tecform__mt" for="pantalla">Pantalla (pulgadas)</label>
+              <input id="pantalla" class="field" type="number" inputmode="decimal" [ngModel]="pantallaPulgadas()" (ngModelChange)="pantallaPulgadas.set($event)" />
+            </div>
+            <div>
+              <label class="field-label tecform__mt" for="resolucion">Resolución</label>
+              <input id="resolucion" class="field" type="text" [ngModel]="resolucion()" (ngModelChange)="resolucion.set($event)" />
+            </div>
+          </div>
+          <app-toggle-switch class="tecform__mt" label="Pantalla táctil" [checked]="tactil()" (checkedChange)="tactil.set($event)" />
+          <label class="field-label tecform__mt" for="nombreWin">Nombre del equipo en Windows</label>
+          <input id="nombreWin" class="field" type="text" [ngModel]="nombreWindows()" (ngModelChange)="nombreWindows.set($event)" placeholder="Ej. CSD-CONT" />
+          <label class="field-label tecform__mt" for="usuarioWin">Usuario de Windows</label>
+          <input id="usuarioWin" class="field" type="text" [ngModel]="usuarioWindows()" (ngModelChange)="usuarioWindows.set($event)" placeholder="Quién tiene la sesión iniciada" />
+          <label class="field-label tecform__mt" for="cargador">Cargador (voltaje / amperaje)</label>
+          <div class="tecform__fila2">
+            <input id="cargador" class="field" type="text" [ngModel]="cargadorVoltaje()" (ngModelChange)="cargadorVoltaje.set($event)" placeholder="Voltios" />
+            <input class="field" type="text" [ngModel]="cargadorAmperaje()" (ngModelChange)="cargadorAmperaje.set($event)" placeholder="Amperios" />
+          </div>
+        }
+        @if (tieneRadio()) {
+          <h3 class="tecform__subsec">Radio</h3>
+          <label class="field-label" for="frecuencia">Frecuencia</label>
+          <input id="frecuencia" class="field" type="text" [ngModel]="frecuencia()" (ngModelChange)="frecuencia.set($event)" placeholder="Ej. 400-470 MHz" />
+          <label class="field-label tecform__mt" for="potencia">Potencia (W)</label>
+          <input id="potencia" class="field" type="number" inputmode="decimal" [ngModel]="potenciaW()" (ngModelChange)="potenciaW.set($event)" />
+          <label class="field-label tecform__mt">Tipo</label>
+          <div class="tecform__estados">
+            <app-option-button label="Frecuencia de radio" [selected]="tipoRadio() === 'frecuencia'" (pressed)="tipoRadio.set('frecuencia')" />
+            <app-option-button label="Red celular (PTT)" [selected]="tipoRadio() === 'celular_ptt'" (pressed)="tipoRadio.set('celular_ptt')" />
+          </div>
+          <label class="field-label tecform__mt" for="selloRadio">Sello Telserdom (radio)</label>
+          <input id="selloRadio" class="field" type="text" [ngModel]="selloTelserdomRadio()" (ngModelChange)="selloTelserdomRadio.set($event)" />
+        }
+        @if (tieneBateria()) {
+          <h3 class="tecform__subsec">Batería</h3>
+          <label class="field-label" for="bateriaModelo">Modelo</label>
+          <input id="bateriaModelo" class="field" type="text" [ngModel]="bateriaModelo()" (ngModelChange)="bateriaModelo.set($event)" />
+          <div class="tecform__fila2">
+            <div>
+              <label class="field-label tecform__mt" for="bateriaCap">Capacidad</label>
+              <input id="bateriaCap" class="field" type="number" inputmode="decimal" [ngModel]="bateriaCapacidad()" (ngModelChange)="bateriaCapacidad.set($event)" />
+            </div>
+            <div>
+              <label class="field-label tecform__mt">Unidad</label>
+              <div class="tecform__estados">
+                <app-option-button label="mAh" [selected]="bateriaUnidad() === 'mAh'" (pressed)="bateriaUnidad.set('mAh')" />
+                <app-option-button label="Wh" [selected]="bateriaUnidad() === 'Wh'" (pressed)="bateriaUnidad.set('Wh')" />
+              </div>
+            </div>
+          </div>
+          <label class="field-label tecform__mt" for="bateriaVolt">Voltaje</label>
+          <input id="bateriaVolt" class="field" type="text" [ngModel]="bateriaVoltaje()" (ngModelChange)="bateriaVoltaje.set($event)" />
+          <label class="field-label tecform__mt" for="bateriaSello">Sello / garantía</label>
+          <input id="bateriaSello" class="field" type="text" [ngModel]="bateriaSello()" (ngModelChange)="bateriaSello.set($event)" />
+          <label class="field-label tecform__mt" for="selloBateria">Sello Telserdom (batería)</label>
+          <input id="selloBateria" class="field" type="text" [ngModel]="selloTelserdomBateria()" (ngModelChange)="selloTelserdomBateria.set($event)" />
+        }
+        @if (tieneDron()) {
+          <h3 class="tecform__subsec">Dron</h3>
+          <label class="field-label" for="camaraSpecs">Cámara / especificaciones</label>
+          <textarea id="camaraSpecs" class="field" rows="2" [ngModel]="camaraSpecs()" (ngModelChange)="camaraSpecs.set($event)"></textarea>
+        }
+        @if (tieneSpecs()) {
+          <label class="field-label tecform__mt" for="accesorios">Accesorios incluidos</label>
+          <input id="accesorios" class="field" type="text" [ngModel]="accesoriosTexto()" (ngModelChange)="accesoriosTexto.set($event)" placeholder="Cargador, base, estuche… (separados por coma)" />
+        }
+      }
+
+      <!-- 6: ubicación + responsable -->
+      @if (step() === 6) {
         <h1 class="screen__title" appWizardStep>Ubicación</h1>
         <p class="screen__subtitle">¿Dónde está el equipo? (almacén u Oficina Central)</p>
         <app-collapsible-select label="Ubicación" icon="📍" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+        <label class="field-label tecform__mt" for="responsableExterno">Responsable sin usuario en el SGC — opcional</label>
+        <input id="responsableExterno" class="field" type="text" [ngModel]="responsableExterno()" (ngModelChange)="responsableExterno.set($event)" placeholder="Ej. Cristofer (Contabilidad)" />
       }
 
-      <!-- 4: precio -->
-      @if (step() === 4) {
-        <h1 class="screen__title" appWizardStep>Precio</h1>
+      <!-- 7: precio + garantía -->
+      @if (step() === 7) {
+        <h1 class="screen__title" appWizardStep>Precio y garantía</h1>
         <label class="field-label">Moneda</label>
         <div class="tecform__moneda">
           <app-option-button label="RD$ (DOP)" [selected]="moneda() === 'DOP'" (pressed)="moneda.set('DOP')" />
@@ -61,13 +199,27 @@
         </div>
         <label class="field-label tecform__mt" for="costo">Costo — opcional</label>
         <input id="costo" class="field" type="number" inputmode="decimal" min="0" [ngModel]="costo()" (ngModelChange)="costo.set($event)" placeholder="0" />
+        <label class="field-label tecform__mt">Origen del costo</label>
+        <div class="tecform__estados">
+          @for (o of costoOrigenes; track o[0]) {
+            <app-option-button [label]="o[1]" [selected]="costoOrigen() === o[0]" (pressed)="costoOrigen.set(o[0])" />
+          }
+        </div>
+
+        <label class="field-label tecform__mt" for="fechaCompra">Fecha de compra</label>
+        <input id="fechaCompra" class="field" type="date" [disabled]="fechaCompraDesconocida()" [ngModel]="fechaCompra()" (ngModelChange)="fechaCompra.set($event)" />
+        <app-toggle-switch class="tecform__mt" label="Fecha de compra desconocida" [checked]="fechaCompraDesconocida()" (checkedChange)="fechaCompraDesconocida.set($event)" />
+
+        <label class="field-label tecform__mt" for="garantiaHasta">Garantía hasta</label>
+        <input id="garantiaHasta" class="field" type="date" [disabled]="garantiaDesconocida()" [ngModel]="garantiaHasta()" (ngModelChange)="garantiaHasta.set($event)" />
+        <app-toggle-switch class="tecform__mt" label="Garantía desconocida" [checked]="garantiaDesconocida()" (checkedChange)="garantiaDesconocida.set($event)" />
 
         <label class="field-label tecform__mt" for="notas">Notas — opcional</label>
         <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Detalle adicional…"></textarea>
       }
 
-      <!-- 5: fotos -->
-      @if (step() === 5) {
+      <!-- 8: fotos -->
+      @if (step() === 8) {
         <h1 class="screen__title" appWizardStep>Fotos</h1>
         <p class="screen__subtitle">Agrega varias fotos y elige la portada (★).</p>
         <div class="tecform__foto-acciones">
@@ -90,16 +242,39 @@
         } @else {
           <p class="tecform__vacio">Sin fotos todavía.</p>
         }
+
+        <h3 class="tecform__subsec tecform__mt">Fotos de especificaciones — opcional</h3>
+        <p class="screen__subtitle">Ej. captura de "Información del sistema" de Windows.</p>
+        <div class="tecform__foto-acciones">
+          <button type="button" class="btn-ghost" (click)="tomarFotoSpecs()">📷 Tomar foto</button>
+          <button type="button" class="btn-ghost" (click)="elegirFotosSpecs()">🖼️ De la galería</button>
+        </div>
+        @if (fotosSpecs().length) {
+          <div class="tecform__galeria" appStagger>
+            @for (f of fotosSpecs(); track f.key) {
+              <div class="tecform__foto">
+                <img [src]="f.previewUrl" alt="Foto de especificaciones" />
+                <div class="tecform__foto-btns">
+                  <button type="button" (click)="quitarFotoSpecs(f.key)" aria-label="Quitar">✕</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
       }
 
-      <!-- 6: resumen -->
-      @if (step() === 6) {
+      <!-- 9: resumen -->
+      @if (step() === 9) {
         <h1 class="screen__title" appWizardStep>Revisa y guarda</h1>
         <ul class="resumen">
           <li><span>Nombre</span><b>{{ nombre() }}</b></li>
           <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
-          <li><span>Estado</span><b>{{ estadoLabel() }}</b></li>
+          <li><span>Situación</span><b>{{ estadoLabel() }}</b></li>
+          <li><span>Condición</span><b>{{ condicionLabel() }}</b></li>
           <li><span>Ubicación</span><b>{{ bodegaLabel() }}</b></li>
+          @if (responsableExterno().trim()) {
+            <li><span>Responsable</span><b>{{ responsableExterno() }}</b></li>
+          }
           @if ((costo() ?? 0) > 0) {
             <li><span>Precio</span><b>{{ moneda() }} {{ costo() | number: '1.0-2' }}</b></li>
           }

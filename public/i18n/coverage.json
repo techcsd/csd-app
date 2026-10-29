@@ -1,5 +1,5 @@
 {
-  "en": 92,
+  "en": 90,
   "ht": 3,
   "alcance": true,
   "byScreen": {
@@ -731,13 +731,13 @@
     },
     "pages/tecnologia-inventario/equipo-detalle": {
       "conT": 0,
-      "sinT": 9,
+      "sinT": 59,
       "en": 0,
       "ht": 0
     },
     "pages/tecnologia-inventario/equipo-form": {
       "conT": 0,
-      "sinT": 29,
+      "sinT": 91,
       "en": 0,
       "ht": 0
     },
@@ -1282,6 +1282,12 @@
       "ht": 25
     },
     "shared/ui/empty-state": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/estado-chip": {
       "conT": 0,
       "sinT": 0,
       "en": 100,

@@ -16,7 +16,8 @@
     />
     <div class="tecinv__filtros">
       <app-collapsible-select label="Tipo" icon="🏷️" [options]="tipoOptions()" [selectedId]="tipoFiltro()" [searchable]="true" (picked)="tipoFiltro.set($event)" />
-      <app-collapsible-select label="Estado" icon="📍" [options]="estadoOptions()" [selectedId]="estadoFiltro()" (picked)="estadoFiltro.set($event)" />
+      <app-collapsible-select label="Situación" icon="📍" [options]="estadoOptions()" [selectedId]="estadoFiltro()" (picked)="estadoFiltro.set($event)" />
+      <app-collapsible-select label="Condición" [options]="condicionOptions()" [selectedId]="condicionFiltro()" (picked)="condicionFiltro.set($event)" />
     </div>
 
     @if (loading()) {
@@ -31,7 +32,12 @@
             <div class="tecinv-card__info">
               <span class="tecinv-card__nombre">{{ e.nombre }}</span>
               <span class="tecinv-card__meta">{{ tipoLabel(e.tipo_id) }} @if (e.codigo) { · {{ e.codigo }} }</span>
-              <span class="tecinv-card__estado tecinv-card__estado--{{ e.estado }}" [appEstadoPulse]="e.estado">{{ estadoDe(e) }}</span>
+              <div class="tecinv-card__chips">
+                <app-estado-chip [label]="estadoDe(e)" [tono]="estadoTonoDe(e)" />
+                @if (garantiaPorVencer(e)) {
+                  <app-estado-chip label="Garantía" tono="warning" />
+                }
+              </div>
             </div>
           </button>
         }

@@ -1,5 +1,41 @@
 # HANDOFF — CSD App
 
+## 🧪 SESIÓN 29/10/2026 — PROMPT-123 · Ronda **DA** (parte app, A0-A4) — EN `feature/da-ronda` (worktree `csd-app-da`), NO en `dev` ni `main`
+
+Contexto completo: `C:\developer\improvements\octubre 2026\imp 27102026\CONTEXTO-ACTUALIZACION-60.md` + `PROMPT-123-CSD-APP.md`. Backend (PROMPT-122) confirmado **100% EN PRODUCCIÓN (v1.204.0)** antes de empezar — leído de `sql/2026-10-27-da{1..5}-*.sql` y el HANDOFF del padre (`SGC-da`), no asumido. CQ6: worktree propia `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-da`, rama `feature/da-ronda` desde `origin/dev` (que ya trae 2.59.0, ronda CZ). Sesión autónoma de principio a fin (defaults del contexto §4 aplicados y reportados, sin preguntar).
+
+### A0 — Verificación
+Confirmado archivo:línea que la app no escribe historial (cero `addHistorial`/inserts a `tec_equipo_historial`) ni calcula el código `TEC-####` (ya los cubre la BD por trigger desde DA1/DA3) — nada que tocar ahí. **Hallazgo nuevo (no estaba en el contexto):** las 4 rutas `/tecnologia-inventario*` usaban `moduleGuard('tecnologia')` a secas (`app.routes.ts`), el MISMO antipatrón que el padre encontró y corrigió en la web (CZ4 F3) — bloqueaba al Subadministrador (permiso granular `tecnologia.inventario`, sin el módulo completo). Corregido con `moduleOrSubmoduleGuard` nuevo en `core/guards/module.guard.ts`.
+
+### A1 — Situación/condición como catálogo + campos nuevos
+`TecEquipo.estado`/`.condicion` pasan de union fijo a `string` validado por catálogo (`tec_equipo_estados`/`tec_equipo_condiciones`, mismo patrón que tipos). Chip "punto + palabra" nuevo y reutilizable: `shared/ui/estado-chip` + `shared/utils/tec-tono.util.ts`. Ficha y formulario (ahora 9 hojas, antes 6) ganan: specs por tipo (`tec_equipo_specs`, embebidas en el mismo `select`, sin RPC aparte — `tec_equipo_tipos.grupos_campos` decide el bloque), identificación (service tag, parte, año, código anterior, IMEI, taller), responsable externo, costo_origen (compra/estimado/donado), fecha de compra/garantía "desconocida" explícita, foto de especificaciones separada de la portada. **Decisión de escritura (reportada, no trivial):** `guardar_tec_equipo_app` no cambió su firma en esta ronda del SGC — los campos nuevos se escriben con un `update`/`upsert` directo a `tec_equipos`/`tec_equipo_specs` DENTRO del mismo handler de outbox (después de la RPC), mismo patrón que ya usan ~85 handlers de esta app; no se usaron las RPC `_asistente` del conector (stampan "Cargado por Claude." por defecto). Detalle completo en `PARIDAD.md` §DA.
+
+### A2 — Kits
+Ficha de un kit: "Completo"/"Incompleto: falta N" (derivado client-side del mismo caché de equipos, sin llamar la vista `tec_kits_estado`), lista de componentes (cada uno es un equipo normal — abrir reutiliza la MISMA ficha/formulario), marcar presente/falta (directo a tabla, online), quitar del kit (`tec_kit_mover_pieza`, online), mover el kit completo (`tec_kit_mover`, bodega+ubicación, online — el empleado asignado se preserva tal cual porque la app no tiene picker de empleado en este módulo). Todo exige conexión (sin cola offline, como kit/clave ya anticipaban). Crear kits/agregar componentes y mover una pieza sin sacarla del kit: no construido (solo web / fuera de alcance, reportado).
+
+### A3 — Clave del equipo
+`core/services/tec-clave.service.ts` nuevo (mismo patrón que `BovedaService`): SOLO `accion:'ver'` contra la edge `equipos-clave` — crear/editar/quitar quedan en la web, tal como pide PROMPT-123 (nota: el `PARIDAD.md` del padre sugiere algo más amplio para la app; se siguió el prompt de esta ronda, más específico). Bloque visible solo con `UserContextService.puedeVerClavesEquipos()` nuevo, espejo EXACTO de `sgc.puede_ver_claves_equipos()` — a propósito sin pasar por `puedeVerSubmodulo` (ese da `'operar'` a cualquiera con el módulo completo, el mismo atajo que el servidor evita). "Mostrar (30 s)" con cuenta regresiva + limpieza de portapapeles, pantalla protegida reutilizando **sin cambios** `ScreenSecurityService`/`VaultSecureDirective` de CZ7 — nada del valor toca almacenamiento del dispositivo.
+
+### A4 — Extras
+Chip de garantía por vencer en lista y ficha (`sgc.parametros.tec_garantia_alerta_dias`, cacheado). QR: **no se agregó dependencia de escaneo** (la app solo tenía `qrcode`, generador, no lector) — el listado soporta `?codigo=TEC-0002` como deep-link (precarga el buscador, navega directo si hay un único match) y el buscador normal ya cubría la búsqueda manual por código.
+
+### Cierre
+`npm run build` verde (incluye los ~10 guards de prebuild — tuve que quitar varios emoji nuevos que `verify-no-ai-tropes` rechazó, sustituidos por texto plano, AW12), `npm test` verde (**59/59**, sin specs nuevos — no se agregó lógica pura nueva que lo amerite más allá de `tec-tono.util.ts`, cubierta indirectamente por los componentes), `npx cap sync android` verde (mismos 15 plugins, sin plugin nativo nuevo — se reutilizó el de CZ). `PARIDAD.md` actualizado con la sección `## DA`. **Nada commiteado, pusheado, ni generado como APK** (instrucción explícita del prompt). Nada en `dev` ni en `main`.
+
+**Regla B (cada nota literal de Xaviel cubierta o declarada fuera de alcance):** notas 1A-1E (specs/identificación) → A1. Nota 1F + 5.1 (clave) → A3 (app, alcance ver-solo). Nota 2 + 5.2 + 7.3 (estados) → A1 (catálogo + chips). Nota 5.3 (kits) → A2. Nota 7.1 (responsable externo) → A1. Nota 7.2/7.4 (costo/fecha "desconocida") → A1. Nota 4 (garantía, QR) → A4; lector de capturas/importador/lote → solo web, sin acción en la app (igual que decidió PROMPT-123). Nota 8 (paginación de Versiones de la app) → solo web, sin parte en la app (tal como aclara el prompt).
+
+### PENDIENTE XAVIEL (físico)
+1. **Reconstruir el APK** (`npm run apk -- --env dev`) para probar de verdad: ficha nueva (specs/identificación/costo/garantía), kit incompleto (marcar presente/falta, mover kit, quitar pieza), clave del equipo (que "Mostrar 30 s" funcione, que la pantalla bloquee capturas, que se oculte sola), chip de garantía.
+2. **Decidir quién recibe `tecnologia.claves_equipos`** (Administración › Roles) — por defecto nadie.
+3. **Probar con un usuario Subadministrador real** que ahora SÍ entra a `/tecnologia-inventario` (antes el guard lo bloqueaba) pero sigue sin ver el bloque de clave.
+4. **OK por escrito** antes de: merge `feature/da-ronda → dev`, build/publish del APK, o cualquier push a `main`.
+
+### En dev / En prod
+- **En dev:** sin cambios de esta sesión — todo vive en `feature/da-ronda`, sin commitear.
+- **En prod:** sin cambios, sigue en **2.59.0** (CZ). El backend de esta ronda (DA) SÍ está en prod del lado SGC (v1.204.0) desde antes de esta sesión.
+
+---
+
 ## 🟡 SESIÓN 26-27/10/2026 — PROMPT-121 · Ronda **CZ** (parte app, A0-A4) — app **2.59.0 EN DEV** (apk-dev publicado), NO en `main`/prod
 
 **Cierre (27/10/2026):** Xaviel probó y confirmó "everything good" → `feature/cz-ronda` mergeado a `dev` (push `0475a5f`), bump de versión **2.59.0** (commit `231d7da`, push a `origin/dev`), `npm run apk -- --env dev` (firmado, canal apk, registrado en `app_versiones` de dev) → con OK explícito de Xaviel tras una pausa del harness (regla de no-publicar-sin-OK aplicada correctamente), `npm run apk:publish -- --env dev` (subido al bucket de dev, `apk_url` actualizado). **2.59.0 está sirviendo en dev** (`app-dev.`/APK dev); usuarios en 2.58.5 verán el prompt de actualización in-app. `main`/prod sin tocar.
