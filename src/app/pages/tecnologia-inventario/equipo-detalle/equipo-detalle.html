@@ -23,8 +23,20 @@
         </div>
       }
 
+      @if (kitPadre(); as padre) {
+        <button type="button" class="tecdet__kit-padre" (click)="abrirKitPadre()">
+          Pertenece al kit: {{ padre.codigo }} — {{ padre.nombre }}
+        </button>
+      }
+
       <h2 class="tecdet__nombre">{{ e.nombre }}</h2>
-      <span class="tecdet__estado tecdet__estado--{{ e.estado }}" [appEstadoPulse]="e.estado">{{ estadoDe() }}</span>
+      <div class="tecdet__chips">
+        <app-estado-chip [label]="estadoLabel()" [tono]="estadoTono()" />
+        <app-estado-chip [label]="condicionLabel()" [tono]="condicionTono()" />
+        @if (garantiaAlerta()) {
+          <app-estado-chip label="Garantía por vencer" tono="warning" />
+        }
+      </div>
 
       <div class="tecdet__grid">
         @if (e.codigo) { <div class="tecdet__kv"><span>Código</span><b>{{ e.codigo }}</b></div> }
@@ -32,9 +44,165 @@
         @if (e.marca) { <div class="tecdet__kv"><span>Marca</span><b>{{ e.marca }}</b></div> }
         @if (e.modelo) { <div class="tecdet__kv"><span>Modelo</span><b>{{ e.modelo }}</b></div> }
         @if (e.serie) { <div class="tecdet__kv"><span>Serie</span><b>{{ e.serie }}</b></div> }
-        @if ((e.costo ?? 0) > 0) { <div class="tecdet__kv"><span>Precio</span><b>{{ e.moneda }} {{ e.costo | number: '1.0-2' }}</b></div> }
-        @if (e.empleado) { <div class="tecdet__kv"><span>Asignado a</span><b>{{ e.empleado.nombre }} {{ e.empleado.apellido }}</b></div> }
+        @if (bodegaLabel(); as bl) { <div class="tecdet__kv"><span>Ubicación</span><b>{{ bl }}{{ e.ubicacion ? ' — ' + e.ubicacion : '' }}</b></div> }
       </div>
+
+      <!-- Quién lo tiene -->
+      @if (e.empleado || e.responsable_externo || e.specs?.usuario_windows || e.specs?.nombre_windows) {
+        <h3 class="tecdet__sec">Quién lo tiene</h3>
+        <div class="tecdet__grid">
+          @if (e.empleado) { <div class="tecdet__kv"><span>Asignado a</span><b>{{ e.empleado.nombre }} {{ e.empleado.apellido }}</b></div> }
+          @if (e.responsable_externo) { <div class="tecdet__kv"><span>Responsable (sin usuario)</span><b>{{ e.responsable_externo }}</b></div> }
+          @if (e.specs?.usuario_windows) { <div class="tecdet__kv"><span>Usuario de Windows</span><b>{{ e.specs?.usuario_windows }}</b></div> }
+          @if (e.specs?.nombre_windows) { <div class="tecdet__kv"><span>Nombre del equipo (Windows)</span><b>{{ e.specs?.nombre_windows }}</b></div> }
+        </div>
+      }
+
+      <!-- Compra / garantía -->
+      @if ((e.costo ?? 0) > 0 || e.fecha_compra || e.fecha_compra_desconocida || e.garantia_hasta || e.garantia_desconocida) {
+        <h3 class="tecdet__sec">Compra</h3>
+        <div class="tecdet__grid">
+          @if ((e.costo ?? 0) > 0) {
+            <div class="tecdet__kv">
+              <span>Precio</span>
+              <b>{{ e.moneda }} {{ e.costo | number: '1.0-2' }} <span class="tecdet__tag">{{ costoOrigenLabel[e.costo_origen] ?? e.costo_origen }}</span></b>
+            </div>
+          }
+          <div class="tecdet__kv">
+            <span>Fecha de compra</span>
+            <b>{{ e.fecha_compra_desconocida ? 'Desconocida' : (e.fecha_compra ? (e.fecha_compra | date: 'dd/MM/yyyy') : '—') }}</b>
+          </div>
+          <div class="tecdet__kv">
+            <span>Garantía hasta</span>
+            <b>{{ e.garantia_desconocida ? 'Desconocida' : (e.garantia_hasta ? (e.garantia_hasta | date: 'dd/MM/yyyy') : '—') }}</b>
+          </div>
+        </div>
+      }
+
+      <!-- Identificación -->
+      @if (e.service_tag || e.codigo_servicio || e.numero_parte || e.modelo_regulatorio || e.anio_fabricacion || e.codigo_anterior || e.imei || e.etiqueta_taller) {
+        <h3 class="tecdet__sec">Identificación</h3>
+        <div class="tecdet__grid">
+          @if (e.service_tag) { <div class="tecdet__kv"><span>Service Tag</span><b>{{ e.service_tag }}</b></div> }
+          @if (e.codigo_servicio) { <div class="tecdet__kv"><span>Código de servicio</span><b>{{ e.codigo_servicio }}</b></div> }
+          @if (e.numero_parte) { <div class="tecdet__kv"><span>Número de parte</span><b>{{ e.numero_parte }}</b></div> }
+          @if (e.modelo_regulatorio) { <div class="tecdet__kv"><span>Modelo regulatorio</span><b>{{ e.modelo_regulatorio }}</b></div> }
+          @if (e.anio_fabricacion) { <div class="tecdet__kv"><span>Año de fabricación</span><b>{{ e.anio_fabricacion }}</b></div> }
+          @if (e.codigo_anterior) { <div class="tecdet__kv"><span>Código anterior</span><b>{{ e.codigo_anterior }}</b></div> }
+          @if (e.imei) { <div class="tecdet__kv"><span>IMEI</span><b>{{ e.imei }}</b></div> }
+          @if (e.etiqueta_taller) { <div class="tecdet__kv"><span>Etiqueta de taller</span><b>{{ e.etiqueta_taller }}</b></div> }
+        </div>
+      }
+
+      <!-- Specs por tipo -->
+      @if (e.specs; as s) {
+        @if (grupos().includes('computadora') && (s.procesador || s.ram_gb || s.almacenamiento_gb || s.so || s.pantalla_pulgadas || s.cargador_voltaje)) {
+          <h3 class="tecdet__sec">Especificaciones de la computadora</h3>
+          <div class="tecdet__grid">
+            @if (s.procesador) { <div class="tecdet__kv"><span>Procesador</span><b>{{ s.procesador }}</b></div> }
+            @if (s.ram_gb) { <div class="tecdet__kv"><span>RAM</span><b>{{ s.ram_gb }} GB{{ s.ram_velocidad ? ' — ' + s.ram_velocidad : '' }}</b></div> }
+            @if (s.almacenamiento_gb) { <div class="tecdet__kv"><span>Almacenamiento</span><b>{{ s.almacenamiento_tipo }} {{ s.almacenamiento_gb }} GB</b></div> }
+            @if (s.gpu_integrada) { <div class="tecdet__kv"><span>GPU integrada</span><b>{{ s.gpu_integrada }}</b></div> }
+            @if (s.gpu_dedicada) { <div class="tecdet__kv"><span>GPU dedicada</span><b>{{ s.gpu_dedicada }}{{ s.gpu_memoria_gb ? ' (' + s.gpu_memoria_gb + ' GB)' : '' }}</b></div> }
+            @if (s.so) { <div class="tecdet__kv"><span>Sistema operativo</span><b>{{ s.so }}{{ s.so_version ? ' ' + s.so_version : '' }}</b></div> }
+            @if (s.pantalla_pulgadas) { <div class="tecdet__kv"><span>Pantalla</span><b>{{ s.pantalla_pulgadas }}" {{ s.resolucion }}{{ s.tactil ? ' · táctil' : '' }}</b></div> }
+            @if (s.cargador_voltaje || s.cargador_amperaje) { <div class="tecdet__kv"><span>Cargador</span><b>{{ s.cargador_voltaje }} {{ s.cargador_amperaje }}</b></div> }
+          </div>
+        }
+        @if (grupos().includes('radio') && (s.frecuencia || s.potencia_w || s.tipo_radio || s.sello_telserdom_radio)) {
+          <h3 class="tecdet__sec">Especificaciones del radio</h3>
+          <div class="tecdet__grid">
+            @if (s.frecuencia) { <div class="tecdet__kv"><span>Frecuencia</span><b>{{ s.frecuencia }}</b></div> }
+            @if (s.potencia_w) { <div class="tecdet__kv"><span>Potencia</span><b>{{ s.potencia_w }} W</b></div> }
+            @if (s.tipo_radio) { <div class="tecdet__kv"><span>Tipo</span><b>{{ s.tipo_radio === 'celular_ptt' ? 'Red celular (PTT)' : 'Frecuencia de radio' }}</b></div> }
+            @if (s.sello_telserdom_radio) { <div class="tecdet__kv"><span>Sello Telserdom (radio)</span><b>{{ s.sello_telserdom_radio }}</b></div> }
+          </div>
+        }
+        @if (grupos().includes('dron') && s.camara_specs) {
+          <h3 class="tecdet__sec">Cámara del dron</h3>
+          <p class="tecdet__notas">{{ s.camara_specs }}</p>
+        }
+        @if (grupos().includes('bateria') && (s.bateria_modelo || s.bateria_capacidad || s.bateria_sello || s.sello_telserdom_bateria)) {
+          <h3 class="tecdet__sec">Batería</h3>
+          <div class="tecdet__grid">
+            @if (s.bateria_modelo) { <div class="tecdet__kv"><span>Modelo</span><b>{{ s.bateria_modelo }}</b></div> }
+            @if (s.bateria_capacidad) { <div class="tecdet__kv"><span>Capacidad</span><b>{{ s.bateria_capacidad }} {{ s.bateria_unidad }}</b></div> }
+            @if (s.bateria_voltaje) { <div class="tecdet__kv"><span>Voltaje</span><b>{{ s.bateria_voltaje }}</b></div> }
+            @if (s.bateria_sello) { <div class="tecdet__kv"><span>Sello</span><b>{{ s.bateria_sello }}</b></div> }
+            @if (s.sello_telserdom_bateria) { <div class="tecdet__kv"><span>Sello Telserdom (batería)</span><b>{{ s.sello_telserdom_bateria }}</b></div> }
+          </div>
+        }
+        @if (s.accesorios?.length) {
+          <h3 class="tecdet__sec">Accesorios</h3>
+          <p class="tecdet__notas">{{ s.accesorios?.join(', ') }}</p>
+        }
+      }
+
+      @if (specsUrls().length) {
+        <h3 class="tecdet__sec">Fotos de especificaciones</h3>
+        <div class="tecdet__galeria" appStagger>
+          @for (u of specsUrls(); track u) {
+            <div class="tecdet__thumb"><img [src]="u" alt="Foto de especificaciones" loading="lazy" /></div>
+          }
+        </div>
+      }
+
+      <!-- Clave del equipo (A3/DA6) -->
+      @if (ctx.puedeVerClavesEquipos() && (e.tiene_clave || claveValor())) {
+        <h3 class="tecdet__sec">Clave del equipo</h3>
+        <div class="tecdet__clave" appVaultSecure (appVaultBackground)="alFondoClave()">
+          @if (!e.tiene_clave) {
+            <p class="tecdet__vacio">Sin clave guardada.</p>
+          } @else if (claveValor(); as v) {
+            <div class="tecdet__clave-valor">
+              <code>{{ v }}</code>
+              <span class="tecdet__clave-cuenta">{{ claveSegundos() }}s</span>
+            </div>
+            <div class="tecdet__clave-btns">
+              <button type="button" class="btn-ghost" (click)="copiarClave(v)">Copiar</button>
+              <button type="button" class="btn-ghost" (click)="ocultarClave()">Ocultar</button>
+            </div>
+            <p class="tecdet__hint">{{ claveTipo() === 'personal' ? 'Clave personal' : 'Clave compartida' }} — se oculta sola en {{ claveSegundos() }}s.</p>
+          } @else {
+            <button type="button" class="btn-cta" [disabled]="claveCargando()" (click)="mostrarClave()">
+              {{ claveCargando() ? 'Cargando…' : 'Mostrar (30 s)' }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Kit (DA3/DA10) -->
+      @if (esKit()) {
+        <h3 class="tecdet__sec">
+          Kit — {{ kitEstado()?.completo ? 'Completo' : 'Kit incompleto: falta ' + kitEstado()?.faltantes }}
+        </h3>
+        <button type="button" class="btn-ghost tecdet__mt" (click)="abrirMoverKit()">Mover kit completo</button>
+        @if (moviendoKit()) {
+          <div class="tecdet__mover-kit">
+            <app-collapsible-select label="Ubicación" [options]="bodegaOptions()" [selectedId]="moverBodegaId()" [searchable]="true" (picked)="moverBodegaId.set($event)" />
+            <input class="field tecdet__mt" type="text" [ngModel]="moverUbicacion()" (ngModelChange)="moverUbicacion.set($event)" placeholder="Ubicación exacta — opcional" />
+            <div class="tecdet__clave-btns tecdet__mt">
+              <button type="button" class="btn-cta" (click)="confirmarMoverKit()">Mover</button>
+              <button type="button" class="btn-ghost" (click)="cancelarMoverKit()">Cancelar</button>
+            </div>
+          </div>
+        }
+        <div class="tecdet__componentes" appStagger>
+          @for (c of componentes(); track c.id) {
+            <div class="tecdet__componente">
+              <button type="button" class="tecdet__componente-info" (click)="abrirComponente(c)">
+                <b>{{ c.codigo }}</b>
+                <span>{{ c.nombre }}</span>
+                <app-estado-chip [label]="c.presente ? 'Presente' : 'Falta'" [tono]="c.presente ? 'success' : 'danger'" />
+              </button>
+              <div class="tecdet__componente-btns">
+                <button type="button" class="btn-ghost" (click)="togglePresente(c)">{{ c.presente ? 'Marcar falta' : 'Marcar presente' }}</button>
+                <button type="button" class="btn-ghost" (click)="pedirQuitarDelKit(c)">Quitar del kit</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       @if (e.notas) {
         <h3 class="tecdet__sec">Notas</h3>
@@ -50,4 +218,15 @@
       <button type="button" class="tecdet__lightbox-close" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
     </div>
   }
+
+  <app-confirm-dialog
+    [open]="!!confirmQuitar()"
+    title="¿Quitar del kit?"
+    message="La pieza pasará a ser un equipo suelto."
+    confirmLabel="Sí, quitar"
+    cancelLabel="Seguir en el kit"
+    tone="danger"
+    (confirmed)="confirmarQuitarDelKit()"
+    (cancelled)="cancelarQuitar()"
+  />
 </div>

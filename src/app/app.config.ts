@@ -133,8 +133,12 @@ export const appConfig: ApplicationConfig = {
       // BJ5 — al estrenar versión, suelta las cachés de proyectos que pudieron
       // guardar un VACÍO bajo la RLS vieja (lista/pickers/liberación/conduces). El
       // prefijo 'proyectos' cubre 'proyectos', 'proyectos_full' y 'proyectos_pickables'.
+      // DA-19 — 'tec_equipo' cubre 'tec_equipos'/'tec_equipo_tipos'/
+      // 'tec_equipo_estados'/'tec_equipo_condiciones': la ronda DA agregó
+      // columnas/specs al `select('*')` de equipos — sin este bust, un caché
+      // offline previo a esta versión seguiría sin ellas hasta su TTL natural.
       // Idempotente por versión; nunca rompe el arranque.
-      void inject(CatalogService).invalidateOnVersionChange(environment.version, ['proyectos']);
+      void inject(CatalogService).invalidateOnVersionChange(environment.version, ['proyectos', 'tec_equipo']);
     }),
   ],
 };

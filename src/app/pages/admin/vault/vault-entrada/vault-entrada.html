@@ -1,0 +1,93 @@
+<div class="screen vente" data-testid="vault-entrada" appVaultSecure (appVaultBackground)="alFondo()">
+  <header class="vente__header">
+    <button type="button" class="vente__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="vente__title">{{ entrada()?.nombre || ('Entrada' | t) }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (bloqueado()) {
+      <div class="vente__vencida">
+        <span class="vente__vencida-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </span>
+        <p>{{ 'Tu sesión del Vault expiró. Vuelve a entrar tu contraseña.' | t }}</p>
+        <button type="button" class="btn-cta" (click)="back()">{{ 'Volver' | t }}</button>
+      </div>
+    } @else if (entrada(); as e) {
+      <p class="vente__tipo">{{ TIPO_LABEL[e.tipo] | t }}</p>
+
+      @if (e.sitio_url) {
+        <div class="vente__campo">
+          <span class="vente__campo-label">{{ 'Sitio' | t }}</span>
+          <span class="vente__campo-valor">{{ e.sitio_url }}</span>
+        </div>
+      }
+      @if (e.usuario_texto) {
+        <div class="vente__campo">
+          <span class="vente__campo-label">{{ 'Usuario' | t }}</span>
+          <span class="vente__campo-valor">{{ e.usuario_texto }}</span>
+          <button type="button" class="vente__copiar" appTapScale (click)="copiar(e.usuario_texto!)">{{ 'Copiar' | t }}</button>
+        </div>
+      }
+
+      @if (e.tipo === 'cuenta' || e.tipo === 'api' || e.tipo === 'nota') {
+        <div class="vente__secreto">
+          <span class="vente__campo-label">{{ e.tipo === 'nota' ? ('Nota' | t) : ('Contraseña / valor' | t) }}</span>
+          @if (valorRevelado(); as v) {
+            <div class="vente__valor-row">
+              <code class="vente__valor">{{ v }}</code>
+              <button type="button" class="vente__copiar" appTapScale (click)="copiar(v)">{{ 'Copiar' | t }}</button>
+            </div>
+            <div class="vente__barra">
+              <div class="vente__barra-fill" [style.width.%]="(segundosVisible() / 30) * 100"></div>
+            </div>
+            <span class="vente__cuenta">{{ segundosVisible() }}s</span>
+          } @else {
+            <button type="button" class="btn-ghost" [disabled]="revelando()" appTapScale (click)="revelar()">
+              {{ (revelando() ? 'Revelando…' : 'Revelar') | t }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (e.tipo === '2fa') {
+        <div class="vente__secreto">
+          <span class="vente__campo-label">{{ 'Código 2FA' | t }}</span>
+          @if (codigo2fa(); as c) {
+            <div class="vente__valor-row">
+              <code class="vente__valor vente__valor--2fa">{{ c }}</code>
+              <button type="button" class="vente__copiar" appTapScale (click)="copiar(c)">{{ 'Copiar' | t }}</button>
+            </div>
+            <div class="vente__barra">
+              <div class="vente__barra-fill" [style.width.%]="(segundos2fa() / 30) * 100"></div>
+            </div>
+            <span class="vente__cuenta">{{ segundos2fa() }}s</span>
+          } @else {
+            <button type="button" class="btn-ghost" [disabled]="pidiendo2fa()" appTapScale (click)="pedirCodigo2fa()">
+              {{ (pidiendo2fa() ? 'Calculando…' : 'Obtener código') | t }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (e.tipo === 'archivo') {
+        <p class="vente__solo-web">{{ 'Los archivos del Vault se ven solo desde la web.' | t }}</p>
+      }
+
+      @if (e.notas && e.tipo !== 'nota') {
+        <div class="vente__campo">
+          <span class="vente__campo-label">{{ 'Notas' | t }}</span>
+          <span class="vente__campo-valor">{{ e.notas }}</span>
+        </div>
+      }
+
+      @if (e.etiquetas.length) {
+        <div class="vente__etiquetas">
+          @for (tag of e.etiquetas; track tag) { <span class="vente__etiqueta">{{ tag }}</span> }
+        </div>
+      }
+    }
+  </div>
+</div>

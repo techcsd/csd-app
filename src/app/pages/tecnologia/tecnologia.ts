@@ -67,6 +67,9 @@ export class TecnologiaPage {
   // encargado_tecnologia; NO gerencia/direccion). Espejo del gate del padre: la RLS
   // de notas ambito='dev' usa es_rol_desarrollador, no es_tecnologia.
   esDesarrollador = this.ctx.esDesarrollador;
+  // CZ1/CZ4 — Cotizaciones: mismo gate que Compras tecnológicas + permiso
+  // granular 'tecnologia.cotizaciones' (DZ-05, para el rol Subadministrador).
+  verCotizaciones = computed(() => this.esTecnologia() || this.ctx.puedeVerSubmodulo('tecnologia.cotizaciones'));
 
   // Z30 — Dudas (mismo contenido que la web, desde sgc.ayuda_contenido).
   private dudasCargadas = false;
@@ -330,6 +333,11 @@ export class TecnologiaPage {
   /** CO8 — abre "Compras por aprobar". */
   abrirComprasTec(): void {
     void this.router.navigate(['/tecnologia/compras-aprobar']);
+  }
+
+  /** CZ1/CZ6 — abre la biblioteca de Cotizaciones. */
+  abrirCotizaciones(): void {
+    void this.router.navigate(['/tecnologia/cotizaciones']);
   }
 
   back(): void {

@@ -1,5 +1,5 @@
 {
-  "en": 92,
+  "en": 90,
   "ht": 3,
   "alcance": true,
   "byScreen": {
@@ -16,7 +16,7 @@
       "ht": 11
     },
     "pages/admin": {
-      "conT": 12,
+      "conT": 13,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -66,8 +66,26 @@
     "pages/admin/usuarios": {
       "conT": 40,
       "sinT": 0,
-      "en": 83,
+      "en": 85,
       "ht": 3
+    },
+    "pages/admin/vault": {
+      "conT": 18,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/admin/vault/vault-entrada": {
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/admin/vault/vault-generador": {
+      "conT": 9,
+      "sinT": 1,
+      "en": 90,
+      "ht": 0
     },
     "pages/admin/versiones": {
       "conT": 8,
@@ -414,7 +432,7 @@
     "pages/legal/contratos": {
       "conT": 30,
       "sinT": 0,
-      "en": 33,
+      "en": 37,
       "ht": 0
     },
     "pages/legal/expedientes": {
@@ -700,10 +718,10 @@
       "ht": 0
     },
     "pages/tecnologia": {
-      "conT": 11,
+      "conT": 13,
       "sinT": 12,
-      "en": 43,
-      "ht": 26
+      "en": 48,
+      "ht": 24
     },
     "pages/tecnologia-inventario": {
       "conT": 0,
@@ -713,13 +731,13 @@
     },
     "pages/tecnologia-inventario/equipo-detalle": {
       "conT": 0,
-      "sinT": 9,
+      "sinT": 59,
       "en": 0,
       "ht": 0
     },
     "pages/tecnologia-inventario/equipo-form": {
       "conT": 0,
-      "sinT": 29,
+      "sinT": 91,
       "en": 0,
       "ht": 0
     },
@@ -727,6 +745,24 @@
       "conT": 29,
       "sinT": 0,
       "en": 100,
+      "ht": 0
+    },
+    "pages/tecnologia/cotizaciones": {
+      "conT": 14,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/tecnologia/cotizaciones/cotizacion-detalle": {
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/tecnologia/cotizaciones/cotizacion-subir": {
+      "conT": 21,
+      "sinT": 2,
+      "en": 91,
       "ht": 0
     },
     "pages/tecnologia/dev-notes": {
@@ -816,7 +852,7 @@
     "pages/transporte/conduce-externo": {
       "conT": 81,
       "sinT": 1,
-      "en": 80,
+      "en": 82,
       "ht": 4
     },
     "pages/transporte/conduce-transferencias": {
@@ -1246,6 +1282,12 @@
       "ht": 25
     },
     "shared/ui/empty-state": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/estado-chip": {
       "conT": 0,
       "sinT": 0,
       "en": 100,

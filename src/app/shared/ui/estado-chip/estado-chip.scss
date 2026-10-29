@@ -1,0 +1,44 @@
+:host {
+  display: inline-flex;
+}
+
+.estado-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-xl, 999px);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface-2, #f2f3f5);
+  color: var(--text-2);
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+
+  &--success {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+  &--warning {
+    background: var(--warning-bg);
+    color: var(--warning);
+  }
+  &--danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+  &--info {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+  &--neutral {
+    background: var(--surface-2, #ececec);
+    color: var(--text-2);
+  }
+}

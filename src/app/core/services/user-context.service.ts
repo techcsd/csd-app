@@ -248,6 +248,18 @@ export class UserContextService {
   }
 
   /**
+   * DA-06 — ¿puede ver la clave de un equipo? Espejo EXACTO de
+   * `sgc.puede_ver_claves_equipos()`: a propósito NO pasa por `nivelSubmodulo`/
+   * `puedeVerSubmodulo` (esos dan 'operar' a cualquiera con el módulo PADRE
+   * completo, el atajo de compatibilidad de AG12) — el permiso granular
+   * `tecnologia.claves_equipos` se mira DIRECTO, sin ese atajo. Nadie lo recibe
+   * por defecto, ni el Subadministrador ni quien tenga el módulo `tecnologia`.
+   */
+  puedeVerClavesEquipos = computed(
+    () => this.esAdmin() || this.permisos()['tecnologia.claves_equipos'] != null,
+  );
+
+  /**
    * AY4c — ¿puede GESTIONAR proyectos (crear/editar/borrar la obra)? Tener el módulo
    * `proyectos` por un rol que NO sea `ingeniero_oficina`. El Ingeniero de Oficina lleva
    * ese módulo SOLO para VER todas las obras + costos (cubicaciones) → es solo-lectura

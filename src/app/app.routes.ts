@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard, proyectosGestionGuard, flotaElevadoGuard, noConducesPrivadoGuard } from './core/guards/module.guard';
+import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, moduleOrSubmoduleGuard, obraGuard, proyectosGestionGuard, flotaElevadoGuard, noConducesPrivadoGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -979,6 +979,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/admin').then((m) => m.AdminPage),
   },
   {
+    // CZ3/CZ7/DZ-08 — Vault: gate de ROL estricto (admin), NUNCA moduleGuard
+    // ('admin' solo abre el hub de Administración; un futuro rol con ese
+    // módulo no debe heredar el Vault — ver docs/SUBMODULOS-SENSIBLES.md).
+    path: 'admin/vault',
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['admin'])],
+    loadComponent: () => import('./pages/admin/vault/vault').then((m) => m.VaultPage),
+  },
+  {
+    path: 'admin/vault/generador',
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['admin'])],
+    loadComponent: () =>
+      import('./pages/admin/vault/vault-generador/vault-generador').then((m) => m.VaultGeneradorPage),
+  },
+  {
+    path: 'admin/vault/:id',
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['admin'])],
+    loadComponent: () =>
+      import('./pages/admin/vault/vault-entrada/vault-entrada').then((m) => m.VaultEntradaPage),
+  },
+  {
     // Z26 — Tecnología la ve TODO usuario (Historial de versiones, Guía, Dudas).
     // Los submódulos restringidos ("Versiones de App", "Reportes de errores") se
     // gatean POR ROL dentro de la página (ctx.esTecnologia), no por módulo.
@@ -1014,6 +1034,26 @@ export const routes: Routes = [
     path: 'tecnologia/compras-aprobar',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/compras-tec/compras-tec').then((m) => m.ComprasTecPage),
+  },
+  {
+    // CZ1/CZ2/CZ6 — Biblioteca de Cotizaciones de Tecnología. Mismo gate que
+    // Compras tecnológicas (RLS real = puede_ver_submodulo('tecnologia.cotizaciones'));
+    // esta ruta solo decide si se pinta el tile, igual que compras-aprobar arriba.
+    path: 'tecnologia/cotizaciones',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tecnologia/cotizaciones/cotizaciones').then((m) => m.CotizacionesPage),
+  },
+  {
+    path: 'tecnologia/cotizaciones/subir',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/cotizaciones/cotizacion-subir/cotizacion-subir').then((m) => m.CotizacionSubirPage),
+  },
+  {
+    path: 'tecnologia/cotizaciones/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/cotizaciones/cotizacion-detalle/cotizacion-detalle').then((m) => m.CotizacionDetallePage),
   },
   // CO13/CO11 — Legal (expedientes + contratos). Solo en línea; gate `legal` dentro
   // del hub/home (RLS real = is_admin() or tiene_modulo('legal')).
@@ -1070,28 +1110,31 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/documentos/plantillas/plantillas').then((m) => m.DocumentosPlantillasPage),
   },
-  // AL2 — Inventario tecnológico (módulo Tecnología real). Gating admin|tecnologia.
+  // AL2/DA-16 — Inventario tecnológico. Gating módulo `tecnologia` O permiso
+  // granular `tecnologia.inventario` (Subadministrador, CZ4) — antes exigía el
+  // módulo completo a secas y lo bloqueaba (mismo hallazgo+fix que hizo el padre
+  // en la web, F3 de CZ4).
   {
     path: 'tecnologia-inventario',
-    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    canActivate: [authGuard, pinGuard, moduleOrSubmoduleGuard('tecnologia', 'tecnologia.inventario')],
     loadComponent: () =>
       import('./pages/tecnologia-inventario/tecnologia-inventario').then((m) => m.TecnologiaInventarioPage),
   },
   {
     path: 'tecnologia-inventario/nuevo',
-    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    canActivate: [authGuard, pinGuard, moduleOrSubmoduleGuard('tecnologia', 'tecnologia.inventario', 'operar')],
     loadComponent: () =>
       import('./pages/tecnologia-inventario/equipo-form/equipo-form').then((m) => m.TecEquipoFormPage),
   },
   {
     path: 'tecnologia-inventario/:id/editar',
-    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    canActivate: [authGuard, pinGuard, moduleOrSubmoduleGuard('tecnologia', 'tecnologia.inventario', 'operar')],
     loadComponent: () =>
       import('./pages/tecnologia-inventario/equipo-form/equipo-form').then((m) => m.TecEquipoFormPage),
   },
   {
     path: 'tecnologia-inventario/:id',
-    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    canActivate: [authGuard, pinGuard, moduleOrSubmoduleGuard('tecnologia', 'tecnologia.inventario')],
     loadComponent: () =>
       import('./pages/tecnologia-inventario/equipo-detalle/equipo-detalle').then((m) => m.TecEquipoDetallePage),
   },
