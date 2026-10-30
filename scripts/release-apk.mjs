@@ -40,11 +40,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Inventario tecnológico: más campos, kits y clave del equipo';
+const TITULO = 'Mi unidad, registro rápido de personal, descargo de pagos y lector de documentos';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Tecnología', d: 'La ficha de un equipo ahora muestra situación y condición por separado, especificaciones técnicas según el tipo (computadora, radio, batería, dron), identificación (service tag, IMEI, etc.), responsable sin usuario en el sistema, origen del costo y alerta de garantía por vencer.' },
-  { t: 'nuevo', m: 'Tecnología', d: 'Soporte para kits: un equipo compuesto por piezas (por ejemplo, un dron con su control y baterías) muestra si está completo, permite marcar una pieza como presente o faltante, quitarla del kit, y mover el kit completo de ubicación.' },
-  { t: 'nuevo', m: 'Tecnología', d: 'La clave de acceso de un equipo compartido se puede ver por 30 segundos (solo quien tenga el permiso), con la pantalla protegida contra capturas.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Nueva tarjeta "Mi unidad": si tienes un vehículo asignado, lo ves arriba del todo y lo tomas en un toque, sin tener que buscarlo en la lista cada vez.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'Registro rápido de personal de obra con 2 fotos: el sistema lee el documento y precarga los datos (siguen siendo editables). Nueva pantalla "Levantamiento de hoy" para marcar quién está presente, y descarga en Excel.' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'Nuevo módulo de Pagos: arma la semana de pago del personal de obra, cada persona firma su descargo en el teléfono, y se envía el reporte.' },
+  { t: 'nuevo', m: 'Flota', d: 'Nuevo botón "Leer documento" en la ficha del vehículo: toma una foto del seguro, matrícula o marbete y el sistema la lee y propone la actualización.' },
+  { t: 'nuevo', m: 'Inicio', d: 'Nuevo bloque "Hoy" con un resumen de la actividad del día.' },
+  { t: 'arreglo', m: 'Proyectos', d: 'Se corrigió un error que impedía cargar la lista de obras a algunos usuarios.' },
+  { t: 'mejora', m: 'Sistema', d: 'La app ahora se repara sola cuando queda con una versión vieja cargada después de una actualización.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
