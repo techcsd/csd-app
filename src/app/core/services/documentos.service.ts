@@ -75,13 +75,19 @@ export class DocumentosService {
    * outbox and uploaded to `flota-documentos/{entidad}/{id}/{tipo}_{uuid}.{ext}`
    * when online, then a row is inserted in `sgc.documentos`. Idempotent via the
    * client UUID (same id reused as the documento PK → upsert on re-send).
+   *
+   * A5 — devuelve `{ id, path }` (antes `void`) para que un caller que necesite
+   * saber cuándo ESTE envío concreto sincronizó (p. ej. "Leer documento" antes de
+   * llamar a `flota_documentos_aplicar`, que exige una ruta real ya subida) pueda
+   * sondear `sync.getOp(id)` hasta que desaparezca (éxito) o quede en error. No
+   * rompe a los callers existentes, que ignoran el valor de retorno.
    */
   async enqueueDocumento(input: {
     entidad: DocEntidad;
     entidadId: string;
     tipo: string;
     doc: DocCaptura;
-  }): Promise<void> {
+  }): Promise<{ id: string; path: string }> {
     const id = crypto.randomUUID();
     const path = `${input.entidad}/${input.entidadId}/${input.tipo}_${id}.${input.doc.ext}`;
     await this.sync.enqueue({
@@ -99,6 +105,7 @@ export class DocumentosService {
     });
     // No need to invalidate the cache: getDocumentos() re-reads from the server
     // (catalog.refresh) on the next online load, picking up the synced row.
+    return { id, path };
   }
 
   private registerHandler(): void {

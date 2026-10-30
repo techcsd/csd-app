@@ -1,0 +1,206 @@
+.pl2-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+  &__back,
+  &__refresh {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+  &__icon {
+    font-size: 22px;
+  }
+  &__title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.pl2-band {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  &--warn {
+    border-style: solid;
+    border-color: var(--Hub, #ffb300);
+    background: var(--color-surface);
+  }
+  &--err {
+    border-color: var(--color-danger, #e11d48);
+    color: var(--color-danger, #e11d48);
+  }
+  &--info {
+    border-style: solid;
+    border-color: var(--color-border);
+    background: var(--color-surface);
+  }
+}
+
+.pl2-retry {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-weight: 700;
+}
+
+// Contadores (presentes / nuevos / faltan)
+.pl2-contadores {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.pl2-contador {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  &__n {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  &__lbl {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+  }
+  &--ok &__n {
+    color: #16a34a;
+  }
+  &--nuevo &__n {
+    color: var(--primary, #ff5f00);
+  }
+  &--falta &__n {
+    color: var(--color-danger, #e11d48);
+  }
+}
+
+// Lista
+.pl2-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pl2-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.pl2-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pl2-row__nombre {
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pl2-row__meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.pl2-row__chip {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  &--nuevo {
+    background: var(--Hub, #ffb300);
+    color: var(--color-text);
+  }
+  &--falta {
+    background: var(--color-danger, #e11d48);
+    color: #fff;
+  }
+}
+.pl2-row__toggle {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.pl2-tbtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  &:disabled {
+    opacity: 0.5;
+  }
+  &--presente.pl2-tbtn--on {
+    background: var(--color-success, #16a34a);
+    border-color: var(--color-success, #16a34a);
+    color: #fff;
+  }
+  &--ausente.pl2-tbtn--on {
+    background: var(--color-danger, #e11d48);
+    border-color: var(--color-danger, #e11d48);
+    color: #fff;
+  }
+}
+
+// Acciones
+.pl2-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.pl2-accion {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-weight: 700;
+  font-size: 14px;
+  &--danger {
+    border-color: var(--color-danger, #e11d48);
+    color: var(--color-danger, #e11d48);
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+}

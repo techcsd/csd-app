@@ -1,5 +1,5 @@
 {
-  "en": 90,
+  "en": 89,
   "ht": 3,
   "alcance": true,
   "byScreen": {
@@ -286,10 +286,10 @@
       "ht": 0
     },
     "pages/home": {
-      "conT": 19,
+      "conT": 25,
       "sinT": 0,
       "en": 100,
-      "ht": 11
+      "ht": 8
     },
     "pages/incentivos": {
       "conT": 40,
@@ -314,6 +314,12 @@
       "sinT": 0,
       "en": 100,
       "ht": 0
+    },
+    "pages/ingenieria/pagos": {
+      "conT": 55,
+      "sinT": 0,
+      "en": 42,
+      "ht": 2
     },
     "pages/inventario": {
       "conT": 10,
@@ -634,9 +640,9 @@
       "ht": 2
     },
     "pages/proyectos/personal": {
-      "conT": 110,
+      "conT": 141,
       "sinT": 1,
-      "en": 81,
+      "en": 67,
       "ht": 1
     },
     "pages/reportar": {
@@ -778,10 +784,10 @@
       "ht": 0
     },
     "pages/transporte": {
-      "conT": 17,
+      "conT": 29,
       "sinT": 0,
       "en": 100,
-      "ht": 6
+      "ht": 3
     },
     "pages/transporte/acta-detalle": {
       "conT": 9,
@@ -1329,6 +1335,12 @@
       "en": 0,
       "ht": 0
     },
+    "shared/ui/leer-documento-vehiculo": {
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
+      "ht": 17
+    },
     "shared/ui/location-picker": {
       "conT": 8,
       "sinT": 0,
@@ -1402,10 +1414,10 @@
       "ht": 5
     },
     "shared/ui/photo-viewer": {
-      "conT": 3,
+      "conT": 5,
       "sinT": 0,
-      "en": 100,
-      "ht": 100
+      "en": 60,
+      "ht": 40
     },
     "shared/ui/pin-pad": {
       "conT": 0,

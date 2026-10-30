@@ -40,6 +40,7 @@
 | Conduce firmado / parada entregada | `pages/transporte/conduce-detalle/conduce-detalle.ts:179`; `conduces/conduces.ts:356` | simple | toast con check |
 | Solicitud de compra / movimiento enviada | `pages/compras/solicitud-compra/solicitud-compra.ts:155`; `transporte/solicitud-movimiento/crear-solicitud-movimiento.ts:183` | simple | toast con check |
 | Documento en cola, PDF guardado, transferencia ofrecida, etc. | varios `toast.success` | simple | toast con check |
+| A6 — "Hoy" (KPIs + feed de actividad del día) en Home | `pages/home/home.ts` (`cargarHoy`/polling 30s foreground) · `home.html`/`.scss` | simple | reutiliza `appCountUp` (KPIs) + `appStagger` (feed) + `appFadeIn` (entrada de la tarjeta) — IDs ya catalogados (`kpi-countup`/`lista`/`skeleton-fade`), sin ID ni overlay nuevo; sin Realtime/mapa en la app (decisión explícita de batería/datos — eso vive solo en el tablero en vivo de la web) |
 
 **Offline:** al **encolar** (sin señal), la celebración grande se degrada a la versión corta *"Guardado, se enviará"* (mediano); la grande **no se repite** al sincronizar después.
 

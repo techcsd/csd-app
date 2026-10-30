@@ -12,7 +12,8 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
-import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
+import { ExportService, ExportDoc } from '../../../core/services/export.service';
+import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, ESTADO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
@@ -32,6 +33,7 @@ export class PersonalListaPage {
   private router = inject(Router);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private exportSvc = inject(ExportService);
 
   readonly nacionalidades = NACIONALIDADES;
   readonly nacionalidadLabel = NACIONALIDAD_LABEL;
@@ -44,6 +46,8 @@ export class PersonalListaPage {
   /** CP1 — glifos desde TS (guarda AW12/no-ai-tropes: nada de emoji literal nuevo en la plantilla). */
   readonly glyphContrato = '📄';
   readonly glyphFoto = '🖼️';
+  readonly glyphLevantamiento = '📋'; // DB3
+  readonly glyphExcel = '📊'; // DB1
 
   loading = signal(true);
   error = signal('');
@@ -232,6 +236,44 @@ export class PersonalListaPage {
     void this.router.navigate(['/proyectos/personal/registrar'], {
       queryParams: this.filObra() ? { obra: this.filObra() } : {},
     });
+  }
+
+  /** DB3 — abre "Levantamiento de hoy" para la obra filtrada (o la activa del usuario). */
+  levantamiento(): void {
+    void this.router.navigate(['/proyectos/personal/levantamiento'], {
+      queryParams: this.filObra() ? { obra: this.filObra() } : {},
+    });
+  }
+
+  /** DB1 — exporta la lista YA filtrada (misma data en pantalla, sin pedir nada nuevo). */
+  descargarExcel(): void {
+    const rows = this.filtrados().map((p) => [
+      p.nombre,
+      p.apellido ?? '',
+      p.cargo?.nombre ?? '',
+      this.i18n.t(this.nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad),
+      this.i18n.t(ESTADO_LABEL[p.estado] ?? p.estado),
+      p.documento_numero ?? '',
+      this.fmtFecha(p.created_at),
+    ]);
+    const doc: ExportDoc = {
+      title: this.i18n.t('Personal de obra'),
+      filenameBase: 'personal-obra',
+      meta: this.filObra() ? [{ label: this.i18n.t('Obra'), value: this.obraOptions().find((o) => o.id === this.filObra())?.label ?? '' }] : [],
+      table: {
+        columns: [
+          this.i18n.t('Nombre'),
+          this.i18n.t('Apellido'),
+          this.i18n.t('Cargo'),
+          this.i18n.t('Nacionalidad'),
+          this.i18n.t('Estado'),
+          this.i18n.t('Documento'),
+          this.i18n.t('Registrado'),
+        ],
+        rows,
+      },
+    };
+    void this.exportSvc.share(doc, 'excel');
   }
 
   abrir(p: PersonalObra): void {

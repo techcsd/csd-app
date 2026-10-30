@@ -8,7 +8,7 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
-import { VehiculosService } from '../../core/services/vehiculos.service';
+import { VehiculosService, MiUnidad } from '../../core/services/vehiculos.service';
 import { ReporteSemanalService } from '../../core/services/reporte-semanal.service';
 import { SyncService } from '../../core/sync/sync.service';
 import { UserContextService } from '../../core/services/user-context.service';
@@ -125,6 +125,39 @@ export class TransportePage {
   esAdmin = () => this.ctx.esAdmin();
   // CW6/CW7 (D6) — aviso discreto: por qué Conduce/Rutas no aparecen en su lista.
   esPrivadoRestringido = this.ctx.esChoferPrivadoRestringido;
+  // A2 — "Crear ruta" en la card de Mi unidad: el privado restringido NO crea
+  // rutas de empresa (D6, mismo gate que la ruta /transporte/rutas/crear).
+  esChoferFlota = this.ctx.esChoferFlota;
+
+  // ── A2 — "Mi unidad" (RPC mi_unidad): card arriba del grid para que el chofer
+  // no tenga que buscar su vehículo en el picker cada vez (origen Joan: solo veía
+  // 2 de 20+ vehículos y "soltaba" el suyo sin querer). Visible a todo chofer
+  // (flota o privado): ambos tienen el concepto de "mi unidad".
+  mostrarMiUnidadCard = computed(() => this.ctx.esChofer());
+  miUnidad = signal<MiUnidad | null>(null);
+  miUnidadLoading = signal(true);
+  pidiendoUnidad = signal(false);
+  pedidoUnidadEnviado = signal(false);
+  /** A2 — ¿el RPC me devolvió un vehículo real? (0 filas o vehiculo_id null = no). */
+  tengoUnidad = computed(() => !!this.miUnidad()?.vehiculo_id);
+
+  /** A2 — la tengo EN USO ahora mismo (origen='uso' o el RPC lo marca es-mi-uso). */
+  miUnidadEnUsoPorMi = computed(() => {
+    const u = this.miUnidad();
+    return !!u?.vehiculo_id && (u.origen === 'uso' || u.en_uso_por_mi === true);
+  });
+  /** A2 — asignada a mí, nadie la tiene tomada ahora → "Tomar mi unidad". */
+  miUnidadParaTomar = computed(() => {
+    const u = this.miUnidad();
+    return !!u?.vehiculo_id && !this.miUnidadEnUsoPorMi() && !u.en_uso_por;
+  });
+  /** A2 — asignada a mí, pero ALGUIEN MÁS la tiene en uso ahora mismo. */
+  miUnidadEnUsoPorOtro = computed(() => {
+    const u = this.miUnidad();
+    return !!u?.vehiculo_id && !this.miUnidadEnUsoPorMi() && !!u.en_uso_por;
+  });
+  /** A2 — identidad homologada (alias/Marca Modelo/Placa) de mi unidad. */
+  miUnidadIdent = computed(() => vehiculoIdentidad(this.miUnidad()));
 
   // AI16 — orden de submódulos configurado por el admin (drag & drop).
   orderMap = signal<Record<string, number>>({});
@@ -451,6 +484,17 @@ export class TransportePage {
           )
           .catch(() => {});
       }
+
+      // A2 — "Mi unidad" (best-effort: no bloquea el hub si falla/offline sin caché).
+      if (this.mostrarMiUnidadCard()) {
+        void this.vehiculos
+          .getMiUnidad()
+          .then((u) => this.miUnidad.set(u))
+          .catch(() => this.miUnidad.set(null))
+          .finally(() => this.miUnidadLoading.set(false));
+      } else {
+        this.miUnidadLoading.set(false);
+      }
     } finally {
       this.loading.set(false);
     }
@@ -499,6 +543,30 @@ export class TransportePage {
     void this.router.navigate(['/transporte/uso-vehiculo', v.vehiculo_id], {
       queryParams: { mode: 'soltar', placa: v.placa, label: vehiculoIdentidad(v) },
     });
+  }
+
+  /** A2 — "Tomar mi unidad (1 toque)": la misma pantalla de `usar()`, pero el
+   *  vehículo ya viene pre-elegido por `mi_unidad()` (se salta el picker). Las
+   *  fotos AS17 del checklist de uso-vehiculo siguen pidiéndose igual ahí. */
+  tomarMiUnidad(): void {
+    const u = this.miUnidad();
+    if (!u?.vehiculo_id) return;
+    this.usar({ vehiculo_id: u.vehiculo_id, placa: u.placa, marca: u.marca, modelo: u.modelo });
+  }
+
+  /** A2 — sin unidad (ni uso ni asignación): avisa a Flota para que le asignen una. */
+  async pedirMiUnidadAFlota(): Promise<void> {
+    if (this.pidiendoUnidad() || this.pedidoUnidadEnviado()) return;
+    this.pidiendoUnidad.set(true);
+    try {
+      await this.vehiculos.pedirUnidadAFlota();
+      this.pedidoUnidadEnviado.set(true);
+      this.toast.success('Le avisamos a Flota que necesitas una unidad.');
+    } catch {
+      this.toast.error('No pudimos avisarle a Flota. Coméntaselo directamente.');
+    } finally {
+      this.pidiendoUnidad.set(false);
+    }
   }
 
   /** AF36 — historial de recepciones/traspasos de vehículo. */

@@ -46,6 +46,13 @@ export class PhotoViewer {
 
   vm = this.pv.estado;
   hint = computed(() => !this.motion.reducido());
+  /** DB2 — URL actual de la galería (1 o más fotos). */
+  urlActual = computed(() => {
+    const st = this.vm();
+    return st ? st.urls[st.index] : null;
+  });
+  /** DB2 — true si hay más de una foto (muestra flechas + contador). */
+  esGaleria = computed(() => (this.vm()?.urls.length ?? 0) > 1);
 
   private imgRef = viewChild<ElementRef<HTMLImageElement>>('img');
   private backdropRef = viewChild<ElementRef<HTMLDivElement>>('backdrop');
@@ -184,7 +191,9 @@ export class PhotoViewer {
   // ── Punteros ────────────────────────────────────────────────────────────────
   onDown(ev: PointerEvent): void {
     const target = ev.target as HTMLElement;
-    if (target.closest('.pv__close')) return; // el ✕ maneja su propio click
+    // DB2 — el ✕ y las flechas de galería manejan su propio click; no deben
+    // arrancar un gesto de pan/swipe-para-cerrar.
+    if (target.closest('.pv__close') || target.closest('.pv__arrow')) return;
     this.pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
     (ev.currentTarget as HTMLElement).setPointerCapture?.(ev.pointerId);
 
@@ -322,6 +331,37 @@ export class PhotoViewer {
   @HostListener('document:keydown.escape')
   onEsc(): void {
     if (this.pv.estado()) this.closeWithExit();
+  }
+
+  /** DB2 — flechas del teclado (PWA/escritorio) navegan la galería. */
+  @HostListener('document:keydown.arrowright')
+  onArrowRight(): void {
+    if (this.esGaleria()) this.siguiente();
+  }
+
+  @HostListener('document:keydown.arrowleft')
+  onArrowLeft(): void {
+    if (this.esGaleria()) this.anterior();
+  }
+
+  /** DB2 — siguiente/anterior foto de la galería: siempre vuelve a 1× (una foto
+   *  acercada no debe "heredar" el zoom a la siguiente). */
+  siguiente(): void {
+    this.pv.siguiente();
+    this.resetZoomInstant();
+  }
+
+  anterior(): void {
+    this.pv.anterior();
+    this.resetZoomInstant();
+  }
+
+  private resetZoomInstant(): void {
+    this.scale = 1;
+    this.tx = 0;
+    this.ty = 0;
+    const img = this.imgRef()?.nativeElement;
+    if (img) img.style.transform = 'translate(0px, 0px) scale(1)';
   }
 
   /** Cierre con fundido/caída (toques del usuario). El back físico cierra directo. */

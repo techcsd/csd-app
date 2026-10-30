@@ -1,0 +1,97 @@
+<div class="screen pl2">
+  <header class="pl2-header">
+    <button type="button" class="pl2-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="pl2-header__icon">{{ glyphLevantamiento }}</span>
+    <h1 class="pl2-header__title">{{ 'Levantamiento de hoy' | t }}</h1>
+    <button type="button" class="pl2-header__refresh" [disabled]="!proyectoId()" (click)="refrescar()" aria-label="Refrescar">{{ glyphRefresh }}</button>
+  </header>
+
+  <div class="screen__body">
+    @if (!online()) {
+      <div class="pl2-band pl2-band--warn">{{ glyphOffline }} {{ 'Sin conexión. El levantamiento de hoy necesita señal.' | t }}</div>
+    }
+
+    <!-- Selector de obra (si no viene preseleccionada) -->
+    <label class="field-label">{{ 'Obra' | t }}</label>
+    <app-collapsible-select
+      [label]="'Obra' | t" [icon]="glyphObra"
+      [options]="obraOptions()" [selectedId]="proyectoId()"
+      [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t"
+      (picked)="seleccionarObra($event)"
+    />
+
+    @if (!proyectoId()) {
+      <app-empty-state [icon]="glyphObra" [title]="'Elige una obra' | t" [message]="'Selecciona una obra para ver quién está presente hoy.' | t" />
+    } @else if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error()) {
+      <div class="pl2-band pl2-band--err">{{ error() }}</div>
+      <button type="button" class="pl2-retry" (click)="refrescar()">{{ 'Reintentar' | t }}</button>
+    } @else if (data()) {
+      <!-- Contadores -->
+      <div class="pl2-contadores">
+        <div class="pl2-contador pl2-contador--ok">
+          <span class="pl2-contador__n">{{ presentes() }}</span>
+          <span class="pl2-contador__lbl">{{ 'Presentes' | t }}</span>
+        </div>
+        <div class="pl2-contador pl2-contador--nuevo">
+          <span class="pl2-contador__n">{{ nuevosHoy() }}</span>
+          <span class="pl2-contador__lbl">{{ 'Nuevos hoy' | t }}</span>
+        </div>
+        <div class="pl2-contador pl2-contador--falta">
+          <span class="pl2-contador__n">{{ faltan() }}</span>
+          <span class="pl2-contador__lbl">{{ 'Faltan' | t }}</span>
+        </div>
+      </div>
+
+      @if (cerrado()) {
+        <div class="pl2-band pl2-band--info">{{ glyphCerrado }} {{ 'El levantamiento de hoy está cerrado. Ya no se puede marcar.' | t }}</div>
+      }
+
+      <!-- Lista de personal -->
+      <div class="pl2-list" appStagger>
+        @for (p of personal(); track p.personal_id) {
+          <div class="pl2-row" appTapScale (click)="abrirPersonal(p)">
+            <div class="pl2-row__main">
+              <span class="pl2-row__nombre">
+                {{ p.nombre }} {{ p.apellido }}
+                @if (p.nuevo_hoy) { <span class="pl2-row__chip pl2-row__chip--nuevo">{{ 'Nuevo' | t }}</span> }
+                @if (p.en_ultimo && p.presente !== true) { <span class="pl2-row__chip pl2-row__chip--falta">{{ 'Faltó' | t }}</span> }
+              </span>
+              <span class="pl2-row__meta">{{ p.cargo || ('Sin cargo' | t) }}@if (p.documento_numero) { · {{ p.documento_numero }} }</span>
+            </div>
+            <div class="pl2-row__toggle" (click)="$event.stopPropagation()">
+              <button type="button" class="pl2-tbtn pl2-tbtn--presente" [class.pl2-tbtn--on]="p.presente === true"
+                [disabled]="cerrado() || !!marcando()[p.personal_id]" (click)="marcar(p, true)">✓</button>
+              <button type="button" class="pl2-tbtn pl2-tbtn--ausente" [class.pl2-tbtn--on]="p.presente === false"
+                [disabled]="cerrado() || !!marcando()[p.personal_id]" (click)="marcar(p, false)">✕</button>
+            </div>
+          </div>
+        } @empty {
+          <app-empty-state [icon]="glyphPersonal" [title]="'Aún no hay personal en esta obra' | t" [message]="'Registra al primero desde Personal de obra.' | t" />
+        }
+      </div>
+
+      <!-- Acciones -->
+      <div class="pl2-acciones">
+        <button type="button" class="pl2-accion" (click)="descargarExcel()">{{ glyphExcel }} {{ 'Descargar Excel' | t }}</button>
+        @if (!cerrado()) {
+          <button type="button" class="pl2-accion pl2-accion--danger" [disabled]="cerrando()" (click)="pedirCerrar()">
+            {{ cerrando() ? ('Cerrando…' | t) : (glyphCerrado + ' ' + ('Cerrar el día' | t)) }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmCerrar()"
+    [title]="'¿Cerrar el levantamiento de hoy?' | t"
+    [message]="'Ya no se podrá marcar presente/ausente para hoy. No se puede deshacer desde la app.' | t"
+    [confirmLabel]="'Sí, cerrar' | t"
+    [cancelLabel]="'Seguir aquí' | t"
+    tone="danger"
+    (confirmed)="confirmarCerrar()"
+    (cancelled)="cancelarCerrar()"
+  />
+</div>

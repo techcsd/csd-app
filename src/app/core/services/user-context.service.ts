@@ -137,6 +137,16 @@ export class UserContextService {
     this.roles().some((r) => UserContextService.FLOTA_ELEVADO.includes(r)),
   );
 
+  // A5 — ¿puede APLICAR un cambio de documento de flota leído por IA (Leer
+  // documento)? Espejo EXACTO de `sgc.flota_documentos_aplicar()`:
+  // is_admin() OR role IN ('jefe_flota','logistica'). Es MÁS ESTRECHO que
+  // esFlotaElevado (que también deja pasar direccion/gerencia, que aquí NO
+  // aplican) — subconjunto a propósito, no el mismo gate.
+  private static readonly FLOTA_DOCS_APLICAR = ['jefe_flota', 'logistica'];
+  puedeAplicarDocumentosFlota = computed(
+    () => this.esAdmin() || this.roles().some((r) => UserContextService.FLOTA_DOCS_APLICAR.includes(r)),
+  );
+
   // Z26 — submódulos restringidos de Tecnología ("Versiones de App", "Reportes
   // de errores"): visibles solo para estos roles (mismo criterio que
   // sgc.es_tecnologia()). El resto de Tecnología (Historial de versiones, Guía,

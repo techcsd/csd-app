@@ -19,6 +19,47 @@ const BUCKET = 'personal-obra';
 /** Todas las fotos de evidencia que maneja el registro (slots del outbox). */
 const FOTO_TIPOS: FotoTipo[] = ['persona', 'documento', 'pared', 'carnet', 'persona_carnet_cedula'];
 
+// DB2 — campos que la edge `leer-documento-personal` extrae de las 2 fotos del
+// "Registro rápido" (documento + persona con el documento). Espejo de LecturaRecibo
+// (combustible.service.ts): la transcripción NUNCA se persiste, solo estos campos.
+export interface LecturaDocumentoPersonal {
+  nombre: string | null;
+  apellido: string | null;
+  tipo_documento: 'cedula' | 'pasaporte' | 'carnet_electoral' | 'otro' | null;
+  documento_numero: string | null;
+  nacionalidad: string | null;
+  fecha_nacimiento: string | null;
+  sexo: string | null;
+  coincide_rostro: 'si' | 'no' | 'dudoso' | null;
+  confianza: number | null;
+}
+
+// DB3 — una persona dentro del levantamiento de hoy (RPC `levantamiento_de_hoy`).
+export interface LevantamientoPersona {
+  personal_id: string;
+  nombre: string;
+  apellido: string;
+  cargo: string | null;
+  documento_numero: string | null;
+  /** null = aún no marcado hoy. */
+  presente: boolean | null;
+  origen: 'registro' | 'marcado' | null;
+  /** Registrado hoy mismo. */
+  nuevo_hoy: boolean;
+  /** Estuvo presente en el último levantamiento CERRADO antes de hoy. */
+  en_ultimo: boolean;
+}
+
+// DB3 — el levantamiento (roll call) de hoy para una obra.
+export interface LevantamientoHoy {
+  id: string;
+  proyecto_id: string;
+  fecha: string;
+  cerrado_at: string | null;
+  ultimo_cerrado_fecha: string | null;
+  personal: LevantamientoPersona[];
+}
+
 /**
  * Regla 10 — columnas que `personal_editar` puede tocar en un UPDATE directo a
  * tabla. `cambios` viaja como objeto abierto por el outbox; si un día se colara
@@ -246,6 +287,65 @@ export class PersonalObraService {
     } catch {
       return [];
     }
+  }
+
+  /**
+   * DB2 — "Registro rápido (2 fotos)": la edge `leer-documento-personal` lee el
+   * documento + la foto de la persona con el documento y devuelve los campos ya
+   * parseados (nunca la transcripción cruda). Debe llamarse con el consentimiento
+   * de IA YA otorgado (IaConsentGate.pedir() antes, en el componente) — la edge
+   * también lo valida server-side (403 `sin_consentimiento_ia`) como red de
+   * seguridad. Un 200 con `ok:false` (documento ilegible) NO es un error: el
+   * componente debe dejar los campos en blanco para edición manual.
+   */
+  async leerDocumento(
+    fotoDocumento: { data: string; mime: string },
+    fotoPersona: { data: string; mime: string },
+  ): Promise<{ ok: boolean; error?: string; error_code?: string; lectura?: LecturaDocumentoPersonal; modelo?: string }> {
+    const { data, error } = await this.client.functions.invoke('leer-documento-personal', {
+      body: { foto_documento: fotoDocumento, foto_persona: fotoPersona },
+    });
+    if (error) {
+      // La edge devuelve un cuerpo JSON incluso en 4xx/5xx; intenta leerlo (mismo
+      // patrón que leerRecibo en combustible.service.ts).
+      const ctx = (error as { context?: { body?: unknown } }).context;
+      if (ctx?.body) {
+        try {
+          const parsed = typeof ctx.body === 'string' ? JSON.parse(ctx.body) : ctx.body;
+          if (parsed?.error) return { ok: false, error: parsed.error, error_code: parsed.error_code };
+        } catch { /* ignore */ }
+      }
+      return { ok: false, error: 'No se pudo leer el documento. Llena los campos a mano.' };
+    }
+    return data as { ok: boolean; lectura?: LecturaDocumentoPersonal; modelo?: string };
+  }
+
+  // ── DB3 — Levantamiento de hoy (roll call) ──────────────────────────────────
+  /** Trae (y crea si no existe) el levantamiento de hoy de una obra. Online-only. */
+  async levantamientoDeHoy(proyectoId: string): Promise<LevantamientoHoy> {
+    const { data, error } = await this.client.rpc('levantamiento_de_hoy', { p_proyecto_id: proyectoId });
+    if (error) throw new Error(error.message);
+    return data as LevantamientoHoy;
+  }
+
+  /** Marca presente/ausente a una persona en el levantamiento de hoy. Online-only. */
+  async levantamientoMarcar(personalId: string, presente: boolean): Promise<void> {
+    const { error } = await this.client.rpc('levantamiento_marcar', {
+      p_personal_id: personalId,
+      p_presente: presente,
+    });
+    if (error) {
+      if ((error as { code?: string }).code === '22023') {
+        throw new Error('El levantamiento de hoy ya está cerrado.');
+      }
+      throw new Error(error.message);
+    }
+  }
+
+  /** Cierra el levantamiento de hoy (irreversible desde la app). Online-only. */
+  async levantamientoCerrar(id: string): Promise<void> {
+    const { error } = await this.client.rpc('levantamiento_cerrar', { p_id: id });
+    if (error) throw new Error(error.message);
   }
 
   /** Conteos por obra (total, por cargo, por nacionalidad) — espejo de la web. */

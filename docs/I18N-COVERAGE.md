@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 90%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 89%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -54,11 +54,12 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 1 | 0% | 0% |  |
-| pages/home | 19 | 0 | 100% | 11% | ✅ |
+| pages/home | 25 | 0 | 100% | 8% | ✅ |
 | pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
 | pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
+| pages/ingenieria/pagos | 55 | 0 | 42% | 2% |  |
 | pages/inventario | 10 | 0 | 100% | 0% |  |
 | pages/inventario/almacen-inventario | 23 | 0 | 100% | 0% |  |
 | pages/inventario/almacenes | 30 | 0 | 100% | 3% |  |
@@ -112,7 +113,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/proyectos/cronograma | 64 | 1 | 98% | 0% |  |
 | pages/proyectos/detalle | 31 | 0 | 100% | 3% |  |
 | pages/proyectos/form | 48 | 1 | 98% | 2% |  |
-| pages/proyectos/personal | 110 | 1 | 81% | 1% |  |
+| pages/proyectos/personal | 141 | 1 | 67% | 1% |  |
 | pages/reportar | 0 | 8 | 0% | 0% |  |
 | pages/reuniones/reunion-crear | 16 | 0 | 100% | 0% |  |
 | pages/reuniones/reunion-detalle | 13 | 0 | 100% | 0% |  |
@@ -136,7 +137,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/tecnologia/cotizaciones/cotizacion-subir | 21 | 2 | 91% | 0% |  |
 | pages/tecnologia/dev-notes | 0 | 7 | 0% | 0% |  |
 | pages/tecnologia/dev-notes/editor | 8 | 0 | 100% | 0% |  |
-| pages/transporte | 17 | 0 | 100% | 6% | ✅ |
+| pages/transporte | 29 | 0 | 100% | 3% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
 | pages/transporte/apoyo-transporte | 53 | 0 | 91% | 0% |  |
 | pages/transporte/asignar | 35 | 0 | 100% | 3% |  |
@@ -215,6 +216,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/km-input | 8 | 0 | 100% | 0% |  |
 | shared/ui/language-onboarding | 1 | 2 | 33% | 0% |  |
 | shared/ui/language-selector | 0 | 2 | 0% | 0% |  |
+| shared/ui/leer-documento-vehiculo | 12 | 0 | 100% | 17% |  |
 | shared/ui/location-picker | 8 | 0 | 100% | 0% |  |
 | shared/ui/logo-reveal | 2 | 1 | 67% | 33% |  |
 | shared/ui/lugar-picker | 9 | 0 | 100% | 0% |  |
@@ -226,7 +228,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
 | shared/ui/photo-slot | 19 | 1 | 90% | 5% |  |
-| shared/ui/photo-viewer | 3 | 0 | 100% | 100% |  |
+| shared/ui/photo-viewer | 5 | 0 | 60% | 40% |  |
 | shared/ui/select-list | 0 | 1 | 0% | 0% |  |
 | shared/ui/selector-categorias | 28 | 1 | 97% | 3% |  |
 | shared/ui/share-sheet | 3 | 2 | 60% | 0% |  |

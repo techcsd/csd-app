@@ -154,6 +154,13 @@
         @if (!puedeSubir()) {
           <p class="pveh__docs-hint">{{ 'Estos documentos se gestionan desde la web.' | t }}</p>
         }
+        <!-- A5 — "Leer documento": una foto (seguro/matrícula/marbete DGII) → IA →
+             emparejar → aplicar (Flota elevado) o avisar a Flota (los demás). -->
+        <app-leer-documento-vehiculo
+          [vehiculoId]="vehiculoId()"
+          [placaVehiculo]="placa()"
+          (aplicado)="onDocumentoAplicado()"
+        />
         <app-doc-slot
           [label]="'Seguro' | t"
           [soloLectura]="!puedeSubir()"

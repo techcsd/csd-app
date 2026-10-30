@@ -56,7 +56,10 @@ const SELECT =
   'ubicacion, localidad, descripcion, presupuesto, ' +
   'latitud, longitud, direccion_geo, ubicacion_metodo, ' + // AM7
   'ingeniero_obra, maestro_encargado, contacto_nombre, contacto_telefono, ' + // AM10
-  'responsable_id, responsable:usuarios(nombre), ' +
+  // DB13 (ronda DB) — proyectos→usuarios tiene 4 FKs (responsable_id/cerrado_por/
+  // ingeniero_obra_id/maestro_usuario_id); sin el hint, PostgREST devuelve
+  // PGRST201 (HTTP 300, embed ambiguo) y TODO el refresh de Proyectos falla.
+  'responsable_id, responsable:usuarios!proyectos_responsable_id_fkey(nombre), ' +
   'fases:fases_proyecto(id, proyecto_id, nombre, descripcion, estado, fecha_inicio, fecha_fin, progreso, orden)';
 
 /**

@@ -1066,3 +1066,147 @@ kit, clave (30 s + pantalla protegida) y garantía en un teléfono real; decidir
 quién recibe `tecnologia.claves_equipos` (Administración › Roles, por defecto
 nadie); avisar OK antes de build/publish o de abrir el PR `feature/da-ronda →
 dev`.
+
+## DB — Resiliencia, Mi unidad, personal con 2 fotos, descargo de pagos, lector de flota, Hoy en vivo (app, 29/10/2026)
+
+Backend (PROMPT-124) **100% mergeado a `origin/dev`** antes de empezar (PR #33,
+`e1bb0bd9`/`8ab164dc`) — confirmado leyendo el HANDOFF del padre (`SGC`) y los
+7 SQL (`db4`,`db5`,`db7`,`db8`,`db9`,`db12`,`db14`,`db15`) + 4 edges nuevas
+(`leer-documento-flota`,`leer-documento-personal`,`resumir-reporte`,
+`pagos-descargo-enviar`), no asumido. A0-A6 completos en `feature/db-ronda`
+(worktree `csd-app-db`), build + 59/59 tests + `cap sync android` verdes.
+**Nada commiteado/pusheado** (instrucción explícita del prompt). Ver contrato
+web↔app en el `PARIDAD.md` del padre, sección "Decisiones (Ronda DB)".
+
+- **DB13 — proyectos ambiguo (causa real, no DA-visto):** `proyectos.service.ts`
+  pedía `responsable:usuarios(nombre)` sobre una tabla con **4 FKs** a
+  `usuarios` (`responsable_id`/`cerrado_por`/`ingeniero_obra_id`/
+  `maestro_usuario_id`) → PostgREST devolvía PGRST201 (HTTP 300, embed
+  ambiguo) y TODO el refresh de Proyectos fallaba para cualquier usuario sin
+  caché previo (el caso real de Sonia). Fix de una línea:
+  `responsable:usuarios!proyectos_responsable_id_fkey(nombre)`. Auditados los
+  demás embeds `usuarios(` de la app (`vehiculos.service.ts`,
+  `admin.service.ts`, `inventario.service.ts`) — todos con una sola FK real,
+  sin el mismo riesgo.
+- **DB14 — auto-reparación por chunk perdido:** `update.service.ts.autoRepair()`
+  pasó de `private` a invocable desde fuera (guard de 60 s intacto);
+  `error-report.service.ts.handleError()` detecta la familia
+  `MIME type|module script failed|dynamically imported module|ChunkLoadError`
+  y dispara `autoRepair('chunk_perdido')` vía inyección perezosa del
+  `Injector` (evita el ciclo `UpdateService↔ErrorReportService`).
+  `VERSION_INSTALLATION_FAILED` repara a la **1ª** falla (antes 2ª) cuando el
+  error es de red/404 de un asset (`esFalloDeRedOChunk()`, nuevo). No se tocó
+  el patrón `failed` de cada pantalla individual (60+ archivos, fuera de
+  alcance de una pasada barata).
+- **DB7 — Compa (hallazgo real, no solo verificación):** `compa.service.ts`
+  dejaba filtrar `"Failed to send a request to the Edge Function"` al chat
+  cuando `FunctionsFetchError` no traía `Response` (solo el error crudo de
+  fetch) — `readEdgeError()` hacía fallback a `error.message`. Quitado ese
+  fallback; ahora cae al mensaje humano por defecto de `mensajeAmable()`.
+  `geocoding.service.ts` tiene el mismo bug latente, fuera de esta ronda
+  (reportado, no corregido).
+- **DB9 — requisición cubierto/pendiente:** ya estaba resuelto desde CD7 —
+  `solicitudes.service.ts.avance()` + `detalle.html:100-124` ya muestran
+  despachado/cubierto/pendiente por renglón. Confirmado, sin cambios.
+- **DB2 — galería de imágenes en Dev notes (solo lectura):** antes, cada
+  imagen de una nota era un `<img>` plano sin lightbox ni agrupación.
+  `core/util/markdown.ts` gana `agruparImagenesConsecutivas()` (agrupa
+  bloques-imagen consecutivos en una fila horizontal de miniaturas de
+  150 px); `markdown-view.ts` abre el visor de pantalla completa existente
+  (`PhotoViewer`/`PhotoViewerService`, reutilizado — se extendió su estado a
+  `{urls[], index}` con flechas/contador, retrocompatible con los 8 llamadores
+  de una sola foto que ya existían) en vez de construir un visor nuevo.
+- **DB12/A2 — "Mi unidad":** tarjeta nueva arriba del hub de Transporte
+  (`transporte.ts`/`.html`, bajo `EstadoChoferBar`) vía `mi_unidad()` (RPC del
+  padre), con 5 estados (en uso por mí / para tomar / en uso por otro /
+  oculta-con-motivo-humano / sin vehículo → "Pide a Flota"). "Tomar mi unidad
+  (1 toque)" reutiliza el flujo existente `usar()` → `/transporte/uso-vehiculo/
+  :id` con el vehículo preseleccionado (los pasos de fotos AS17 no cambiaron).
+  `vehiculo-picker.ts`: `mios()` ahora siempre pone la unidad propia primero.
+  Caché offline nueva `getMiUnidad()` en `vehiculos.service.ts`, mismo patrón
+  `CatalogService` que `veh_autorizados:<uid>`, keyed `mi_unidad:<uid>`.
+  "Pide a Flota" reutiliza `notificar_modulo('flota', …)` (no hay RPC
+  específica por rol; mismo mecanismo que ya usa el resto de la app para
+  avisar a Flota). Confirmado: `soloMios` de Combustible ya aceptaba una
+  unidad solo-asignada (sin uso activo) desde antes — `misIds` ya caía a
+  `vehiculo_asignaciones` cuando no hay uso; sin cambios ahí.
+- **DB5/A3 — Registro rápido (2 fotos) + Levantamiento + Excel:**
+  `personal-registro.ts` gana un modo `'modo'→'fotos_rapidas'` (2 fotos:
+  `documento` + `persona_carnet_cedula`, los mismos `FotoTipo` ya existentes)
+  que llama a la edge `leer-documento-personal` (gateado por
+  `IaConsentGate.pedir()`, igual que Compa) y precarga nombre/apellido/
+  nacionalidad/tipo y número de documento — todo editable, `cargo` sigue
+  manual. Aviso no bloqueante si `coincide_rostro` es `no`/`dudoso`.
+  `fecha_nacimiento`/`sexo` de la lectura **no se guardan** (el modelo
+  `PersonalObra` no tiene esos campos; no se extendió el dominio solo para
+  esto). Duplicado por `documento_numero` ofrece "Ya está registrado — marcar
+  presente hoy" (`levantamiento_marcar`) en vez de crear dos veces. Pantalla
+  nueva `personal-levantamiento` (ruta `proyectos/personal/levantamiento`):
+  Presentes/Nuevos/Faltan vía `levantamiento_de_hoy(proyecto)`, toggle
+  optimista por persona vía `levantamiento_marcar`, "Cerrar el día" vía
+  `levantamiento_cerrar` tras confirmar — **online-requerida a propósito**
+  (la RPC lee-y-escribe el "hoy" en cada llamada; cachear sería engañoso
+  offline). "Descargar Excel" en la lista de personal y en el levantamiento
+  vía `ExportService` existente (`write-excel-file`, ya era dependencia) — una
+  sola hoja por documento (el contrato de `ExportDoc`/`ExportTable` de esta
+  app no soporta multi-hoja; el pedido de "3 hojas" es del lado web, no de
+  esta app).
+- **DB4/A4 — Pagos / descargo firmado:** nuevo submódulo `ingenieria.pagos`
+  (tile en el hub de Ingeniería, gate `puedeVerSubmodulo`/`puedeOperarSubmodulo`
+  — `ver` para abogado/gerencia/dirección, `operar` para ingeniero_campo/
+  gerente_proyectos/jefe_ingenieros, espejo exacto del gate del servidor).
+  `pagos-lista`/`pagos-detalle` nuevas: crear semana (`pagos_obra_crear`),
+  montos/conceptos/ausente por línea (`pagos_obra_linea_guardar`), texto del
+  descargo renderizado con placeholders reales vía el motor `renderizar()` ya
+  existente de `PlantillasDocumentoService` (se le agregó `porNombre()`),
+  firma con `<app-signature-pad>` (mismo patrón que `personal-registro`),
+  "Enviar reporte" (`pagos_obra_enviar`, **requiere conexión, nunca se
+  encola** — a diferencia de montos/concepto/firma que SÍ van por un outbox
+  nuevo `tipo_op:'pagos_firma'`, con el bucket `obra` fijado explícitamente
+  por foto en vez de inferido — mismo patrón que `combustible`). Servicio
+  nuevo `pagos-obra.service.ts` inyectado eager en `app.config.ts` (lección
+  S30: si no se bootea ahí, el handler nunca se registra). Complemento/
+  reabrir: fuera de alcance, solo se muestra el error `22023` del servidor
+  si aplica. Sin TTS (no existe infraestructura de texto-a-voz en la app,
+  solo dictado de voz-a-texto — no se construyó desde cero). Confirmado:
+  Compa en esta app solo habla con RPCs/edges del servidor, no hay
+  allowlist cliente-side que extender para excluir `pagos_obra`.
+- **DB3/A5 — "Leer documento" en la ficha del vehículo (1 foto):** componente
+  nuevo `shared/ui/leer-documento-vehiculo` (bottom-sheet, no ruta aparte)
+  colgado de `perfil-vehiculo.html`: cámara → `leer-documento-flota` (1 foto)
+  → `flota_documentos_emparejar` (para avisar si la placa leída no coincide
+  con el vehículo actual, sin bloquear) → revisión humana de los campos →
+  rama por rol: **elevado** (`admin`/`jefe_flota`/`logistica`, gate nuevo
+  `puedeAplicarDocumentosFlota`, deliberadamente más estrecho que
+  `esFlotaElevado` que también incluye dirección/gerencia) ve "Aplicar"
+  (sube la foto por el outbox existente de `DocumentosService`, espera a que
+  sincronice — **requiere conexión**, sin infraestructura nueva de "aplicar
+  diferido" — y entonces llama `flota_documentos_aplicar`, mostrando
+  `omitido` tal cual si el servidor no pisó una vigencia más nueva); **no
+  elevado** (chofer) ve "Avisar a Flota" (sube la foto igual, sin aplicar, +
+  `notificar_modulo('flota', …)`, mismo mecanismo que DB12). Tipos
+  `licencia`/`otro`/`reverso` o lecturas fallidas caen directo al flujo de
+  subida manual ya existente, sin pasar por IA.
+- **DB1/A6 — "Hoy" en el Inicio (sin mapa, sin Realtime):** bloque nuevo en
+  `home.ts`/`.html` visible a admin/inventario/flota/proyectos/dirección
+  (espejo del gate `42501` del servidor), vía `tablero_vivo_resumen()`: 3 KPIs
+  con `appCountUp` (`conduces_hoy`/`echadas_hoy`/`vehiculos_en_uso`, mismos
+  para todo el que ve el bloque — sin desglose por rol) + feed de los
+  últimos 8 eventos con `appStagger`/`appFadeIn`. Polling cada 30 s SOLO con
+  la app en primer plano (mismo patrón ya usado en `conduces-pendientes`/
+  `live-refresh.directive`: `App.resume/pause` nativo +
+  `document.visibilitychange` en PWA), sin Realtime ni mapa (decisión
+  explícita del prompt — batería/datos de un teléfono). Sin entradas nuevas
+  al catálogo de movimiento (reutiliza `appCountUp`/`appStagger`/`appFadeIn`
+  ya registrados como `nivel:'simple'`; el nivel "mediano" del catálogo está
+  reservado para eventos de negocio reales vía `MotionService.momento()`,
+  no para chrome de dashboard pasivo).
+
+**Pendiente físico (Xaviel):** probar en un teléfono real contra **dev**: Mi
+unidad (tomar 1-toque, que ya no "se suelte" sola), registro rápido de
+personal con 2 fotos (con una cédula real, en dev), levantamiento del día,
+Excel descargado, firmar un descargo de pago semana completa hasta enviar,
+leer un documento de flota (ideal: una de las páginas de `MARBETES.pdf`) tanto
+como chofer (Avisar a Flota) como con un usuario de Flota (Aplicar), y el
+bloque "Hoy" del Inicio. Avisar OK antes de build/publish o de abrir el PR
+`feature/db-ronda → dev`.

@@ -1,0 +1,135 @@
+<div class="screen pgd">
+  <header class="pgd-header">
+    <button type="button" class="pgd-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <span class="pgd-header__icon">{{ glyphPagos }}</span>
+    <h1 class="pgd-header__title">{{ 'Pagos' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error() || !pago()) {
+      <app-empty-state [icon]="glyphPagos" [title]="'No se pudo cargar' | t" [message]="'Revisa tu conexión e intenta de nuevo.' | t" [ctaLabel]="'Reintentar' | t" (action)="cargar()" />
+    } @else {
+      <div class="pgd-info">
+        <span class="pgd-info__obra">{{ glyphObra }} {{ obraNombre() }}</span>
+        <span class="pgd-info__semana">{{ fmt(pago()!.semana_desde) }} – {{ fmt(pago()!.semana_hasta) }}</span>
+        <span class="pgd-chip" [class.pgd-chip--enviado]="enviado()">
+          {{ enviado() ? ('Enviado' | t) : ('Borrador' | t) }}
+        </span>
+      </div>
+
+      @if (!online()) {
+        <div class="pgd-band pgd-band--warn">{{ glyphOffline }} {{ 'Sin conexión. Los cambios se guardan y se enviarán cuando vuelva la señal.' | t }}</div>
+      }
+      @if (enviado()) {
+        <div class="pgd-band pgd-band--info">{{ glyphEnviado }} {{ 'Esta semana ya fue enviada. Para lo que faltó, usa un complemento (próximamente).' | t }}</div>
+      }
+      @if (!operar() && !enviado()) {
+        <div class="pgd-band">{{ 'Solo puedes ver este reporte.' | t }}</div>
+      }
+
+      <div class="pgd-list">
+        @for (l of lineas(); track l.id) {
+          <div class="pgd-linea">
+            <div class="pgd-linea__head">
+              <div class="pgd-linea__id">
+                <span class="pgd-linea__nombre">{{ l.nombre_snapshot }}</span>
+                <span class="pgd-linea__meta">
+                  {{ l.cargo_snapshot || ('Sin cargo' | t) }}
+                  @if (l.documento_numero_snapshot) { · {{ l.documento_tipo_snapshot }} {{ l.documento_numero_snapshot }} }
+                </span>
+              </div>
+              <span class="pgd-estado" [class.pgd-estado--firmado]="l.estado === 'firmado'" [class.pgd-estado--ausente]="l.estado === 'ausente'">
+                {{ l.estado === 'firmado' ? ('Firmado' | t) : l.estado === 'ausente' ? ('Ausente' | t) : ('Pendiente' | t) }}
+              </span>
+            </div>
+
+            @if (soloLectura()) {
+              <div class="pgd-linea__ro">
+                <span>{{ 'Monto' | t }}: <b>{{ montoVista(l.monto) }}</b></span>
+                <span>{{ 'Concepto' | t }}: {{ l.concepto || '—' }}</span>
+                @if (l.estado === 'firmado') { <span class="pgd-linea__firmadoAt">{{ 'Firmado' | t }} {{ fmt(l.firmado_at) }}</span> }
+              </div>
+            } @else {
+              <div class="pgd-linea__campos">
+                <input
+                  class="field pgd-monto" type="text" inputmode="decimal" autocomplete="off"
+                  [ngModel]="bufMonto(l.id)" (ngModelChange)="onMontoInput(l.id, $event)"
+                  [placeholder]="'Monto RD$' | t"
+                />
+                <input
+                  class="field pgd-concepto" type="text" autocomplete="off"
+                  [ngModel]="bufConcepto(l.id)" (ngModelChange)="onConceptoInput(l.id, $event)"
+                  [placeholder]="'Concepto (opcional)' | t"
+                />
+              </div>
+              <div class="pgd-linea__acciones">
+                <button type="button" class="pgd-btn" [disabled]="!!guardandoId()" (click)="guardarLinea(l)">
+                  {{ guardandoId() === l.id ? ('Guardando…' | t) : ('Guardar' | t) }}
+                </button>
+                <button type="button" class="pgd-btn" [disabled]="!!guardandoId() || l.estado === 'firmado'" (click)="toggleAusente(l)">
+                  {{ l.estado === 'ausente' ? ('Deshacer' | t) : ('Ausente' | t) }}
+                </button>
+                @if (l.estado !== 'firmado') {
+                  <button type="button" class="pgd-btn pgd-btn--primary" (click)="abrirFirma(l)">{{ 'Firmar' | t }}</button>
+                }
+              </div>
+            }
+
+            @if (firmandoId() === l.id) {
+              <div class="pgd-firma">
+                <h3 class="pgd-firma__titulo">{{ 'Descargo de pago' | t }}</h3>
+                @if (!plantillaLista()) {
+                  <p class="pgd-firma__nota">{{ 'Cargando el texto del descargo…' | t }}</p>
+                } @else if (descargoHtml()) {
+                  <div class="pgd-firma__texto" [innerHTML]="descargoHtml()"></div>
+                } @else {
+                  <p class="pgd-firma__nota pgd-firma__nota--warn">
+                    {{ 'No se encontró la plantilla del descargo. ' | t }}
+                    {{ l.nombre_snapshot }} {{ 'recibe' | t }} {{ montoVista(l.monto) }}
+                    {{ 'de Constructora SD por la semana del' | t }} {{ fmt(pago()!.semana_desde) }} {{ 'al' | t }} {{ fmt(pago()!.semana_hasta) }},
+                    {{ 'sin reclamo pendiente.' | t }}
+                  </p>
+                }
+
+                <p class="pgd-firma__instruccion">{{ 'Pide al trabajador que firme aquí:' | t }}</p>
+                <app-signature-pad (changed)="onFirmaChanged($event)" />
+
+                <div class="pgd-firma__acciones">
+                  <button type="button" class="pgd-btn" (click)="cancelarFirma()">{{ 'Cancelar' | t }}</button>
+                  <button type="button" class="pgd-btn pgd-btn--primary" [disabled]="!firmaLista() || firmando()" (click)="confirmarFirma()">
+                    {{ firmando() ? ('Guardando…' | t) : ('Confirmar firma' | t) }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @empty {
+          <app-empty-state [icon]="glyphPagos" [title]="'Sin personal en esta semana' | t" [message]="'El servidor prellena las líneas desde el último levantamiento cerrado.' | t" />
+        }
+      </div>
+
+      @if (operar() && !enviado()) {
+        <button type="button" class="pgd-enviar" [disabled]="!puedeEnviar()" (click)="pedirEnviar()">
+          {{ enviando() ? ('Enviando…' | t) : ('Enviar reporte' | t) + ' (' + firmadosCount() + ')' }}
+        </button>
+        @if (firmadosCount() === 0) {
+          <p class="pgd-firma__nota">{{ 'Necesitas al menos un descargo firmado para enviar.' | t }}</p>
+        } @else if (!online()) {
+          <p class="pgd-firma__nota pgd-firma__nota--warn">{{ 'Necesitas conexión para enviar el reporte.' | t }}</p>
+        }
+      }
+    }
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmEnviar()"
+    [title]="'¿Enviar el reporte de esta semana?' | t"
+    [message]="'Se genera el PDF y se avisa a Legal/gerencia. No se puede deshacer desde la app.' | t"
+    [confirmLabel]="'Sí, enviar' | t"
+    [cancelLabel]="'Seguir aquí' | t"
+    (confirmed)="confirmarEnviar()"
+    (cancelled)="cancelarEnviar()"
+  />
+</div>

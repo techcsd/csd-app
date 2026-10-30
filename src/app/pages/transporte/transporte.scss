@@ -137,6 +137,86 @@
   gap: 10px;
 }
 
+// A2 — card "Mi unidad" (mismo patrón visual que .estado-bar: superficie +
+// borde de acento a la izquierda).
+.mi-unidad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 5px solid var(--primary);
+  border-radius: 14px;
+}
+
+.mi-unidad__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mi-unidad__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mi-unidad__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mi-unidad__titulo {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--main);
+}
+
+.mi-unidad__ident {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--main-ultra-light);
+}
+
+.mi-unidad__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mi-unidad__chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--main);
+  transition: all 0.15s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.mi-unidad__aviso {
+  margin: 0;
+  font-size: 13px;
+  color: var(--main-ultra-light);
+  line-height: 1.4;
+}
+
+.mi-unidad__tomar,
+.mi-unidad__pedir {
+  width: 100%;
+}
+
 // AI1 — banner "Doc. en proceso" (descartable dentro de la vista en-proceso).
 // CW6/CW7 (D6) — aviso discreto para el chofer privado restringido.
 .transporte__aviso-privado {

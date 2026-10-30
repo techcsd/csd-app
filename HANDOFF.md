@@ -1,5 +1,62 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 29/10/2026 — PROMPT-125 · Ronda **DB** (parte app, A0-A6) — construida sobre **2.60.0**, SIN COMMIT (espera OK de Xaviel)
+
+**TL;DR:** las 7 fases (A0-A6) hechas en una sesión autónoma, en worktree propia `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-db` (rama `feature/db-ronda`, desde `origin/dev` = 2.60.0). Backend (PROMPT-124, SGC) confirmado **100% mergeado a `origin/dev`** antes de empezar (PR #33 `e1bb0bd9`/`8ab164dc`) — leído del HANDOFF/`PARIDAD.md` del padre y los 7 SQL + 4 edges nuevas, no asumido. `npm run build` verde, `npm test` verde (**59/59**), `npx cap sync android` verde (15 plugins, sin plugin nativo nuevo). **Nada commiteado/pusheado, nada en `main`** — instrucción explícita del prompt ("no commit/push/APK/publish sin avisar y sin OK"). Contrato completo archivo:línea en `PARIDAD.md` §DB.
+
+Contexto completo: `C:\developer\improvements\octubre 2026\imp 29102026\CONTEXTO-ACTUALIZACION-61.md` + `PROMPT-125-CSD-APP.md`. Sesión 100% autónoma (Regla A del prompt: defaults DB-00…DB-19 aplicados sin preguntar, reportados abajo). Cada fase se delegó a un sub-agente con el contrato exacto (RPC/edge ya en dev) y verificó su propio build+tests antes de devolver el control; el cierre (build final, `cap sync`, `PARIDAD.md`, este HANDOFF) lo hice yo directamente.
+
+### A0 — Verificación
+Confirmado archivo:línea: `vehiculos.service.ts` (pool `activo && estado not in (baja,no_disponible)`, ~línea 427), `vehiculo-picker.ts` (`misIds` desde uso-v2 ∪ asignaciones, ~línea 105), 0 coincidencias de la familia `MIME type|ChunkLoadError|module script failed` en toda la app (confirmado: no hay manejo, como esperaba el contexto). **DB13 (Sonia) reproducido y resuelto en el código** (ver A1) — la causa real NO era RLS ni scoping, era un embed PostgREST ambiguo (`proyectos→usuarios` tiene 4 FKs), exactamente lo que el F0 del padre ya había diagnosticado con la sesión de Sonia mintada en dev; yo solo apliqué el fix del lado app. **DB12 (Joan)** — el padre ya diagnosticó con datos reales de prod (F0 de PROMPT-124): su unidad es **L542136 (Canter)**, asignación activa; dos causas server-side ya corregidas por el padre (cron que soltaba el uso a las 24 h pese a asignación activa, y la flota casi completa `no_disponible` por seguros SURA vencidos el 28-oct) — del lado app, A2 construye la tarjeta "Mi unidad" que hace esto visible y operable.
+
+### A1 — Resiliencia y arreglos rápidos
+**DB14** — `update.service.ts.autoRepair()` pasa de `private` a invocable externamente (guard de 60 s intacto); `error-report.service.ts.handleError()` (el `ErrorHandler` global de la app) detecta la familia de errores de chunk perdido y dispara `autoRepair('chunk_perdido')` vía `Injector` perezoso (evita el ciclo `UpdateService↔ErrorReportService`). `VERSION_INSTALLATION_FAILED` repara a la 1ª falla (antes 2ª) cuando es claramente red/404 de un asset. **DB13** — fix de una línea en `proyectos.service.ts` (`responsable:usuarios!proyectos_responsable_id_fkey(nombre)`), auditados los demás embeds `usuarios(` de la app (sin el mismo riesgo). **DB7** — hallazgo real (no solo verificación): `compa.service.ts` sí dejaba filtrar `"Failed to send a request to the Edge Function"` cuando el fallo era de transporte puro (sin `Response`); corregido quitando ese fallback. **DB9** — ya resuelto desde CD7, confirmado sin cambios. **DB2** — Dev notes (solo lectura) ganó agrupación de imágenes consecutivas en galería horizontal de 150 px + reutilización del visor de pantalla completa existente (`PhotoViewer`, extendido a multi-imagen con flechas, retrocompatible con sus 8 llamadores de una sola foto).
+
+### A2 — Mi unidad (Joan)
+Tarjeta nueva arriba del hub de Transporte vía `mi_unidad()` (RPC del padre): 5 estados (en uso por mí, para tomar, en uso por otro, oculta-con-motivo-humano, sin vehículo→"Pide a Flota"). "Tomar mi unidad (1 toque)" reutiliza el flujo `usar()` existente con el vehículo preseleccionado (AS17 sin cambios). `vehiculo-picker.ts` pone la unidad propia siempre primero. Caché offline `getMiUnidad()` (mismo patrón `CatalogService` que `veh_autorizados:<uid>`). "Pide a Flota" reutiliza `notificar_modulo('flota', …)`. Confirmado: `soloMios` de Combustible ya aceptaba la unidad solo-asignada desde antes.
+
+### A3 — Personal con 2 fotos + Levantamiento + Excel
+`personal-registro.ts` gana modo "Registro rápido" (2 fotos → `leer-documento-personal`, gateado por `IaConsentGate` → precarga editable; `coincide_rostro` no/dudoso = aviso no bloqueante; duplicado por documento → "marcar presente hoy" en vez de duplicar). `fecha_nacimiento`/`sexo` de la lectura no se persisten (el modelo no los tiene; no se extendió solo para esto). Pantalla nueva `personal-levantamiento` (Presentes/Nuevos/Faltan, marcar por persona, cerrar el día) — **online-requerida a propósito** (cachear "hoy" sería engañoso offline). "Descargar Excel" en lista y levantamiento vía `ExportService` ya existente (una hoja por documento; el contrato de esta app no soporta multi-hoja, a diferencia del pedido web de "3 hojas").
+
+### A4 — Firmar descargo de pagos
+Submódulo nuevo `ingenieria.pagos` (ver/operar, espejo exacto del gate del servidor). `pagos-lista`/`pagos-detalle`: crear semana, montos/concepto/ausente por línea, texto del descargo con placeholders reales (reutiliza el motor de `PlantillasDocumentoService`), firma con el `signature-pad` existente, "Enviar reporte" **requiere conexión y nunca se encola** (a diferencia de montos/firma, que sí van por un outbox nuevo `tipo_op:'pagos_firma'` con bucket `obra` explícito). Sin TTS (no existe infraestructura de texto-a-voz en la app). Confirmado: Compa no tiene ningún camino hacia `pagos_obra` (solo habla con RPCs/edges del servidor).
+
+### A5 — Lector de documento de flota desde el teléfono
+Componente `leer-documento-vehiculo` (bottom-sheet) en la ficha del vehículo: 1 foto → `leer-documento-flota` → `flota_documentos_emparejar` (avisa si la placa no coincide, sin bloquear) → revisión humana → rama por rol: elevado (`admin`/`jefe_flota`/`logistica`, gate nuevo y más estrecho que `esFlotaElevado`) ve "Aplicar" (sube por outbox, espera sincronizar — requiere conexión — y llama `flota_documentos_aplicar`); chofer ve "Avisar a Flota" (sube la foto + `notificar_modulo`). Tipos no aplicables o lecturas fallidas caen al flujo de subida manual ya existente.
+
+### A6 — Feed "Hoy" (movimiento)
+Bloque nuevo en el Inicio (mismo gate de módulos que el RPC del servidor): 3 KPIs con `appCountUp` (conduces/echadas/vehículos-en-uso, iguales para todos los que ven el bloque) + feed de los últimos 8 eventos con `appStagger`/`appFadeIn`. Polling cada 30 s solo en primer plano (mismo patrón `App.resume/pause` + `visibilitychange` ya usado en `conduces-pendientes`). Sin Realtime, sin mapa (decisión explícita del prompt). Sin entradas nuevas al catálogo de movimiento (reutiliza directivas `nivel:'simple'` ya registradas).
+
+### Cierre
+`npm run build` verde (solo warnings preexistentes de budget/NG8102/heic2any, nada nuevo), `npm test` verde (**59/59**, sin regresión), `npx cap sync android` verde (mismos 15 plugins). `PARIDAD.md` actualizado con la sección `## DB`. `docs/MOVIMIENTO.md` sin filas nuevas (A6 reutiliza directivas existentes). **Nada commiteado** — todo el diff vive en el working tree de `csd-app-db`.
+
+**Regla B (cada nota literal de Xaviel cubierta o declarada fuera de alcance):**
+- **Nota 1/DB7** (Compa) → A1 (bug real encontrado y corregido, no solo verificado).
+- **Nota 2/DB1** (animaciones/tablero en vivo) → A6 (feed "Hoy" sin mapa/Realtime — explícitamente fuera de alcance esta ronda; reels de IG no vistos, van a la ronda DC).
+- **Nota 3/DB8** (echada retroactiva Raykler) → **repetida**, ya resuelta por CZ1 desde 2.59.0 (`combustible.service.ts:52,420`); el padre cerró los 2 reportes de soporte en prod.
+- **Nota 4/DB9** (requisición cubierto) → A1, confirmado ya resuelto desde CD7, sin cambios.
+- **Nota 5/DB4** (pagos/descargo) → A4.
+- **Nota 6/DB10** (reporte rendimiento combustible) → **solo padre** (destinatarios + encender, sin parte app).
+- **Nota 7/DB11** (destinatarios resumen semanal) → **solo padre**.
+- **Nota 8/DB3** (lector marbetes/flota) → A5 (una foto desde el teléfono; el lote completo del PDF es solo web).
+- **Nota 9/DB12** (Joan, Mi unidad) → A0 + A2.
+- **Nota 10/DB2** (imágenes Dev notes) → A1 (galería de solo lectura).
+- **Nota 11/DB6** (reportes→ronda con IA) → **solo padre** (pantalla de Administración web, sin parte app).
+- **Nota 12/DB13** (Sonia sin obras) → A0 + A1 (causa real: embed ambiguo, no RLS).
+- **Nota 13/DB5** (personal 2 fotos) → A3.
+- **Nota 14/DB14** (chunk viejo/SW, mía) → A1.
+
+### PENDIENTE XAVIEL (físico)
+1. Probar en un teléfono real contra **dev**: Mi unidad (tomar 1-toque, que ya no "se suelte" sola — confirmar con Joan al día siguiente), registro rápido de personal con 2 fotos (con una cédula real, en dev), levantamiento del día, Excel descargado, firmar un descargo de pago de una semana completa hasta enviar, leer un documento de flota (ideal: una página de `MARBETES.pdf`) tanto como chofer (Avisar a Flota) como con un usuario de Flota (Aplicar), y el bloque "Hoy" del Inicio.
+2. **Físico del lado SGC** (ya en su HANDOFF, repetido aquí para no perderlo): cargar `MARBETES.pdf`, asignar/confirmar la unidad de Joan, correo de Yonairis, encender "Rendimiento de combustible de la flota", describir los reels de IG → ronda DC.
+3. **OK por escrito** antes de: commitear/pushear `feature/db-ronda`, abrir PR `dev → main` de 2.60.0 (sigue pendiente de DA, independiente de esta ronda), o cualquier build/publish de APK.
+
+### En dev / En prod
+- **En dev:** nada todavía — todo el trabajo de esta ronda vive sin commitear en el worktree `csd-app-db`. El backend (SGC) de esta ronda SÍ está en `origin/dev` desde antes de esta sesión.
+- **En prod:** sin cambios. App sigue en **2.59.0** en prod; 2.60.0 (ronda DA) sigue esperando el OK del teléfono de Xaviel, **independiente** de esta ronda DB.
+
+---
+
 ## 🟡 SESIÓN 29/10/2026 — PROMPT-123 · Ronda **DA** (parte app, A0-A4) — app **2.60.0 EN DEV** (apk-dev publicado), NO en `main`/prod
 
 **Cierre (29/10/2026):** Xaviel dio el OK explícito ("eso lo puedes hacer tu, hazlo por favor") para hacer yo mismo lo que normalmente queda de su lado — build, merge y publish a **dev** (regla 18: dev no está gateado, solo prod lo está). `feature/da-ronda` → pusheada (`cc3f3ba`) → mergeada a `dev` (fast-forward, commit `cc3f3ba`) → bump de versión **2.60.0** (commit `37dc0ec`, push a `origin/dev`) → `npm run apk -- --env dev` (firmado con el cert de siempre `3c5316d8…5065`, canal apk, candado OK, registrado en `app_versiones` de dev) → `npm run apk:publish -- --env dev` (subido al bucket de dev, `apk_url` actualizado). **2.60.0 está sirviendo en dev** (`app-dev.`/APK dev); usuarios en 2.59.0 verán el prompt de actualización in-app. **No se tocó `main`/prod** — la prueba en un teléfono real (CP5/CL4) sigue siendo física, de Xaviel; sin ella no se abre el PR `dev → main`.

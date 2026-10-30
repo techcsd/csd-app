@@ -221,8 +221,15 @@ export class CompaService {
         /* body no-JSON */
       }
     }
-    const legacy = (error as { context?: { error?: string }; message?: string })?.context?.error;
-    return { error: legacy || (error as Error)?.message };
+    // DB7 — sin Response (p. ej. `FunctionsFetchError`: el fetch mismo falló, sin
+    // conexión/CORS/cold-start sin respuesta) no hay body de la edge que leer. Antes
+    // esto caía a `error.message`, que es texto genérico del SDK de supabase-js
+    // ("Failed to send a request to the Edge Function") — jerga técnica que NO debe
+    // llegar al chat como si fuera lo que dijo la edge. Solo confiamos en
+    // `context.error` (forma vieja real de un body de edge); si no hay eso, `null`
+    // deja que `mensajeAmable` use su mensaje genérico de "sin conexión".
+    const legacy = (error as { context?: { error?: string } })?.context?.error;
+    return legacy ? { error: legacy } : null;
   }
 
   /** Extrae el status HTTP de un error de edge (Response en `context`). */

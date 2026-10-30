@@ -1,0 +1,81 @@
+<button type="button" class="btn-ghost ldv__btn" (click)="comenzar()" [disabled]="ocupado()">
+  {{ glyphCamara }} {{ 'Leer documento' | t }}
+</button>
+
+<app-bottom-sheet [open]="sheetAbierto()" [titulo]="'Leer documento' | t" (closed)="cerrar()">
+  @switch (paso()) {
+    @case ('procesando') {
+      <div class="ldv__estado">
+        <span class="ldv__spinner">{{ glyphCamara }}</span>
+        <p>{{ 'Leyendo el documento…' | t }}</p>
+      </div>
+    }
+    @case ('aplicando') {
+      <div class="ldv__estado">
+        <span class="ldv__spinner">{{ glyphCamara }}</span>
+        <p>{{ 'Aplicando el cambio…' | t }}</p>
+      </div>
+    }
+    @case ('revision') {
+      <div class="ldv__revision">
+        @if (noAplicable()) {
+          <p class="ldv__hint">
+            {{ mensajeError() || ('Este documento no se puede aplicar automáticamente; se guardará como documento.' | t) }}
+          </p>
+        } @else {
+          <h3 class="ldv__tipo">{{ tipoLabel() }}</h3>
+
+          @if (!coincideVehiculo()) {
+            <div class="ldv__warn">
+              <span>{{ glyphAlerta }}</span>
+              <span>{{ 'La placa leída no coincide con este vehículo — revisa la foto.' | t }}</span>
+            </div>
+          }
+
+          @if (camposMostrar().length) {
+            <ul class="ldv__campos">
+              @for (c of camposMostrar(); track c.label) {
+                <li><span>{{ c.label }}</span><b>{{ c.valor }}</b></li>
+              }
+            </ul>
+          } @else {
+            <p class="ldv__hint">{{ 'No se leyó ningún campo de este documento.' | t }}</p>
+          }
+        }
+
+        <div class="ldv__acciones">
+          @if (noAplicable()) {
+            <button type="button" class="btn-cta" (click)="guardarComoDocumento()" [disabled]="ocupado()">
+              {{ 'Guardar como documento' | t }}
+            </button>
+          } @else if (puedeAplicar()) {
+            <button type="button" class="btn-cta" (click)="aplicar()" [disabled]="ocupado() || !online()">
+              {{ 'Aplicar' | t }}
+            </button>
+            @if (!online()) {
+              <p class="ldv__hint">{{ 'Se requiere conexión para aplicar el cambio.' | t }}</p>
+            }
+          } @else {
+            <button type="button" class="btn-cta" (click)="avisarFlota()" [disabled]="ocupado()">
+              {{ 'Avisar a Flota' | t }}
+            </button>
+          }
+          <button type="button" class="btn-ghost" (click)="cerrar()" [disabled]="ocupado()">{{ 'Cerrar' | t }}</button>
+        </div>
+      </div>
+    }
+    @case ('hecho') {
+      <div class="ldv__hecho">
+        <p class="ldv__hecho-msg">{{ mensajeFinal() }}</p>
+        @if (detalleAplicado().length) {
+          <ul class="ldv__campos">
+            @for (d of detalleAplicado(); track d.label) {
+              <li><span>{{ d.label }}</span><b>{{ d.valor }}</b></li>
+            }
+          </ul>
+        }
+        <button type="button" class="btn-cta" (click)="cerrar()">{{ 'Listo' | t }}</button>
+      </div>
+    }
+  }
+</app-bottom-sheet>

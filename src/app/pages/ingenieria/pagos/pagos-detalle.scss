@@ -1,0 +1,235 @@
+.pgd-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+  &__back {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  &__icon {
+    font-size: 22px;
+  }
+  &__title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+  }
+}
+
+.pgd-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  &__obra {
+    font-weight: 700;
+    font-size: 14px;
+  }
+  &__semana {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+}
+
+.pgd-chip {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  &--enviado {
+    background: var(--color-success, #16a34a);
+    border-color: var(--color-success, #16a34a);
+    color: #fff;
+  }
+}
+
+.pgd-band {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  &--warn {
+    border-style: solid;
+    border-color: var(--Hub, #ffb300);
+    background: var(--color-surface);
+  }
+  &--info {
+    border-style: solid;
+    border-color: var(--color-border);
+    background: var(--color-surface);
+  }
+}
+
+.pgd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pgd-linea {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.pgd-linea__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pgd-linea__id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pgd-linea__nombre {
+  font-weight: 700;
+  font-size: 15px;
+}
+.pgd-linea__meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.pgd-estado {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  &--firmado {
+    background: var(--color-success, #16a34a);
+    border-color: var(--color-success, #16a34a);
+    color: #fff;
+  }
+  &--ausente {
+    background: var(--color-danger, #e11d48);
+    border-color: var(--color-danger, #e11d48);
+    color: #fff;
+  }
+}
+
+.pgd-linea__ro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+.pgd-linea__firmadoAt {
+  font-size: 11px;
+}
+
+.pgd-linea__campos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.pgd-monto,
+.pgd-concepto {
+  height: 44px;
+}
+
+.pgd-linea__acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pgd-btn {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-weight: 700;
+  font-size: 13px;
+  &--primary {
+    background: var(--primary, #ff5f00);
+    border-color: var(--primary, #ff5f00);
+    color: var(--text-on-accent, #14243a);
+  }
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.pgd-firma {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-border);
+  &__titulo {
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  &__texto {
+    font-size: 12px;
+    line-height: 1.5;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    margin-bottom: 10px;
+  }
+  &__nota {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin: 0 0 10px;
+    &--warn {
+      color: var(--Hub, #ffb300);
+    }
+  }
+  &__instruccion {
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  &__acciones {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+}
+
+.pgd-enviar {
+  width: 100%;
+  min-height: var(--touch-min, 56px);
+  margin-top: 16px;
+  border-radius: var(--radius);
+  background: var(--primary, #ff5f00);
+  color: var(--text-on-accent, #14243a);
+  font-weight: 800;
+  font-size: 15px;
+  border: none;
+  &:disabled {
+    opacity: 0.5;
+  }
+}

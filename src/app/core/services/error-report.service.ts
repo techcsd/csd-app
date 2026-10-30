@@ -5,6 +5,7 @@ import { SyncService, throwSyncError, type PermanentSyncError } from '../sync/sy
 import type { OutboxOp } from '../db/app-db';
 import { SupabaseService } from './supabase.service';
 import { DeviceInfoService } from './device-info.service';
+import { UpdateService } from './update.service';
 
 /**
  * Y6 — tipos de error que instrumentamos. `crash`/`error` son automáticos
@@ -69,6 +70,20 @@ export class ErrorReportService implements ErrorHandler {
   private static readonly MAX_PER_HOUR = 30;
   private static readonly WINDOW_MS = 3_600_000;
 
+  /**
+   * DB14 — familia de errores de "chunk perdido": el `index.html` cacheado pide un
+   * JS que ya no existe en el servidor (se publicó una versión nueva) y el browser
+   * recibe de vuelta el HTML de la SPA en vez del script, o directamente falla el
+   * import dinámico. Sin manejo esto deja al usuario con una pantalla rota hasta que
+   * recargue a mano — ya se vio 10+ veces en 6 dispositivos distintos.
+   */
+  private static readonly CHUNK_ERROR_PATTERNS = [
+    /not a valid javascript mime type/i,
+    /importing a module script failed/i,
+    /failed to fetch dynamically imported module/i,
+    /chunkloaderror/i,
+  ];
+
   constructor() {
     // El handler del outbox: envía el reporte al RPC. Es retrocompatible con la
     // clasificación de errores del SyncService (permanente vs transitorio).
@@ -107,7 +122,20 @@ export class ErrorReportService implements ErrorHandler {
   handleError(error: unknown): void {
     // Mantener el log de consola (reemplazamos el ErrorHandler por defecto).
     console.error(error);
-    void this.report('crash', this.messageOf(error), {}, this.stackOf(error));
+    const mensaje = this.messageOf(error);
+    void this.report('crash', mensaje, {}, this.stackOf(error));
+
+    // DB14 — chunk perdido tras un deploy nuevo: auto-reparar (desregistra el SW +
+    // limpia cachés + recarga) en vez de dejar al usuario con una pantalla rota.
+    // Lazy injector (no un campo inyectado) a propósito: UpdateService ya inyecta
+    // ErrorReportService, así que un campo aquí sería un ciclo de DI.
+    if (ErrorReportService.CHUNK_ERROR_PATTERNS.some((p) => p.test(mensaje))) {
+      try {
+        void this.injector.get(UpdateService).autoRepair('chunk_perdido');
+      } catch {
+        /* best-effort */
+      }
+    }
   }
 
   /**

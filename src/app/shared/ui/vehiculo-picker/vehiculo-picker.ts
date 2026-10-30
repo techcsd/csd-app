@@ -81,9 +81,24 @@ export class VehiculoPicker {
    *  ahora (uso v2). Incluir el "en uso" es clave: un chofer puede estar usando un
    *  vehículo que NO es su asignación formal (lo recibió), y debe poder echarle gas. */
   misIds = signal<Set<string>>(new Set());
+  /** A2 — vehiculo_id de `mi_unidad()` (uso o asignación), si lo hay, para
+   *  flotarlo SIEMPRE primero dentro de "Tus vehículos" (Joan: su unidad real
+   *  se perdía entre el resto de "mis" vehículos). Best-effort: si falla, el
+   *  orden cae al que ya traía `disponibles()`. */
+  miUnidadId = signal<string | null>(null);
 
-  /** W4 — "Tus vehículos" primero. */
-  mios = computed(() => this.disponibles().filter((v) => this.misIds().has(v.vehiculo_id)));
+  /** W4/A2 — "Tus vehículos" primero, y entre esos, "mi unidad" primero de todas. */
+  mios = computed(() => {
+    const list = this.disponibles().filter((v) => this.misIds().has(v.vehiculo_id));
+    const miId = this.miUnidadId();
+    if (!miId) return list;
+    const idx = list.findIndex((v) => v.vehiculo_id === miId);
+    if (idx <= 0) return list; // ya está primero, o no está en el pool visible
+    const reordenado = [...list];
+    const [mia] = reordenado.splice(idx, 1);
+    reordenado.unshift(mia);
+    return reordenado;
+  });
   /** W4 — el resto de la flota disponible (oculto cuando soloMios, AF18). */
   resto = computed(() =>
     this.soloMios() ? [] : this.disponibles().filter((v) => !this.misIds().has(v.vehiculo_id)),
@@ -105,12 +120,15 @@ export class VehiculoPicker {
     this.cargaFallo.set(false);
     try {
       // W4 — cargar disponibles + mis asignaciones/recepciones + mis usos activos.
-      const [dispRes, asignaciones, recepcionesEnCola, misUsos] = await Promise.all([
+      // A2 — "mi unidad" en paralelo (best-effort: no bloquea el picker si falla).
+      const [dispRes, asignaciones, recepcionesEnCola, misUsos, miUnidad] = await Promise.all([
         this.vehiculos.getVehiculosDisponiblesDetailed(),
         this.vehiculos.getMisAsignaciones().catch(() => []),
         this.vehiculos.entregasRecepcionPendientes().catch(() => new Set<string>()),
         this.usoSvc.misUsos().catch(() => []),
+        this.vehiculos.getMiUnidad().catch(() => null),
       ]);
+      this.miUnidadId.set(miUnidad?.vehiculo_id ?? null);
       const disp = dispRes.items;
       this.disponibles.set(disp);
       // BL2 — solo es error si falló Y no hay nada cacheado que ofrecer.

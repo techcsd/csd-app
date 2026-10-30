@@ -1,0 +1,155 @@
+.pg-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+  &__back {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  &__icon {
+    font-size: 22px;
+  }
+  &__title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.pg-band {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  &--warn {
+    border-style: solid;
+    border-color: var(--Hub, #ffb300);
+    background: var(--color-surface);
+  }
+  &--err {
+    border-color: var(--color-danger, #e11d48);
+    color: var(--color-danger, #e11d48);
+  }
+}
+
+.pg-retry {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-weight: 700;
+}
+
+.pg-accion {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 14px;
+  &--primary {
+    background: var(--primary, #ff5f00);
+    border-color: var(--primary, #ff5f00);
+    color: var(--text-on-accent, #14243a);
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.pg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.pg-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pg-row__obra {
+  font-weight: 700;
+  font-size: 14px;
+}
+.pg-row__semana {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.pg-chip {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  &--enviado {
+    background: var(--color-success, #16a34a);
+    border-color: var(--color-success, #16a34a);
+    color: #fff;
+  }
+}
+
+// Hoja de "Nueva semana de pago"
+.pg-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  z-index: 50;
+}
+.pg-sheet {
+  width: 100%;
+  background: var(--color-surface);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 16px 24px;
+  max-height: 85vh;
+  overflow-y: auto;
+  &__title {
+    margin: 0 0 14px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  &__acciones {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    .pg-accion {
+      margin-bottom: 0;
+    }
+  }
+}

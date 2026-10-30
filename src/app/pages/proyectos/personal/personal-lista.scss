@@ -53,6 +53,22 @@
   }
 }
 
+// DB1/DB3 — levantamiento de hoy + exportar a Excel
+.pl-acciones {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.pl-accion {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
 // Conteos
 .pl-conteos {
   display: flex;

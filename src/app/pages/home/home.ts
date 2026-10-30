@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppLauncher } from '@capacitor/app-launcher';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import type { PluginListenerHandle } from '@capacitor/core';
 import { BigButton } from '../../shared/ui/big-button/big-button';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
@@ -22,6 +25,31 @@ import { PushService } from '../../core/services/push.service';
 import { ModuleOrderService, ModuleSize } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fusionarEntregasPorRecibir } from '../../core/util/recepcion';
+import { SupabaseService } from '../../core/services/supabase.service';
+import { formatFechaRelativa } from '../../core/util/fecha';
+
+// A6 — "Hoy": resumen del tablero en vivo (RPC `tablero_vivo_resumen`, sin params).
+// Esta app NO consume `flujo` ni `flota` (sin mapa ni pipeline de etapas — decisión
+// explícita de batería/datos en el teléfono; eso vive solo en el tablero de la web).
+interface TableroVivoKpis {
+  requisiciones_hoy: number;
+  conduces_hoy: number;
+  entregas_hoy: number;
+  echadas_hoy: number;
+  vehiculos_en_uso: number;
+  bitacoras_hoy: number;
+}
+interface TableroVivoEvento {
+  tipo: 'requisicion' | 'conduce' | 'entrega' | 'combustible' | 'uso' | 'bitacora';
+  titulo: string;
+  detalle: string;
+  at: string;
+}
+interface TableroVivoResumen {
+  kpis: TableroVivoKpis;
+  eventos: TableroVivoEvento[];
+  generado_en: string;
+}
 
 interface HomeTile {
   modulo: string;
@@ -156,6 +184,7 @@ export class HomePage implements OnDestroy {
   private autosave = inject(AutosaveService);
   private i18n = inject(I18nService);
   private toast = inject(ToastService);
+  private supabase = inject(SupabaseService);
   avisosNoLeidos = this.notificaciones.noLeidas;
 
   // AF38 — orden de módulos configurable por el admin (drag & drop tipo launcher).
@@ -188,6 +217,35 @@ export class HomePage implements OnDestroy {
   private primerSync = true;
   // QA-19: canal realtime de mensajes para mantener el badge de no leídos EN VIVO.
   private mensajesUnsub: (() => void) | null = null;
+
+  // A6 — "Hoy": gate client-side ESPEJO del gate del RPC (42501 si no cumple) — evita
+  // un round-trip inútil y decide si el bloque se muestra siquiera. Sin Realtime/mapa
+  // (costo de batería/datos en el teléfono): polling fijo cada 30s, solo en foreground.
+  hoyVisible = computed(
+    () =>
+      this.ctx.esAdmin() ||
+      this.ctx.hasModulo('inventario') ||
+      this.ctx.hasModulo('flota') ||
+      this.ctx.hasModulo('proyectos') ||
+      this.ctx.hasModulo('direccion'),
+  );
+  // BL2 — "no hay eventos hoy" (hoyResumen con eventos=[]) ≠ "la llamada falló"
+  // (hoyFallo, solo cuando NUNCA hubo una carga exitosa — un poll fallido con datos
+  // previos no tira el bloque, solo deja de refrescarlo esta vez).
+  hoyResumen = signal<TableroVivoResumen | null>(null);
+  hoyFallo = signal(false);
+  private hoyInterval: ReturnType<typeof setInterval> | null = null;
+  private hoyResumeHandle: PluginListenerHandle | null = null;
+  private hoyPauseHandle: PluginListenerHandle | null = null;
+  private static readonly HOY_POLL_MS = 30000;
+  private static readonly ICONOS_EVENTO: Record<TableroVivoEvento['tipo'], string> = {
+    requisicion: '🛒',
+    conduce: '📦',
+    entrega: '📥',
+    combustible: '⛽',
+    uso: '🔑',
+    bitacora: '📓',
+  };
 
   // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
   // Tecnología se excluye de aquí porque NO es un módulo de trabajo (ver `tiles`).
@@ -399,6 +457,21 @@ export class HomePage implements OnDestroy {
     void this.push.syncToken();
     // AF38 — orden de módulos configurado (cache-then-network).
     void this.cargarOrden();
+    // A6 — "Hoy": primera carga + arranca el polling si el gate lo permite; el
+    // foreground/background lo maneja iniciarPollingHoy/detenerPollingHoy.
+    if (this.hoyVisible()) {
+      void this.cargarHoy();
+      this.iniciarPollingHoy();
+    }
+    if (Capacitor.isNativePlatform()) {
+      void CapApp.addListener('pause', () => this.detenerPollingHoy()).then((h) => (this.hoyPauseHandle = h));
+      void CapApp.addListener('resume', () => {
+        if (!this.hoyVisible()) return;
+        void this.cargarHoy();
+        this.iniciarPollingHoy();
+      }).then((h) => (this.hoyResumeHandle = h));
+    }
+    document.addEventListener('visibilitychange', this.onHoyVisibilityChange);
     effect(() => {
       this.sync.changed();
       if (this.primerSync) {
@@ -459,6 +532,58 @@ export class HomePage implements OnDestroy {
     // QA-19: cierra el canal realtime de mensajes al salir del Home.
     this.mensajesUnsub?.();
     this.clearLongPress();
+    // A6 — para el polling y suelta los listeners de foreground al salir del Home.
+    this.detenerPollingHoy();
+    void this.hoyPauseHandle?.remove();
+    void this.hoyResumeHandle?.remove();
+    document.removeEventListener('visibilitychange', this.onHoyVisibilityChange);
+  }
+
+  /** A6 — PWA: visibilitychange cubre lo que `App.addListener` (solo nativo) no ve. */
+  private readonly onHoyVisibilityChange = (): void => {
+    if (!this.hoyVisible()) return;
+    if (document.visibilityState === 'visible') {
+      void this.cargarHoy();
+      this.iniciarPollingHoy();
+    } else {
+      this.detenerPollingHoy();
+    }
+  };
+
+  /** A6 — carga el resumen del tablero (best-effort, nice-to-have, nunca rompe el Home). */
+  private async cargarHoy(): Promise<void> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('tablero_vivo_resumen');
+      if (error) throw error;
+      this.hoyResumen.set(data as TableroVivoResumen);
+      this.hoyFallo.set(false);
+    } catch {
+      // Un poll fallido con datos previos no los borra (evita parpadear a "falló" por
+      // un blip de red); solo marca fallo si NUNCA hubo una carga exitosa.
+      if (!this.hoyResumen()) this.hoyFallo.set(true);
+    }
+  }
+
+  private iniciarPollingHoy(): void {
+    this.detenerPollingHoy();
+    this.hoyInterval = setInterval(() => void this.cargarHoy(), HomePage.HOY_POLL_MS);
+  }
+
+  private detenerPollingHoy(): void {
+    if (this.hoyInterval != null) {
+      clearInterval(this.hoyInterval);
+      this.hoyInterval = null;
+    }
+  }
+
+  /** A6 — glyph del tipo de evento (TS-bound, nunca emoji literal en la plantilla). */
+  iconoEvento(tipo: TableroVivoEvento['tipo']): string {
+    return HomePage.ICONOS_EVENTO[tipo] ?? '•';
+  }
+
+  /** A6 — "hace X min/h" reutilizando el util de fecha ya existente en la app. */
+  tiempoEvento(at: string): string {
+    return formatFechaRelativa(at);
   }
 
   /** QA-19 — recuenta los mensajes no leídos y actualiza el badge (best-effort). */
