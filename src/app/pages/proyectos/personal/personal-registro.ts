@@ -25,7 +25,9 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MotionService } from '../../../core/services/motion.service';
-import { PersonalObraService } from '../../../core/services/personal-obra.service';
+import { NetworkService } from '../../../core/services/network.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
+import { PersonalObraService, LecturaDocumentoPersonal } from '../../../core/services/personal-obra.service';
 import { PlantillasDocumentoService } from '../../../core/services/plantillas-documento.service';
 import { PlantillaDocumento, EmpresaLite } from '../../../core/models/plantilla-documento.model';
 import { construirValoresAuto } from '../../../core/utils/plantilla-merge.util';
@@ -51,8 +53,15 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
  *  y testigos, que Legal completa desde el expediente (ahora / en papel / después). */
 const FIRMA_HABILITADA = true;
 
-/** AR1 — hojas del wizard de registro de personal (una pregunta por pantalla). */
-type PasoKey = 'datos' | 'documento' | 'fotos' | 'firma' | 'carnet' | 'resumen';
+/** AR1 — hojas del wizard de registro de personal (una pregunta por pantalla).
+ *  DB2 — `modo` (elegir rápido/completo) y `fotos_rapidas` (las 2 fotos del
+ *  Registro rápido) son exclusivas del modo rápido; `documento`/`fotos` (las 5
+ *  fotos guiadas) son exclusivas del modo completo. */
+type PasoKey = 'modo' | 'datos' | 'documento' | 'fotos' | 'fotos_rapidas' | 'firma' | 'carnet' | 'resumen';
+
+/** DB2 — "Registro rápido (2 fotos)": toma documento + persona-con-documento y deja
+ *  que la IA pre-llene nombre/apellido/nacionalidad/tipo/n° de documento (editable). */
+type ModoRegistro = 'rapido' | 'completo';
 
 /** AE9 — slice persistido del registro (sin fotos/firma, que van a borrador_fotos). */
 interface RegistroDraft {
@@ -113,16 +122,33 @@ export class PersonalRegistroPage implements OnDestroy {
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
   private motion = inject(MotionService);
+  private network = inject(NetworkService);
+  private iaGate = inject(IaConsentGate);
 
   readonly nacionalidades = NACIONALIDADES;
   readonly tiposDocumento = TIPOS_DOCUMENTO;
   readonly cuadrillas = CUADRILLAS; // AV4
   readonly aseguramientos = ASEGURAMIENTO; // AV4
   readonly firmaHabilitada = FIRMA_HABILITADA;
-  /** Guía de la foto del documento (paso 2). */
+  /** Guía de la foto del documento (paso 2, y 1ra foto del modo rápido). */
   readonly guiaDocumento = FOTOS_GUIA.find((g) => g.tipo === 'documento')!;
+  /** DB2 — 2da foto del modo rápido (persona sosteniendo el documento). */
+  readonly guiaPersonaDoc = FOTOS_GUIA.find((g) => g.tipo === 'persona_carnet_cedula')!;
+  /** CP1/AW12 — glifos desde TS (guarda no-ai-tropes: nada de emoji literal nuevo en la plantilla). */
+  readonly glyphRapido = '⚡';
+  readonly glyphCompleto = '📝';
   /** Fotos guiadas del paso 3 (todas menos el documento, que va en el paso 2). */
   readonly guiaFotos = FOTOS_GUIA.filter((g) => g.tipo !== 'documento');
+
+  // ── DB2 — Registro rápido (2 fotos) ───────────────────────────────────────
+  modoRegistro = signal<ModoRegistro>('completo');
+  leyendoDocumento = signal(false);
+  lecturaDocError = signal('');
+  /** Etiquetas de los campos que la IA llenó (para el aviso "Leído: …"). */
+  lecturaDocOk = signal<string[]>([]);
+  /** `coincide_rostro` 'no'|'dudoso' → aviso visible, no bloquea. */
+  rostroDudoso = signal(false);
+  marcandoPresente = signal(false);
 
   private readonly clave = 'proyectos:personal-registro';
   private hydrated = false;
@@ -222,11 +248,17 @@ export class PersonalRegistroPage implements OnDestroy {
   paso = signal(0);
 
   pasos = computed<{ key: PasoKey; titulo: string }[]>(() => {
-    const p: { key: PasoKey; titulo: string }[] = [
-      { key: 'datos', titulo: this.i18n.t('Datos de la persona') },
-      { key: 'documento', titulo: this.i18n.t('Documento de identidad') },
-      { key: 'fotos', titulo: this.i18n.t('Fotos de evidencia') },
-    ];
+    const p: { key: PasoKey; titulo: string }[] = [{ key: 'modo', titulo: this.i18n.t('Tipo de registro') }];
+    if (this.modoRegistro() === 'rapido') {
+      // DB2 — rápido: 2 fotos primero (con lectura IA de fondo) → datos pre-llenos.
+      // Las otras 3 fotos guiadas y el paso "documento" se saltan (CE4: opcionales).
+      p.push({ key: 'fotos_rapidas', titulo: this.i18n.t('Fotos del documento') });
+      p.push({ key: 'datos', titulo: this.i18n.t('Datos de la persona') });
+    } else {
+      p.push({ key: 'datos', titulo: this.i18n.t('Datos de la persona') });
+      p.push({ key: 'documento', titulo: this.i18n.t('Documento de identidad') });
+      p.push({ key: 'fotos', titulo: this.i18n.t('Fotos de evidencia') });
+    }
     if (FIRMA_HABILITADA) p.push({ key: 'firma', titulo: this.i18n.t('Firma del documento') });
     p.push({ key: 'carnet', titulo: this.i18n.t('Carnet') });
     p.push({ key: 'resumen', titulo: this.i18n.t('Revisar y registrar') });
@@ -238,6 +270,8 @@ export class PersonalRegistroPage implements OnDestroy {
 
   pasoValido = computed(() => {
     switch (this.pasoActual()?.key) {
+      case 'modo':
+        return true;
       case 'datos':
         return !!(this.proyectoId() && this.nombre().trim() && this.nacionalidad() && this.cargoId());
       // CE4 — las 5 fotos son OPCIONALES: ni el documento ni la foto de la persona
@@ -245,6 +279,10 @@ export class PersonalRegistroPage implements OnDestroy {
       case 'documento':
         return true;
       case 'fotos':
+        return true;
+      // DB2 — las 2 fotos del modo rápido tampoco son un muro (CE4): se puede seguir
+      // sin ellas y llenar los datos a mano en el siguiente paso.
+      case 'fotos_rapidas':
         return true;
       case 'firma':
         return !!this.firma();
@@ -425,6 +463,110 @@ export class PersonalRegistroPage implements OnDestroy {
     }
   }
 
+  // ── DB2 — Registro rápido (2 fotos + lectura IA) ────────────────────────────
+  /** Foto del paso rápido: guarda + dispara la lectura IA en cuanto estén las 2. */
+  onFotoRapida(tipo: FotoTipo, photo: CapturedPhoto): void {
+    this.onFoto(tipo, photo);
+    this.lecturaDocError.set('');
+    if (this.fotoDe('documento') && this.fotoDe('persona_carnet_cedula')) void this.leerDocumentoAuto();
+  }
+
+  /** Reduce una imagen a ~1600px y devuelve base64 sin prefijo (mismo patrón que
+   *  combustible.ts/imagenBase64, para la edge `leer-documento-personal`). */
+  private async imagenBase64(blob: Blob, max = 1600): Promise<{ data: string; mime: string }> {
+    const bitmap = await createImageBitmap(blob);
+    const escala = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * escala), h = Math.round(bitmap.height * escala);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    return { data: dataUrl.split(',')[1] ?? '', mime: 'image/jpeg' };
+  }
+
+  /**
+   * DB2 — lee documento+persona con IA para pre-llenar los datos (todo editable
+   * luego). Consentimiento de IA ANTES de llamar a la edge (evita un viaje gastado
+   * si el usuario no lo ha dado); si dice "Ahora no" se sigue igual, solo que sin
+   * pre-llenado (la IA nunca bloquea el registro). Un 200 con `ok:false` (documento
+   * ilegible) se trata igual: se deja todo en blanco para llenar a mano.
+   */
+  async leerDocumentoAuto(): Promise<void> {
+    const doc = this.fotoDe('documento');
+    const persona = this.fotoDe('persona_carnet_cedula');
+    if (!doc || !persona || this.leyendoDocumento()) return;
+    if (!this.network.online()) {
+      this.lecturaDocError.set(this.i18n.t('Necesitas conexión para leer el documento automáticamente. Llena los datos a mano.'));
+      return;
+    }
+    if (!(await this.iaGate.pedir())) return; // CI10 — sin consentimiento: se sigue, sin pre-llenado
+    this.leyendoDocumento.set(true);
+    this.lecturaDocError.set('');
+    try {
+      const [fd, fp] = await Promise.all([this.imagenBase64(doc.blob), this.imagenBase64(persona.blob)]);
+      const res = await this.service.leerDocumento(fd, fp);
+      if (!res.ok || !res.lectura) {
+        this.lecturaDocError.set(res.error || this.i18n.t('No se pudo leer el documento. Llena los campos a mano.'));
+        return;
+      }
+      this.aplicarLecturaDocumento(res.lectura);
+    } catch {
+      this.lecturaDocError.set(this.i18n.t('No se pudo leer el documento. Llena los campos a mano.'));
+    } finally {
+      this.leyendoDocumento.set(false);
+    }
+  }
+
+  /** Pre-llena los campos leídos (todos quedan editables). Nunca persiste la lectura cruda. */
+  private aplicarLecturaDocumento(l: LecturaDocumentoPersonal): void {
+    const campos: string[] = [];
+    if (l.nombre) { this.nombre.set(l.nombre); campos.push(this.i18n.t('Nombre')); }
+    if (l.apellido) { this.apellido.set(l.apellido); campos.push(this.i18n.t('Apellido')); }
+    const nac = this.mapNacionalidad(l.nacionalidad);
+    if (nac) { this.nacionalidad.set(nac); campos.push(this.i18n.t('Nacionalidad')); }
+    const td = this.mapTipoDocumento(l.tipo_documento);
+    if (td) { this.tipoDocumento.set(td); campos.push(this.i18n.t('Tipo de documento')); }
+    if (l.documento_numero) {
+      this.documentoNumero.set(l.documento_numero);
+      campos.push(this.i18n.t('N° de documento'));
+      void this.verificarDuplicado(); // CE16 — aviso suave de duplicado
+    }
+    this.lecturaDocOk.set(campos);
+    this.rostroDudoso.set(l.coincide_rostro === 'no' || l.coincide_rostro === 'dudoso');
+  }
+
+  /** La edge devuelve nacionalidad libre (texto); la mapeamos al enum de la app. */
+  private mapNacionalidad(raw: string | null): Nacionalidad | null {
+    if (!raw) return null;
+    const s = raw.toLowerCase();
+    if (s.includes('domin')) return 'dominicano';
+    if (s.includes('hait')) return 'haitiano';
+    return 'otro';
+  }
+
+  /** 'otro' no tiene equivalente en TipoDocumento (modelo de la app): se deja sin tocar. */
+  private mapTipoDocumento(raw: LecturaDocumentoPersonal['tipo_documento']): TipoDocumento | null {
+    if (raw === 'cedula' || raw === 'pasaporte' || raw === 'carnet_electoral') return raw;
+    return null;
+  }
+
+  /** CE16 — ya existe: marca presente hoy en vez de crear un duplicado. */
+  async marcarPresenteDuplicado(personalId: string): Promise<void> {
+    if (this.marcandoPresente()) return;
+    this.marcandoPresente.set(true);
+    try {
+      await this.service.levantamientoMarcar(personalId, true);
+      this.toast.success(this.i18n.t('Marcado presente hoy.'));
+      void this.autosave.discard(this.clave);
+      this.navGuard.back('/proyectos/personal');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo marcar presente.'));
+    } finally {
+      this.marcandoPresente.set(false);
+    }
+  }
+
   // ── Firma (⏸) ──────────────────────────────────────────────────────────────
   async onFirma(has: boolean): Promise<void> {
     if (!has) {
@@ -553,6 +695,11 @@ export class PersonalRegistroPage implements OnDestroy {
     this.telefono.set('');
     this.notas.set('');
     this.registroId.set(crypto.randomUUID());
+    this.modoRegistro.set('completo');
+    this.lecturaDocError.set('');
+    this.lecturaDocOk.set([]);
+    this.rostroDudoso.set(false);
+    this.dupAviso.set([]);
     this.paso.set(0);
     this.hydrated = true;
     this.hoja.set('form');

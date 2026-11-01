@@ -14,6 +14,12 @@
         <div class="pl-band pl-band--err">{{ error() }}</div>
       }
 
+      <!-- DB1/DB3 — levantamiento de hoy + exportar a Excel -->
+      <div class="pl-acciones">
+        <button type="button" class="pl-accion" (click)="levantamiento()">{{ glyphLevantamiento }} {{ 'Levantamiento de hoy' | t }}</button>
+        <button type="button" class="pl-accion" (click)="descargarExcel()">{{ glyphExcel }} {{ 'Descargar Excel' | t }}</button>
+      </div>
+
       <!-- Conteos rápidos -->
       <div class="pl-conteos">
         <div class="pl-conteos__total">

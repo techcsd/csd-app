@@ -1,0 +1,78 @@
+<div class="screen pg">
+  <header class="pg-header">
+    <button type="button" class="pg-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <span class="pg-header__icon">{{ glyphPagos }}</span>
+    <h1 class="pg-header__title">{{ 'Pagos' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!online()) {
+      <div class="pg-band pg-band--warn">{{ glyphOffline }} {{ 'Sin conexión. Verás lo último que se cargó.' | t }}</div>
+    }
+
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (error()) {
+      <div class="pg-band pg-band--err">{{ 'No se pudieron cargar las semanas de pago.' | t }}</div>
+      <button type="button" class="pg-retry" (click)="cargar()">{{ 'Reintentar' | t }}</button>
+    } @else {
+      @if (puedeOperar()) {
+        <button type="button" class="pg-accion pg-accion--primary" (click)="abrirCrear()">
+          {{ glyphNuevo }} {{ 'Crear semana de pago' | t }}
+        </button>
+      }
+
+      <div class="pg-list" appStagger>
+        @for (p of pagos(); track p.id) {
+          <div class="pg-row" appTapScale (click)="abrir(p)">
+            <div class="pg-row__main">
+              <span class="pg-row__obra">{{ glyphObra }} {{ nombreObra(p.proyecto_id) }}</span>
+              <span class="pg-row__semana">{{ fmt(p.semana_desde) }} – {{ fmt(p.semana_hasta) }}</span>
+            </div>
+            <span class="pg-chip" [class.pg-chip--enviado]="p.estado === 'enviado'">
+              {{ p.estado === 'enviado' ? ('Enviado' | t) : ('Borrador' | t) }}
+            </span>
+          </div>
+        } @empty {
+          <app-empty-state
+            [icon]="glyphPagos"
+            [title]="'Aún no hay semanas de pago' | t"
+            [message]="puedeOperar() ? ('Crea la primera semana de pago de tu obra.' | t) : ('Cuando se cree una semana de pago, aparecerá aquí.' | t)"
+          />
+        }
+      </div>
+    }
+  </div>
+
+  @if (mostrarCrear()) {
+    <div class="pg-sheet-backdrop" (click)="cerrarCrear()">
+      <div class="pg-sheet" (click)="$event.stopPropagation()">
+        <h2 class="pg-sheet__title">{{ 'Nueva semana de pago' | t }}</h2>
+
+        <label class="field-label">{{ 'Obra' | t }}</label>
+        <app-collapsible-select
+          [label]="'Obra' | t" [icon]="glyphObra"
+          [options]="obraOptions()" [selectedId]="nuevoObraId()"
+          [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t"
+          (picked)="elegirObraNueva($event)"
+        />
+
+        <label class="field-label" for="pg-desde">{{ 'Desde (lunes)' | t }}</label>
+        <input
+          id="pg-desde" class="field" type="date"
+          [ngModel]="nuevoDesde()" (ngModelChange)="nuevoDesde.set($event)"
+        />
+
+        <label class="field-label">{{ 'Hasta' | t }}</label>
+        <input class="field" type="date" [ngModel]="nuevoHasta()" readonly disabled />
+
+        <div class="pg-sheet__acciones">
+          <button type="button" class="pg-accion" (click)="cerrarCrear()">{{ 'Cancelar' | t }}</button>
+          <button type="button" class="pg-accion pg-accion--primary" [disabled]="creando()" (click)="crearSemana()">
+            {{ creando() ? ('Creando…' | t) : ('Crear' | t) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

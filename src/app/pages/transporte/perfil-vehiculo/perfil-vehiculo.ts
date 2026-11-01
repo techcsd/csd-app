@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { LeerDocumentoVehiculo } from '../../../shared/ui/leer-documento-vehiculo/leer-documento-vehiculo';
 import { Img } from '../../../shared/ui/img/img';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -33,6 +34,7 @@ interface DocView {
 const TIPO_LABEL: Record<string, string> = {
   seguro: 'Seguro',
   matricula: 'Matrícula',
+  marbete: 'Marbete DGII', // A5 — "Leer documento"
   otro: 'Otro documento',
 };
 
@@ -46,7 +48,7 @@ const TIPO_LABEL: Record<string, string> = {
   selector: 'app-perfil-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, SelectList, Img, TranslatePipe],
+  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, LeerDocumentoVehiculo, SelectList, Img, TranslatePipe],
   templateUrl: './perfil-vehiculo.html',
   styleUrl: './perfil-vehiculo.scss',
 })
@@ -272,6 +274,27 @@ export class PerfilVehiculoPage {
     } catch {
       this.toast.error(this.i18n.t('No se pudo guardar el documento.'));
     }
+  }
+
+  /**
+   * A5 — tras `flota_documentos_aplicar`, el vehículo puede tener números/
+   * aseguradora nuevos: refresca el encabezado + la lista de Documentos para
+   * que se vea el cambio de una vez (sin esperar a reabrir la pantalla).
+   */
+  async onDocumentoAplicado(): Promise<void> {
+    const id = this.vehiculoId();
+    if (!id) return;
+    try {
+      const veh = await this.vehiculos.getVehiculo(id);
+      if (veh) {
+        this.numeroMatricula.set(veh.numero_matricula);
+        this.numeroSeguro.set(veh.numero_seguro);
+        this.aseguradora.set(veh.aseguradora);
+      }
+    } catch {
+      /* best-effort: el detalle de abajo ya refrescó los documentos */
+    }
+    await this.loadDocs(id);
   }
 
   back(): void {

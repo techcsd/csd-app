@@ -66,14 +66,23 @@ export class UpdateService {
           void this.applyUpdate();
         } else if (evt.type === 'VERSION_INSTALLATION_FAILED') {
           this.installFailures++;
+          // DB14 — ¿la falla fue un fetch de red/404 (chunk perdido tras un deploy
+          // nuevo, o el servidor sin responder)? ngsw-worker.js reporta ese caso con
+          // "Response not Ok (fetchAndCacheOnce): ... returned response <status>" o,
+          // si ni hubo respuesta, "Failed to fetch"/NetworkError — una señal concreta,
+          // no inventada (ver node_modules/@angular/service-worker/ngsw-worker.js).
+          const esFalloDeRed = this.esFalloDeRedOChunk(evt.error);
           void this.errorReport.report('sync', `sw_update: instalación falló (${this.installFailures}ª vez)`, {
             sw_event: 'VERSION_INSTALLATION_FAILED',
             error: evt.error,
             intento: this.installFailures,
+            es_fallo_red: esFalloDeRed,
           });
           // CO1 — 2 fallas de instalación en la misma sesión → el SW está atascado;
           // auto-reparar en vez de dejar al usuario congelado para siempre.
-          if (this.installFailures >= 2) void this.autoRepair('instalacion_fallida_repetida');
+          // DB14 — si ya sabemos que fue un fetch de red/404 de un chunk, no hace
+          // falta esperar la 2ª: reparamos desde la 1ª (el chunk no va a aparecer solo).
+          if (this.installFailures >= 2 || esFalloDeRed) void this.autoRepair('instalacion_fallida_repetida');
         }
       });
 
@@ -170,7 +179,7 @@ export class UpdateService {
    * candado anti-formulario que una recarga normal, y un candado propio más largo
    * para no repetir la reparación en bucle si el SW sigue roto.
    */
-  private async autoRepair(motivo: string): Promise<void> {
+  async autoRepair(motivo: string): Promise<void> {
     const last = Number(sessionStorage.getItem(UpdateService.REPAIR_GUARD_KEY) || 0);
     if (last && Date.now() - last < UpdateService.REPAIR_GUARD_WINDOW_MS) return;
     sessionStorage.setItem(UpdateService.REPAIR_GUARD_KEY, String(Date.now()));
@@ -242,6 +251,17 @@ export class UpdateService {
       if ((r[i] ?? 0) < (l[i] ?? 0)) return false;
     }
     return false;
+  }
+
+  /**
+   * DB14 — true si el mensaje de error de una `VERSION_INSTALLATION_FAILED` apunta a
+   * un fetch de red/404 (status HTTP incluido en el texto, o "Failed to fetch"/
+   * NetworkError cuando no hubo respuesta siquiera). No es una heurística inventada:
+   * son los strings exactos que arma `ngsw-worker.js` al fallar `fetchAndCacheOnce`.
+   */
+  private esFalloDeRedOChunk(error: string | undefined): boolean {
+    if (!error) return false;
+    return /response not ok|failed to fetch|networkerror|err_internet_disconnected|err_network|err_failed/i.test(error);
   }
 
   /** Manual "Buscar actualización" from Perfil / pantalla /actualizar en PWA. */

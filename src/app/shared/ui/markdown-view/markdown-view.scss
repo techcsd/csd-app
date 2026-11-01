@@ -85,6 +85,7 @@
     max-width: 100%;
     height: auto;
     border-radius: 8px;
+    cursor: pointer; // DB2 — toda imagen resuelta abre el visor a pantalla completa
   }
   // CS2 — imagen pegada (web) mientras se resuelve su URL firmada / si no se pudo
   // resolver: nunca una ruta rota visible (8ª regla — el estado se ve, no se adivina).
@@ -92,9 +93,37 @@
     min-height: 120px;
     background: var(--color-surface-2);
     display: block;
+    cursor: default;
   }
   img.nota-img-rota {
     display: none;
+  }
+
+  // DB2 — imágenes consecutivas (sin texto entre ellas): galería horizontal de
+  // miniaturas en vez de apilarlas a ancho completo (mucho scroll vertical en
+  // capturas de pantalla de teléfono). Cada miniatura abre el visor a pantalla
+  // completa en su posición, con flechas para recorrer el resto del grupo.
+  .md-galeria {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 0.6em 0;
+    padding-bottom: 2px; // espacio para que la barra de scroll no tape la última miniatura
+    scroll-snap-type: x proximity;
+  }
+  .md-galeria__item {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+
+    img {
+      display: block;
+      width: 150px;
+      height: 150px;
+      max-width: 150px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 0;
+    }
   }
 
   hr {

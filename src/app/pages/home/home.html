@@ -44,6 +44,53 @@
     </button>
   }
 
+  <!-- A6 — "Hoy": KPIs que cuentan + feed de eventos del día. Polling fijo cada 30s
+       SOLO en foreground (sin Realtime, sin mapa — decisión explícita de batería/datos
+       en el teléfono; eso vive solo en el tablero en vivo de la web). -->
+  @if (hoyVisible()) {
+    @if (hoyResumen(); as h) {
+      <section class="home__hoy" appFadeIn>
+        <h2 class="home__hoy-title">{{ 'Hoy' | t }}</h2>
+        <div class="home__hoy-kpis">
+          <div class="home__hoy-kpi">
+            <span class="home__hoy-kpi-value"><span [appCountUp]="h.kpis.conduces_hoy"></span></span>
+            <span class="home__hoy-kpi-label">{{ 'Conduces' | t }}</span>
+          </div>
+          <div class="home__hoy-kpi">
+            <span class="home__hoy-kpi-value"><span [appCountUp]="h.kpis.echadas_hoy"></span></span>
+            <span class="home__hoy-kpi-label">{{ 'Echadas' | t }}</span>
+          </div>
+          <div class="home__hoy-kpi">
+            <span class="home__hoy-kpi-value"><span [appCountUp]="h.kpis.vehiculos_en_uso"></span></span>
+            <span class="home__hoy-kpi-label">{{ 'En uso' | t }}</span>
+          </div>
+        </div>
+        @if (h.eventos.length) {
+          <ul class="home__hoy-feed" appStagger>
+            @for (e of h.eventos; track e.at + e.titulo) {
+              <li class="home__hoy-evento">
+                <span class="home__hoy-evento-ic">{{ iconoEvento(e.tipo) }}</span>
+                <span class="home__hoy-evento-txt">
+                  <span class="home__hoy-evento-titulo">{{ e.titulo }}</span>
+                  @if (e.detalle) {
+                    <span class="home__hoy-evento-detalle"> · {{ e.detalle }}</span>
+                  }
+                </span>
+                <span class="home__hoy-evento-hora">{{ tiempoEvento(e.at) }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <!-- BL2 — vacío legítimo (la carga funcionó, hoy no ha pasado nada aún). -->
+          <p class="home__hoy-vacio">{{ 'Sin actividad registrada hoy todavía.' | t }}</p>
+        }
+      </section>
+    } @else if (hoyFallo()) {
+      <!-- BL2 — fallo honesto (nunca se pudo cargar), sin bloquear el resto del Home. -->
+      <p class="home__hoy-fallo">{{ 'No se pudo cargar la actividad de hoy.' | t }}</p>
+    }
+  }
+
   @if (editMode()) {
     <!-- AF38 — modo edición (admin): arrastrar para reordenar como un launcher -->
     <div class="home__edit-bar">

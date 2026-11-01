@@ -6,6 +6,38 @@
   </header>
 
   <div class="screen__body" appStagger>
+    <!-- DE3 — tarjeta "Pendientes": el MISMO número del badge del Home, con la
+         lista corta de lo más antiguo, para que nunca "diga un número y adentro
+         no haya nada". Si el total es 0, no se pinta (ni aquí ni el badge). -->
+    @if (totalPendientes() > 0) {
+      <div class="inv-pendientes">
+        <div class="inv-pendientes__head">
+          <span class="inv-pendientes__title">{{ 'Pendientes' | t }}</span>
+          <span class="inv-pendientes__total">{{ totalPendientes() }}</span>
+        </div>
+        @if (porRecibir() > 0) {
+          @if (!loadingPendientes() && pendientesPreview().length) {
+            <ul class="inv-pendientes__list">
+              @for (c of pendientesPreview(); track c.id) {
+                <li class="inv-pendientes__item">
+                  <span class="inv-pendientes__item-codigo">{{ c.codigo }}</span>
+                  <span class="inv-pendientes__item-ruta">{{ c.bodega || ('Almacén' | t) }} → {{ c.destino || ('Destino' | t) }}</span>
+                </li>
+              }
+            </ul>
+          }
+          <button type="button" class="inv-pendientes__link" appTapScale (click)="go('/inventario/recibir')">
+            {{ 'Recibir conduce' | t }} ({{ porRecibir() }}) · {{ 'Ver todos' | t }} →
+          </button>
+        }
+        @if (porDespachar() > 0) {
+          <button type="button" class="inv-pendientes__link" appTapScale (click)="go('/solicitudes/bandeja')">
+            {{ 'Por despachar' | t }} ({{ porDespachar() }}) · {{ 'Ver todos' | t }} →
+          </button>
+        }
+      </div>
+    }
+
     <!-- AS20 — catálogo global de artículos (buscar, ver detalle + stock por almacén) -->
     <button type="button" class="inv-action" appTapScale (click)="go('/inventario/catalogo')">
       <span class="inv-action__icon">📋</span>
@@ -28,9 +60,11 @@
       <span class="inv-action__icon">➕</span>
       <span class="inv-action__label">{{ 'Registrar entrada' | t }}</span>
     </button>
+    <!-- DE3 — el conteo aquí es el MISMO que el badge del Home (badges_modulos_app). -->
     <button type="button" class="inv-action" appTapScale (click)="go('/inventario/recibir')">
       <span class="inv-action__icon">📥</span>
       <span class="inv-action__label">{{ 'Recibir conduce' | t }}</span>
+      @if (porRecibir() > 0) { <span class="inv-action__count">{{ porRecibir() }}</span> }
     </button>
     <button type="button" class="inv-action" appTapScale (click)="go('/inventario/conteo')">
       <span class="inv-action__icon">🔢</span>

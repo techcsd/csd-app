@@ -92,6 +92,11 @@ export class IngenieriaPage {
     if (c.esAdmin() || c.hasModulo('compras')) {
       t.push({ key: 'solicitudCompra', icon: '🛍️', label: 'Solicitud de compra', tint: '#b45309', route: '/compras/solicitud-compra' });
     }
+    // A4 — Pagos (pago semanal de personal + descargo firmado). ver = ingeniero
+    // de campo/jefe (operan) + abogado/gerencia/dirección (solo leen).
+    if (c.esAdmin() || c.puedeVerSubmodulo('ingenieria.pagos')) {
+      t.push({ key: 'pagos', icon: '🧾', label: 'Pagos', tint: '#15803d', route: '/ingenieria/pagos' });
+    }
     return t;
   });
 

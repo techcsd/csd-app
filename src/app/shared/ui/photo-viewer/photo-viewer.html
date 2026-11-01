@@ -15,7 +15,22 @@
       </svg>
     </button>
 
-    <img #img class="pv__img" [src]="st.url" [attr.alt]="'Foto de perfil' | t" draggable="false" />
+    <!-- DB2 — galería: flechas prev/next + contador (solo con más de 1 foto) -->
+    @if (esGaleria()) {
+      <button type="button" class="pv__arrow pv__arrow--prev" (click)="anterior()" [attr.aria-label]="'Foto anterior' | t">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"></path>
+        </svg>
+      </button>
+      <button type="button" class="pv__arrow pv__arrow--next" (click)="siguiente()" [attr.aria-label]="'Foto siguiente' | t">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18l6-6-6-6"></path>
+        </svg>
+      </button>
+      <span class="pv__contador">{{ st.index + 1 }} / {{ st.urls.length }}</span>
+    }
+
+    <img #img class="pv__img" [src]="urlActual()" [attr.alt]="'Foto' | t" draggable="false" />
 
     @if (hint()) {
       <span class="pv__hint">{{ 'Pellizca para acercar · desliza abajo para cerrar' | t }}</span>

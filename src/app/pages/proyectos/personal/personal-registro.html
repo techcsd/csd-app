@@ -15,6 +15,69 @@
       }
 
       @switch (pasoActual()?.key) {
+        <!-- ═══════════ HOJA: MODO (DB2) ═══════════ -->
+        @case ('modo') {
+          <p class="preg__intro">{{ 'Elige cómo quieres registrar a esta persona.' | t }}</p>
+          <div class="preg__opts" appStagger>
+            <app-option-button appTapScale [icon]="glyphRapido" [label]="'Registro rápido (2 fotos)' | t" [selected]="modoRegistro() === 'rapido'" (pressed)="modoRegistro.set('rapido')" />
+            <app-option-button appTapScale [icon]="glyphCompleto" [label]="'Registro completo' | t" [selected]="modoRegistro() === 'completo'" (pressed)="modoRegistro.set('completo')" />
+          </div>
+          @if (modoRegistro() === 'rapido') {
+            <div class="preg__band preg__band--info">{{ glyphRapido }} {{ 'Toma la foto del documento y la de la persona sosteniéndolo. La IA intenta leer los datos para no escribirlos a mano (siempre puedes corregirlos).' | t }}</div>
+          } @else {
+            <div class="preg__band">{{ glyphCompleto }} {{ 'Wizard completo: datos a mano, documento, 5 fotos guiadas y firma.' | t }}</div>
+          }
+        }
+
+        <!-- ═══════════ HOJA: FOTOS RÁPIDAS (DB2 — modo rápido) ═══════════ -->
+        @case ('fotos_rapidas') {
+          <p class="preg__intro">{{ 'Toma estas 2 fotos. Al tener ambas, intentamos leer los datos automáticamente.' | t }}</p>
+          <div class="preg__guia" appStagger>
+            <div class="preg__guia-item">
+              <div class="preg__guia-txt">
+                <span class="preg__guia-label">{{ guiaDocumento.label | t }}</span>
+                <span class="preg__guia-ayuda">{{ guiaDocumento.ayuda | t }}</span>
+              </div>
+              <app-photo-slot
+                [label]="guiaDocumento.label | t" [hint]="guiaDocumento.hint" [gallery]="false"
+                [foto]="fotoDe('documento')"
+                (captured)="onFotoRapida('documento', $event)" (cleared)="onFotoClear('documento')"
+              />
+            </div>
+            <div class="preg__guia-item">
+              <div class="preg__guia-txt">
+                <span class="preg__guia-label">{{ guiaPersonaDoc.label | t }}</span>
+                <span class="preg__guia-ayuda">{{ guiaPersonaDoc.ayuda | t }}</span>
+              </div>
+              <app-photo-slot
+                [label]="guiaPersonaDoc.label | t" [hint]="guiaPersonaDoc.hint" [gallery]="false"
+                [foto]="fotoDe('persona_carnet_cedula')"
+                (captured)="onFotoRapida('persona_carnet_cedula', $event)" (cleared)="onFotoClear('persona_carnet_cedula')"
+              />
+            </div>
+          </div>
+
+          @if (leyendoDocumento()) {
+            <p class="preg__sub">{{ 'Leyendo el documento…' | t }}</p>
+          } @else if (lecturaDocOk().length) {
+            <div class="preg__band preg__band--info">✓ {{ 'Leído del documento:' | t }} {{ lecturaDocOk().join(' · ') }}. {{ 'Revisa y corrige en el siguiente paso.' | t }}</div>
+          } @else if (lecturaDocError()) {
+            <div class="preg__band preg__band--warn">{{ lecturaDocError() }}</div>
+          }
+          @if (rostroDudoso()) {
+            <div class="preg__band preg__band--warn">⚠️ {{ 'Revisa que la foto de la persona coincida con el documento.' | t }}</div>
+          }
+          @if (dupAviso().length) {
+            <div class="preg__band preg__band--warn">
+              ⚠️ {{ 'Ya existe un trabajador con este documento' | t }}: <b>{{ dupAviso()[0].nombre }}</b>{{ dupAviso()[0].proyecto ? ' (' + dupAviso()[0].proyecto + ')' : '' }}.
+              <br />
+              <button type="button" class="preg__dup-btn" [disabled]="marcandoPresente()" (click)="marcarPresenteDuplicado(dupAviso()[0].id)">
+                {{ marcandoPresente() ? ('Marcando…' | t) : ('Ya está registrado — marcar presente hoy' | t) }}
+              </button>
+            </div>
+          }
+        }
+
         <!-- ═══════════ HOJA: DATOS ═══════════ -->
         @case ('datos') {
           <label class="field-label">{{ 'Obra' | t }} <span class="preg__req">*</span></label>
@@ -88,6 +151,10 @@
                 @for (d of dupAviso(); track d.id) {
                   <b>{{ d.nombre }}</b>{{ d.proyecto ? ' (' + d.proyecto + ')' : '' }}@if (!$last) { · }
                 }. {{ 'Verifica que no sea un duplicado antes de continuar.' | t }}
+                <br />
+                <button type="button" class="preg__dup-btn" [disabled]="marcandoPresente()" (click)="marcarPresenteDuplicado(dupAviso()[0].id)">
+                  {{ marcandoPresente() ? ('Marcando…' | t) : ('Ya está registrado — marcar presente hoy' | t) }}
+                </button>
               </div>
             }
 

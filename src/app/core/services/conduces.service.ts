@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CatalogService } from '../sync/catalog.service';
+import { CatalogService, ListaCatalogo } from '../sync/catalog.service';
 import { LocalStore } from './local-store.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
@@ -272,6 +272,21 @@ export interface ConduceTransferenciaHist {
   a_conductor_id: string | null;
   a_nombre: string | null;
   notas: string | null;
+}
+
+/** DE4 — una transferencia que YO ofrecí (pestaña "Ofrecidas por mí"). */
+export interface ConduceTransferenciaOfrecida {
+  id: string;
+  salida_id: string;
+  estado: 'ofrecida' | 'aceptada' | 'rechazada' | 'cancelada';
+  ofrecida_en: string;
+  resuelta_en: string | null;
+  a_conductor_id: string | null;
+  a_nombre: string | null;
+  a_tiene_usuario: boolean;
+  notas: string | null;
+  conduce_obra: string | null;
+  conduce_bodega: string | null;
 }
 
 /** AC13 — una parada intermedia de la ruta. */
@@ -2201,13 +2216,17 @@ export class ConducesService {
   // ─── AH5 — Transferencia de responsabilidad de conduces entre choferes ──────
 
   /** Choferes activos a los que se puede transferir. `choferes_activos` (AH5c) es
-   *  accesible a cualquier chofer (choferes_estado solo lo ve flota-elevado). */
+   *  accesible a cualquier chofer (choferes_estado solo lo ve flota-elevado).
+   *  DE4/A2.1 — etiqueta `nombre · obra` (antes solo el nombre): con varios
+   *  choferes homónimos o sin contexto, elegir "a ciegas" es como se transfirió
+   *  a la persona equivocada. Única implementación: los 3+ selectores de la app
+   *  consumen este `label` tal cual, sin reformatear cada uno por su lado. */
   async choferesParaTransferir(): Promise<{ id: string; label: string }[]> {
     const { data, error } = await this.supabase.client.rpc('choferes_activos');
     if (error) return [];
-    return ((data ?? []) as { conductor_id: string; nombre: string }[])
+    return ((data ?? []) as { conductor_id: string; nombre: string; obra?: string | null }[])
       .filter((c) => c.conductor_id)
-      .map((c) => ({ id: c.conductor_id, label: c.nombre }));
+      .map((c) => ({ id: c.conductor_id, label: c.obra ? `${c.nombre} · ${c.obra}` : c.nombre }));
   }
 
   /**
@@ -2261,6 +2280,40 @@ export class ConducesService {
     return r ?? [];
   }
 
+  /**
+   * DE4/A2.3 — como `misTransferenciasPendientes`, pero DISTINGUE "no tienes
+   * ofertas" de "no se pudo cargar" (BL2/BH6). Antes un error de red se veía
+   * exactamente igual que "Sin transferencias" — si la causa real era un fallo
+   * silencioso, el receptor nunca se enteraba de que debía reintentar. Siempre
+   * consulta el servidor primero (no sirve una caché vacía vieja).
+   */
+  async misTransferenciasPendientesDetailed(): Promise<ListaCatalogo<ConduceTransferencia>> {
+    const r = await this.catalog.refreshDetailed('mis_transferencias', async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_transferencias_conduce');
+      if (error) throw error;
+      return (data ?? []) as ConduceTransferencia[];
+    });
+    return { items: r.data ?? [], failed: r.failed, fromCache: r.fromCache };
+  }
+
+  /** DE4/A2.2 — transferencias que YO ofrecí ("Ofrecidas por mí"), con su estado
+   *  (esperando / aceptada / rechazada / cancelada). Siempre va al servidor. */
+  async misTransferenciasOfrecidasDetailed(): Promise<ListaCatalogo<ConduceTransferenciaOfrecida>> {
+    const r = await this.catalog.refreshDetailed('mis_transferencias_ofrecidas', async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_transferencias_ofrecidas');
+      if (error) throw error;
+      return (data ?? []) as ConduceTransferenciaOfrecida[];
+    });
+    return { items: r.data ?? [], failed: r.failed, fromCache: r.fromCache };
+  }
+
+  /** DE4/A2.2 — cancela una transferencia que YO ofrecí (solo si sigue "ofrecida"). */
+  async cancelarTransferenciaOfrecida(id: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('cancelar_transferencia_conduce', { p_id: id });
+    if (error) throwSyncError(error);
+    await this.catalog.invalidate('mis_transferencias_ofrecidas').catch(() => {});
+  }
+
   /** Historial de transferencias de un conduce (trazabilidad en el detalle). */
   async transferenciasDeConduce(salidaId: string): Promise<ConduceTransferenciaHist[]> {
     const { data, error } = await this.supabase.client.rpc('transferencias_de_conduce', {
@@ -2283,6 +2336,7 @@ export class ConducesService {
     });
     if (error) throwSyncError(error);
     await this.catalog.invalidate('mis_transferencias').catch(() => {});
+    await this.catalog.invalidate('mis_transferencias_ofrecidas').catch(() => {});
   }
 
   /**

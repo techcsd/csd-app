@@ -3,43 +3,116 @@
     <button type="button" class="tr-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="tr-header__icon">↔️</span>
     <h1 class="tr-header__title">{{ 'Transferencias de conduce' | t }}</h1>
+    <button type="button" class="tr-header__refresh" (click)="refrescar()" [disabled]="refrescando() || refrescandoOfrecidas()" [attr.aria-label]="'Actualizar' | t">
+      {{ (refrescando() || refrescandoOfrecidas()) ? '…' : '↻' }}
+    </button>
   </header>
 
-  <div class="screen__body">
-    @if (loading()) {
-      <app-skeleton [rows]="4" />
-    } @else if (!ofertas().length) {
+  @if (!esChofer()) {
+    <div class="screen__body">
       <app-empty-state
-        icon="↔️"
-        [title]="'Sin transferencias' | t"
-        [message]="'Cuando otro chofer te transfiera la responsabilidad de un conduce, aparecerá aquí para que la aceptes con foto y firma.' | t"
+        [title]="'Tu usuario no está registrado como chofer' | t"
+        [message]="'Las transferencias llegan solo a choferes. Pídele a Flota que te registre.' | t"
       />
-    } @else {
-      <p class="tr-intro">{{ 'Otro chofer quiere pasarte la responsabilidad de estos conduces. Revísalos y acéptalos con foto + firma, o recházalos.' | t }}</p>
-      @for (t of ofertas(); track t.id) {
-        <div class="tr-card">
-          <div class="tr-card__top">
-            <span class="tr-card__de">{{ 'De:' | t }} <strong>{{ t.de_nombre || ('Otro chofer' | t) }}</strong></span>
-            <span class="tr-card__fecha">{{ t.ofrecida_en | date: 'dd/MM HH:mm' }}</span>
-          </div>
-          <div class="tr-card__ruta">
-            <span>{{ t.conduce_bodega || ('Almacén' | t) }}</span>
-            <span class="tr-card__arrow">→</span>
-            <span>{{ t.conduce_obra || ('Destino' | t) }}</span>
-          </div>
-          <div class="tr-card__meta">
-            <span>{{ t.items_count }} {{ 'artículo(s)' | t }}</span>
-            @if (t.conduce_fecha) { <span>· {{ t.conduce_fecha | date: 'dd/MM/yyyy' }}</span> }
-          </div>
-          @if (t.notas) { <p class="tr-card__notas">📝 {{ t.notas }}</p> }
-          <div class="tr-card__actions">
-            <button type="button" class="btn-cta" (click)="abrir(t)">{{ 'Aceptar…' | t }}</button>
-            <button type="button" class="btn-ghost" (click)="pedirRechazo(t)">{{ 'Rechazar' | t }}</button>
-          </div>
-        </div>
+    </div>
+  } @else {
+    <div class="tr-tabs">
+      <button type="button" class="tr-tabs__btn" [class.tr-tabs__btn--activo]="tab() === 'aceptar'" (click)="irA('aceptar')">
+        {{ 'Para aceptar' | t }} @if (ofertas().length) { <span class="tr-tabs__badge">{{ ofertas().length }}</span> }
+      </button>
+      <button type="button" class="tr-tabs__btn" [class.tr-tabs__btn--activo]="tab() === 'ofrecidas'" (click)="irA('ofrecidas')">
+        {{ 'Ofrecidas por mí' | t }}
+      </button>
+    </div>
+
+    <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
+      @if (tab() === 'aceptar') {
+        @if (loading()) {
+          <app-skeleton [rows]="4" />
+        } @else if (fallo()) {
+          <app-empty-state
+            [title]="'No se pudo cargar' | t"
+            [message]="'No pudimos consultar tus transferencias. Revisa tu conexión e intenta de nuevo.' | t"
+          />
+          <button type="button" class="btn-ghost tr-reintentar" (click)="cargar()">{{ 'Reintentar' | t }}</button>
+        } @else if (!ofertas().length) {
+          <app-empty-state
+            icon="↔️"
+            [title]="'Sin transferencias' | t"
+            [message]="'Cuando otro chofer te transfiera la responsabilidad de un conduce, aparecerá aquí para que la aceptes con foto y firma.' | t"
+          />
+        } @else {
+          <p class="tr-intro">{{ 'Otro chofer quiere pasarte la responsabilidad de estos conduces. Revísalos y acéptalos con foto + firma, o recházalos.' | t }}</p>
+          @for (t of ofertas(); track t.id) {
+            <div class="tr-card">
+              <div class="tr-card__top">
+                <span class="tr-card__de">{{ 'De:' | t }} <strong>{{ t.de_nombre || ('Otro chofer' | t) }}</strong></span>
+                <span class="tr-card__fecha">{{ t.ofrecida_en | date: 'dd/MM HH:mm' }}</span>
+              </div>
+              <div class="tr-card__ruta">
+                <span>{{ t.conduce_bodega || ('Almacén' | t) }}</span>
+                <span class="tr-card__arrow">→</span>
+                <span>{{ t.conduce_obra || ('Destino' | t) }}</span>
+              </div>
+              <div class="tr-card__meta">
+                <span>{{ t.items_count }} {{ 'artículo(s)' | t }}</span>
+                @if (t.conduce_fecha) { <span>· {{ t.conduce_fecha | date: 'dd/MM/yyyy' }}</span> }
+              </div>
+              @if (t.notas) { <p class="tr-card__notas">📝 {{ t.notas }}</p> }
+              <div class="tr-card__actions">
+                <button type="button" class="btn-cta" (click)="abrir(t)">{{ 'Aceptar…' | t }}</button>
+                <button type="button" class="btn-ghost" (click)="pedirRechazo(t)">{{ 'Rechazar' | t }}</button>
+              </div>
+            </div>
+          }
+        }
+      } @else {
+        @if (loadingOfrecidas()) {
+          <app-skeleton [rows]="4" />
+        } @else if (falloOfrecidas()) {
+          <app-empty-state
+            [title]="'No se pudo cargar' | t"
+            [message]="'No pudimos consultar tus transferencias ofrecidas. Revisa tu conexión e intenta de nuevo.' | t"
+          />
+          <button type="button" class="btn-ghost tr-reintentar" (click)="cargarOfrecidas()">{{ 'Reintentar' | t }}</button>
+        } @else if (!ofrecidas().length) {
+          <app-empty-state
+            icon="↔️"
+            [title]="'No tienes ofertas' | t"
+            [message]="'Las transferencias que ofrezcas a otros choferes aparecerán aquí con su estado.' | t"
+          />
+        } @else {
+          @for (o of ofrecidas(); track o.id) {
+            <div class="tr-card">
+              <div class="tr-card__top">
+                <span class="tr-card__de">
+                  {{ 'A:' | t }} <strong>{{ o.a_nombre || ('Otro chofer' | t) }}</strong>
+                </span>
+                <span class="tr-card__fecha">{{ o.ofrecida_en | date: 'dd/MM HH:mm' }}</span>
+              </div>
+              <div class="tr-card__ruta">
+                <span>{{ o.conduce_bodega || ('Almacén' | t) }}</span>
+                <span class="tr-card__arrow">→</span>
+                <span>{{ o.conduce_obra || ('Destino' | t) }}</span>
+              </div>
+              @if (o.notas) { <p class="tr-card__notas">📝 {{ o.notas }}</p> }
+              <div class="tr-card__estado" [class.tr-card__estado--ok]="o.estado === 'aceptada'" [class.tr-card__estado--mal]="o.estado === 'rechazada' || o.estado === 'cancelada'">
+                @if (o.estado === 'ofrecida') { {{ 'Esperando a {nombre}' | t: { nombre: o.a_nombre || ('el chofer' | t) } }} }
+                @else if (o.estado === 'aceptada') { {{ 'Aceptada' | t }} }
+                @else if (o.estado === 'rechazada') { {{ 'Rechazada' | t }} }
+                @else { {{ 'Cancelada' | t }} }
+              </div>
+              @if (o.estado === 'ofrecida') {
+                <div class="tr-card__actions">
+                  <button type="button" class="btn-ghost" [disabled]="cancelando()" (click)="pedirCancelar(o)">{{ 'Cancelar' | t }}</button>
+                </div>
+              }
+            </div>
+          }
+        }
       }
-    }
-  </div>
+    </div>
+  }
 
   <!-- Recepción de la transferencia: resumen → foto → firma → aceptar -->
   @if (seleccion(); as t) {
@@ -86,6 +159,17 @@
     tone="danger"
     (confirmed)="confirmarRechazo()"
     (cancelled)="cancelarRechazo()"
+  />
+
+  <app-confirm-dialog
+    [open]="!!confirmCancelar()"
+    [title]="'¿Cancelar la transferencia?' | t"
+    [message]="'El conduce seguirá a tu cargo; el otro chofer ya no podrá aceptarla.' | t"
+    [confirmLabel]="'Sí, cancelar' | t"
+    [cancelLabel]="'Volver' | t"
+    tone="danger"
+    (confirmed)="confirmarCancelar()"
+    (cancelled)="cancelarCancelacion()"
   />
 
   <app-sync-bar />

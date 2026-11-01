@@ -58,6 +58,13 @@ export class PlantillasDocumentoService {
     return deCat.find((p) => p.es_default) ?? deCat[0] ?? null;
   }
 
+  /** A4 — plantilla por NOMBRE exacto (p. ej. 'descargo_pago_semanal'), sobre la
+   *  misma caché read-through que getAll(). null si no existe/no está activa. */
+  async porNombre(nombre: string): Promise<PlantillaDocumento | null> {
+    const all = await this.getAll().catch(() => [] as PlantillaDocumento[]);
+    return all.find((p) => p.nombre === nombre) ?? null;
+  }
+
   /** Datos de empresa para las variables (cacheados). */
   async getEmpresa(): Promise<EmpresaLite | null> {
     const data = await this.catalog.refresh<EmpresaLite | null>(CAT_EMPRESA, async () => {

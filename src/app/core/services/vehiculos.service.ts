@@ -29,6 +29,29 @@ export interface VehiculoAutorizado {
   hasta: string | null;
 }
 
+/**
+ * A2 — "Mi unidad" (RPC `mi_unidad()`): el vehículo que el chofer tiene EN USO
+ * ahora mismo (`origen='uso'`) o, si no tiene ninguno tomado, el que tiene
+ * ASIGNADO formalmente (`origen='asignacion'`). `visible=false` significa que el
+ * vehículo existe pero está fuera del pool normal (p. ej. `no_disponible` por
+ * documentos vencidos) — NO confundir con "sin vehículo" (0 filas). `en_uso_por`
+ * puede ser OTRO usuario (alguien tomó mi asignación mientras yo no la usaba).
+ */
+export interface MiUnidad {
+  vehiculo_id: string | null;
+  placa: string;
+  alias: string | null;
+  marca: string;
+  modelo: string;
+  estado: string;
+  visible: boolean;
+  origen: 'uso' | 'asignacion';
+  asignacion_desde: string | null;
+  en_uso_por: string | null;
+  en_uso_por_nombre: string | null;
+  en_uso_por_mi: boolean;
+}
+
 const REQUIRED_SLOTS = FOTOS_REQUERIDAS.map((f) => f.slot);
 const CATALOG_PENDIENTES = 'pendientes_transporte';
 const CATALOG_VEH_DETALLE = 'veh_detalle'; // + `:${vehiculoId}`
@@ -531,6 +554,42 @@ export class VehiculosService {
       const etiqueta = (v ? vehiculoIdentidad(v) || v.placa : '') || a.vehiculo_id;
       return { vehiculoId: a.vehiculo_id, etiqueta, desde: a.desde, hasta: a.hasta };
     });
+  }
+
+  /**
+   * A2 — "Mi unidad" (RPC `mi_unidad()`, ya desplegado en dev): el vehículo en
+   * uso/asignado del usuario actual, o null si no tiene ninguno. Cacheado
+   * read-through (patrón `veh_autorizados:<uid>`) bajo `mi_unidad:<uid>` para que
+   * la card del hub y el picker (prioridad "mía primero") lean rápido offline.
+   */
+  async getMiUnidad(): Promise<MiUnidad | null> {
+    const uid = this.ctx.profile()?.id;
+    if (!uid) return null;
+    const rows = await this.catalog.refresh<MiUnidad[]>(`mi_unidad:${uid}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('mi_unidad');
+      if (error) throw new Error(error.message);
+      return (data as MiUnidad[]) ?? [];
+    });
+    return (rows ?? [])[0] ?? null;
+  }
+
+  /**
+   * A2 — el chofer no tiene ninguna unidad (ni uso ni asignación): le avisa a
+   * Flota para que se la asignen. Reutiliza `notificar_modulo('flota', …)` del
+   * padre (mismo patrón que `CL1Servicio.solicitarFirma` / avisos de flota) en
+   * vez de un RPC nuevo — llega a jefe_flota + admin + logística (todos los que
+   * tienen el módulo `flota`), que es justo a quién le toca asignar unidades.
+   */
+  async pedirUnidadAFlota(): Promise<void> {
+    const nombre = this.ctx.profile()?.nombre || 'Un chofer';
+    const { error } = await this.supabase.client.rpc('notificar_modulo', {
+      p_modulo: 'flota',
+      p_tipo: 'mi_unidad_solicitud',
+      p_titulo: 'Solicitud de unidad',
+      p_mensaje: `${nombre} no tiene vehículo asignado y necesita que le asignen uno.`,
+      p_ruta: '/flota/vehiculos',
+    });
+    if (error) throw new Error(error.message);
   }
 
   /** U6 — foto_path (primera) por vehículo, para pintar fotos en listas. */

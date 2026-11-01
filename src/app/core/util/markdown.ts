@@ -76,6 +76,52 @@ export async function resolverImagenesNota(
   );
 }
 
+/**
+ * DB2 — agrupa bloques consecutivos que contienen ÚNICAMENTE una imagen (sin texto
+ * al lado, p. ej. varias fotos pegadas seguidas en una dev-note) en una sola galería
+ * horizontal con scroll (miniaturas ~150px), en vez de apilarlas una debajo de otra
+ * a ancho completo — en una captura de pantalla de teléfono eso era mucho scroll
+ * vertical para ver 3-4 fotos. Un bloque con texto + imagen NO se toca. Idempotente
+ * sobre el DOM recién pintado (se llama una vez por render completo, ver
+ * `markdown-view.ts`); mueve los `<img>` (ya con sus clases/estado) sin clonarlos.
+ */
+export function agruparImagenesConsecutivas(root: HTMLElement): void {
+  const bloques = Array.from(root.children) as HTMLElement[];
+  let i = 0;
+  while (i < bloques.length) {
+    if (!soloImagen(bloques[i])) {
+      i++;
+      continue;
+    }
+    let j = i + 1;
+    while (j < bloques.length && soloImagen(bloques[j])) j++;
+    if (j - i >= 2) {
+      const galeria = document.createElement('div');
+      galeria.className = 'md-galeria';
+      for (let k = i; k < j; k++) {
+        const img = soloImagen(bloques[k])!;
+        const item = document.createElement('div');
+        item.className = 'md-galeria__item';
+        item.appendChild(img); // mueve el <img> tal cual (conserva clases/estado)
+        galeria.appendChild(item);
+      }
+      bloques[i].replaceWith(galeria);
+      for (let k = i + 1; k < j; k++) bloques[k].remove();
+    }
+    i = j;
+  }
+}
+
+/** Devuelve el `<img>` si `el` ES una imagen o contiene ÚNICAMENTE una imagen
+ *  (ningún texto hermano) — nunca un párrafo con texto + imagen. */
+function soloImagen(el: Element): HTMLImageElement | null {
+  if (el.tagName === 'IMG') return el as HTMLImageElement;
+  if (el.children.length === 1 && el.children[0].tagName === 'IMG' && !(el.textContent ?? '').trim()) {
+    return el.children[0] as HTMLImageElement;
+  }
+  return null;
+}
+
 /** CS2 — `![alt](nota-img:<ruta>)` de vuelta, a partir del `data-nota-img-path` que
  *  `markdownToHtml` dejó (NUNCA la `src` resuelta — esa es una URL firmada que vence
  *  y no debe guardarse). null si la imagen no tiene ruta (no debería pasar). */

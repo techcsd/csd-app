@@ -41,6 +41,7 @@ import { RetirosService } from './core/services/retiros.service';
 import { CartillaService } from './core/services/cartilla.service';
 import { SolicitudesCompraService } from './core/services/solicitudes-compra.service';
 import { ReunionesService } from './core/services/reuniones.service';
+import { PagosObraService } from './core/services/pagos-obra.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { environment } from '../environments/environment';
 
@@ -129,6 +130,9 @@ export const appConfig: ApplicationConfig = {
       inject(CartillaService); // BO10 — cartilla (cartillas de acero, offline)
       inject(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
       inject(ReunionesService); // CP8 — reunion_nota (offline, outbox con foto de pizarra)
+      // A4 — S30-class: sin bootearlo, el handler 'pagos_firma' no se registra y
+      // las firmas/monto-concepto de "Pagos" quedarían "En cola" para siempre.
+      inject(PagosObraService);
 
       // BJ5 — al estrenar versión, suelta las cachés de proyectos que pudieron
       // guardar un VACÍO bajo la RLS vieja (lista/pickers/liberación/conduces). El

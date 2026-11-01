@@ -14,6 +14,78 @@
       <app-estado-chofer-bar />
     }
 
+    <!-- A2 — "Mi unidad": mi vehículo (en uso o asignado) arriba de todo, sin
+         tener que buscarlo en el picker (origen: Joan solo veía 2 de 20+
+         vehículos y "soltaba" el suyo sin querer). -->
+    @if (mostrarMiUnidadCard() && !miUnidadLoading()) {
+      <div class="mi-unidad">
+        <div class="mi-unidad__head">
+          <span class="mi-unidad__icon">🚗</span>
+          <div class="mi-unidad__info">
+            <span class="mi-unidad__titulo">{{ 'Mi unidad' | t }}</span>
+            <span class="mi-unidad__ident">
+              {{ tengoUnidad() ? miUnidadIdent() : ('Aún no tienes vehículo asignado' | t) }}
+            </span>
+          </div>
+        </div>
+
+        @if (tengoUnidad()) {
+          @if (miUnidadEnUsoPorMi()) {
+            <!-- A2 — la tengo en uso ahora: accesos directos a sus flujos -->
+            <div class="mi-unidad__chips">
+              @if (esChoferFlota()) {
+                <button type="button" class="mi-unidad__chip" (click)="crearRuta()">
+                  {{ 'Crear ruta' | t }}
+                </button>
+              }
+              <button type="button" class="mi-unidad__chip" (click)="combustibleTop()">
+                ⛽ {{ 'Echar combustible' | t }}
+              </button>
+              <button type="button" class="mi-unidad__chip" (click)="reporteSemanal()">
+                {{ 'Checklist' | t }}
+              </button>
+            </div>
+          } @else if (miUnidadEnUsoPorOtro()) {
+            <!-- A2 — mi asignación, pero ALGUIEN MÁS la tiene tomada ahora mismo -->
+            <p class="mi-unidad__aviso">
+              {{ 'En uso por' | t }} {{ miUnidad()?.en_uso_por_nombre || ('otro usuario' | t) }}
+            </p>
+          } @else if (!miUnidad()?.visible) {
+            <!-- A2 — tengo unidad pero está fuera del pool normal (seguro vencido…) -->
+            @if (miUnidad()?.estado === 'no_disponible') {
+              <p class="mi-unidad__aviso">
+                {{ 'Tu unidad está temporalmente fuera de servicio (documentos vencidos). Avísale a Flota.' | t }}
+              </p>
+            } @else if (miUnidad()?.estado === 'baja') {
+              <p class="mi-unidad__aviso">
+                {{ 'Tu unidad fue dada de baja. Pídele a Flota que te asignen otra.' | t }}
+              </p>
+            } @else {
+              <p class="mi-unidad__aviso">
+                {{ 'Tu unidad no está disponible para operar ahora mismo. Consulta con Flota.' | t }}
+              </p>
+            }
+          } @else {
+            <!-- A2 — asignada a mí, libre ahora mismo: 1 toque para tomarla -->
+            <button type="button" class="btn-cta mi-unidad__tomar" (click)="tomarMiUnidad()">
+              {{ 'Tomar mi unidad (1 toque)' | t }}
+            </button>
+          }
+        } @else if (pedidoUnidadEnviado()) {
+          <p class="mi-unidad__aviso">{{ 'Ya le avisamos a Flota. Te asignarán una unidad pronto.' | t }}</p>
+        } @else {
+          <button
+            type="button"
+            class="btn-ghost mi-unidad__pedir"
+            [disabled]="pidiendoUnidad()"
+            (click)="pedirMiUnidadAFlota()"
+          >
+            {{ (pidiendoUnidad() ? 'Avisando…' : 'Pide a Flota que te asigne tu unidad') | t }}
+          </button>
+        }
+      </div>
+    }
+
     <!-- CW6/CW7 (D6) — aviso discreto: por qué no ve Conduce/Rutas de empresa -->
     @if (esPrivadoRestringido()) {
       <div class="transporte__aviso-privado">

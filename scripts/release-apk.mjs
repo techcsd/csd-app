@@ -40,11 +40,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Inventario tecnológico: más campos, kits y clave del equipo';
+const TITULO = 'El número del icono ahora coincide con lo que hay adentro + transferencias de conduce';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Tecnología', d: 'La ficha de un equipo ahora muestra situación y condición por separado, especificaciones técnicas según el tipo (computadora, radio, batería, dron), identificación (service tag, IMEI, etc.), responsable sin usuario en el sistema, origen del costo y alerta de garantía por vencer.' },
-  { t: 'nuevo', m: 'Tecnología', d: 'Soporte para kits: un equipo compuesto por piezas (por ejemplo, un dron con su control y baterías) muestra si está completo, permite marcar una pieza como presente o faltante, quitarla del kit, y mover el kit completo de ubicación.' },
-  { t: 'nuevo', m: 'Tecnología', d: 'La clave de acceso de un equipo compartido se puede ver por 30 segundos (solo quien tenga el permiso), con la pantalla protegida contra capturas.' },
+  { t: 'arreglo', m: 'Inicio', d: 'El número del icono de Inventario ya no cuenta TODOS los conduces de la empresa — ahora cuenta solo lo tuyo (por recibir/por despachar), lo mismo que ves al entrar.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Tarjeta "Pendientes" arriba del todo con lo más antiguo por recibir, y el número junto al botón "Recibir conduce".' },
+  { t: 'nuevo', m: 'Transporte', d: 'Pestaña nueva "Ofrecidas por mí" en Transferencias de conduce: ves el estado de lo que ofreciste y puedes cancelarlo.' },
+  { t: 'arreglo', m: 'Transporte', d: 'El aviso "Te ofrecen un conduce" ahora lleva directo a la pantalla de transferencias, no al menú general.' },
+  { t: 'mejora', m: 'Transporte', d: 'El selector de chofer para transferir ahora muestra la obra junto al nombre, para elegir sin confusión.' },
+  { t: 'mejora', m: 'Transporte', d: 'Si no se pudo cargar tus transferencias por falta de conexión, ya no se ve igual que "no tienes nada" — te avisa y puedes reintentar.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

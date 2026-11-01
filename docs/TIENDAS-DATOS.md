@@ -12,9 +12,10 @@ Respuestas listas para **Seguridad de datos (Google Play)** y **Privacidad de la
 | ID de dispositivo, token de push, plataforma, versión | Notificaciones, soporte | Sí | Supabase, Google (FCM) |
 | Registros de errores/diagnóstico | Soporte técnico | Sí | Supabase |
 | Texto/dictado enviado al asistente, foto del recibo | Asistente IA / lectura de recibo (con consentimiento) | Sí | Anthropic, Groq/OpenAI |
+| Foto de documento de identidad + foto de la persona con el documento (registro rápido de personal); foto de documento de vehículo (seguro/matrícula/marbete) | Lectura con IA para precargar el formulario (con consentimiento); **no se guarda la transcripción**, solo los campos del registro | Sí | Anthropic |
 | Biometría | Desbloqueo | **No sale del teléfono** | — (local) |
 
-**Terceros (procesadores):** Supabase (BD/archivos), Vercel (hosting web), Google (FCM, Maps Platform), Anthropic (Compa, leer-recibo), Groq/OpenAI (transcripción), Open-Meteo (clima), OpenStreetMap (mapas).
+**Terceros (procesadores):** Supabase (BD/archivos), Vercel (hosting web), Google (FCM, Maps Platform), Anthropic (Compa, leer-recibo, lector de documentos de personal y de flota — ronda DB), Groq/OpenAI (transcripción), Open-Meteo (clima), OpenStreetMap (mapas).
 **No hay** rastreo publicitario. Datos cifrados en tránsito (HTTPS). Se puede **pedir eliminación** de la cuenta.
 
 ---

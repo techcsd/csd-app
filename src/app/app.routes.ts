@@ -79,6 +79,20 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
     loadComponent: () => import('./pages/ingenieria/cartilla/cartilla-detalle').then((m) => m.CartillaDetallePage),
   },
+  // A4 — "Pagos" (pago semanal de personal + descargo firmado). ver/operar por
+  // `ingenieria.pagos` (gate de submódulo): ingenieros/jefes de obra operan,
+  // abogado/gerencia/dirección solo leen. La pantalla gatea las acciones de
+  // escritura con puedeOperarSubmodulo (el guard de ruta solo exige "ver").
+  {
+    path: 'ingenieria/pagos',
+    canActivate: [authGuard, pinGuard, submoduleGuard('ingenieria.pagos')],
+    loadComponent: () => import('./pages/ingenieria/pagos/pagos-lista').then((m) => m.PagosListaPage),
+  },
+  {
+    path: 'ingenieria/pagos/:id',
+    canActivate: [authGuard, pinGuard, submoduleGuard('ingenieria.pagos')],
+    loadComponent: () => import('./pages/ingenieria/pagos/pagos-detalle').then((m) => m.PagosDetallePage),
+  },
   {
     path: 'bitacora/incidente',
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
@@ -834,11 +848,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/solicitudes/mis/mis').then((m) => m.MisSolicitudesPage),
   },
   {
-    // AS7 — bandeja de TODAS las requisiciones (aprobar): sigue siendo del módulo
-    // `compras` completo (coordinador de compras), NO del ingeniero que solo origina.
-    // El gate server-side por rol confirma; la página muestra "sin acceso" si lo niega.
+    // AS7 — bandeja de TODAS las requisiciones (aprobar): del módulo `compras`
+    // completo (coordinador de compras). DE3/A1 — también de `inventario`: el
+    // badge de Inventario (`badges_modulos_app`) cuenta "por_despachar" para
+    // cualquier usuario con el módulo inventario (política real de
+    // `solicitudes_material`); sin este guard, ese número llevaba a un 403. El
+    // gate server-side por rol/RLS sigue siendo la verdad (la página se queda
+    // vacía/sin acceso si no corresponde).
     path: 'solicitudes/bandeja',
-    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['compras', 'inventario'])],
     loadComponent: () => import('./pages/solicitudes/bandeja/bandeja').then((m) => m.RequisicionesBandejaPage),
   },
   {
@@ -1209,6 +1227,14 @@ export const routes: Routes = [
     path: 'proyectos/personal/registrar',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/proyectos/personal/personal-registro').then((m) => m.PersonalRegistroPage),
+  },
+  {
+    // DB3 — "Levantamiento de hoy" (roll call): debe ir ANTES de ':id' (si no, la
+    // ruta genérica se traga 'levantamiento' como si fuera un id de personal).
+    path: 'proyectos/personal/levantamiento',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/proyectos/personal/personal-levantamiento').then((m) => m.PersonalLevantamientoPage),
   },
   {
     path: 'proyectos/personal/:id',
