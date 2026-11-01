@@ -322,7 +322,7 @@
       "ht": 2
     },
     "pages/inventario": {
-      "conT": 10,
+      "conT": 15,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -862,10 +862,10 @@
       "ht": 4
     },
     "pages/transporte/conduce-transferencias": {
-      "conT": 26,
+      "conT": 46,
       "sinT": 0,
-      "en": 100,
-      "ht": 4
+      "en": 98,
+      "ht": 2
     },
     "pages/transporte/conduces": {
       "conT": 71,

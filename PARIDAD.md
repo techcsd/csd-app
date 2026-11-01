@@ -1210,3 +1210,55 @@ leer un documento de flota (ideal: una de las páginas de `MARBETES.pdf`) tanto
 como chofer (Avisar a Flota) como con un usuario de Flota (Aplicar), y el
 bloque "Hoy" del Inicio. Avisar OK antes de build/publish o de abrir el PR
 `feature/db-ronda → dev`.
+
+## DE (ronda 01/11/2026) — badges honestos + transferencias
+
+- **Regla de paridad (nueva, no negociable):** todo número en un icono del Home
+  se puede abrir y listar exactamente esos elementos — el mismo conteo arriba
+  y adentro, por construcción (no dos consultas distintas que puedan
+  divergir). Fuente única para módulos de servidor: `badges_modulos_app()`
+  (por usuario, `BadgesService.load()` una sola llamada, con `detalle` jsonb
+  por módulo). Los borradores locales sin enviar (`EnProcesoService`) NUNCA
+  se suman a un badge de módulo — viven en su propia fila "Pendiente de
+  terminar"/`/en-proceso` (ya existía); sumarlos producía un total que no
+  coincidía con ninguna lista real.
+- **DE3 — causa raíz:** el badge de Inventario contaba TODOS los conduces
+  "despachado" de la empresa (`salidas_inventario.estado='despachado'`
+  global), mientras el hub de Inventario no mostraba ningún número en sus
+  botones. `badges_modulos_app()` (padre, PROMPT-126) reemplaza ese conteo
+  por `por_recibir` (mis entregas/firmas pendientes) + `por_despachar`
+  (`solicitudes_material` pendientes que puedo ver, solo si tengo el módulo
+  inventario). El hub de Inventario pinta el MISMO detalle en una tarjeta
+  "Pendientes" + el conteo junto al botón "Recibir conduce"; si el total es 0
+  no hay badge ni tarjeta. **Gotcha de ruta:** `/solicitudes/bandeja` estaba
+  gateada solo a `moduleGuard('compras')`; como `por_despachar` ahora también
+  cuenta para usuarios con módulo `inventario` (sin `compras`), el guard pasó
+  a `moduleAnyGuard(['compras','inventario'])` — si no, el número llevaba a
+  un 403 (la misma clase de bug, un nivel más abajo). La RLS/política real
+  sigue siendo la única autoridad sobre qué filas ve cada quien.
+- **DE4 — causa raíz real (push mal enrutado, YA RESUELTA en el padre):** el
+  push "Te ofrecen un conduce" apuntaba a `/transporte/conduces` (el hub
+  genérico, 7 iconos) en vez de a la bandeja de transferencias — quien lo
+  tocaba nunca veía el motivo real del aviso. El padre (interno DE-11/DE-12,
+  parte de PROMPT-126, ya en dev) corrigió la ruta a
+  `/transporte/conduce-transferencias` y agregó un rechazo explícito
+  (`DR423`) si el chofer elegido no tiene usuario vinculado (antes la oferta
+  quedaba "fantasma": se creaba igual y el receptor nunca podía verla). Esta
+  ronda (app) cierra el resto: pestaña **"Ofrecidas por mí"** (estado +
+  Cancelar, `mis_transferencias_ofrecidas`/`cancelar_transferencia_conduce`),
+  empty-vs-failed (BL2: un error de red ya no se ve igual que "Sin
+  transferencias"), refresco homologado (AM2: pull-to-refresh + foreground +
+  botón), mensaje explícito si el usuario no es chofer de flota, etiqueta
+  `nombre · obra` en los 3+ selectores de chofer destino (antes solo el
+  nombre — única implementación en el servicio, sin duplicar por página), y
+  el badge de "Transferencias" ahora también se suma al tile "Transporte" del
+  Home (antes solo visible entrando al hub de Conduces).
+- **A3 — documento de flota sin vehículo (DE1/DE2), NO aplica en la app:** el
+  único lector desde el teléfono (`shared/ui/leer-documento-vehiculo`, A5 de
+  PROMPT-125) se abre SIEMPRE desde el perfil de UN vehículo ya elegido —
+  `aplicar()` usa `this.vehiculoId()` del perfil, nunca `p.vehiculo_id` del
+  emparejamiento — así que estructuralmente nunca deja un documento "sin
+  vehículo" que necesite una lista de sugerencias. El escenario de
+  DE1/DE2 (documento huérfano con sugerencias + reverso + zoom) es, por
+  ahora, **solo web** (donde si se da: lector de documentos server-side sin
+  vehículo preseleccionado). No se construyó nada nuevo — ver HANDOFF.

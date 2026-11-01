@@ -1,69 +1,44 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { UserContextService } from './user-context.service';
+
+/** DE-07 — detalle del conteo de un módulo (p. ej. inventario: por_recibir/por_despachar). */
+export type BadgeDetalle = Record<string, number>;
 
 /**
- * Q2 — conteos de pendientes por módulo para los badges del home. Reutiliza las
- * MISMAS tablas/estados que `pendingByModulo` de la web (no inventa sistema
- * nuevo). Best-effort y solo online; si falla, no muestra badge.
+ * Q2/DE — conteos de pendientes por módulo para los badges del home. DE3: antes
+ * cada módulo hacía su propia consulta global (p. ej. inventario contaba TODOS
+ * los conduces "despachado" de la empresa, no los MÍOS) → el número del icono no
+ * tenía relación con lo que el usuario veía al entrar. Ahora una SOLA llamada a
+ * `badges_modulos_app()` (server, por usuario) es la fuente única de verdad:
+ * mismo número arriba y adentro, por construcción. Best-effort y solo online;
+ * si falla, no muestra badge (no se adivina un número).
  */
 @Injectable({ providedIn: 'root' })
 export class BadgesService {
   private supabase = inject(SupabaseService);
-  private ctx = inject(UserContextService);
 
   private _counts = signal<Record<string, number>>({});
   counts = this._counts.asReadonly();
 
-  async load(): Promise<void> {
-    const tasks: Promise<void>[] = [];
-    // Flota: avisos de flota pendientes (misma fuente que la web).
-    if (this.ctx.hasModulo('flota')) tasks.push(this.count('avisos_flota', 'estado', 'pendiente', 'flota'));
-    // Inventario: conduces despachados por recibir.
-    if (this.ctx.hasModulo('inventario')) tasks.push(this.count('salidas_inventario', 'estado', 'despachado', 'inventario'));
-    // Compras (Requisición): requisiciones de material aún por aprobar/atender.
-    if (this.ctx.hasModulo('compras')) tasks.push(this.count('solicitudes_material', 'estado', 'pendiente', 'compras'));
-    // Admin: reportes/comentarios de campo sin resolver (misma cola que Admin › Reportes).
-    if (this.ctx.hasModulo('admin')) tasks.push(this.count('reportes_usuario', 'estado', 'resuelto', 'admin', 'neq'));
-    // Y15/AY4 — Proyectos: avisos de cronograma pendientes (por iniciar/vencer/atrasada).
-    // Incluye al rol Ingenieros (submódulo proyectos.cronograma, sin módulo completo).
-    if (this.ctx.hasModulo('proyectos') || this.ctx.puedeVerSubmodulo('proyectos.cronograma')) {
-      tasks.push(this.countCronograma());
-    }
-    // Bitácora: sin badge de servidor. Sus pendientes reales son borradores locales
-    // (los cuenta EnProcesoService) y no hay una cola de aprobación en servidor propia
-    // de bitácora en la app — los conduces por recibir ya se muestran en Inventario.
-    await Promise.allSettled(tasks);
-  }
+  /** DE-07 — detalle por módulo (p. ej. `{por_recibir: 3, por_despachar: 12}`). */
+  private _detalle = signal<Record<string, BadgeDetalle>>({});
+  detalle = this._detalle.asReadonly();
 
-  private async count(
-    table: string,
-    col: string,
-    val: string,
-    modulo: string,
-    op: 'eq' | 'neq' = 'eq',
-  ): Promise<void> {
+  async load(): Promise<void> {
     try {
-      let q = this.supabase.client.from(table).select('id', { count: 'exact', head: true });
-      q = op === 'neq' ? q.neq(col, val) : q.eq(col, val);
-      const { count } = await q;
-      this._counts.update((m) => ({ ...m, [modulo]: count ?? 0 }));
+      const { data, error } = await this.supabase.client.rpc('badges_modulos_app');
+      if (error) throw error;
+      const rows = (data ?? []) as { modulo: string; total: number; detalle: BadgeDetalle | null }[];
+      const counts: Record<string, number> = {};
+      const detalle: Record<string, BadgeDetalle> = {};
+      for (const r of rows) {
+        counts[r.modulo] = r.total;
+        detalle[r.modulo] = r.detalle ?? {};
+      }
+      this._counts.set(counts);
+      this._detalle.set(detalle);
     } catch {
       /* best-effort: sin conexión o sin permiso, no se muestra badge */
-    }
-  }
-
-  /** Y15 — avisos de cronograma pendientes (avisos_proyecto tipo cronograma_*). */
-  private async countCronograma(): Promise<void> {
-    try {
-      const { count } = await this.supabase.client
-        .from('avisos_proyecto')
-        .select('id', { count: 'exact', head: true })
-        .eq('estado', 'pendiente')
-        .like('tipo', 'cronograma_%');
-      this._counts.update((m) => ({ ...m, proyectos: count ?? 0 }));
-    } catch {
-      /* best-effort */
     }
   }
 }

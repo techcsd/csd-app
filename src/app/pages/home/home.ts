@@ -204,11 +204,14 @@ export class HomePage implements OnDestroy {
   nombre = this.ctx.nombre;
   obra = this.ctx.obraActiva;
   badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
-  enProcesoCounts = this.enProceso.counts; // V1 — borradores/envíos por módulo
   // BD2 — entregas por RECIBIR: banner ÚNICO (fusiona "por firmar" AE + "por
   // confirmar" AJ8, deduplicado). El receptor puede ser un ingeniero/obra sin
   // módulo flota → banner de descubrimiento.
   porRecibir = signal(0);
+  // DE4/A2.4 — transferencias de conduce que me ofrecieron (badge ya en el hub de
+  // Conduces, AH5); se suma también al tile "Transporte" del Home para que no haga
+  // falta entrar a Conduces para enterarse de que alguien te transfirió algo.
+  transferenciasPendientes = signal(0);
   // BV5 — captura a medias (borrador con datos/foto sin enviar). Tarjeta "Pendiente
   // de terminar" que reabre la pantalla con el borrador. Muestra el más reciente.
   pendienteTerminar = signal<EnProcesoItem | null>(null);
@@ -237,6 +240,7 @@ export class HomePage implements OnDestroy {
   private hoyInterval: ReturnType<typeof setInterval> | null = null;
   private hoyResumeHandle: PluginListenerHandle | null = null;
   private hoyPauseHandle: PluginListenerHandle | null = null;
+  private badgesResumeHandle: PluginListenerHandle | null = null;
   private static readonly HOY_POLL_MS = 30000;
   private static readonly ICONOS_EVENTO: Record<TableroVivoEvento['tipo'], string> = {
     requisicion: '🛒',
@@ -446,6 +450,11 @@ export class HomePage implements OnDestroy {
     void this.cargarPendienteTerminar();
     // BD2 — cuántas entregas me quedan por recibir (fusión firmar+confirmar).
     void this.cargarPorRecibir();
+    // DE4/A2.4 — transferencias de conduce ofrecidas a mí (badge del tile Transporte).
+    void this.conduces
+      .misTransferenciasPendientes()
+      .then((l) => this.transferenciasPendientes.set(l.length))
+      .catch(() => {});
     // AJ5 — mensajes no leídos (badge del tile de Mensajes).
     this.recontarNoLeidos();
     // QA-19: badge EN VIVO — recuenta en cada INSERT de mensajes (antes solo se
@@ -470,6 +479,16 @@ export class HomePage implements OnDestroy {
         void this.cargarHoy();
         this.iniciarPollingHoy();
       }).then((h) => (this.hoyResumeHandle = h));
+      // DE3/A1 — recuenta badges al volver a primer plano (AM2): si algo cambió
+      // mientras la app estaba en background (otro recibió/despachó), el número
+      // del icono no debe quedar viejo hasta que el usuario reabra el Home.
+      void CapApp.addListener('resume', () => {
+        void this.badges.load();
+        void this.conduces
+          .misTransferenciasPendientes()
+          .then((l) => this.transferenciasPendientes.set(l.length))
+          .catch(() => {});
+      }).then((h) => (this.badgesResumeHandle = h));
     }
     document.addEventListener('visibilitychange', this.onHoyVisibilityChange);
     effect(() => {
@@ -480,6 +499,11 @@ export class HomePage implements OnDestroy {
       }
       if (this.sync.pendingCount() === 0) {
         void this.cargarPorRecibir();
+        void this.badges.load(); // DE3/A1 — recuenta al drenar el outbox (algo se envió)
+        void this.conduces
+          .misTransferenciasPendientes()
+          .then((l) => this.transferenciasPendientes.set(l.length))
+          .catch(() => {});
       }
       void this.cargarPendienteTerminar(); // BV5 — refresca al drenar/encolar/descartar
     });
@@ -536,6 +560,7 @@ export class HomePage implements OnDestroy {
     this.detenerPollingHoy();
     void this.hoyPauseHandle?.remove();
     void this.hoyResumeHandle?.remove();
+    void this.badgesResumeHandle?.remove();
     document.removeEventListener('visibilitychange', this.onHoyVisibilityChange);
   }
 
@@ -615,12 +640,20 @@ export class HomePage implements OnDestroy {
     void this.router.navigate(['/avisos']);
   }
 
-  /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */
+  /** Q2/DE3 — badge del tile = pendientes de aprobación del servidor, por módulo
+   *  (`badges_modulos_app`, por usuario). Los borradores locales sin enviar YA NO
+   *  se suman aquí: viven en su propia fila "Pendiente de terminar"/`/en-proceso`
+   *  (EnProcesoService) para que el número del icono siempre cuadre con lo que el
+   *  módulo lista al entrar — antes sumar ambos producía un total que no coincidía
+   *  con ninguna lista real (DE3). */
   badgeFor(modulo: string): number | null {
     if (modulo === 'mensajes') return this.mensajesNoLeidos() || null;
     if (modulo === 'por_confirmar') return this.porRecibir() || null; // BD2
-    const total = (this.badgeCounts()[modulo] ?? 0) + (this.enProcesoCounts()[modulo] ?? 0);
-    return total || null;
+    // DE4 — Transporte suma las transferencias de conduce que me ofrecieron (antes
+    // solo visibles entrando al hub de Conduces; el deep-link del push aterriza
+    // aquí, no en Conduces, así que el tile debe mostrarlo sin tener que entrar).
+    if (modulo === 'flota') return (this.badgeCounts()['flota'] ?? 0) + this.transferenciasPendientes() || null;
+    return this.badgeCounts()[modulo] || null;
   }
 
   open(tile: HomeTile): void {

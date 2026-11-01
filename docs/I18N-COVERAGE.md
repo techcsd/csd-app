@@ -60,7 +60,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
 | pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
 | pages/ingenieria/pagos | 55 | 0 | 42% | 2% |  |
-| pages/inventario | 10 | 0 | 100% | 0% |  |
+| pages/inventario | 15 | 0 | 100% | 0% |  |
 | pages/inventario/almacen-inventario | 23 | 0 | 100% | 0% |  |
 | pages/inventario/almacenes | 30 | 0 | 100% | 3% |  |
 | pages/inventario/articulo-detalle | 20 | 0 | 100% | 0% |  |
@@ -150,7 +150,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
 | pages/transporte/conduce-externo | 81 | 1 | 82% | 4% |  |
-| pages/transporte/conduce-transferencias | 26 | 0 | 100% | 4% |  |
+| pages/transporte/conduce-transferencias | 46 | 0 | 98% | 2% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 3% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-hub | 3 | 0 | 100% | 0% |  |

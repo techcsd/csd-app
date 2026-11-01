@@ -14,13 +14,73 @@
     padding: 4px 8px;
   }
   &__icon { font-size: 22px; }
-  &__title { font-size: 18px; font-weight: 700; margin: 0; }
+  &__title { font-size: 18px; font-weight: 700; margin: 0; flex: 1; }
+  &__refresh {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+}
+
+.tr-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+.tr-tabs__btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.tr-tabs__btn--activo {
+  border-color: var(--accent);
+  color: var(--color-text-primary);
+}
+.tr-tabs__badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tr-intro {
   color: var(--main-ultra-light, #6b7280);
   font-size: 14px;
   margin: 0 0 12px;
+}
+
+.tr-reintentar {
+  width: auto;
+  margin: 8px auto 0;
+  display: block;
+}
+
+.tr-card__estado {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  &--ok { color: var(--color-success, #15803d); }
+  &--mal { color: var(--color-text-secondary); text-decoration: line-through; }
 }
 
 .tr-card {
