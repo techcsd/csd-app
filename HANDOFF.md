@@ -1,12 +1,21 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 01/11/2026 — PROMPT-127 · Ronda **DE** (A0-A4) — app **2.62.0 EN DEV** (apk-dev publicado), NO en `main`/prod
+## 🟢 SESIÓN 01/11/2026 — PROMPT-127 · Ronda **DE** (A0-A4) — app **2.62.0 EN PRODUCCIÓN**
 
-**TL;DR:** worktree `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-de` (rama `feature/de-ronda`, desde `origin/dev` = 2.61.0, la ronda DB ya mergeada). `npm run build` **verde**. Depende de PROMPT-126 (padre): confirmado en **dev** que `badges_modulos_app()`, `choferes_activos()`, `mis_transferencias_ofrecidas()`, `cancelar_transferencia_conduce` YA existen — nada bloqueado.
+**TL;DR:** worktree `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-de` (rama `feature/de-ronda`, desde `origin/dev` = 2.61.0, la ronda DB ya mergeada). `npm run build` **verde**. Depende de PROMPT-126 (padre): confirmado que `badges_modulos_app()`, `choferes_activos()`, `mis_transferencias_ofrecidas()`, `cancelar_transferencia_conduce` ya estaban — y de hecho la propia "Ronda DE" del padre (mismo nombre, coincidencia de letras entre los dos round-counters) ya estaba **en prod de SGC** (v1.206.0) antes siquiera de empezar esta sesión.
 
-**Cierre:** Xaviel dio el OK explícito ("yes, go ahead — commit, push, and build the dev APK"). Commits `6acd67c` (feat) + `1a0c3dc` (chore y1, bump 2.62.0) → push `feature/de-ronda` → `npm run apk -- --env dev` (firmado con el cert de siempre `3c5316d8…5065`, canal apk, candado OK, registrado en `app_versiones` de dev) → `npm run apk:publish -- --env dev` (subido al bucket de dev, `apk_url` actualizado) → `feature/de-ronda` era fast-forward puro de `origin/dev` (mismo merge-base `ae764da`), así que se empujó directo con `git push origin feature/de-ronda:dev` (sin merge commit) → **`origin/dev` ahora en `1a0c3dc` (2.62.0)**, Vercel construirá `app-dev.`. **No se tocó `main`/prod.**
+**Cierre (dev):** Xaviel dio el OK explícito ("yes, go ahead — commit, push, and build the dev APK"). Commits `6acd67c` (feat) + `1a0c3dc` (chore y1, bump 2.62.0) → `npm run apk -- --env dev` → `npm run apk:publish -- --env dev` → `feature/de-ronda` (fast-forward puro de `origin/dev`) empujado directo a `dev`.
 
-**Gotcha de sesión paralela (CQ6):** el worktree principal (`csd-app`, sin sufijo) tiene `dev` checked out y quedó **desactualizado** (en `6720b16`, 3 commits detrás — la ronda DB se había mergeado a `origin/dev` sin que ese worktree hiciera `git pull`) + diffs sin commitear sin relación (solo normalización CRLF, sin contenido real) + 3 scripts `_tmp-*.mjs` sueltos de la ronda DA. No se tocó nada de eso — la próxima sesión que abra `csd-app` (sin sufijo) debe: `git status` primero (regla de siempre), resolver/descartar esos 3 `_tmp-*.mjs` si ya no hacen falta, y `git pull` para alinearse con `origin/dev` (ahora en 2.62.0).
+**Promoción a prod (misma sesión, OK explícito de Xaviel tras probar en su teléfono — "i test it on my phone, so is ready... do all the stuff, release... to main"):**
+1. QA records nuevos `qa/release-2.61.0.md` + `qa/release-2.62.0.md` (la prueba de Xaviel cubre el salto acumulado 2.58.5→2.62.0, igual que el patrón ya usado para 2.59.0+2.60.0).
+2. `release-check.mjs --version 2.62.0` → **4/4 PASS**.
+3. PR `dev → main` (#13) con CI (`build-prod` + Vercel) en verde → **merge `49af1df`**. Vercel desplegó `app.sgcconstructorasd.com` con 2.62.0.
+4. `npm run apk -- --env prod --yes` → `npm run apk:publish -- --env prod --yes` (firmado `3c5316d8…5065`, candado OK, registrado + subido al bucket de prod, `apk_url` actualizado).
+5. **Regla 19** — el flip de `publicada` (único paso que el hijo no puede aplicar directo) se dejó versionado en `sql-para-sgc/2026-11-01-de-publicar-2.62.0.sql` y se aplicó yo mismo vía `apply-migration.mjs` **del padre (SGC)** — primero `--env dev` (ledger) y luego `--env prod --yes` (con el OK ya dado por Xaviel en el chat). **Verificado:** `sgc.app_versiones` (prod) → `2.62.0 publicada=true`, `2.58.5 publicada=false`. Commit `09c36eb` en `main` (push directo, admin bypass) + sincronizado a `dev`.
+
+**2.60.0 y 2.61.0 nunca se publicaron individualmente** (prod salta directo de 2.58.5 a 2.62.0, que ya las incluye) — quedan en el historial de `app_versiones` sin `publicada=true`, lo cual es normal (el changelog combinado de 2.62.0 cubre las 3 rondas). El SQL viejo `sql-para-sgc/2026-10-29-da-publicar-2.60.0.sql` queda obsoleto/no aplicado — no se borró, pero el nuevo archivo lo deja explícito.
+
+**Gotcha de sesión paralela (CQ6), YA RESUELTO:** el worktree principal (`csd-app`, sin sufijo) estaba desactualizado + tenía 3 scripts `_tmp-*.mjs` sueltos de la ronda DA que escribían directo a prod (nunca ejecutados — verificado leyendo `app_versiones` antes de borrarlos) + diffs CRLF sin contenido real. Todo limpiado en esta misma sesión (con el OK de Xaviel para cada paso).
 
 ### A0 — Verificación (hallazgos clave antes de tocar código)
 - **DE3 — causa raíz confirmada leyendo `badges_modulos_app()` en dev:** el comentario del propio SQL del padre dice literalmente "NUNCA el conteo global de 'despachado' — esa era la causa de DE3". El viejo `BadgesService` hacía `select count(*) from salidas_inventario where estado='despachado'` SIN filtrar por usuario — Misael veía el total de TODA la empresa. `inventario.html` no mostraba ningún número en sus botones (coincide exacto con su queja: "hay un número arriba pero adentro no hay nada").
@@ -23,9 +32,14 @@
 `npm run build` verde (solo warnings preexistentes de budget/NG8102/heic2any). Gate `verify-no-ai-tropes` me hizo cambiar 4 emoji nuevos por alternativas ya permitidas (↻ para refrescar, `icon` omitido = default del componente) — nada funcional. 17 strings nuevas + 1 de conexión agregadas a `public/i18n/en.json` (sin re-ordenar el archivo, para no ensuciar el diff). `PARIDAD.md` §DE agregado. Versión **2.62.0** bumpeada en los 3 sitios (`environment.prod.ts`/`environment.dev.ts`/`android/app/build.gradle`) + `CAMBIOS_CURADOS`/`TITULO` de `release-apk.mjs` actualizados. `android/keystore.properties` copiado a la worktree nueva (gotcha conocido de la ronda DB — sin esto el primer APK sale sin firmar).
 
 ### PENDIENTE (Xaviel)
-1. **Instalar 2.62.0 en un teléfono real** (actualización in-app desde 2.61.0, o APK dev directo) y probar: el número del icono de Inventario coincide con la lista real (Recibir conduce / Por despachar); ofrecer una transferencia a otro chofer y confirmar que el push lleva directo a la pantalla correcta Y que el tile "Transporte" del Home ya muestra el badge sin entrar al hub; pestaña "Ofrecidas por mí" con Cancelar; probar con un usuario SIN rol de chofer abriendo Transferencias (debe ver el mensaje explícito, no "Sin transferencias"). Anotar el resultado en `qa/release-2.62.0.md` (CP5/CL4) — sin esto no se abre el PR `dev → main`.
+1. **Verificar en prod** que la app forzando actualización se vea correcta para usuarios reales (banner "hay una versión nueva" con el changelog de `CAMBIOS_CURADOS`) — la publicación ya está hecha, pero no hay device-QA de un usuario DISTINTO a Xaviel todavía.
 2. **A3 (DE1/DE2) sigue sin construir** — es un escenario que no existe en la app actual (ver A0/PARIDAD.md); si Xaviel quiere un lector de documentos SIN vehículo preseleccionado, es trabajo nuevo, no un fix.
-3. **OK por escrito** antes de: abrir PR `dev → main` (de 2.60.0 DA / 2.61.0 DB / 2.62.0 DE — las tres siguen solo en dev), build/publish del APK de prod, o forzar versión mínima.
+3. Decidir si forzar `minima` a 2.62.0 (hoy `minima=false`, nadie queda bloqueado — los que sigan en versiones viejas solo ven el aviso, no el bloqueo).
+
+### En dev / En prod
+- **En dev:** app **2.62.0** (igual que prod). `origin/dev` = `origin/main` = `09c36eb`.
+- **En prod:** app **2.62.0 PUBLICADA** (`version_publicada()` = 2.62.0, `minima` = sin forzar). APK: `csd-app-2.62.0.apk` en el bucket de prod, `apk_url` actualizado. PWA: `app.sgcconstructorasd.com` desplegado por Vercel desde `main` (`49af1df`). Cert de firma sin cambios (`3c5316d8…5065`).
+- **Rollback:** `update sgc.app_versiones set publicada=true where plataforma='movil' and version='2.58.5'; update sgc.app_versiones set publicada=false where plataforma='movil' and version='2.62.0';` (vía `apply-migration.mjs --env prod` del padre) + `git revert 49af1df && git push` para el PWA.
 
 ### En dev / En prod
 - **En dev:** app **2.62.0** (badges honestos en Inventario + transferencias de conduce), `apk_url` del bucket dev apuntando a `csd-app-2.62.0.apk`. `origin/dev` al cierre = `1a0c3dc`.
