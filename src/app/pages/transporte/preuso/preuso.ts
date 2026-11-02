@@ -22,6 +22,9 @@ import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-pick
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { FormularioIaService } from '../../../core/services/formulario-ia.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AyudanteUsuario } from '../../../core/services/ayudante.service';
@@ -116,7 +119,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -136,6 +139,10 @@ export class PreusoPage extends GuardedWizard {
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
   private motion = inject(MotionService);
+  // DF1-D (PROMPT 129) — "Entender con voz" (leer-formulario tipo=checklist_vehiculo).
+  private formularioIa = inject(FormularioIaService);
+  private iaGate = inject(IaConsentGate);
+  iaLeyendo = signal(false);
 
   private sig = viewChild(SignaturePad);
   borradorPrevio = signal<number | null>(null); // M1 — banner de recuperación
@@ -561,6 +568,43 @@ export class PreusoPage extends GuardedWizard {
   setComentario(itemId: string, comentario: string): void {
     this.respuestas.update((r) => ({ ...r, [itemId]: { ...this.draft(itemId), comentario } }));
   }
+
+  /** DF1-D (PROMPT 129) — voz describiendo el estado del vehículo → respuesta ok/no por ítem. */
+  async leerConVoz(audio: Blob): Promise<void> {
+    if (!(await this.iaGate.pedir())) return;
+    this.iaLeyendo.set(true);
+    try {
+      const items = this.itemsAplicables().map((it) => ({ id: it.id, etiqueta: it.etiqueta, es_critico: it.es_critico }));
+      const propuesta = await this.formularioIa.leerChecklistVehiculo({ items, audio });
+      if (!propuesta.ok) {
+        if (propuesta.error_code === 'sin_consentimiento_ia' && (await this.iaGate.reabrir())) {
+          await this.leerConVoz(audio);
+          return;
+        }
+        this.toast.error(propuesta.error || this.i18n.t('No se pudo entender la nota. Llena el checklist a mano.'));
+        return;
+      }
+      const idsValidos = new Set(items.map((i) => i.id));
+      let aplicados = 0;
+      for (const r of propuesta.respuestas ?? []) {
+        if (!idsValidos.has(r.id) || this.draft(r.id).respuesta) continue; // nunca sobrescribe lo ya marcado
+        this.setRespuesta(r.id, r.respuesta);
+        if (r.comentario) this.setComentario(r.id, r.comentario);
+        aplicados++;
+      }
+      if (propuesta.propuesta_id) this.formularioIa.resolverPropuesta(propuesta.propuesta_id, 'aceptada').catch(() => {});
+      this.toast.success(
+        aplicados
+          ? this.i18n.t('Marcamos {n} ítems con lo que entendí — revísalos.', { n: aplicados })
+          : this.i18n.t('No reconocí ítems del checklist en la nota.'),
+      );
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo entender la nota. Llena el checklist a mano.'));
+    } finally {
+      this.iaLeyendo.set(false);
+    }
+  }
+
   onItemFoto(itemId: string, photo: CapturedPhoto): void {
     // AQ14 — libera la vista previa anterior antes de reemplazarla (evita que los
     // object-URL/blobs se acumulen en memoria durante la inspección en gama baja).

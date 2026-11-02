@@ -179,6 +179,12 @@
   overflow: hidden;
   padding: 12px 16px 0;
 }
+// DF1-E (PROMPT 129) — "decir qué necesitas" en pedir.ts (reusa este stylesheet compartido).
+.mov__ia-hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
 .mov__h2 {
   margin: 0 0 14px;
   font-size: var(--fs-title);

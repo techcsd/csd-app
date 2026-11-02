@@ -1047,6 +1047,15 @@ export const routes: Routes = [
       import('./pages/tecnologia/dev-notes/editor/dev-nota-editor').then((m) => m.DevNotaEditorPage),
   },
   {
+    // DF2/DF3 (PROMPT 129) — Agentes de monitoreo (Vigía/Capataz/Soporte/Auditor/
+    // Escriba/Cronista). Gate real = RLS (`sgc.is_admin() or sgc.es_tecnologia()`,
+    // ver `sql/2026-11-01-df2-agentes.sql` del SGC); esta ruta solo decide si se
+    // pinta el tile, mismo patrón que compras-aprobar/cotizaciones de abajo.
+    path: 'tecnologia/agentes',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tecnologia/agentes/agentes').then((m) => m.AgentesPage),
+  },
+  {
     // CO8 — Compras tecnológicas por aprobar (solo el aprobador/admin; RLS acota la
     // lectura real de `solicitudes_compra`, esta ruta solo decide si se pinta el tile).
     path: 'tecnologia/compras-aprobar',

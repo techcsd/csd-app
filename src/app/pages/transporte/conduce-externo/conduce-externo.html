@@ -115,6 +115,16 @@
             [foto]="cargaFoto()" (captured)="onCarga($event)" (cleared)="quitarCarga()" />
         </div>
         <p class="ce-hint">{{ 'La placa es obligatoria. La carga puede ir en la misma foto si se ve.' | t }}</p>
+
+        <!-- DF1-B (PROMPT 129) — lectura IA de la foto -->
+        @if (placaFoto()) {
+          <button type="button" class="btn-ghost ce-ia-btn" [disabled]="!puedeLeerConIa || iaLeyendo()" (click)="leerConIa()">
+            @if (iaLeyendo()) { {{ 'Leyendo la foto…' | t }} } @else { {{ 'Leer conduce con foto' | t }} }
+          </button>
+          @if (!online) {
+            <p class="ce-hint">{{ 'Necesitas conexión para leer la foto con IA.' | t }}</p>
+          }
+        }
       </section>
 
       <!-- 3. Material -->

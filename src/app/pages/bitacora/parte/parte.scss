@@ -593,3 +593,77 @@ app-counter {
   color: var(--color-text-secondary);
   font-weight: 400;
 }
+
+// DF1-A (PROMPT 129) — Modo rápido.
+.parte__modorapido-entrada {
+  margin-top: 16px;
+  width: 100%;
+  border-color: var(--Hub);
+  color: var(--Hub);
+}
+.parte__link {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  font-weight: 600;
+  text-align: center;
+}
+.parte__ia-revision {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.parte__ia-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &--alta {
+    border-color: var(--color-success);
+  }
+  &--dudosa {
+    border-color: var(--Hub);
+  }
+  &--vacia {
+    opacity: 0.7;
+  }
+}
+.parte__ia-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+.parte__ia-fila--alta .parte__ia-dot {
+  background: var(--color-success);
+}
+.parte__ia-fila--dudosa .parte__ia-dot {
+  background: var(--Hub);
+}
+.parte__ia-label {
+  flex: 1;
+  font-weight: 700;
+}
+.parte__ia-valor {
+  color: var(--color-text-secondary);
+  text-align: right;
+}

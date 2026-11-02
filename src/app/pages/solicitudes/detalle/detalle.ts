@@ -165,6 +165,31 @@ export class RequisicionDetallePage {
   /** CD7 — hay algo que mostrar en "Avance": un despacho o una cobertura por llegada. */
   hayDespachos = computed(() => this.avance().some((i) => i.despachado > 0 || (i.cubierto ?? 0) > 0));
 
+  /**
+   * DF4 (PROMPT 129) — "Requisición → recepción": las etapas REALES de ESTA
+   * solicitud (no la analítica agregada de `sgc.requisicion_flujo_tiempos`,
+   * que mide cuellos de botella entre MUCHAS requisiciones, no el estado de
+   * una). Se deriva de `estado`/`fase`/`avance` ya cargados — no hay columnas
+   * `transito_at`/`entregado_en` en este modelo, así que "Despachada" se
+   * infiere de `hayDespachos()`, nunca de un timestamp inventado.
+   */
+  etapasFlujo = computed<{ label: string; lit: boolean; at: string | null }[]>(() => {
+    const r = this.req();
+    if (!r) return [];
+    const fase = faseRequisicion(r.estado, r.fase);
+    if (fase === 'rechazada') return [];
+    return [
+      { label: this.i18n.t('Solicitada'), lit: true, at: r.created_at },
+      { label: this.i18n.t('Aprobada'), lit: !!r.atendido_en, at: r.atendido_en },
+      { label: this.i18n.t('Despachada'), lit: this.hayDespachos(), at: null },
+      { label: this.i18n.t('Recibida'), lit: fase === 'completada', at: r.cerrada_en ?? null },
+    ];
+  });
+
+  fechaDe(at: string): string {
+    return formatFechaMedia(at);
+  }
+
   get online(): boolean {
     return this.net.online();
   }

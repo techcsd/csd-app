@@ -23,6 +23,10 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
+// DF1-B (PROMPT 129) — "Leer conduce con foto" (leer-formulario tipo=conduce_externo).
+import { FormularioIaService } from '../../../core/services/formulario-ia.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
+import { emparejarExacto } from '../../../shared/utils/bitacora-ia.util';
 
 /** Proveedor elegido: del catálogo (id) o texto libre «Otro» (sin registrar aún). */
 interface ProveedorElegido {
@@ -76,6 +80,10 @@ export class ConduceExternoPage {
   private borrador = inject(BorradorService);
   private motion = inject(MotionService);
   private userCtx = inject(UserContextService);
+  private formularioIa = inject(FormularioIaService);
+  private iaGate = inject(IaConsentGate);
+
+  iaLeyendo = signal(false);
 
   /** Una sola captura activa a la vez → clave fija. */
   private readonly clave = 'conduce_externo';
@@ -453,6 +461,70 @@ export class ConduceExternoPage {
   }
   onDestino(l: LugarSel | null): void {
     this.destino.set(l);
+  }
+
+  // ── DF1-B (PROMPT 129) — "Leer conduce con foto" ────────────────────────────
+
+  /** Al menos la placa (obligatoria) permite intentar la lectura. */
+  get puedeLeerConIa(): boolean {
+    return !!this.placaFoto() && this.online;
+  }
+
+  async leerConIa(): Promise<void> {
+    const fotos = [this.placaFoto(), this.cargaFoto()].filter((f): f is CapturedPhoto => !!f);
+    if (!fotos.length) {
+      this.toast.error('Toma al menos la foto de la placa.');
+      return;
+    }
+    if (!(await this.iaGate.pedir())) return;
+    this.iaLeyendo.set(true);
+    try {
+      const propuesta = await this.formularioIa.leerConduceExterno({
+        fotos,
+        proyectoId: this.destino()?.proyecto_id ?? this.origen()?.proyecto_id ?? null,
+      });
+      if (!propuesta.ok) {
+        if (propuesta.error_code === 'sin_consentimiento_ia' && (await this.iaGate.reabrir())) {
+          await this.leerConIa();
+          return;
+        }
+        this.toast.error(propuesta.error || 'No se pudo leer la foto. Llena el conduce a mano.');
+        return;
+      }
+
+      let aplicados = 0;
+      if (!this.materialDesc().trim() && propuesta.material?.valor) {
+        this.materialDesc.set(propuesta.material.valor);
+        aplicados++;
+      }
+      if (!this.proveedorSel() && !this.modoOtroProv() && propuesta.proveedor_sugerido?.valor) {
+        // No hay match confirmado contra un proveedor real del catálogo — se deja como
+        // texto libre "Otro" (nunca se inventa un id de proveedor).
+        this.modoOtroProv.set(true);
+        this.nombreOtro.set(propuesta.proveedor_sugerido.valor);
+        aplicados++;
+      }
+      if (this.conMateriales() && propuesta.items?.length) {
+        for (const it of propuesta.items) {
+          if (!it.articulo) continue;
+          const real = emparejarExacto(it.articulo, this.articulos());
+          if (!real || real.requiere_talla) continue; // la talla no viene en la propuesta — nunca se adivina
+          if (this.cart().some((l) => l.articulo_id === real.id)) continue;
+          this.agregar(real);
+          if (it.cantidad != null) this.setCantidad(real.id, it.cantidad);
+          aplicados++;
+        }
+      }
+
+      if (propuesta.propuesta_id) this.formularioIa.resolverPropuesta(propuesta.propuesta_id, 'aceptada').catch(() => {});
+      this.toast.success(
+        aplicados ? 'Prellenado con lo que entendí de la foto — revisa antes de enviar.' : 'No reconocí datos nuevos en la foto.',
+      );
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo leer la foto. Llena el conduce a mano.');
+    } finally {
+      this.iaLeyendo.set(false);
+    }
   }
 
   // ── Borrador: banner ─────────────────────────────────────────────────────────

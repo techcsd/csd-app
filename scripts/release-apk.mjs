@@ -40,14 +40,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'El número del icono ahora coincide con lo que hay adentro + transferencias de conduce';
+const TITULO = 'IA para llenar formularios por foto/voz + Agentes de monitoreo + animaciones en vivo';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Inicio', d: 'El número del icono de Inventario ya no cuenta TODOS los conduces de la empresa — ahora cuenta solo lo tuyo (por recibir/por despachar), lo mismo que ves al entrar.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Tarjeta "Pendientes" arriba del todo con lo más antiguo por recibir, y el número junto al botón "Recibir conduce".' },
-  { t: 'nuevo', m: 'Transporte', d: 'Pestaña nueva "Ofrecidas por mí" en Transferencias de conduce: ves el estado de lo que ofreciste y puedes cancelarlo.' },
-  { t: 'arreglo', m: 'Transporte', d: 'El aviso "Te ofrecen un conduce" ahora lleva directo a la pantalla de transferencias, no al menú general.' },
-  { t: 'mejora', m: 'Transporte', d: 'El selector de chofer para transferir ahora muestra la obra junto al nombre, para elegir sin confusión.' },
-  { t: 'mejora', m: 'Transporte', d: 'Si no se pudo cargar tus transferencias por falta de conexión, ya no se ve igual que "no tienes nada" — te avisa y puedes reintentar.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Modo rápido: toma fotos y graba una nota de voz contando qué se hizo — la IA propone el parte diario completo, tú revisas y confirmas antes de enviar.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Botón "Leer conduce con foto" al emitir un conduce externo: la IA lee la placa y la carga y prellena el material, el proveedor y los renglones.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Al reportar un mantenimiento, puedes describir el trabajo por voz en vez de escribirlo.' },
+  { t: 'nuevo', m: 'Transporte', d: 'En el checklist de vehículo, puedes describir el estado por voz y la IA marca ok/no por cada ítem.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Puedes pedir materiales diciendo lo que necesitas ("necesito 50 sacos de cemento para Torre Alpha, es urgente") en vez de buscarlos uno por uno.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'Pantalla nueva "Agentes": seis agentes automáticos vigilan el sistema; ves sus hallazgos, lo que arreglaron solos (con Deshacer) y las propuestas que esperan tu aprobación.' },
+  { t: 'nuevo', m: 'Inicio', d: 'Pulso de obras: un anillo por obra que se enciende en verde apenas llega el parte del día.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'La ficha de tu requisición ahora muestra en qué etapa va: Solicitada → Aprobada → Despachada → Recibida.' },
+  { t: 'mejora', m: 'Transporte', d: 'En Seguimiento, los choferes en ruta con señal fresca ahora se ven con una flecha que apunta hacia donde van.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

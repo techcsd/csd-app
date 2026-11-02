@@ -208,10 +208,10 @@
       "ht": 3
     },
     "pages/bitacora/parte": {
-      "conT": 186,
+      "conT": 204,
       "sinT": 4,
       "en": 98,
-      "ht": 1
+      "ht": 0
     },
     "pages/borrador": {
       "conT": 13,
@@ -286,10 +286,10 @@
       "ht": 0
     },
     "pages/home": {
-      "conT": 25,
+      "conT": 28,
       "sinT": 0,
       "en": 100,
-      "ht": 8
+      "ht": 7
     },
     "pages/incentivos": {
       "conT": 40,
@@ -706,9 +706,9 @@
       "ht": 0
     },
     "pages/solicitudes/pedir": {
-      "conT": 31,
+      "conT": 33,
       "sinT": 0,
-      "en": 68,
+      "en": 70,
       "ht": 0
     },
     "pages/soporte": {
@@ -724,10 +724,10 @@
       "ht": 0
     },
     "pages/tecnologia": {
-      "conT": 13,
+      "conT": 15,
       "sinT": 12,
-      "en": 48,
-      "ht": 24
+      "en": 52,
+      "ht": 22
     },
     "pages/tecnologia-inventario": {
       "conT": 0,
@@ -745,6 +745,12 @@
       "conT": 0,
       "sinT": 91,
       "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia/agentes": {
+      "conT": 21,
+      "sinT": 1,
+      "en": 86,
       "ht": 0
     },
     "pages/tecnologia/compras-tec": {
@@ -856,7 +862,7 @@
       "ht": 5
     },
     "pages/transporte/conduce-externo": {
-      "conT": 81,
+      "conT": 84,
       "sinT": 1,
       "en": 82,
       "ht": 4
@@ -964,7 +970,7 @@
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
-      "conT": 43,
+      "conT": 45,
       "sinT": 1,
       "en": 91,
       "ht": 2
@@ -1048,7 +1054,7 @@
       "ht": 5
     },
     "pages/transporte/preuso": {
-      "conT": 71,
+      "conT": 73,
       "sinT": 0,
       "en": 100,
       "ht": 3

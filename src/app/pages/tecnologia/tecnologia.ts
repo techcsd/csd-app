@@ -340,6 +340,11 @@ export class TecnologiaPage {
     void this.router.navigate(['/tecnologia/cotizaciones']);
   }
 
+  /** DF2/DF3 (PROMPT 129) — abre la pantalla de Agentes de monitoreo. */
+  abrirAgentes(): void {
+    void this.router.navigate(['/tecnologia/agentes']);
+  }
+
   back(): void {
     this.location.back();
   }

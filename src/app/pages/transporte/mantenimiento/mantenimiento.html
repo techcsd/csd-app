@@ -59,6 +59,18 @@
       <!-- Step 2: description + km -->
       @if (step() === 2) {
         <h1 class="screen__title">{{ 'Describe el trabajo' | t }}</h1>
+
+        <!-- DF1-C (PROMPT 129) — describir por voz en vez de escribir -->
+        @if (!descripcion().trim() && online) {
+          @if (iaLeyendo()) {
+            <p class="mant-ia-hint">{{ 'Entendiendo la nota…' | t }}</p>
+          } @else {
+            <app-voice-recorder (recorded)="$event && leerConVoz($event)" />
+          }
+        } @else if (!descripcion().trim()) {
+          <p class="mant-ia-hint">{{ 'Necesitas conexión para describir por voz.' | t }}</p>
+        }
+
         <label class="field-label" for="desc">{{ '¿Qué se hizo o se necesita?' | t }}</label>
         <textarea
           id="desc"

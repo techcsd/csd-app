@@ -25,6 +25,10 @@ import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { FormularioIaService } from '../../../core/services/formulario-ia.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
+import { emparejarExacto } from '../../../shared/utils/bitacora-ia.util';
 
 interface GrupoResumen {
   categoria: string;
@@ -52,7 +56,7 @@ interface PedirDraft {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })
@@ -69,6 +73,10 @@ export class PedirPage implements OnDestroy {
   private motion = inject(MotionService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  // DF1-E (PROMPT 129) — "necesito 50 sacos de cemento…" (leer-formulario tipo=requisicion).
+  private formularioIa = inject(FormularioIaService);
+  private iaGate = inject(IaConsentGate);
+  iaLeyendo = signal(false);
 
   /** CT5 (FASE 2.4) — un solo carrito a medio armar a la vez (mismo patrón que
    *  la clave fija de `recibir.ts`). */
@@ -186,6 +194,55 @@ export class PedirPage implements OnDestroy {
       }
     } finally {
       this.hydrated = true;
+    }
+  }
+
+  /** DF1-E (PROMPT 129) — voz → renglones (catálogo real) + obra mencionada (match del lado del cliente, nunca en el servidor — CA2/RLS) + urgencia. */
+  async leerConVoz(audio: Blob): Promise<void> {
+    if (!(await this.iaGate.pedir())) return;
+    this.iaLeyendo.set(true);
+    try {
+      const propuesta = await this.formularioIa.leerRequisicionVoz({ audio });
+      if (!propuesta.ok) {
+        if (propuesta.error_code === 'sin_consentimiento_ia' && (await this.iaGate.reabrir())) {
+          await this.leerConVoz(audio);
+          return;
+        }
+        this.toast.error(propuesta.error || this.i18n.t('No se pudo entender la nota. Agrega los artículos a mano.'));
+        return;
+      }
+      let aplicados = 0;
+      if (!this.proyectoId() && propuesta.obra_mencionada?.valor) {
+        const real = emparejarExacto(propuesta.obra_mencionada.valor, this.proyectos(), (p) => p.nombre);
+        if (real) {
+          this.proyectoId.set(real.id);
+          aplicados++;
+        }
+      }
+      if (propuesta.urgencia?.valor) {
+        this.urgencia.set(propuesta.urgencia.valor);
+        aplicados++;
+      }
+      for (const it of propuesta.items ?? []) {
+        if (!it.articulo) continue;
+        const real = emparejarExacto(it.articulo, this.articulos(), (a) => a.nombre);
+        if (!real || real.requiere_talla || this.cart().some((l) => l.articulo_id === real.id)) continue;
+        this.cart.update((list) => [
+          ...list,
+          { articulo_id: real.id, nombre: real.nombre, unidad: real.unidad, categoria_id: real.categoria_id ?? null, cantidad: it.cantidad ?? 1 },
+        ]);
+        aplicados++;
+      }
+      if (propuesta.propuesta_id) this.formularioIa.resolverPropuesta(propuesta.propuesta_id, 'aceptada').catch(() => {});
+      this.toast.success(
+        aplicados
+          ? this.i18n.t('Prellenamos tu requisición con lo que entendí — revísala.')
+          : this.i18n.t('No reconocí ningún material en la nota.'),
+      );
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo entender la nota. Agrega los artículos a mano.'));
+    } finally {
+      this.iaLeyendo.set(false);
     }
   }
 

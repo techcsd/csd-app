@@ -14,6 +14,7 @@ import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { TallerPicker, TallerSel } from '../../../shared/ui/taller-picker/taller-picker';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -36,6 +37,8 @@ import {
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { fechaLocalISO } from '../../../core/util/fecha';
+import { FormularioIaService } from '../../../core/services/formulario-ia.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 
 interface TipoOpcion {
   valor: MantenimientoTipo;
@@ -74,7 +77,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, TallerPicker, VoiceNotes, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, TallerPicker, VoiceNotes, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
@@ -92,6 +95,10 @@ export class MantenimientoPage implements OnDestroy {
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
   private motion = inject(MotionService);
+  // DF1-C (PROMPT 129) — "Entender con voz" (leer-formulario tipo=mantenimiento).
+  private formularioIa = inject(FormularioIaService);
+  private iaGate = inject(IaConsentGate);
+  iaLeyendo = signal(false);
 
   readonly total = TOTAL_STEPS;
   readonly maxFotos = MAX_FOTOS;
@@ -445,6 +452,39 @@ export class MantenimientoPage implements OnDestroy {
         return true;
       default:
         return true;
+    }
+  }
+
+  /** DF1-C (PROMPT 129) — voz → descripción del trabajo (el vehículo ya está fijo por ruta, no se toca). */
+  async leerConVoz(audio: Blob): Promise<void> {
+    if (!(await this.iaGate.pedir())) return;
+    this.iaLeyendo.set(true);
+    try {
+      const propuesta = await this.formularioIa.leerMantenimiento({ audio });
+      if (!propuesta.ok) {
+        if (propuesta.error_code === 'sin_consentimiento_ia' && (await this.iaGate.reabrir())) {
+          await this.leerConVoz(audio);
+          return;
+        }
+        this.toast.error(propuesta.error || this.i18n.t('No se pudo entender la nota. Escribe la descripción a mano.'));
+        return;
+      }
+      let aplicado = false;
+      if (!this.descripcion().trim() && propuesta.descripcion?.valor) {
+        this.descripcion.set(propuesta.descripcion.valor);
+        aplicado = true;
+      }
+      // El tipo de visita ya se eligió en el paso 1 — no se sobreescribe aquí.
+      if (propuesta.propuesta_id) this.formularioIa.resolverPropuesta(propuesta.propuesta_id, 'aceptada').catch(() => {});
+      this.toast.success(
+        aplicado
+          ? this.i18n.t('Prellenamos la descripción con lo que entendí — revísala.')
+          : this.i18n.t('No reconocí una descripción clara. Escríbela a mano.'),
+      );
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo entender la nota. Escribe la descripción a mano.'));
+    } finally {
+      this.iaLeyendo.set(false);
     }
   }
 

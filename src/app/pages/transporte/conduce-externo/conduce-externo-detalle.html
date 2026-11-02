@@ -28,6 +28,22 @@
         <p class="ced__anulado">{{ 'Anulado:' | t }} {{ f.motivo_anulacion }}</p>
       }
 
+      <!-- DF4 (PROMPT 129) — línea de vida: solo los nodos reales (2-3) -->
+      @if (lineaVida().length) {
+        <div class="ced__linea-vida">
+          @for (n of lineaVida(); track $index) {
+            <div class="ced__lv-nodo" [class.ced__lv-nodo--lit]="n.lit">
+              <span class="ced__lv-punto"></span>
+              <span class="ced__lv-label">{{ n.label }}</span>
+              @if (n.at) { <span class="ced__lv-fecha">{{ fechaDe(n.at) }}</span> }
+            </div>
+            @if (!$last) {
+              <span class="ced__lv-linea" [class.ced__lv-linea--lit]="n.lit"></span>
+            }
+          }
+        </div>
+      }
+
       <!-- Datos -->
       <div class="ced__card">
         <div class="ced__kv"><span>{{ 'Transporta' | t }}</span><b>🚛 {{ f.transporta || '—' }}</b></div>
