@@ -91,6 +91,24 @@
     }
   }
 
+  <!-- DF4 (PROMPT 129) — Pulso de obras: anillo por obra, naranja mientras no
+       reportó bitácora hoy, verde al llegar. -->
+  @if (pulsoObrasVisible() && pulsoObras()?.length) {
+    <section class="home__pulso">
+      <h2 class="home__hoy-title">{{ 'Pulso de obras' | t }}</h2>
+      <div class="home__pulso-row">
+        @for (o of pulsoObras(); track o.obra) {
+          <div class="home__pulso-anillo" [class.home__pulso-anillo--listo]="o.reporto_hoy" [appEstadoPulse]="o.reporto_hoy">
+            <span class="home__pulso-obra">{{ o.obra }}</span>
+            <span class="home__pulso-estado">
+              {{ o.reporto_hoy ? ('Ya reportó' | t) : ('Sin parte hoy' | t) }}
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
   @if (editMode()) {
     <!-- AF38 — modo edición (admin): arrastrar para reordenar como un launcher -->
     <div class="home__edit-bar">

@@ -217,6 +217,17 @@
           </span>
         </div>
 
+        <!-- DF1-D (PROMPT 129) — describe el estado por voz en vez de marcar uno a uno -->
+        @if (respondidos() === 0) {
+          @if (iaLeyendo()) {
+            <p class="preuso__ia-hint">{{ 'Entendiendo la nota…' | t }}</p>
+          } @else if (online) {
+            <app-voice-recorder (recorded)="$event && leerConVoz($event)" />
+          } @else {
+            <p class="preuso__ia-hint">{{ 'Necesitas conexión para describir por voz.' | t }}</p>
+          }
+        }
+
         @for (g of grupos(); track g.seccion) {
           <h2 class="preuso__section">{{ g.seccion }}</h2>
           @for (it of g.items; track it.id) {

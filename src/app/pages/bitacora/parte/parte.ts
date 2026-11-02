@@ -49,6 +49,12 @@ import {
   RESTRICCIONES,
 } from '../../../core/models/bitacora.model';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
+// DF1-A (PROMPT 129) — "Modo rápido": fotos + voz → la IA propone el parte.
+import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { BitacoraIaService } from '../../../core/services/bitacora-ia.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
+import { CampoParteIaClave, PropuestaBitacoraIA } from '../../../core/models/bitacora-ia.model';
+import { CampoPropuesto, ClasificacionConfianza, clasificarConfianza, contarDudosos } from '../../../shared/utils/bitacora-ia.util';
 
 // BP4 daños = paso 9, BO9 moldes = paso 10; ingeniero pasa a 11, resumen a 12.
 const TOTAL = 12;
@@ -73,7 +79,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -92,6 +98,8 @@ export class PartePage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private i18n = inject(I18nService);
   private motion = inject(MotionService);
+  private bitacoraIa = inject(BitacoraIaService);
+  private iaGate = inject(IaConsentGate);
 
   // S5 — clave de borrador por instancia (varios borradores a la vez).
   private draftKey = '';
@@ -113,6 +121,53 @@ export class PartePage implements OnDestroy {
   estructuras = signal<CatOrdenado[]>(ESTRUCTURAS.map((v) => ({ valor: v, destacado: false })));
   actividadesCat = signal<CatOrdenado[]>(ACTIVIDADES.map((v) => ({ valor: v, destacado: false })));
   restriccionesCat = signal<readonly string[]>(RESTRICCIONES);
+
+  // ── DF1-A (PROMPT 129) — Modo rápido (fotos + voz → la IA propone el parte) ──
+  modoRapidoPantalla = signal<'cerrado' | 'captura' | 'cargando' | 'revision'>('cerrado');
+  iaAudio = signal<Blob | null>(null);
+  iaError = signal('');
+  iaPropuesta = signal<PropuestaBitacoraIA | null>(null);
+  iaSoloDudosos = signal(false);
+
+  /** DF1 pantalla B — un campo por fila, con el paso real donde se corrige. */
+  private readonly CAMPOS_PARTE_IA: { clave: CampoParteIaClave; etiqueta: string; paso: number }[] = [
+    { clave: 'llovio', etiqueta: '¿Llovió?', paso: 2 },
+    { clave: 'lluvia_detalle', etiqueta: 'Detalle de la lluvia', paso: 2 },
+    { clave: 'horas_lluvia', etiqueta: 'Horas de lluvia', paso: 2 },
+    { clave: 'personal_carpinteria', etiqueta: 'Personal de carpintería', paso: 4 },
+    { clave: 'personal_acero', etiqueta: 'Personal de acero', paso: 4 },
+    { clave: 'trabajadores_casa', etiqueta: 'Trabajadores de la casa', paso: 4 },
+    { clave: 'otro_personal', etiqueta: 'Otro personal', paso: 4 },
+    { clave: 'ingeniero_responsable', etiqueta: 'Ingeniero responsable', paso: 11 },
+    { clave: 'hora_fin_trabajo', etiqueta: 'Hora de fin de trabajo', paso: 11 },
+    { clave: 'comentarios', etiqueta: 'Comentarios', paso: 11 },
+  ];
+
+  /** Campos de la propuesta con su clasificación de confianza, para pintar los puntos. */
+  camposRevision = computed<{ clave: string; etiqueta: string; valor: unknown; paso: number; clasificacion: ClasificacionConfianza }[]>(() => {
+    const campos = this.iaPropuesta()?.campos ?? {};
+    return this.CAMPOS_PARTE_IA
+      .map(({ clave, etiqueta, paso }) => {
+        const c = campos[clave];
+        const confianza = c?.confianza ?? 0;
+        let valor: unknown = c?.valor ?? null;
+        if (clave === 'llovio' && valor !== null) valor = valor === true ? this.i18n.t('Sí') : this.i18n.t('No');
+        return { clave, etiqueta: this.i18n.t(etiqueta), valor, paso, clasificacion: clasificarConfianza(c?.valor ?? null, confianza) };
+      })
+      .filter((c) => !this.iaSoloDudosos() || c.clasificacion !== 'alta');
+  });
+
+  /** Cuántos campos quedaron en "¿seguro?" (ámbar) — para "Revisar los N que dudo". */
+  iaDudososCount = computed(() => {
+    const p = this.iaPropuesta();
+    if (!p?.campos) return 0;
+    return contarDudosos(p.campos as Record<string, CampoPropuesto>);
+  });
+
+  iaActividadesRevision = computed(() =>
+    (this.iaPropuesta()?.actividades ?? []).map((a) => ({ ...a, clasificacion: clasificarConfianza(a.actividad, a.confianza) })),
+  );
+  iaRestriccionesRevision = computed(() => this.iaPropuesta()?.restricciones ?? []);
 
   step = signal(1);
   paso5 = signal<Paso5>('sujeto'); // S3/S4 — sub-paso del "¿qué se hizo hoy?"
@@ -1622,6 +1677,124 @@ export class PartePage implements OnDestroy {
 
   ngOnDestroy(): void {
     this.navGuard.clear(this.backHandler);
+  }
+
+  // ── DF1-A (PROMPT 129) — Modo rápido ────────────────────────────────────────
+
+  abrirModoRapido(): void {
+    this.modoRapidoPantalla.set('captura');
+  }
+
+  /** "Prefiero llenarlo paso a paso" — descarta la propuesta, el formulario manual sigue intacto. */
+  cerrarModoRapido(): void {
+    const p = this.iaPropuesta();
+    if (p?.propuesta_id) this.bitacoraIa.resolverPropuesta(p.propuesta_id, 'descartada').catch(() => {});
+    this.modoRapidoPantalla.set('cerrado');
+    this.iaPropuesta.set(null);
+    this.iaAudio.set(null);
+    this.iaError.set('');
+    this.iaSoloDudosos.set(false);
+  }
+
+  onAudioGrabadoIa(blob: Blob | null): void {
+    this.iaAudio.set(blob);
+  }
+
+  /** DF-04 — sin consentimiento de IA, el botón reabre la hoja antes de llamar la edge. */
+  async entenderParte(): Promise<void> {
+    if (!this.online) return; // DF-05 simplificado — ver nota en bitacora-ia.service.ts
+    if (this.fotos().length < this.minFotos && !this.iaAudio()) {
+      this.iaError.set(this.i18n.t('Agrega al menos {n} fotos o graba una nota de voz.', { n: this.minFotos }));
+      return;
+    }
+    if (!(await this.iaGate.pedir())) return;
+    this.iaError.set('');
+    this.modoRapidoPantalla.set('cargando');
+    try {
+      const propuesta = await this.bitacoraIa.entenderParte({
+        proyectoId: this.proyectoId(),
+        fecha: this.fecha(),
+        fotos: this.fotos(),
+        audio: this.iaAudio(),
+      });
+      if (!propuesta.ok) {
+        if (propuesta.error_code === 'sin_consentimiento_ia' && (await this.iaGate.reabrir())) {
+          this.modoRapidoPantalla.set('captura');
+          await this.entenderParte();
+          return;
+        }
+        this.iaError.set(propuesta.error || this.i18n.t('No se pudo entender el parte. Llénalo a mano.'));
+        this.modoRapidoPantalla.set('captura');
+        return;
+      }
+      this.iaPropuesta.set(propuesta);
+      this.modoRapidoPantalla.set('revision');
+    } catch (e) {
+      this.iaError.set(e instanceof Error ? e.message : this.i18n.t('No se pudo entender el parte. Llénalo a mano.'));
+      this.modoRapidoPantalla.set('captura');
+    }
+  }
+
+  /** Aplica la propuesta a los MISMOS signals que llena el flujo manual — nunca sobrescribe un valor ya puesto. */
+  private aplicarPropuestaIa(): void {
+    const p = this.iaPropuesta();
+    if (!p) return;
+    const c = p.campos ?? {};
+    const setStr = (campo: CampoPropuesto | undefined, actual: string, setter: (v: string) => void) => {
+      if (!actual.trim() && campo?.valor != null && String(campo.valor).trim()) setter(String(campo.valor));
+    };
+    if (c.llovio?.valor != null && this.llovio() === null) this.llovio.set(!!c.llovio.valor);
+    setStr(c.lluvia_detalle, this.lluviaDetalle(), (v) => this.lluviaDetalle.set(v));
+    if (c.horas_lluvia?.valor != null && !this.horasLluvia()) this.horasLluvia.set(Number(c.horas_lluvia.valor));
+    if (c.personal_carpinteria?.valor != null && !this.carpinteria()) this.carpinteria.set(Number(c.personal_carpinteria.valor));
+    if (c.personal_acero?.valor != null && !this.acero()) this.acero.set(Number(c.personal_acero.valor));
+    if (c.trabajadores_casa?.valor != null && !this.casa()) this.casa.set(Number(c.trabajadores_casa.valor));
+    setStr(c.otro_personal, this.otroPersonal(), (v) => this.otroPersonal.set(v));
+    setStr(c.ingeniero_responsable, this.ingenieroResponsable(), (v) => this.ingenieroResponsable.set(v));
+    setStr(c.hora_fin_trabajo, this.horaFinTrabajo(), (v) => this.horaFinTrabajo.set(v));
+    setStr(c.comentarios, this.comentarios(), (v) => this.comentarios.set(v));
+
+    // Actividades — defensa en profundidad: re-valida contra el catálogo vigente de la obra.
+    const estructurasValidas = new Set(this.estructuras().map((e) => e.valor));
+    const actividadesValidas = new Set(this.actividadesCat().map((a) => a.valor));
+    const nuevas = (p.actividades ?? [])
+      .filter((a) => estructurasValidas.has(a.estructura) && actividadesValidas.has(a.actividad))
+      .map((a) => ({ estructura: a.estructura, actividad: a.actividad, cantidad: a.cantidad, unidad: a.unidad, bloque: null, es_aproximada: a.cantidad == null }));
+    if (nuevas.length) {
+      this.actividades.update((list) => {
+        const yaEsta = (n: (typeof nuevas)[number]) =>
+          list.some((x) => (x.bloque ?? '') === (n.bloque ?? '') && x.estructura === n.estructura && x.actividad === n.actividad);
+        return [...nuevas.filter((n) => !yaEsta(n)), ...list];
+      });
+    }
+
+    // Restricciones — solo si el usuario no había elegido ninguna aún (igual que el espejo web).
+    if (this.restricciones().length === 0) {
+      const catalogo = this.restriccionesCat();
+      for (const r of p.restricciones ?? []) {
+        if (!catalogo.includes(r.tipo_restriccion)) continue;
+        this.toggleRestriccion(r.tipo_restriccion);
+        if (r.descripcion_otro) this.setRestriccionDesc(r.tipo_restriccion, r.descripcion_otro);
+      }
+    }
+  }
+
+  /** Tocar una fila de la revisión aplica TODA la propuesta y abre el paso real donde vive ese dato. */
+  irAPasoDesdeRevision(paso: number): void {
+    this.aplicarPropuestaIa();
+    const p = this.iaPropuesta();
+    if (p?.propuesta_id) this.bitacoraIa.resolverPropuesta(p.propuesta_id, 'aceptada').catch(() => {});
+    this.modoRapidoPantalla.set('cerrado');
+    this.step.set(paso);
+  }
+
+  /** "Usar esto y enviar bitácora" — aplica todo y manda por el MISMO submit()/RPC de siempre. */
+  async confirmarPropuestaIa(): Promise<void> {
+    this.aplicarPropuestaIa();
+    const p = this.iaPropuesta();
+    if (p?.propuesta_id) this.bitacoraIa.resolverPropuesta(p.propuesta_id, 'aceptada').catch(() => {});
+    this.modoRapidoPantalla.set('cerrado');
+    await this.submit();
   }
 
   get online(): boolean {

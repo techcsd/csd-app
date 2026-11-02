@@ -55,6 +55,21 @@
       </button>
     }
 
+    <!-- DF2/DF3 (PROMPT 129) — Agentes de monitoreo. Mismo gate/patrón que Compras
+         por aprobar (RLS real del padre decide; aquí solo se ofrece la entrada). -->
+    @if (esTecnologia()) {
+      <button type="button" class="tec__devnotes" appTapScale (click)="abrirAgentes()">
+        <span class="tec__devnotes-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 4h6M9 13h.01M15 13h.01"/><path d="M2 14h2M20 14h2"/></svg>
+        </span>
+        <span class="tec__devnotes-txt">
+          <span class="tec__devnotes-title">{{ 'Agentes' | t }}</span>
+          <span class="tec__devnotes-sub">{{ 'Monitoreo automático de SGC y la app' | t }}</span>
+        </span>
+        <span class="tec__devnotes-caret">›</span>
+      </button>
+    }
+
     <!-- Tabs — Versiones + Dudas para todos; "Reportes de errores" solo para
          roles de Tecnología (Z26/Z30). -->
     <div class="tec__tabs">

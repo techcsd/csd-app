@@ -12,8 +12,104 @@
       <button type="button" class="parte__topback" (click)="salir()" [attr.aria-label]="'Salir' | t">←</button>
       <span class="parte__topttl">{{ 'Bitácora del día' | t }}</span>
     </header>
-    <app-step-bar [current]="step()" [total]="total()" />
+    @if (modoRapidoPantalla() === 'cerrado') {
+      <app-step-bar [current]="step()" [total]="total()" />
+    }
     <div class="screen__body">
+    @if (modoRapidoPantalla() !== 'cerrado') {
+      @if (modoRapidoPantalla() === 'captura') {
+        <h1 class="screen__title" appWizardStep>{{ 'Modo rápido' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Toma fotos del trabajo y graba una nota de voz contando qué se hizo hoy — la IA propone el parte, tú lo revisas.' | t }}</p>
+
+        <p class="screen__subtitle">
+          {{ 'Mínimo {n} fotos (o una nota de voz).' | t: { n: minFotos } }} {{ 'Llevas' | t }} <b>{{ fotos().length }}</b>.
+        </p>
+        <div class="parte__fotos">
+          @for (f of fotos(); track f.previewUrl) {
+            <div class="parte__foto">
+              <img [src]="f.previewUrl" alt="foto" />
+              <button type="button" class="parte__foto-x" (click)="removeFoto($index)">✕</button>
+            </div>
+          }
+        </div>
+        <div class="parte__foto-actions">
+          <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
+            @if (capturing()) { ⏳… } @else { 📷 {{ 'Cámara' | t }} }
+          </button>
+          <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">
+            @if (capturing()) { ⏳… } @else { 🖼️ {{ 'Galería' | t }} }
+          </button>
+        </div>
+
+        <label class="field-label">{{ 'Nota de voz (opcional si ya pusiste fotos)' | t }}</label>
+        <app-voice-recorder (recorded)="onAudioGrabadoIa($event)" />
+
+        @if (!online) {
+          <p class="parte__warn">⚠️ {{ 'El modo rápido necesita conexión. Tus fotos y tu nota ya quedaron guardadas — inténtalo de nuevo cuando tengas señal.' | t }}</p>
+        }
+        @if (iaError()) { <p class="parte__warn">{{ iaError() }}</p> }
+
+        <button type="button" class="btn-cta" [disabled]="!online" (click)="entenderParte()">
+          {{ 'Entender y llenar el parte' | t }}
+        </button>
+        <button type="button" class="parte__link" (click)="cerrarModoRapido()">{{ 'Prefiero llenarlo paso a paso' | t }}</button>
+      }
+
+      @if (modoRapidoPantalla() === 'cargando') {
+        <h1 class="screen__title" appWizardStep>{{ 'Entendiendo el parte…' | t }}</h1>
+        <app-skeleton [rows]="6" />
+      }
+
+      @if (modoRapidoPantalla() === 'revision') {
+        <h1 class="screen__title" appWizardStep>{{ 'Esto entendí' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Toca cualquier dato para revisarlo o corregirlo en su paso.' | t }}</p>
+
+        @if (iaDudososCount() > 0) {
+          <button type="button" class="btn-ghost" (click)="iaSoloDudosos.set(!iaSoloDudosos())">
+            {{ iaSoloDudosos() ? ('Ver todo' | t) : ('Revisar los {n} que dudo' | t: { n: iaDudososCount() }) }}
+          </button>
+        }
+
+        <ul class="parte__ia-revision">
+          @for (c of camposRevision(); track c.clave) {
+            <li class="parte__ia-fila" [class.parte__ia-fila--alta]="c.clasificacion === 'alta'" [class.parte__ia-fila--dudosa]="c.clasificacion === 'dudosa'" [class.parte__ia-fila--vacia]="c.clasificacion === 'vacia'" (click)="irAPasoDesdeRevision(c.paso)">
+              <span class="parte__ia-dot" aria-hidden="true"></span>
+              <span class="parte__ia-label">{{ c.etiqueta }}</span>
+              <span class="parte__ia-valor">{{ c.valor ?? ('No mencionó · sin datos' | t) }}</span>
+            </li>
+          }
+        </ul>
+
+        @if (iaActividadesRevision().length) {
+          <h2 class="parte__resumen-h">{{ 'Trabajo que entendí' | t }}</h2>
+          <ul class="parte__ia-revision">
+            @for (a of iaActividadesRevision(); track $index) {
+              <li class="parte__ia-fila" [class.parte__ia-fila--alta]="a.clasificacion === 'alta'" [class.parte__ia-fila--dudosa]="a.clasificacion === 'dudosa'" (click)="irAPasoDesdeRevision(5)">
+                <span class="parte__ia-dot" aria-hidden="true"></span>
+                <span class="parte__ia-label">{{ a.estructura }} · {{ a.actividad }}</span>
+                <span class="parte__ia-valor">@if (a.cantidad != null) { {{ a.cantidad }} {{ a.unidad }} }</span>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (iaRestriccionesRevision().length) {
+          <h2 class="parte__resumen-h">{{ 'Restricciones que entendí' | t }}</h2>
+          <ul class="parte__ia-revision">
+            @for (r of iaRestriccionesRevision(); track $index) {
+              <li class="parte__ia-fila parte__ia-fila--alta" (click)="irAPasoDesdeRevision(6)">
+                <span class="parte__ia-dot" aria-hidden="true"></span>
+                <span class="parte__ia-label">{{ r.tipo_restriccion }}</span>
+                <span class="parte__ia-valor">{{ r.descripcion_otro }}</span>
+              </li>
+            }
+          </ul>
+        }
+
+        <button type="button" class="btn-cta" (click)="confirmarPropuestaIa()">{{ 'Usar esto y enviar bitácora' | t }}</button>
+        <button type="button" class="parte__link" (click)="cerrarModoRapido()">{{ 'Prefiero llenarlo paso a paso' | t }}</button>
+      }
+    } @else {
       <!-- 1. Obra -->
       @if (step() === 1) {
         <h1 class="screen__title" appWizardStep>{{ '¿En qué obra estás?' | t }}</h1>
@@ -61,6 +157,14 @@
         />
         @if (sinActividad()) {
           <p class="screen__subtitle">{{ 'Solo te pediremos el motivo. Toca de nuevo para volver al parte normal.' | t }}</p>
+        }
+
+        <!-- DF1-A (PROMPT 129) — Modo rápido: fotos + voz → la IA llena el parte -->
+        @if (proyectoId() && !sinActividad()) {
+          <button type="button" class="btn-ghost parte__modorapido-entrada" (click)="abrirModoRapido()">
+            {{ 'Modo rápido: fotos y voz' | t }}
+          </button>
+          <p class="parte__muted">{{ 'La IA te ayuda a llenar el parte. Tú siempre revisas y confirmas.' | t }}</p>
         }
       }
 
@@ -800,15 +904,18 @@
           </ul>
         }
       }
+    }
     </div>
 
-    <app-wizard-footer
-      [backLabel]="backLabel()"
-      [primaryLabel]="primaryLabel()"
-      [primaryDisabled]="primaryDisabled()"
-      (back)="onBack()"
-      (primary)="onPrimary()"
-    />
+    @if (modoRapidoPantalla() === 'cerrado') {
+      <app-wizard-footer
+        [backLabel]="backLabel()"
+        [primaryLabel]="primaryLabel()"
+        [primaryDisabled]="primaryDisabled()"
+        (back)="onBack()"
+        (primary)="onPrimary()"
+      />
+    }
   </div>
 
   <app-confirm-dialog

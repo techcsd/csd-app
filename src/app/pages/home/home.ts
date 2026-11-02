@@ -59,6 +59,14 @@ interface HomeTile {
   tint: string;
 }
 
+/** DF4 (PROMPT 129) — fila de `sgc.pulso_obras_hoy()`, ya desplegado al Supabase de dev. */
+interface PulsoObra {
+  obra: string;
+  reporto_hoy: boolean;
+  dias_sin_reportar: number;
+  estado: string;
+}
+
 // One button = one job. Gated by the same SGC module keys as the web.
 const TILES: HomeTile[] = [
   { modulo: 'bitacora', icon: '📓', label: 'Bitácora', route: '/bitacora', tint: '#1e3a5f' },
@@ -237,9 +245,18 @@ export class HomePage implements OnDestroy {
   // previos no tira el bloque, solo deja de refrescarlo esta vez).
   hoyResumen = signal<TableroVivoResumen | null>(null);
   hoyFallo = signal(false);
+
+  // DF4 (PROMPT 129) — "Pulso de obras": anillo por obra, naranja mientras no
+  // reportó hoy, verde al llegar. Dato de granularidad diaria — se carga una vez
+  // por re-ingreso/resume (NO un polling de 30s como "Hoy", sería desperdiciar
+  // batería/datos para algo que solo cambia una vez al día por obra).
+  pulsoObrasVisible = computed(() => this.ctx.hasModulo('proyectos') || this.ctx.esFlotaElevado());
+  pulsoObras = signal<PulsoObra[] | null>(null);
+
   private hoyInterval: ReturnType<typeof setInterval> | null = null;
   private hoyResumeHandle: PluginListenerHandle | null = null;
   private hoyPauseHandle: PluginListenerHandle | null = null;
+  private pulsoObrasResumeHandle: PluginListenerHandle | null = null;
   private badgesResumeHandle: PluginListenerHandle | null = null;
   private static readonly HOY_POLL_MS = 30000;
   private static readonly ICONOS_EVENTO: Record<TableroVivoEvento['tipo'], string> = {
@@ -472,6 +489,7 @@ export class HomePage implements OnDestroy {
       void this.cargarHoy();
       this.iniciarPollingHoy();
     }
+    void this.cargarPulsoObras();
     if (Capacitor.isNativePlatform()) {
       void CapApp.addListener('pause', () => this.detenerPollingHoy()).then((h) => (this.hoyPauseHandle = h));
       void CapApp.addListener('resume', () => {
@@ -479,6 +497,7 @@ export class HomePage implements OnDestroy {
         void this.cargarHoy();
         this.iniciarPollingHoy();
       }).then((h) => (this.hoyResumeHandle = h));
+      void CapApp.addListener('resume', () => void this.cargarPulsoObras()).then((h) => (this.pulsoObrasResumeHandle = h));
       // DE3/A1 — recuenta badges al volver a primer plano (AM2): si algo cambió
       // mientras la app estaba en background (otro recibió/despachó), el número
       // del icono no debe quedar viejo hasta que el usuario reabra el Home.
@@ -561,11 +580,13 @@ export class HomePage implements OnDestroy {
     void this.hoyPauseHandle?.remove();
     void this.hoyResumeHandle?.remove();
     void this.badgesResumeHandle?.remove();
+    void this.pulsoObrasResumeHandle?.remove();
     document.removeEventListener('visibilitychange', this.onHoyVisibilityChange);
   }
 
   /** A6 — PWA: visibilitychange cubre lo que `App.addListener` (solo nativo) no ve. */
   private readonly onHoyVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') void this.cargarPulsoObras();
     if (!this.hoyVisible()) return;
     if (document.visibilityState === 'visible') {
       void this.cargarHoy();
@@ -586,6 +607,18 @@ export class HomePage implements OnDestroy {
       // Un poll fallido con datos previos no los borra (evita parpadear a "falló" por
       // un blip de red); solo marca fallo si NUNCA hubo una carga exitosa.
       if (!this.hoyResumen()) this.hoyFallo.set(true);
+    }
+  }
+
+  /** DF4 — best-effort, nice-to-have, nunca rompe el Home. */
+  private async cargarPulsoObras(): Promise<void> {
+    if (!this.pulsoObrasVisible()) return;
+    try {
+      const { data, error } = await this.supabase.client.rpc('pulso_obras_hoy');
+      if (error) throw error;
+      this.pulsoObras.set(data as PulsoObra[]);
+    } catch {
+      /* best-effort — el widget simplemente no aparece esta vez */
     }
   }
 

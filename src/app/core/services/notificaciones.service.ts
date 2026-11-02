@@ -430,7 +430,9 @@ export function notifAppRoute(n: {
     r.startsWith('/tareas') ||
     r.startsWith('/mensajes') ||
     r.startsWith('/reuniones') ||
-    r.startsWith('/borrador')
+    r.startsWith('/borrador') ||
+    // DF3 (PROMPT 129) — aviso de agente (aprobación pendiente / informe diario).
+    r.startsWith('/tecnologia')
   ) {
     return r;
   }

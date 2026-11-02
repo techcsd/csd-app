@@ -82,6 +82,52 @@
   &[data-estado='rechazada'],
   &[data-estado='cancelada'] { background: var(--color-error-bg); color: var(--color-error); }
 }
+// DF4 (PROMPT 129) — requisición → recepción (mismo patrón visual que la línea
+// de vida del conduce externo, conduce-externo-detalle.scss .ced__lv-*).
+.reqd__flujo {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 14px;
+}
+.reqd__flujo-nodo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 60px;
+}
+.reqd__flujo-punto {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+.reqd__flujo-nodo--lit .reqd__flujo-punto {
+  background: var(--Hub);
+}
+.reqd__flujo-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.reqd__flujo-nodo--lit .reqd__flujo-label {
+  color: var(--color-text);
+}
+.reqd__flujo-fecha {
+  font-size: 9px;
+  color: var(--color-text-secondary);
+}
+.reqd__flujo-linea {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin-top: 6px;
+}
+.reqd__flujo-linea--lit {
+  background: var(--Hub);
+}
+
 .reqd__code {
   display: flex;
   align-items: center;

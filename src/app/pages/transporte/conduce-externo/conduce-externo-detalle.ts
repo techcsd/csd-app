@@ -110,6 +110,33 @@ export class ConduceExternoDetallePage {
     }
   }
 
+  /**
+   * DF4 (PROMPT 129) — línea de vida honesta: solo los 2-3 nodos REALES que
+   * `conduces_externos` registra de verdad (emitido/recibido/anulado, vía
+   * `historial`) — nunca se inventan los 5 pasos de un mockup genérico. Si el
+   * conduce sigue abierto (ni recibido ni anulado), se agrega un nodo "Recibido"
+   * apagado para mostrar qué falta, no un dato que ya pasó.
+   */
+  lineaVida = computed<{ label: string; at: string | null; lit: boolean }[]>(() => {
+    const f = this.ficha();
+    if (!f || f.pendiente) return [];
+    const ETIQUETA: Record<string, string> = { emitido: 'Emitido', recibido: 'Recibido', anulado: 'Anulado' };
+    const reales = (f.historial ?? []).filter((h): h is { estado: keyof typeof ETIQUETA; at: string } => h.estado in ETIQUETA);
+    if (!reales.length) return [];
+    const nodos: { label: string; at: string | null; lit: boolean }[] = reales.map((h) => ({
+      label: this.i18n.t(ETIQUETA[h.estado]),
+      at: h.at,
+      lit: true,
+    }));
+    const terminado = reales.some((h) => h.estado === 'anulado' || h.estado === 'recibido');
+    if (!terminado) nodos.push({ label: this.i18n.t('Recibido'), at: null, lit: false });
+    return nodos;
+  });
+
+  fechaDe(at: string): string {
+    return formatFechaHumana(at);
+  }
+
   async verPdf(): Promise<void> {
     const f = this.ficha();
     if (!f || this.generandoPdf()) return;

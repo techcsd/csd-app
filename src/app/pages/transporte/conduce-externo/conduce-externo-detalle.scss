@@ -59,6 +59,51 @@
   border-radius: 14px;
   background: var(--color-surface);
 }
+
+// DF4 (PROMPT 129) — línea de vida (solo los nodos reales de historial).
+.ced__linea-vida {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 14px;
+}
+.ced__lv-nodo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 64px;
+}
+.ced__lv-punto {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+.ced__lv-nodo--lit .ced__lv-punto {
+  background: var(--Hub);
+}
+.ced__lv-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.ced__lv-nodo--lit .ced__lv-label {
+  color: var(--color-text);
+}
+.ced__lv-fecha {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+}
+.ced__lv-linea {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin-top: 6px;
+}
+.ced__lv-linea--lit {
+  background: var(--Hub);
+}
 .ced__sec {
   margin: 0 0 8px;
   font-size: 14px;

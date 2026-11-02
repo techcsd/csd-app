@@ -9,6 +9,15 @@
   <!-- Hoja 1+2: selección por categorías (con "Otros" libre) -->
   @if (hoja() === 'seleccion') {
     <div class="screen__body mov__sheet">
+      <!-- DF1-E (PROMPT 129) — decir qué necesitas en vez de buscarlo a mano -->
+      @if (cart().length === 0) {
+        @if (iaLeyendo()) {
+          <p class="mov__ia-hint">{{ 'Entendiendo lo que necesitas…' | t }}</p>
+        } @else if (online) {
+          <app-voice-recorder (recorded)="$event && leerConVoz($event)" />
+          <p class="mov__ia-hint">{{ 'Di qué necesitas y para qué obra, por ejemplo: "necesito 50 sacos de cemento para Torre Alpha, es urgente".' | t }}</p>
+        }
+      }
       <app-selector-categorias
         [articulos]="articulos()"
         [categorias]="categorias()"

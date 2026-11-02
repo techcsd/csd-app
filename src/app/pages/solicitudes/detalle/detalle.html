@@ -24,6 +24,20 @@
         <span class="reqd__estado" [appEstadoPulse]="r.estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
       </div>
 
+      <!-- DF4 (PROMPT 129) — requisición → recepción: etapas reales de ESTA solicitud -->
+      @if (etapasFlujo().length) {
+        <div class="reqd__flujo">
+          @for (e of etapasFlujo(); track e.label) {
+            <div class="reqd__flujo-nodo" [class.reqd__flujo-nodo--lit]="e.lit">
+              <span class="reqd__flujo-punto"></span>
+              <span class="reqd__flujo-label">{{ e.label }}</span>
+              @if (e.at) { <span class="reqd__flujo-fecha">{{ fechaDe(e.at) }}</span> }
+            </div>
+            @if (!$last) { <span class="reqd__flujo-linea" [class.reqd__flujo-linea--lit]="e.lit"></span> }
+          }
+        </div>
+      }
+
       <div class="reqd__code">
         <span class="reqd__code-req">{{ codigo(r.folio) }}</span>
         @if ((r.version ?? 1) > 1) { <span class="reqd__code-ver">v{{ r.version }}</span> }

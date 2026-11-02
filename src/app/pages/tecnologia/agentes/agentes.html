@@ -1,0 +1,140 @@
+<div class="screen agentes">
+  <header class="agentes__header">
+    <button type="button" class="agentes__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="agentes__title">{{ 'Agentes' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!online) {
+      <p class="agentes__offline">{{ 'Sin conexión — mostrando lo último que se vio.' | t }}</p>
+    }
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      <!-- Los 6 agentes — miniatura de solo lectura (la oficina completa vive en la web) -->
+      <section class="agentes__sec">
+        @for (f of filas(); track f.agente.id) {
+          <div class="agentes__fila">
+            <app-estado-chip [label]="f.estadoLabel" [tono]="f.tono" [appEstadoPulse]="f.estado" />
+            <div class="agentes__fila-txt">
+              <span class="agentes__fila-nombre">{{ f.agente.nombre }}</span>
+              <span class="agentes__fila-resumen">
+                {{ f.ultimoResumen || ('Sin actividad reciente' | t) }}
+                @if (f.ultimoCuando) { · {{ relativo(f.ultimoCuando) }} }
+              </span>
+            </div>
+          </div>
+        } @empty {
+          <app-empty-state [title]="'Sin agentes configurados' | t" />
+        }
+        @if (costo()) {
+          <p class="agentes__costo">
+            {{ 'Costo de IA hoy' | t }}: {{ costo()!.costo_hoy | number: '1.2-2' }} / {{ costo()!.tope_diario | number: '1.0-0' }} USD
+          </p>
+        }
+      </section>
+
+      <!-- Esperan tu OK -->
+      <section class="agentes__sec">
+        <h2 class="agentes__h2">{{ 'Esperan tu OK' | t }} ({{ aprobaciones().length }})</h2>
+        @for (a of aprobaciones(); track a.id) {
+          <div class="agentes__aprob">
+            <button type="button" class="agentes__aprob-head" (click)="toggleAprobacion(a.id)">
+              <span class="agentes__aprob-titulo">{{ a.propuesta.split('\n')[0] }}</span>
+              <span class="agentes__aprob-caret">{{ abierta(a.id) ? '▾' : '›' }}</span>
+            </button>
+            @if (abierta(a.id)) {
+              <div class="agentes__aprob-detalle">
+                <p class="agentes__aprob-propuesta">{{ a.propuesta }}</p>
+                @if (a.rama) { <p class="agentes__aprob-meta">{{ 'Rama' | t }}: {{ a.rama }}</p> }
+                @if (a.pr_url) {
+                  <p class="agentes__aprob-meta">
+                    <a [href]="a.pr_url" target="_blank" rel="noopener">{{ 'Ver cambios (PR)' | t }}</a>
+                  </p>
+                }
+                @if (entradasPruebas(a).length) {
+                  <p class="agentes__aprob-meta agentes__aprob-meta--pruebas">
+                    @for (e of entradasPruebas(a); track e[0]) { {{ e[0] }}: {{ e[1] }} &nbsp; }
+                  </p>
+                }
+                <p class="agentes__aprob-hint">{{ '"Aprobar para dev" solo marca el estado — el merge real a main lo decides tú en GitHub.' | t }}</p>
+
+                <textarea
+                  class="field agentes__aprob-nota"
+                  rows="2"
+                  [placeholder]="'Nota para pedir un ajuste (opcional)' | t"
+                  [ngModel]="notaAjuste()[a.id] || ''"
+                  (ngModelChange)="setNotaAjuste(a.id, $event)"
+                ></textarea>
+
+                <div class="agentes__aprob-acciones">
+                  <button type="button" class="btn-cta" [disabled]="decidiendo() === a.id || !online" (click)="aprobar(a)">
+                    {{ 'Aprobar para dev' | t }}
+                  </button>
+                  <button type="button" class="btn-ghost" [disabled]="decidiendo() === a.id || !online" (click)="pedirAjuste(a)">
+                    {{ 'Pedir ajuste' | t }}
+                  </button>
+                  <button type="button" class="btn-ghost" [disabled]="decidiendo() === a.id || !online" (click)="descartar(a)">
+                    {{ 'Descartar' | t }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        } @empty {
+          <p class="agentes__muted">{{ 'Nada esperando tu OK.' | t }}</p>
+        }
+      </section>
+
+      <!-- Lo que arreglaron solos -->
+      <section class="agentes__sec">
+        <h2 class="agentes__h2">{{ 'Lo que arreglaron solos' | t }}</h2>
+        @for (acc of acciones(); track acc.id) {
+          <div class="agentes__accion">
+            <div class="agentes__accion-txt">
+              <span>{{ acc.que_hizo }}</span>
+              <span class="agentes__fila-resumen">{{ relativo(acc.creado_en) }}</span>
+            </div>
+            @if (acc.deshecha_en) {
+              <span class="agentes__muted">{{ 'Deshecho' | t }}</span>
+            } @else if (acc.reversible) {
+              <button type="button" class="btn-ghost" [disabled]="deshaciendo() === acc.id || !online" (click)="deshacer(acc)">
+                {{ 'Deshacer' | t }}
+              </button>
+            }
+          </div>
+        } @empty {
+          <p class="agentes__muted">{{ 'Nada que mostrar todavía.' | t }}</p>
+        }
+      </section>
+
+      <!-- Lo que encontré hoy -->
+      @if (hallazgos().length) {
+        <section class="agentes__sec">
+          <h2 class="agentes__h2">{{ 'Lo que encontré hoy' | t }}</h2>
+          @for (h of hallazgos(); track h.id) {
+            <div class="agentes__hallazgo">
+              <app-estado-chip [label]="h.severidad" [tono]="tonoSeveridad(h.severidad)" />
+              <span class="agentes__hallazgo-titulo">{{ h.titulo }}</span>
+              @if (h.detalle) { <span class="agentes__fila-resumen">{{ h.detalle }}</span> }
+            </div>
+          }
+        </section>
+      }
+
+      <!-- Informe del día -->
+      @if (informe()) {
+        <section class="agentes__sec">
+          <button type="button" class="agentes__informe-toggle" (click)="mostrarInforme.set(!mostrarInforme())">
+            {{ 'Informe de hoy' | t }} {{ mostrarInforme() ? '▾' : '›' }}
+          </button>
+          @if (mostrarInforme()) {
+            <app-markdown-view [source]="informe()!.contenido_md" />
+            <p class="agentes__muted">{{ 'El envío a jefes se hace desde la web.' | t }}</p>
+          }
+        </section>
+      }
+    }
+  </div>
+</div>

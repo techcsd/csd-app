@@ -41,7 +41,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/mis-partes | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/orden-trabajo | 60 | 1 | 98% | 2% |  |
 | pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
-| pages/bitacora/parte | 186 | 4 | 98% | 1% |  |
+| pages/bitacora/parte | 204 | 4 | 98% | 0% |  |
 | pages/borrador | 13 | 0 | 100% | 0% |  |
 | pages/compa | 22 | 0 | 100% | 0% |  |
 | pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
@@ -54,7 +54,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 1 | 0% | 0% |  |
-| pages/home | 25 | 0 | 100% | 8% | ✅ |
+| pages/home | 28 | 0 | 100% | 7% | ✅ |
 | pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
@@ -124,13 +124,14 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/bandeja | 20 | 0 | 100% | 0% |  |
 | pages/solicitudes/detalle | 74 | 12 | 76% | 1% |  |
 | pages/solicitudes/mis | 18 | 0 | 89% | 0% |  |
-| pages/solicitudes/pedir | 31 | 0 | 68% | 0% |  |
+| pages/solicitudes/pedir | 33 | 0 | 70% | 0% |  |
 | pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 13 | 12 | 48% | 24% |  |
+| pages/tecnologia | 15 | 12 | 52% | 22% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 59 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 91 | 0% | 0% |  |
+| pages/tecnologia/agentes | 21 | 1 | 86% | 0% |  |
 | pages/tecnologia/compras-tec | 29 | 0 | 100% | 0% |  |
 | pages/tecnologia/cotizaciones | 14 | 0 | 100% | 0% |  |
 | pages/tecnologia/cotizaciones/cotizacion-detalle | 12 | 0 | 100% | 0% |  |
@@ -149,7 +150,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/combustible | 130 | 2 | 86% | 2% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
-| pages/transporte/conduce-externo | 81 | 1 | 82% | 4% |  |
+| pages/transporte/conduce-externo | 84 | 1 | 82% | 4% |  |
 | pages/transporte/conduce-transferencias | 46 | 0 | 98% | 2% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 3% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
@@ -167,7 +168,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/ferreteria | 30 | 0 | 100% | 3% |  |
 | pages/transporte/generar-conduce | 104 | 1 | 97% | 1% |  |
 | pages/transporte/importar | 34 | 0 | 100% | 0% |  |
-| pages/transporte/mantenimiento | 43 | 1 | 91% | 2% |  |
+| pages/transporte/mantenimiento | 45 | 1 | 91% | 2% |  |
 | pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 5% |  |
 | pages/transporte/mantenimientos-lista | 10 | 0 | 80% | 10% |  |
@@ -181,7 +182,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
 | pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
 | pages/transporte/por-confirmar | 38 | 0 | 100% | 5% |  |
-| pages/transporte/preuso | 71 | 0 | 100% | 3% |  |
+| pages/transporte/preuso | 73 | 0 | 100% | 3% |  |
 | pages/transporte/reportar-multa | 33 | 0 | 100% | 3% |  |
 | pages/transporte/reportar-vehiculo | 53 | 1 | 98% | 2% |  |
 | pages/transporte/reporte-semanal | 52 | 0 | 100% | 4% |  |

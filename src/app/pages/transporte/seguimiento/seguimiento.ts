@@ -29,10 +29,15 @@ import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { LatLng, rumboEntre } from '../../../shared/utils/geo.util';
 
 /* google.maps sin @types → lo tratamos como any. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type GAny = any;
+
+/** DF4 (PROMPT 129) — flecha de dirección para "camión en ruta" (Leaflet; SVG de trazo, apunta al norte por defecto). */
+const SEG_FLECHA_SVG =
+  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L12 18 M12 3 L7 9 M12 3 L17 9"/></svg>';
 
 /** AF27 — Seguimiento en vivo (jefe de flota / admin / tecnología).
  *  AG10 — usa Google Maps si hay API key configurada (RPC maps_api_key); si no,
@@ -75,6 +80,10 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   // AJ14/AV1 — trazado en vivo POR CHOFER, sólo del seleccionado (color propio).
   private gPolylines = new Map<string, GAny>();
   private lPolylines = new Map<string, L.Polyline>();
+  // DF4 (PROMPT 129) — "camión en ruta": rumbo real (2 posiciones consecutivas),
+  // solo para choferes en_ruta con señal fresca — nunca se inventa una dirección.
+  private posAnterior = new Map<string, LatLng>();
+  private rumbos = new Map<string, number>();
   // QA-11: debounce de recargas por realtime + memo del set de rutas activas.
   private cargarTimer: ReturnType<typeof setTimeout> | null = null;
   // AV1 — el trazo pintado (para no re-consultar el mismo chofer sin cambios).
@@ -188,8 +197,18 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
     this.cargarDebounced();
   }
 
+  /** DF4 — rumbo real entre 2 posiciones consecutivas (≥~5m, evita jitter del GPS parado). */
+  private actualizarRumbo(usuarioId: string, lat: number, lng: number): void {
+    const prev = this.posAnterior.get(usuarioId);
+    if (prev && Math.hypot(lat - prev.lat, lng - prev.lng) > 0.00005) {
+      this.rumbos.set(usuarioId, rumboEntre(prev, { lat, lng }));
+    }
+    this.posAnterior.set(usuarioId, { lat, lng });
+  }
+
   /** AV1 — interpola el marcador de un chofer de su posición actual a la nueva. */
   private moverMarcador(usuarioId: string, lat: number, lng: number): void {
+    this.actualizarRumbo(usuarioId, lat, lng);
     if (this.useGoogle) {
       const m = this.gmarkers.get(usuarioId);
       if (!m) return;
@@ -396,6 +415,20 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private iconoGoogle(c: ChoferSeguimiento): GAny {
     const stale = this.esStale(c.capturado_en); // AV1 — sin señal reciente
     const sel = this.selectedId() === c.usuario_id;
+    // DF4 — "camión en ruta": flecha orientada por rumbo real, solo con señal
+    // fresca y ≥2 posiciones (nunca se inventa una dirección).
+    const rumbo = this.rumbos.get(c.usuario_id);
+    if (c.estado === 'en_ruta' && !stale && rumbo != null) {
+      return {
+        path: this.g.SymbolPath.FORWARD_CLOSED_ARROW,
+        rotation: rumbo,
+        scale: sel ? 7 : 5,
+        fillColor: estadoMeta(c.estado).tint,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 2,
+      };
+    }
     return {
       path: this.g.SymbolPath.CIRCLE,
       scale: sel ? 12 : 9,
@@ -450,6 +483,16 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
     const tint = stale ? '#9ca3af' : estadoMeta(c.estado).tint;
     const ring = sel ? `box-shadow:0 0 0 3px ${this.colorDe(c.usuario_id)};` : '';
     const size = sel ? 30 : 24;
+    // DF4 — "camión en ruta": flecha orientada por rumbo real (ver iconoGoogle).
+    const rumbo = this.rumbos.get(c.usuario_id);
+    if (c.estado === 'en_ruta' && !stale && rumbo != null) {
+      return L.divIcon({
+        className: 'seg-marker seg-marker--rumbo',
+        html: `<div class="seg-marker__flecha" style="color:${tint};transform:rotate(${rumbo}deg);">${SEG_FLECHA_SVG}</div>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+      });
+    }
     return L.divIcon({
       className: 'seg-marker' + (stale ? ' seg-marker--stale' : ''),
       html: `<div class="seg-marker__pin" style="background:${tint};opacity:${stale ? 0.65 : 1};${ring}"></div>`,
