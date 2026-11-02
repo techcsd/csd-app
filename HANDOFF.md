@@ -1,5 +1,21 @@
 # HANDOFF — CSD App
 
+## 🟡 CIERRE DE SESIÓN 02-nov-2026 — Ronda CY (PROMPT-119, app-side) — referencia completa en `C:\developer\csd-app integration\`
+
+Esta sesión (varios días, 26-oct a 02-nov) hizo la parte app de la integración SGC↔Odoo (PROMPT-119): inventario de escrituras, hallazgo y verificación del fix de CORS que rompía la app nativa, construcción de la pantalla "Estado de la orden" en Compras › Solicitud de compra (CY24d), pruebas reales en el teléfono de Xaviel (admin + rol chofer, prod), y un bug de datos encontrado en el camino (`sgc.compa_chips` con mojibake, fix en dev, pendiente en prod).
+
+**Para retomar esto, no hace falta leer todo el historial de commits** — la carpeta `C:\developer\csd-app integration\` tiene el contexto completo, auto-contenido:
+- `README.md` — qué es esto y dónde vive el código.
+- `PLAN-Y-PENDIENTES.md` — qué está hecho (con hash de commit), qué falta (en orden), cómo recrear el entorno de trabajo.
+- `DECISIONES-Y-REGLAS.md` — **qué está autorizado y qué no, citando las palabras exactas de Xaviel** — importante antes de tocar producción otra vez.
+- `GOTCHAS.md` — trampas técnicas reales de esta sesión (ADB, encoding, el harness de permisos).
+- `MAPA-DE-ARCHIVOS.md` — archivo por archivo, con su commit.
+- `codigo-de-referencia/` — copias reales de todo lo nuevo/modificado, por si la rama es difícil de encontrar.
+
+**Lo único pendiente real:** aplicar el fix de `compa_chips` a producción (ya en dev, ya commiteado, ya confirmado con Xaviel dos veces — pero quien lo ejecute debe volver a confirmar en el momento, ver `DECISIONES-Y-REGLAS.md`). Todo lo demás de esta ronda está en `dev`, probado, y sin bugs encontrados.
+
+---
+
 ## 🟢 SESIÓN 01/11/2026 — PROMPT-127 · Ronda **DE** (A0-A4) — app **2.62.0 EN PRODUCCIÓN**
 
 **TL;DR:** worktree `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-de` (rama `feature/de-ronda`, desde `origin/dev` = 2.61.0, la ronda DB ya mergeada). `npm run build` **verde**. Depende de PROMPT-126 (padre): confirmado que `badges_modulos_app()`, `choferes_activos()`, `mis_transferencias_ofrecidas()`, `cancelar_transferencia_conduce` ya estaban — y de hecho la propia "Ronda DE" del padre (mismo nombre, coincidencia de letras entre los dos round-counters) ya estaba **en prod de SGC** (v1.206.0) antes siquiera de empezar esta sesión.
