@@ -1,8 +1,16 @@
 # HANDOFF — CSD App
 
-## 🟢 02-nov-2026 — Ronda DF (PROMPT 129, app-side) — F0-F5 COMPLETOS, en `csd-app-df` SIN commitear
+## 🟢 02-nov-2026 — Ronda DF (PROMPT 129, app-side) — F0-F5 COMPLETOS, EN DEV v2.63.0, falta prueba de Xaviel
 
-**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-df`, rama `feature/df-ia-agentes-animaciones` (desde `origin/dev` @ `70a772f`). **Nada commiteado ni pusheado** (regla de la casa: avisar antes de commit/push/deploy).
+**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-df`, rama `feature/df-ia-agentes-animaciones` (desde `origin/dev` @ `70a772f`). Commits `b40ea59` (feat, todo F0-F5) + `6a2bd77` (chore, bump 2.62.0→2.63.0 + CAMBIOS_CURADOS/TITULO). Pusheada a `origin/feature/df-ia-agentes-animaciones` y fast-forwardeada directo a `origin/dev` (Xaviel dio el OK explícito: "i tested the app already, so u can continue working and push all the changes to main" → se le aclaró que nada de esto se había instalado/probado todavía en ningún lado porque seguía sin commitear → confirmó el flujo normal: dev → su prueba real en el teléfono → main).
+
+**Publicado a dev:**
+- `npm run apk -- --env dev` → APK firmado (`android/app/build/outputs/apk/devApk/release/app-dev-apk-release.apk`, certificado `3c5316d8…5065`, el mismo de siempre) + registrado en `sgc.app_versiones` (dev) vía `registrar_version`.
+- `npm run apk:publish -- --env dev` → subido a `app-releases` (dev): `csd-app-2.63.0.apk` + `csd-app-latest.apk` + `version.json`, `apk_url` actualizado. **`MIN_VERSION` sigue en `2.26.1`** (no se tocó) — v2.63.0 NO quedó como mínima obligatoria.
+- `dev` en GitHub → Vercel debería desplegar `app-dev.sgcconstructorasd.com` solo (hook automático en push a `dev`) — no verificado manualmente en esta sesión, Xaviel puede confirmarlo al entrar.
+- **Gotcha de esta sesión**: `android/keystore.properties` (gitignorado) no estaba en el worktree nuevo — hubo que copiarlo a mano desde `csd-app/android/keystore.properties` (el .keystore real vive fuera del repo en `C:/Users/xavie/keystores/`, ruta absoluta, así que no hacía falta copiar el binario, solo el .properties). Primer intento de `npm run apk` produjo un APK **sin firmar** por esto — quedó resuelto antes de publicar nada.
+
+**Falta real:** Xaviel prueba en dev (actualización in-app desde 2.62.0, cámara/micrófono reales en los 5 flujos de IA, rotación del camión en Seguimiento — dev no tenía GPS en movimiento al momento de este cierre). Con su OK: PR `dev → main` (regla 18/CP5), `release-check.mjs --version 2.63.0`, luego `npm run apk -- --env prod` + `apk:publish --env prod`.
 
 **Contexto clave:** el padre (SGC, PROMPT 128) ya hizo TODO el backend de esta ronda en una sesión paralela — `bitacora-ia`, `leer-formulario` (4 tipos reales: conduce_externo/mantenimiento/checklist_vehiculo/requisicion), infraestructura de 6 agentes, RPCs de animación (pulso de obras, flujo de requisición, ETA, pulso del sistema) — **ya desplegado al Supabase de dev** (`fzfrnrvndzrjwyvdpkgg`), aunque la rama del SGC (`feature/df-ia-agentes-animaciones`, mismo nombre, repo distinto) todavía no se mergea a `dev`/`main` del SGC. Ver `C:\Users\xavie\Desktop\X Dev\dev\SGC-df\HANDOFF.md` + `docs/AGENTES.md` + `docs/IA-FLUJOS-ROLES.md` para los contratos completos. La app (csd-app) no consumía nada de esto todavía — F0 confirmó que `bitacora-ia`/`leer-formulario`/`agente_eventos` eran 100% nuevos aquí, pero que ya existe un precedente de patrón (`cotizacion-subir.ts` + `leer-cotizacion`) que se siguió para F1.
 
@@ -47,7 +55,7 @@ Nueva pantalla `pages/tecnologia/agentes/agentes.ts` (ruta `/tecnologia/agentes`
 - **Falta real, no simulable desde aquí**: prueba en un teléfono real (regla 18/CP5) — especialmente el modo rápido de bitácora (cámara+micrófono reales), los 4 lectores de voz/foto, y la rotación del camión en Seguimiento (necesita datos GPS reales en movimiento, que dev no tiene ahora mismo per el handoff del SGC — "dev no tiene GPS de hoy").
 
 ### En dev / En prod
-En dev (backend, vía el SGC): todo el backend de PROMPT 128 ya vive en el Supabase de dev. En dev (app): nada todavía — el worktree `csd-app-df` no está mergeado, F0-F5 completos pero sin commitear. En prod: nada de esta ronda.
+En dev (backend, vía el SGC): todo el backend de PROMPT 128 ya vive en el Supabase de dev. En dev (app): **v2.63.0 publicada** — merge fast-forward a `origin/dev`, APK dev subido y registrado, PWA debería estar desplegándose sola. Falta la prueba real de Xaviel en su teléfono antes de pasar a `main`. En prod: nada de esta ronda todavía.
 
 ---
 
