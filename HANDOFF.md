@@ -1,16 +1,22 @@
 # HANDOFF — CSD App
 
-## 🟢 02-nov-2026 — Ronda DF (PROMPT 129, app-side) — F0-F5 COMPLETOS, EN DEV v2.63.0, falta prueba de Xaviel
+## 🟢 02-nov-2026 — Ronda DF (PROMPT 129, app-side) — v2.63.0 EN PRODUCCIÓN (cierre completo)
 
-**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-df`, rama `feature/df-ia-agentes-animaciones` (desde `origin/dev` @ `70a772f`). Commits `b40ea59` (feat, todo F0-F5) + `6a2bd77` (chore, bump 2.62.0→2.63.0 + CAMBIOS_CURADOS/TITULO). Pusheada a `origin/feature/df-ia-agentes-animaciones` y fast-forwardeada directo a `origin/dev` (Xaviel dio el OK explícito: "i tested the app already, so u can continue working and push all the changes to main" → se le aclaró que nada de esto se había instalado/probado todavía en ningún lado porque seguía sin commitear → confirmó el flujo normal: dev → su prueba real en el teléfono → main).
+**Worktree de trabajo:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-df`, rama `feature/df-ia-agentes-animaciones` (desde `origin/dev` @ `70a772f`). Commits `b40ea59` (feat, todo F0-F5) + `6a2bd77` (chore, bump 2.62.0→2.63.0 + CAMBIOS_CURADOS/TITULO) + `8dc318c`/`78875e7` (docs/qa).
 
-**Publicado a dev:**
-- `npm run apk -- --env dev` → APK firmado (`android/app/build/outputs/apk/devApk/release/app-dev-apk-release.apk`, certificado `3c5316d8…5065`, el mismo de siempre) + registrado en `sgc.app_versiones` (dev) vía `registrar_version`.
-- `npm run apk:publish -- --env dev` → subido a `app-releases` (dev): `csd-app-2.63.0.apk` + `csd-app-latest.apk` + `version.json`, `apk_url` actualizado. **`MIN_VERSION` sigue en `2.26.1`** (no se tocó) — v2.63.0 NO quedó como mínima obligatoria.
-- `dev` en GitHub → Vercel debería desplegar `app-dev.sgcconstructorasd.com` solo (hook automático en push a `dev`) — no verificado manualmente en esta sesión, Xaviel puede confirmarlo al entrar.
-- **Gotcha de esta sesión**: `android/keystore.properties` (gitignorado) no estaba en el worktree nuevo — hubo que copiarlo a mano desde `csd-app/android/keystore.properties` (el .keystore real vive fuera del repo en `C:/Users/xavie/keystores/`, ruta absoluta, así que no hacía falta copiar el binario, solo el .properties). Primer intento de `npm run apk` produjo un APK **sin firmar** por esto — quedó resuelto antes de publicar nada.
+**Cierre (dev → prod, misma sesión, con el OK explícito de Xaviel en cada paso):**
+1. Pusheada a `origin/feature/df-ia-agentes-animaciones` y fast-forwardeada directo a `origin/dev`.
+2. `npm run apk -- --env dev` + `apk:publish -- --env dev` → APK firmado (certificado `3c5316d8…5065`, el de siempre), subido a `app-releases` (dev), registrado en `sgc.app_versiones` (dev) vía `registrar_version`. `MIN_VERSION` sigue en `2.26.1` — v2.63.0 no quedó como mínima obligatoria.
+3. `qa/release-2.63.0.md` con el OK real de Xaviel ("ok, ya la probe. continua trabajando", 02-nov-2026).
+4. `release-check.mjs --version 2.63.0` → **4/4 PASS**.
+5. PR `dev → main` (#14) con CI (`pr-main` + Vercel preview) en verde → **merge `47cffec`** (Xaviel confirmó el merge explícitamente tras preguntarle).
+6. `npm run apk -- --env prod --yes` → `npm run apk:publish -- --env prod --yes` (Xaviel autorizó el `--yes` explícitamente después de que se le preguntara) → `release-check.mjs` 4/4 de nuevo, APK firmado subido a `app-releases` (**prod**), registrado en `sgc.app_versiones` (prod) vía `registrar_version`, `apk_url` actualizado. Confirmado en el changelog real (`changelog_reciente`) que 2.63.0 quedó con su título/cambios correctos.
+7. `main` en GitHub → Vercel debería desplegar `app.sgcconstructorasd.com` solo (hook automático en push a `main`, igual que el preview de la PR que ya pasó) — no verificado manualmente en esta sesión.
+8. **"Publicar"/"forzar mínima" NO se tocó a propósito** — eso es un paso aparte que hace Xaviel desde el admin de SGC cuando él decida forzar la actualización a todos los usuarios; registrar en el historial (lo que se hizo) no publica/fuerza nada.
 
-**Falta real:** Xaviel prueba en dev (actualización in-app desde 2.62.0, cámara/micrófono reales en los 5 flujos de IA, rotación del camión en Seguimiento — dev no tenía GPS en movimiento al momento de este cierre). Con su OK: PR `dev → main` (regla 18/CP5), `release-check.mjs --version 2.63.0`, luego `npm run apk -- --env prod` + `apk:publish --env prod`.
+**Gotcha de esta sesión**: `android/keystore.properties` (gitignorado) no estaba en el worktree nuevo — hubo que copiarlo a mano desde `csd-app/android/keystore.properties` (el .keystore real vive fuera del repo en `C:/Users/xavie/keystores/`, ruta absoluta, así que no hacía falta copiar el binario, solo el .properties). Primer intento de `npm run apk` produjo un APK **sin firmar** por esto — quedó resuelto antes de publicar nada.
+
+**Pendiente real, no resoluble desde aquí:** Xaviel confirma visualmente que `app.sgcconstructorasd.com` se actualizó y que el APK de Play/tiendas (si aplica, `npm run aab`) se gestiona aparte — esta ronda solo cubrió canal `apk` directo, no Play Store.
 
 **Contexto clave:** el padre (SGC, PROMPT 128) ya hizo TODO el backend de esta ronda en una sesión paralela — `bitacora-ia`, `leer-formulario` (4 tipos reales: conduce_externo/mantenimiento/checklist_vehiculo/requisicion), infraestructura de 6 agentes, RPCs de animación (pulso de obras, flujo de requisición, ETA, pulso del sistema) — **ya desplegado al Supabase de dev** (`fzfrnrvndzrjwyvdpkgg`), aunque la rama del SGC (`feature/df-ia-agentes-animaciones`, mismo nombre, repo distinto) todavía no se mergea a `dev`/`main` del SGC. Ver `C:\Users\xavie\Desktop\X Dev\dev\SGC-df\HANDOFF.md` + `docs/AGENTES.md` + `docs/IA-FLUJOS-ROLES.md` para los contratos completos. La app (csd-app) no consumía nada de esto todavía — F0 confirmó que `bitacora-ia`/`leer-formulario`/`agente_eventos` eran 100% nuevos aquí, pero que ya existe un precedente de patrón (`cotizacion-subir.ts` + `leer-cotizacion`) que se siguió para F1.
 
@@ -55,7 +61,7 @@ Nueva pantalla `pages/tecnologia/agentes/agentes.ts` (ruta `/tecnologia/agentes`
 - **Falta real, no simulable desde aquí**: prueba en un teléfono real (regla 18/CP5) — especialmente el modo rápido de bitácora (cámara+micrófono reales), los 4 lectores de voz/foto, y la rotación del camión en Seguimiento (necesita datos GPS reales en movimiento, que dev no tiene ahora mismo per el handoff del SGC — "dev no tiene GPS de hoy").
 
 ### En dev / En prod
-En dev (backend, vía el SGC): todo el backend de PROMPT 128 ya vive en el Supabase de dev. En dev (app): **v2.63.0 publicada** — merge fast-forward a `origin/dev`, APK dev subido y registrado, PWA debería estar desplegándose sola. Falta la prueba real de Xaviel en su teléfono antes de pasar a `main`. En prod: nada de esta ronda todavía.
+En dev (backend, vía el SGC): todo el backend de PROMPT 128 ya vive en el Supabase de dev (rama del SGC sin mergear a `dev`/`main` del SGC todavía, pero el Supabase sí tiene todo desplegado). En dev (app): v2.63.0 publicada y probada por Xaviel. **En prod (app): v2.63.0 EN PRODUCCIÓN** — `main` mergeado (PR #14), APK prod firmado y publicado (`csd-app-2.63.0.apk`, bucket de prod), registrado en `sgc.app_versiones` (prod). PWA prod debería haberse desplegado sola vía Vercel (no verificado manualmente). "Publicada"/"mínima" para forzar la actualización a todos: pendiente, es decisión de Xaviel desde el admin de SGC.
 
 ---
 
