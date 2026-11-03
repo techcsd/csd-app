@@ -81,6 +81,9 @@ export class ErrorReportService implements ErrorHandler {
     /not a valid javascript mime type/i,
     /importing a module script failed/i,
     /failed to fetch dynamically imported module/i,
+    // DH15 — "error loading dynamically imported module" (Firefox/variantes WebView)
+    // es el MISMO chunk perdido con otra redacción; antes no disparaba autoRepair.
+    /error loading dynamically imported module/i,
     /chunkloaderror/i,
   ];
 
@@ -109,7 +112,16 @@ export class ErrorReportService implements ErrorHandler {
       if (op.tipo_op === 'error_report') return; // anti-bucle
       const kind = (err as PermanentSyncError | undefined)?.kind;
       const msg = err instanceof Error ? err.message : String(err);
-      void this.report('sync', `[${op.tipo_op}] ${msg}`, {
+      // DH15 — un rechazo 'validacion' (P0001/22023: el RPC validó una REGLA DE
+      // NEGOCIO — fecha retroactiva, estado de conduce, existencia insuficiente…)
+      // no es un bug: el mensaje ya es accionable en español y el usuario lo ve en
+      // la tarjeta del outbox. Reportarlo como 'sync' lo mezclaba con errores
+      // técnicos reales en Reportes de errores (N15). `regla_negocio` sería el tipo
+      // ideal, pero el CHECK del servidor (`report_app_error`) aún no lo acepta —
+      // 'info' ya está desplegado para justo este caso (evento, no bug); migrar a
+      // `regla_negocio` cuando el padre amplíe el CHECK es owed (DH23).
+      const tipo = kind === 'validacion' ? 'info' : 'sync';
+      void this.report(tipo, `[${op.tipo_op}] ${msg}`, {
         tipo_op: op.tipo_op,
         error_kind: kind ?? null,
         op_id: op.id,
@@ -187,11 +199,15 @@ export class ErrorReportService implements ErrorHandler {
   /**
    * Y11 — vista compacta de reportes para la sección Tecnología. La RLS
    * (`es_tecnologia()`) ya scopea: solo admin/tecnología leen. Online.
+   * DH15 — excluye 'info' (rechazos de regla de negocio, ya accionables para el
+   * usuario en su outbox): no son bugs que Tecnología deba atender, y mezclados
+   * con los reales era justo el ruido que N15 pidió limpiar.
    */
   async listRecent(limit = 100): Promise<AppErrorReportRow[]> {
     const { data, error } = await this.supabase.client
       .from('app_error_reports')
       .select('id, error_type, message, device_model, device_brand, os_version, app_version, platform, context, created_at')
+      .neq('error_type', 'info')
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) return [];

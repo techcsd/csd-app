@@ -137,7 +137,7 @@
     },
     "pages/avisos": {
       "conT": 0,
-      "sinT": 4,
+      "sinT": 5,
       "en": 0,
       "ht": 0
     },
@@ -778,7 +778,7 @@
       "ht": 0
     },
     "pages/tecnologia/cotizaciones/cotizacion-detalle": {
-      "conT": 12,
+      "conT": 14,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -1156,10 +1156,10 @@
       "ht": 100
     },
     "shared/components/compa-flotante": {
-      "conT": 10,
+      "conT": 11,
       "sinT": 0,
       "en": 100,
-      "ht": 10
+      "ht": 9
     },
     "shared/components/consentimiento-ia": {
       "conT": 8,
@@ -1528,9 +1528,9 @@
       "ht": 0
     },
     "shared/ui/vehiculo-picker": {
-      "conT": 14,
+      "conT": 12,
       "sinT": 0,
-      "en": 86,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/video-player": {

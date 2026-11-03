@@ -37,6 +37,7 @@ import {
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { fechaLocalISO } from '../../../core/util/fecha';
+import { mensajeKmRico } from '../../../core/util/km-validacion';
 import { FormularioIaService } from '../../../core/services/formulario-ia.service';
 import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 
@@ -172,11 +173,11 @@ export class MantenimientoPage implements OnDestroy {
     return this.kmMenorOdometro(); // offline: regla local
   });
 
-  /** CH1 — mensaje a mostrar al bloquear el avance. */
+  /** CH1/DH2 — mensaje a mostrar al bloquear el avance; mismo enriquecido que combustible.ts. */
   kmMensajeBloqueo(): string {
     const v = this.kmValidacion();
-    if (this.online && v?.nivel === 'error' && v.mensaje) return v.mensaje;
-    return this.i18n.t('La lectura no puede ser menor a la registrada ({km} {u}).', { km: this.odometro() ?? '', u: this.unidad() });
+    const fallback = this.i18n.t('La lectura no puede ser menor a la registrada ({km} {u}).', { km: this.odometro() ?? '', u: this.unidad() });
+    return this.online ? mensajeKmRico(v, fallback) : fallback;
   }
 
   get clave(): string {

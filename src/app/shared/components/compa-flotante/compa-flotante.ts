@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -39,6 +39,9 @@ export class CompaFlotante {
 
   readonly fmtHora = formatHora;
 
+  /** N7/DH7 — "Ocultar" en el saludo inicial; se resetea cada vez que se abre la hoja. */
+  introDescartada = signal(false);
+
   constructor() {
     // DG6 — autoscroll propio (misma idea que CompaPage): reacciona a la MISMA
     // conversación compartida, cada vista hace scroll en SU propia lista.
@@ -54,6 +57,7 @@ export class CompaFlotante {
     if (this.flotante.abierta()) {
       this.flotante.cerrar();
     } else {
+      this.introDescartada.set(false);
       this.flotante.abrir();
       void this.store.cargarSugerencias();
     }

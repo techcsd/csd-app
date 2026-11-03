@@ -62,6 +62,7 @@ import {
 } from '../../../core/models/combustible.model';
 import { parseNumeroFlexible } from '../../../core/util/numero';
 import { formatFechaCortaHora, fechaLocalISO } from '../../../core/util/fecha';
+import { mensajeKmRico } from '../../../core/util/km-validacion';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
@@ -1216,10 +1217,14 @@ export class CombustiblePage extends GuardedWizard {
     return this.kmMenorOdometro(); // offline: regla local conservadora
   });
 
-  /** CZ1 — mensaje a mostrar al bloquear el avance. */
+  /** CZ1/DH2 — mensaje a mostrar al bloquear el avance; enriquecido con contra qué
+   *  lectura choca (fuente/fecha/km) cuando el servidor los trae, para que el chofer
+   *  sepa qué pasó sin tener que adivinar (N2 — error de Raykler). */
   kmMensajeBloqueo(): string {
     const v = this.kmValidacion();
-    if (this.online && v?.nivel === 'error' && v.mensaje) return v.mensaje;
+    if (this.online) {
+      return mensajeKmRico(v, this.i18n.t('El kilometraje no puede ser menor al registrado ({n} km).', { n: this.odometro() ?? 0 }));
+    }
     return this.i18n.t('El kilometraje no puede ser menor al registrado ({n} km).', { n: this.odometro() ?? 0 });
   }
 

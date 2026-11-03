@@ -195,9 +195,20 @@ export class TecnologiaPage {
   }
 
   tab = signal<Tab>('versiones');
-  loading = signal(true);
+  // N13/DH13 — una sola señal `loading` compartida entre los 3 tabs producía una
+  // carrera: con el deep-link `/tecnologia?tab=dudas` (AA6) las 3 cargas arrancan
+  // casi juntas y la que termine primero apagaba `loading` para TODOS, mostrando
+  // "Sin resultados" un instante antes de que llegaran las guías. Señal por tab.
+  loadingVersiones = signal(true);
+  loadingDudas = signal(false);
+  loadingReportes = signal(false);
   historial = signal<VersionHistorial[]>([]);
   reportes = signal<AppErrorReportRow[]>([]);
+  // DH21 — regla de paginación: "Cargar más" explícito con tope (en vez de traer
+  // todo de una vez). Reusa `listRecent(limit)` con un límite creciente.
+  reportesLimite = signal(50);
+  reportesHayMas = signal(false);
+  cargandoMasReportes = signal(false);
   private reportesCargados = false;
   private expandido = signal<Set<string>>(new Set());
 
@@ -230,14 +241,14 @@ export class TecnologiaPage {
 
   private async loadDudas(): Promise<void> {
     this.dudasCargadas = true;
-    this.loading.set(true);
+    this.loadingDudas.set(true);
     try {
       const { guias, categorias } = await this.ayuda.getContenido();
       this.guias.set(guias);
       this.categorias.set(categorias);
       void this.cargarVideos(guias);
     } finally {
-      this.loading.set(false);
+      this.loadingDudas.set(false);
     }
   }
 
@@ -280,23 +291,41 @@ export class TecnologiaPage {
   }
 
   private async loadVersiones(): Promise<void> {
-    this.loading.set(true);
+    this.loadingVersiones.set(true);
     try {
       this.historial.set(await this.version.historial());
     } catch {
       this.historial.set([]);
     } finally {
-      this.loading.set(false);
+      this.loadingVersiones.set(false);
     }
   }
 
   private async loadReportes(): Promise<void> {
     this.reportesCargados = true;
-    this.loading.set(true);
+    this.loadingReportes.set(true);
     try {
-      this.reportes.set(await this.errores.listRecent(100));
+      const limite = this.reportesLimite();
+      const rows = await this.errores.listRecent(limite + 1); // +1: ¿hay más?
+      this.reportesHayMas.set(rows.length > limite);
+      this.reportes.set(rows.slice(0, limite));
     } finally {
-      this.loading.set(false);
+      this.loadingReportes.set(false);
+    }
+  }
+
+  /** DH21 — "Cargar más" explícito: sube el tope y vuelve a pedir. */
+  async cargarMasReportes(): Promise<void> {
+    if (this.cargandoMasReportes()) return;
+    this.cargandoMasReportes.set(true);
+    this.reportesLimite.update((n) => n + 50);
+    try {
+      const limite = this.reportesLimite();
+      const rows = await this.errores.listRecent(limite + 1);
+      this.reportesHayMas.set(rows.length > limite);
+      this.reportes.set(rows.slice(0, limite));
+    } finally {
+      this.cargandoMasReportes.set(false);
     }
   }
 

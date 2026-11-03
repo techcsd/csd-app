@@ -70,6 +70,11 @@ export class AvisosPage {
   prefsAbierto = signal(false);
   estados = signal<NotifEstado[]>([]);
 
+  // DH8 — "Requisiciones por correo": preferencia aparte (solo el canal correo, NO
+  // toca bandeja/push), ver notificaciones.service.ts.
+  emailRequisiciones = signal(true);
+  emailRequisicionesBusy = signal(false);
+
   /** Tipos que se muestran en el panel: los apagables (no operativos) + los que
    *  Administración apagó (para que el usuario lo vea) + las alarmas dominicales. */
   estadosVisibles = computed(() =>
@@ -181,6 +186,7 @@ export class AvisosPage {
   // ── BK1 — preferencias de notificación (catálogo + admin + propia) ───────────
   async abrirPrefs(): Promise<void> {
     this.prefsAbierto.set(true);
+    void this.service.emailRequisicionesActivo().then((v) => this.emailRequisiciones.set(v));
     try {
       // BT6 — carga el estado + qué puede silenciar ESTE usuario (alarmas semanales
       // incluidas, si está autorizado) y lo fusiona en cada tipo.
@@ -258,6 +264,22 @@ export class AvisosPage {
         list.map((x) => (x.tipo === e.tipo ? { ...x, silenciado_por_mi: !silenciar } : x)),
       );
       this.toast.error('No se pudo guardar la preferencia.');
+    }
+  }
+
+  /** DH8 — toggle de "Requisiciones por correo" (solo email; bandeja/push no cambian). */
+  async onToggleEmailRequisiciones(recibir: boolean): Promise<void> {
+    if (this.emailRequisicionesBusy()) return;
+    this.emailRequisicionesBusy.set(true);
+    const prev = this.emailRequisiciones();
+    this.emailRequisiciones.set(recibir);
+    try {
+      await this.service.setEmailRequisiciones(recibir);
+    } catch {
+      this.emailRequisiciones.set(prev);
+      this.toast.error('No se pudo guardar la preferencia.');
+    } finally {
+      this.emailRequisicionesBusy.set(false);
     }
   }
 

@@ -1,5 +1,61 @@
 # HANDOFF — CSD App
 
+## 🟡 03-nov-2026 — Ronda DH (PROMPT 133, app-side) — EN WORKTREE, sin commit
+
+**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dh`, rama `feature/dh-ronda-03nov-app` (desde `origin/dev` @ `efd7191` = v2.64.1, al día). **Sin commit/push** — regla de la casa del PROMPT 133 ("no hagas commit, push ni deploy sin avisarle"); todo queda en el working tree para que Xaviel revise. `npm run build` verde (solo warnings preexistentes de bundle-budget/CommonJS). i18n: `verify-i18n` pasa, coberturas de los archivos tocados en 100%.
+
+**Nota de proceso:** parte de esta ronda la investigué con forks en paralelo (F1/F2/F4/F5/F6/F8); dos de ellos (F5 y F1) terminaron escribiendo código por su cuenta pese a habérseles pedido solo lectura. Revisé cada diff suyo línea por línea antes de aceptarlo: la pieza de N8 (`notif_email_requisiciones`) la acepté a pesar de que la propia investigación había concluido "sin cambios de código" — reusa el mismo patrón seguro de `compa_flotante`/`tema` (escritura genérica vía `mis_preferencias`), así que Sonia puede apagarlo HOY aunque falte que el SGC lea esa preferencia antes de enviar el correo real (mitad del contrato, documentado abajo). Una redundancia menor quedó resuelta a favor de la versión más completa (`mensajeKmRico` en vez de un párrafo inline suelto en combustible.html). Todo lo que queda abajo ya pasó esa revisión + `npm run build` + `tsc --noEmit` en verde.
+
+### Por nota — qué aplicó y qué fue "solo web"
+
+- **N1/DH1** (Mandar a ronda) — solo web, no hay equivalente en la app.
+- **N2/DH2** (echada de combustible, Raykler) — **aplicado**. `km-validacion.ts` nuevo: `mensajeKmRico()` enriquece el mensaje de bloqueo con fuente/fecha/km contra los que chocó (antes el chofer solo veía "La lectura (…) no puede ser menor…" sin saber de qué lectura se trataba), compartido entre `combustible.ts` y `mantenimiento.ts` (mismo RPC `validar_km_vehiculo`, mismo contrato `ValidacionKm`). **Pendiente real (no resoluble desde la app):** no existe excepción con motivo para Flota/admin cuando el servidor marca `nivel: 'error'` — ni el cliente ni (hasta donde se pudo ver) el RPC `registrar_combustible_app` aceptan un override; si Raykler's caso real era un choque contra un mantenimiento del MISMO día (ambigüedad de orden sin hora), la validación del servidor necesita un ajuste del padre, no solo el mensaje.
+- **N3/DH3** (módulo Sistema/Historial de versiones) — **ya cumplía**, sin cambios: `/tecnologia` (comentario `Z26` en el código) ya es visible a TODO usuario autenticado; solo "Versiones de App"/"Reportes de errores" gatean por rol (`esTecnologia`) DENTRO de la página, no por módulo. La app nunca tuvo el bug de la web (que borró el módulo completo).
+- **N4/DH4** (Vault selector de usuario) — solo web.
+- **N5/DH5** (Auditoría) — solo web para el resumen/acciones de admin; de paso se confirmó que la Auditoría de la app YA pagina con "Cargar más" (dos listas, `auditoria.html`) — nada que arreglar ahí.
+- **N6/N7/N9/DH6/DH7/DH9** (Compa flotante) — **diagnóstico: la app NO tiene el bug de la web.** El panel usa `@if` (Angular control flow, entra/sale del DOM), no `[hidden]`; abrir/cerrar/botón ✕ ya estaban bien conectados (`compa-flotante.ts`). Lo único real que aplicaba de N7 era el saludo inicial (chips de sugerencia) ocupando espacio del chat sin poder descartarse — se agregó un botón "Ocultar" (`introDescartada`, reutiliza `btn-ghost`). **Falta probar en teléfono real** (Capacitor) antes de dar esto por cerrado al 100%.
+- **N8/DH8** (requisiciones por correo) — **aplicado**. Nuevo toggle "Requisiciones por correo" en Avisos › Preferencias, independiente del silenciado por tipo (`notificaciones.service.ts`: `emailRequisicionesActivo()`/`setEmailRequisiciones()`, contrato `mis_preferencias()`/`set_mi_preferencia('notif_email_requisiciones', …)` — MISMO patrón que `compa_flotante`/`tema`, no toca `sgc.notif_tipo` para no apagar bandeja/push). **Clave a confirmar con el padre:** elegí el nombre `notif_email_requisiciones`; si la ronda web (PROMPT 132) usó otro nombre de clave, hay que alinear uno de los dos lados.
+- **N10/DH10** (módulo Empresa) — solo web, no existe en la app.
+- **N11/DH11** (Roles/subaccesos) — la app ya es 100% data-driven para `obra.*` (`submoduleGuard` granular); `rrhh.*` sigue en `moduleGuard('rrhh')` grueso. No se tocó: cambiarlo a submódulo requiere los nombres de clave exactos que el padre defina en su módulo de Roles — hacerlo a ciegas podía dejar a alguien sin acceso que hoy sí tiene. **Pendiente: confirmar nombres de `rrhh.*` con el padre y entonces sí migrar las 2 rutas de `rrhh/`.**
+- **N12/DH12** (Usuarios, resize) — solo web, no aplica a móvil.
+- **N13/DH13** (Dudas, loading skeleton) — **el prompt lo daba por "solo web" pero SÍ aplicaba**: `/tecnologia` compartía una sola señal `loading` entre sus 3 tabs (versiones/dudas/reportes); con el deep-link `/tecnologia?tab=dudas` las 3 cargas arrancaban casi juntas y la que terminara primero apagaba `loading` para TODAS, mostrando "Sin resultados" un instante antes de que llegaran las guías reales. Arreglado con una señal de carga por tab (`loadingVersiones`/`loadingDudas`/`loadingReportes`).
+- **N14/DH14** (recepción de OC) — **PARIDAD, solo web.** La app no tiene pantalla de detalle de orden de compra ni botón "cambiar a Recibida"; `compra_ferreteria`/`registrar_entrada_app` no enlazan a una OC específica (comentario propio en el código: "Almacén enlaza la OC al confirmar").
+- **N15/DH15** (Reportes de errores / Consultas de compa / Outbox atascados) — **aplicado, el grueso de la ronda.** Ver detalle abajo.
+- **N16/DH16** (módulo Agentes) — solo web.
+- **N17/DH17** (informe del día, Agentes) — solo web.
+- **N18/DH18** (Homologación) — solo web, no existe en la app.
+- **N19/DH19** (Guía de herramientas) — **ya cumplía, sin cambios**: la pestaña "Dudas" de `/tecnologia` NO gatea por rol (solo "Reportes de errores" lo hace); cada guía se filtra por `canVerModulo`, no por ser-tech. La app nunca tuvo el bug de la web.
+- **N20/DH20** (cotización, analizar PDF) — **aplicado parcial**: los renglones que la IA ya lee (`lectura.articulos`) y guarda se muestran de solo lectura en el detalle (antes se descartaban visualmente, solo se usaban para sumar el subtotal). NO se implementó comparar cotizaciones ni crear una compra tecnológica prellenada desde ahí (eso es trabajo de analizar/actuar, fuera del alcance "mostrar" que pidió Xaviel como opción recomendada). Si el padre agrega una tabla normalizada `tec_cotizacion_items`, cambiar la fuente del detalle de `lectura.articulos` a esa tabla es sencillo (mismo patrón de capacidad/fallback que ya usa `numero_recibo`).
+- **DH21 (regla de paginación)** — ver debajo.
+
+### F1 — Errores que nacen en la app (detalle técnico)
+
+1. **GPS `[object GeolocationPositionError]` (36 veces)** — `permissions.service.ts` reportaba `String(e)` cuando `e` no era `instanceof Error` (los `GeolocationPositionError` nativos NO extienden `Error`). Nuevo `errMessage()` extrae `.code`/`.message` por duck-typing.
+2. **GPS timeout (580)** — además de lo anterior, ahora hay un segundo intento con precisión BAJA (8s) antes de rendirse cuando el primero (alta precisión, 25s) da timeout — en interiores/sombra, red/wifi a veces resuelve donde GPS satelital no.
+3. **`registrar_posiciones` rechazó el lote (212/7 dispositivos)** — bug real: un rechazo PERMANENTE (dato inválido, regla del servidor) conservaba el lote completo y lo reintentaba en CADA flush (cada pocos segundos/minutos), repitiendo el mismo error para siempre. Ahora clasifica con `throwSyncError`/`PermanentSyncError` (mismo contrato BG1 del outbox): permanente → descarta ESE lote y sigue drenando el resto; transitorio → se comporta igual que antes (conserva para reintentar).
+4. **Watcher nativo devolvió error (288)** — revisado: YA extrae `.code`/`.message` correctamente; es ruido genuino del SO (OEMs agresivos matando el foreground service, permiso "always" revocado), no un bug de serialización. Sin cambios.
+5. **Chunks viejos tras deploy** — YA existía auto-reparación con guarda anti-bucle (`UpdateService.autoRepair`, `sessionStorage` + ventana de tiempo). Gap real: el patrón `CHUNK_ERROR_PATTERNS` no cubría la redacción "error loading dynamically imported module" (vista en prod, no disparaba la reparación) — agregado.
+6. **Realtime "cannot add postgres_changes callbacks" (47/11 dispositivos)** — condición de carrera real: `iniciarRealtime()` chequeaba `this.canal` pero lo asignaba DESPUÉS de un `await`; dos llamadas casi simultáneas (login + resume en primer plano) pasaban ambas el guard y suscribían el MISMO canal dos veces. Cerrado con un flag síncrono (`conectando`).
+7. **`sw_update: instalación falló` (39)** — revisado: ya escala a auto-reparación en la 2ª falla (o en la 1ª si detecta que fue un chunk de red). Sin cambios.
+8. **`signIn timeout`/IndexedDB internos** — ya manejados (timeout de 12s con fallback) o ruido de plataforma (IndexedDB "Transaction aborted" x3, un dispositivo); sin ocurrencias nuevas desde agosto. Sin acción.
+9. **Errores de negocio reclasificados** ("no puedes registrar con fecha pasada", "conduce no despachado", "existencia insuficiente", etc., ~90 ocurrencias combinadas) — `onPermanentError` los mandaba como tipo `'sync'` (mezclados con bugs reales en Reportes de errores). Ahora los rechazos con `kind==='validacion'` (P0001/22023 — regla del servidor, mensaje ya accionable) se reportan como `'info'` (tipo ya soportado por el CHECK del servidor) y `listRecent()` los excluye del panel de Tecnología. **Un tipo `regla_negocio` dedicado sería más claro, pero el CHECK de `report_app_error` aún no lo acepta — usar `'info'` es el default seguro de esta ronda; migrar cuando el padre amplíe el CHECK queda como pendiente (antes llamado DH23).**
+
+### F7 — Regla de paginación (DH21)
+
+Lo tocado esta ronda pagina: nuevo "Cargar más" en Tecnología › Reportes de errores (antes traía 100 filas de un golpe). Auditoría de listas SIN paginación (no tocadas esta ronda, deuda pendiente — ninguna tiene "Cargar más"/scroll con tope hoy):
+`admin/conteos`, `admin/reportes` (reportes de soporte, no el de errores), `documentos/historial`, `ingenieria/cartilla`, `ingenieria/pagos`, `inventario/conteos`, `inventario/existencias`, `proyectos/personal`, `reuniones/reuniones-lista`, `solicitudes/bandeja`, `solicitudes/mis`, `transporte/apoyo-transporte`, `transporte/checklists-historial`, `transporte/conduce-externo`, `transporte/conduces-historial`, `transporte/conduces-hub`, `transporte/conduces-pendientes`, `transporte/conduces-por-firmar`, `transporte/conduces-por-implementar`, `transporte/conduces`, `transporte/mantenimientos-general`, `transporte/mantenimientos-lista`, `transporte/rutas-activas`, `transporte/solicitud-movimiento`. Patrón de referencia ya en el código: `auditoria.html`/`auditoria.ts` (señal de límite + botón "Cargar más"/"Cargando…").
+
+### Riesgos / qué falta antes de pasar a dev
+
+- **Nada probado en teléfono real todavía** (Compa flotante con teclado abierto, GPS/tracking en background, el toggle nuevo de correo).
+- 2 llaves nuevas que dependen de nombres elegidos en esta sesión sin confirmar con el padre: `notif_email_requisiciones` (preferencia) y el tipo `'info'` reusado para regla de negocio (ideal sería `regla_negocio` dedicado).
+- `rrhh.*` sigue sin granularidad — pendiente de que el padre confirme los nombres de submódulo.
+- Overide de Flota/admin para km bloqueado (N2) no se construyó — falta contrato del padre.
+
+**En dev:** nada todavía (worktree sin commit). **En prod:** sin cambios de esta ronda (v2.64.1 sigue siendo lo último en prod).
+
+---
+
 ## 🟢 03-nov-2026 — Hotfix autorización vehículo chofer privado — v2.64.1 EN PRODUCCIÓN
 
 **Worktree:** `csd-app-fix-auth`, rama `fix/autorizacion-vehiculo-chofer-privado`. PR #16 merged `2eda06c`.

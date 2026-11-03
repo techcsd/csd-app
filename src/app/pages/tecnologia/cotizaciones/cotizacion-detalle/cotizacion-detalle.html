@@ -38,6 +38,22 @@
         <p class="cotd__notas">{{ d.notas }}</p>
       }
 
+      @if (d.lectura?.articulos?.length) {
+        <div class="cotd__renglones">
+          <h3 class="cotd__vinculos-h">{{ 'Renglones leídos' | t }}</h3>
+          @for (a of d.lectura!.articulos; track $index) {
+            <div class="cotd__renglon">
+              <div class="cotd__renglon-desc">{{ a.descripcion }}</div>
+              <div class="cotd__renglon-cifras">
+                @if (a.cantidad != null) { <span>{{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</span> }
+                @if (a.precio != null) { <span>{{ d.moneda }} {{ a.precio | number:'1.0-2' }}</span> }
+              </div>
+            </div>
+          }
+          <p class="cotd__vinculos-nota">{{ 'Leído automáticamente del documento; corregirlo se hace desde la web.' | t }}</p>
+        </div>
+      }
+
       <div class="cotd__vinculos">
         <h3 class="cotd__vinculos-h">{{ 'Vínculos' | t }}</h3>
         @if (!d.compras.length && !d.equipos.length) {

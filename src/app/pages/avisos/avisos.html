@@ -85,6 +85,13 @@
           </div>
         }
       }
+      <!-- DH8 — "Requisiciones por correo": solo el canal correo (bandeja/push no cambian). -->
+      <p class="avisos-prefs__intro">Correo de requisiciones: avisos de solicitudes de compra/movimiento a tu correo. Apagarlo no afecta lo que ves aquí ni las notificaciones del teléfono.</p>
+      <app-toggle-switch
+        [checked]="emailRequisiciones()"
+        label="Requisiciones por correo"
+        (checkedChange)="onToggleEmailRequisiciones($event)"
+      />
     </div>
   </app-bottom-sheet>
 </div>
