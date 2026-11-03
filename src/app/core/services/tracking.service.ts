@@ -15,6 +15,7 @@ import { ErrorReportService } from './error-report.service';
 import { ChoferEstadoService, estadoMeta } from './chofer-estado.service';
 import { ConsentService } from './consent.service';
 import { db, PosicionBuffer } from '../db/app-db';
+import { throwSyncError, PermanentSyncError } from '../sync/sync.service';
 
 const LEGACY_BUFFER_KEY = 'tracking_buffer'; // AU7 — buffer viejo en LocalStore (se migra a Dexie)
 const FLUSH_MS = 45_000; // AF27 — lote cada ~45 s en ruta activa
@@ -598,13 +599,27 @@ export class TrackingService {
           })),
         });
         if (error) {
-          // AG11 — el rechazo del RPC (RLS/permiso/param) NO se traga en silencio.
+          // DH15 — un rechazo PERMANENTE (datos inválidos, regla del servidor, firma
+          // desactualizada) nunca se arregla reintentando: antes se conservaba el lote
+          // entero y el MISMO error se reportaba en cada flush (212 ocurrencias/7
+          // dispositivos, un lote "atascado" para siempre). `throwSyncError` clasifica
+          // por SQLSTATE (mismo contrato BG1 del outbox); permanente → se descarta ESE
+          // lote (puntos de tracking, bajo valor) y se sigue drenando el resto.
+          let permanente = false;
+          try {
+            throwSyncError(error);
+          } catch (e) {
+            permanente = e instanceof PermanentSyncError;
+          }
           this.errors.report('tracking', 'registrar_posiciones rechazó el lote', {
             code: error.code,
             message: error.message,
             lote: lote.length,
+            permanente,
           });
-          return; // conserva el buffer para reintentar
+          if (!permanente) return; // transitorio: conserva el buffer para reintentar
+          await db.posiciones.bulkDelete(lote.map((p) => p.seq!).filter((s) => s != null));
+          continue; // descartado: sigue drenando el resto del buffer
         }
         // Borra EXACTAMENTE lo enviado (por seq); los push() concurrentes tienen seq
         // mayor y no entran en este lote → sin drift.

@@ -22,7 +22,7 @@
       </header>
 
       <div class="cf__body" #scroller>
-        @if (store.vacio()) {
+        @if (store.vacio() && !introDescartada()) {
           <div class="cf__intro">
             <span class="cf__intro-emoji" aria-hidden="true">🤖</span>
             <h2 class="cf__intro-title">{{ store.saludo() }}</h2>
@@ -34,8 +34,10 @@
                 </button>
               }
             </div>
+            <!-- N7/DH7 — descartable: deja de ocupar el cuerpo del chat sin tener que escribir. -->
+            <button type="button" class="btn-ghost" appTapScale (click)="introDescartada.set(true)">{{ 'Ocultar' | t }}</button>
           </div>
-        } @else {
+        } @else if (!store.vacio()) {
           @for (m of store.mensajes(); track m.id) {
             <div class="cf__msg" [class.cf__msg--mio]="m.rol === 'user'">
               @if (m.rol === 'assistant') {

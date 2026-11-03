@@ -154,17 +154,43 @@ export class PermissionsService {
       return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
     } catch (e) {
       const reason = this.classifyPosError(e);
-      // Y6 — telemetría explícita del fallo de adquisición GPS (mismo pipeline
-      // outbox/sanitizado/anti-loop). No reporta 'denied' (sale antes) sino los
-      // fallos reales de fix: timeout, gps-off, unavailable.
-      void this.errors.report('gps', e instanceof Error ? e.message : String(e), {
-        reason,
-        native: this.native,
-        high_accuracy: enableHighAccuracy,
-        timeout,
-      });
+      // DH15 — un timeout en alta precisión (GPS satelital, lento en interiores/
+      // sombra) a veces SÍ resuelve con baja precisión (red/wifi, más rápido).
+      // Un segundo intento corto antes de rendirse evita el "no se pudo obtener
+      // ubicación" cuando una posición menos exacta hubiera bastado.
+      if (reason === 'timeout' && enableHighAccuracy) {
+        try {
+          const pos = await this.acquireFirstFix({ enableHighAccuracy: false, timeout: 8000, maximumAge });
+          return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
+        } catch (e2) {
+          void this.reportGpsFallo(e2, { native: this.native, high_accuracy: false, timeout: 8000, reintento: true });
+          return { ok: false, reason: this.classifyPosError(e2) };
+        }
+      }
+      void this.reportGpsFallo(e, { native: this.native, high_accuracy: enableHighAccuracy, timeout });
       return { ok: false, reason };
     }
+  }
+
+  /**
+   * DH15 — telemetría explícita del fallo de adquisición GPS (mismo pipeline
+   * outbox/sanitizado/anti-loop + el límite global de ErrorReportService ya
+   * actúa como muestreo: no más de 30 reportes/hora entre TODOS los tipos).
+   */
+  private reportGpsFallo(e: unknown, context: Record<string, unknown>): void {
+    void this.errors.report('gps', this.errMessage(e), context);
+  }
+
+  /** DH15 — mensaje legible de un error de posición, sea `Error` o `GeolocationPositionError`. */
+  private errMessage(e: unknown): string {
+    if (e instanceof Error) return e.message;
+    const g = e as { message?: unknown; code?: unknown } | null;
+    if (g && typeof g === 'object' && (typeof g.message === 'string' || typeof g.code === 'number')) {
+      const code = typeof g.code === 'number' ? g.code : null;
+      const msg = typeof g.message === 'string' && g.message ? g.message : 'sin mensaje';
+      return code != null ? `GeolocationPositionError(${code}): ${msg}` : msg;
+    }
+    return String(e);
   }
 
   /**

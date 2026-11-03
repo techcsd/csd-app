@@ -304,7 +304,7 @@
           />
           <!-- CZ1 — veredicto del km contra las lecturas con fecha del vehículo (online) -->
           @if (online && kmValidacion()?.nivel === 'error') {
-            <p class="comb__warn">{{ kmValidacion()!.mensaje }}</p>
+            <p class="comb__warn">{{ kmMensajeBloqueo() }}</p>
           } @else if (online && kmValidacion()?.nivel === 'aviso') {
             <div class="comb__km-aviso">
               <p class="comb__hint--warn">{{ kmValidacion()!.mensaje }}</p>

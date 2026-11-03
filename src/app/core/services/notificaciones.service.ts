@@ -218,6 +218,33 @@ export class NotificacionesService {
     void this.refreshNoLeidas();
   }
 
+  /**
+   * DH8 — "Requisiciones por correo": a diferencia de `setNotifPref` (que apaga
+   * bandeja+push+correo juntos por tipo), esta preferencia SOLO controla el correo de
+   * requisiciones (p. ej. Sonia no quiere el correo pero sigue viendo el aviso en la
+   * app). Vive en `usuario_preferencias` (mismo contrato que `compa_flotante`/`tema`:
+   * `mis_preferencias()` / `set_mi_preferencia`), NO en `sgc.notif_tipo`. true por
+   * defecto hasta que se confirme lo contrario.
+   */
+  async emailRequisicionesActivo(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+      if (error || !data) return true;
+      const v = (data as { notif_email_requisiciones?: unknown }).notif_email_requisiciones;
+      return typeof v === 'boolean' ? v : true;
+    } catch {
+      return true;
+    }
+  }
+
+  async setEmailRequisiciones(valor: boolean): Promise<void> {
+    const { error } = await this.supabase.client.rpc('set_mi_preferencia', {
+      p_clave: 'notif_email_requisiciones',
+      p_valor: String(valor),
+    });
+    if (error) throw new Error(error.message);
+  }
+
   /** Últimos avisos del usuario (no leídos primero). Online. AT23 — oculta los silenciados. */
   async getMisNotificaciones(limit = 50): Promise<Notificacion[]> {
     const { data, error } = await this.supabase.client
@@ -277,29 +304,41 @@ export class NotificacionesService {
    * tras el login (app.ts) y se mantiene mientras la sesión esté abierta.
    */
   private canal: { unsubscribe: () => void } | null = null;
+  // DH15 — `this.canal` se asignaba DESPUÉS del await a `auth.getUser()`: dos llamadas
+  // casi simultáneas a `iniciarRealtime` (login + resume en primer plano, p. ej.) pasan
+  // AMBAS el guard antes de que la primera termine, y las dos suscriben el MISMO canal
+  // `notificaciones-app-<uid>` → "cannot add `postgres_changes` callbacks … after
+  // `subscribe()`" (47 ocurrencias/11 dispositivos). `conectando` cierra la carrera
+  // síncronamente, antes de cualquier await.
+  private conectando = false;
   async iniciarRealtime(): Promise<void> {
-    if (this.canal) return;
-    const { data } = await this.supabase.client.auth.getUser();
-    const uid = data.user?.id;
-    if (!uid) return;
-    // CA1 — con sesión confirmada, refresca el estado operativo (activa/silenciada por
-    // admin) que usa el gate de alarmas nativas. Best-effort, una vez por login.
-    void this.refreshOperativas();
-    const channel = this.supabase.client
-      .channel(`notificaciones-app-${uid}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'sgc', table: 'notificaciones', filter: `usuario_id=eq.${uid}` },
-        (payload: { new?: { tipo?: string } }) => {
-          this._lastTipo.set(payload?.new?.tipo ?? null);
-          this._tick.update((n) => n + 1);
-          void this.refreshNoLeidas().catch(() => {});
-          // AQ1 — con la app abierta, un aviso nuevo suena sutil (tipo WhatsApp).
-          this.sound.chime();
-        },
-      )
-      .subscribe();
-    this.canal = { unsubscribe: () => void this.supabase.client.removeChannel(channel) };
+    if (this.canal || this.conectando) return;
+    this.conectando = true;
+    try {
+      const { data } = await this.supabase.client.auth.getUser();
+      const uid = data.user?.id;
+      if (!uid || this.canal) return;
+      // CA1 — con sesión confirmada, refresca el estado operativo (activa/silenciada por
+      // admin) que usa el gate de alarmas nativas. Best-effort, una vez por login.
+      void this.refreshOperativas();
+      const channel = this.supabase.client
+        .channel(`notificaciones-app-${uid}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'sgc', table: 'notificaciones', filter: `usuario_id=eq.${uid}` },
+          (payload: { new?: { tipo?: string } }) => {
+            this._lastTipo.set(payload?.new?.tipo ?? null);
+            this._tick.update((n) => n + 1);
+            void this.refreshNoLeidas().catch(() => {});
+            // AQ1 — con la app abierta, un aviso nuevo suena sutil (tipo WhatsApp).
+            this.sound.chime();
+          },
+        )
+        .subscribe();
+      this.canal = { unsubscribe: () => void this.supabase.client.removeChannel(channel) };
+    } finally {
+      this.conectando = false;
+    }
   }
   detenerRealtime(): void {
     this.canal?.unsubscribe();

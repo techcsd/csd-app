@@ -2,7 +2,8 @@
  * CZ1/CZ2/CZ6 — Biblioteca de Cotizaciones de Tecnología. Espeja sgc.tec_cotizaciones
  * + sus dos M:N opcionales (compra tecnológica / equipo de inventario TI). La app
  * SOLO ve/busca/sube/liga-a-compra (DZ-25); ligar a equipos y corregir renglones es
- * trabajo de la web (el mockup CZ6 lo dice).
+ * trabajo de la web (el mockup CZ6 lo dice). DH20 — el detalle SÍ muestra los
+ * renglones leídos por IA (`lectura.articulos`), de solo lectura.
  */
 
 export type CotizacionEstado = 'vigente' | 'usada' | 'descartada';

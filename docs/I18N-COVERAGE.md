@@ -29,7 +29,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/auth/pin-unlock | 10 | 0 | 100% | 0% |  |
 | pages/auth/reset | 5 | 1 | 83% | 0% |  |
 | pages/auth/set-password | 4 | 0 | 100% | 0% |  |
-| pages/avisos | 0 | 4 | 0% | 0% |  |
+| pages/avisos | 0 | 5 | 0% | 0% |  |
 | pages/bitacora | 10 | 0 | 100% | 0% |  |
 | pages/bitacora/cl-detalle | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/cl-firmas | 10 | 0 | 100% | 0% |  |
@@ -136,7 +136,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/tecnologia/agentes | 21 | 1 | 86% | 0% |  |
 | pages/tecnologia/compras-tec | 29 | 0 | 100% | 0% |  |
 | pages/tecnologia/cotizaciones | 14 | 0 | 100% | 0% |  |
-| pages/tecnologia/cotizaciones/cotizacion-detalle | 12 | 0 | 100% | 0% |  |
+| pages/tecnologia/cotizaciones/cotizacion-detalle | 14 | 0 | 100% | 0% |  |
 | pages/tecnologia/cotizaciones/cotizacion-subir | 21 | 2 | 91% | 0% |  |
 | pages/tecnologia/dev-notes | 0 | 7 | 0% | 0% |  |
 | pages/tecnologia/dev-notes/editor | 8 | 0 | 100% | 0% |  |
@@ -199,7 +199,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/components/aceptacion-politicas | 9 | 0 | 56% | 0% |  |
 | shared/components/alarma-host | 4 | 0 | 100% | 0% |  |
 | shared/components/bienvenida | 26 | 0 | 100% | 100% |  |
-| shared/components/compa-flotante | 10 | 0 | 100% | 10% |  |
+| shared/components/compa-flotante | 11 | 0 | 100% | 9% |  |
 | shared/components/consentimiento-ia | 8 | 2 | 20% | 10% |  |
 | shared/components/consentimiento-ubicacion | 4 | 0 | 25% | 0% |  |
 | shared/components/demo-tabs | 3 | 0 | 100% | 0% |  |
@@ -243,7 +243,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/sticker-editor | 7 | 0 | 100% | 0% |  |
 | shared/ui/taller-picker | 8 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-card | 2 | 0 | 100% | 0% |  |
-| shared/ui/vehiculo-picker | 14 | 0 | 86% | 0% |  |
+| shared/ui/vehiculo-picker | 12 | 0 | 100% | 0% |  |
 | shared/ui/video-player | 7 | 0 | 100% | 100% |  |
 | shared/ui/voice-notes | 2 | 0 | 100% | 0% |  |
 | shared/ui/voice-recorder | 3 | 0 | 100% | 0% |  |
