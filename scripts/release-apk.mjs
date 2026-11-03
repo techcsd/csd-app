@@ -40,17 +40,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'IA para llenar formularios por foto/voz + Agentes de monitoreo + animaciones en vivo';
+const TITULO = 'Módulo Demo, buscador y Compa flotante';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Bitácora', d: 'Modo rápido: toma fotos y graba una nota de voz contando qué se hizo — la IA propone el parte diario completo, tú revisas y confirmas antes de enviar.' },
-  { t: 'nuevo', m: 'Transporte', d: 'Botón "Leer conduce con foto" al emitir un conduce externo: la IA lee la placa y la carga y prellena el material, el proveedor y los renglones.' },
-  { t: 'nuevo', m: 'Transporte', d: 'Al reportar un mantenimiento, puedes describir el trabajo por voz en vez de escribirlo.' },
-  { t: 'nuevo', m: 'Transporte', d: 'En el checklist de vehículo, puedes describir el estado por voz y la IA marca ok/no por cada ítem.' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'Puedes pedir materiales diciendo lo que necesitas ("necesito 50 sacos de cemento para Torre Alpha, es urgente") en vez de buscarlos uno por uno.' },
-  { t: 'nuevo', m: 'Tecnología', d: 'Pantalla nueva "Agentes": seis agentes automáticos vigilan el sistema; ves sus hallazgos, lo que arreglaron solos (con Deshacer) y las propuestas que esperan tu aprobación.' },
-  { t: 'nuevo', m: 'Inicio', d: 'Pulso de obras: un anillo por obra que se enciende en verde apenas llega el parte del día.' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'La ficha de tu requisición ahora muestra en qué etapa va: Solicitada → Aprobada → Despachada → Recibida.' },
-  { t: 'mejora', m: 'Transporte', d: 'En Seguimiento, los choferes en ruta con señal fresca ahora se ven con una flecha que apunta hacia donde van.' },
+  { t: 'nuevo', m: 'Inicio', d: 'Buscador: toca la lupa arriba y escribe el nombre de un módulo o pantalla (por ejemplo "combustible") para ir directo, sin perderte entre tantos botones.' },
+  { t: 'nuevo', m: 'Demo', d: 'Nuevo módulo "Demo": practica el flujo de tu rol (firmar un conduce, pedir material, registrar mantenimiento, crear una ruta, orden de trabajo…) con datos de mentira — nada se guarda de verdad, y ves tu progreso y nota.' },
+  { t: 'nuevo', m: 'Compa', d: 'Compa ahora flota: una burbuja accesible desde cualquier pantalla abre su chat sin que pierdas lo que estabas haciendo. Puedes apagarla en Perfil si prefieres usar solo la pantalla completa.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
