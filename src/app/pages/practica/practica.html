@@ -7,6 +7,7 @@
         <button type="button" class="prac__back" (click)="back()" aria-label="Atrás">←</button>
         <h1 class="prac__title">{{ 'Modo práctica' | t }}</h1>
       </header>
+      <app-demo-tabs activo="misiones" />
       <div class="screen__body prac__home" appFadeIn>
         <span class="prac__kicker">{{ 'MODO PRÁCTICA' | t }}</span>
         <h2 class="prac__home-h">{{ 'Practica sin miedo' | t }}</h2>
@@ -30,8 +31,6 @@
         } @else {
           <p class="prac__vacio">{{ 'Aún no hay misiones para tu rol.' | t }}</p>
         }
-
-        <a class="prac__resultados-link" routerLink="/practica/resultados">🏅 {{ 'Mis resultados' | t }}</a><!-- tropes-allow: icono 🏅 = paridad con Mi rendimiento -->
 
       </div>
     }

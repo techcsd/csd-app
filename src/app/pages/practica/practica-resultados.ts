@@ -10,6 +10,7 @@ import { PracticaIntentoFila } from '../../core/practica/practica.models';
 import { misionPorId } from '../../core/practica/misiones-app';
 import { formatFechaHumana } from '../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
+import { DemoTabs } from '../../shared/components/demo-tabs/demo-tabs';
 
 /**
  * CM7 (PROMPT-95 F6a) — "Mis resultados": los intentos de práctica del usuario
@@ -19,7 +20,7 @@ import { MOTION_DIRECTIVES } from '../../shared/motion';
   selector: 'app-practica-resultados',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [Skeleton, EmptyState, TranslatePipe, DemoTabs, ...MOTION_DIRECTIVES],
   templateUrl: './practica-resultados.html',
   styleUrl: './practica-resultados.scss',
 })

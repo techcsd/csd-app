@@ -1,0 +1,277 @@
+// DG6 — burbuja fija (abajo a la derecha, nunca tapa la acción naranja principal).
+.cf__burbuja {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + var(--safe-bottom, 0px));
+  z-index: 850;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--Hub, #ffb300);
+  color: #121212;
+  font-size: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.cf__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  animation: cf-fade 0.2s ease;
+}
+
+// DG-19 — hoja desde abajo (~78% de pantalla): deja ver que hay algo detrás.
+.cf__panel {
+  width: 100%;
+  max-width: 640px;
+  height: 78vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.4);
+  animation: cf-up 0.25s ease;
+  overflow: hidden;
+}
+
+.cf__header {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 12px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.cf__handle {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.cf__avatar {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--Hub, #ffb300);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.cf__title {
+  flex: 1 1 auto;
+  font-weight: 800;
+  font-size: 15px;
+}
+.cf__expandir,
+.cf__close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 16px;
+}
+
+.cf__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cf__intro {
+  margin: auto;
+  max-width: 320px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 4px;
+}
+.cf__intro-emoji { font-size: 40px; }
+.cf__intro-title { margin: 2px 0 0; font-size: 17px; font-weight: 800; color: var(--color-text-primary); }
+.cf__intro-text { margin: 0; font-size: 13px; color: var(--color-text-secondary); }
+.cf__chips { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.cf__chip {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+.cf__chip:disabled { opacity: 0.5; }
+
+.cf__archivos { display: flex; flex-wrap: wrap; gap: 6px; }
+.cf__archivo-link {
+  display: inline-flex;
+  margin-top: 6px;
+  padding: 7px 12px;
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.cf__msg {
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+.cf__msg--mio { align-self: flex-end; align-items: flex-end; }
+.cf__burbuja {
+  padding: 9px 13px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+  font-size: 14px;
+}
+.cf__msg--mio .cf__burbuja {
+  border-radius: 14px 14px 4px 14px;
+  background: var(--Hub, #ffb300);
+  border-color: transparent;
+  color: #121212;
+}
+.cf__hora { margin-top: 2px; font-size: 10px; color: var(--color-text-secondary); }
+
+.cf__typing { display: inline-flex; align-items: center; gap: 5px; }
+.cf__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--main-ultra-light, #929090);
+  animation: cf-blink 1.2s infinite ease-in-out;
+}
+.cf__dot:nth-child(2) { animation-delay: 0.2s; }
+.cf__dot:nth-child(3) { animation-delay: 0.4s; }
+
+.cf__compose {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  padding-bottom: calc(10px + var(--safe-bottom, 0px));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.cf__compose--rec { align-items: center; }
+.cf__compose--rec app-voice-recorder { flex: 1; min-width: 0; }
+.cf__input { flex: 1; }
+.cf__send {
+  flex: 0 0 auto;
+  width: 46px;
+  border-radius: 12px;
+  background: var(--primary, #ff5f00);
+  color: var(--text-on-accent);
+  font-size: 18px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cf__send:disabled { opacity: 0.5; }
+.cf__offline {
+  margin: 0;
+  padding: 5px 14px calc(5px + var(--safe-bottom, 0px));
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+}
+
+.cf__prop { display: flex; flex-direction: column; gap: 14px; }
+.cf__prop-lineas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    padding: 11px 13px;
+    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
+.cf__prop-acts {
+  display: flex;
+  gap: 10px;
+
+  .btn-cta { flex: 1; }
+  .btn-ghost { width: auto; flex: 0 0 auto; }
+}
+.cf__prop-acts--abrir {
+  flex-direction: column;
+  gap: 12px;
+
+  .btn-cta { flex: none; }
+}
+.cf__prop-descartar {
+  background: none;
+  border: none;
+  padding: 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.cf__prop-faltan {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: var(--warning-bg);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--warning);
+}
+.cf__prop-faltan-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot-warning);
+  margin-top: 4px;
+  flex: none;
+}
+
+@keyframes cf-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cf-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes cf-blink { 0%, 60%, 100% { opacity: 0.3; } 30% { opacity: 1; } }

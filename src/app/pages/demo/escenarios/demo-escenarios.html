@@ -1,0 +1,62 @@
+<div class="screen desc">
+  <header class="desc__header">
+    <button type="button" class="desc__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="desc__title">{{ 'Escenarios' | t }}</h1>
+  </header>
+  <app-demo-tabs activo="escenarios" />
+
+  <div class="screen__body" appFadeIn>
+    <p class="desc__intro">{{ 'Estos son los datos de mentira que puedes usar para practicar. Nunca son reales.' | t }}</p>
+
+    @if (cargando()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error()) {
+      <app-empty-state icon="⚠️" [title]="'No se pudo cargar' | t" [message]="error()" /><!-- tropes-allow: icono de empty-state (patrón establecido en todo el proyecto) -->
+    } @else {
+      <section class="desc__sec">
+        <h2 class="desc__sec-tit">🏗️ {{ 'Obras' | t }}</h2><!-- tropes-allow: icono de sección = mismo emoji del tile "Proyectos" en Home -->
+        <ul class="desc__list">
+          @for (o of catalogo().obras; track o.id) {
+            <li class="desc__row"><span class="desc__row-main">{{ o.nombre }}</span><span class="desc__row-sub">{{ o.codigo }}</span></li>
+          }
+        </ul>
+      </section>
+
+      <section class="desc__sec">
+        <h2 class="desc__sec-tit">📦 {{ 'Almacenes' | t }}</h2><!-- tropes-allow: icono de sección = mismo emoji del tile "Inventario" en Home -->
+        <ul class="desc__list">
+          @for (a of catalogo().almacenes; track a.id) {
+            <li class="desc__row"><span class="desc__row-main">{{ a.nombre }}</span><span class="desc__row-sub">{{ nombreObra(a.proyecto_id) }}</span></li>
+          }
+        </ul>
+      </section>
+
+      <section class="desc__sec">
+        <h2 class="desc__sec-tit">🧱 {{ 'Artículos' | t }}</h2><!-- tropes-allow: icono de sección (paridad con "Escenarios" de la web) -->
+        <ul class="desc__list">
+          @for (a of catalogo().articulos; track a.id) {
+            <li class="desc__row"><span class="desc__row-main">{{ a.nombre }}</span><span class="desc__row-sub">{{ a.codigo }} · {{ a.unidad }}</span></li>
+          }
+        </ul>
+      </section>
+
+      <section class="desc__sec">
+        <h2 class="desc__sec-tit">🚚 {{ 'Vehículos' | t }}</h2><!-- tropes-allow: icono de sección = mismo emoji del tile "Transporte" en Home -->
+        <ul class="desc__list">
+          @for (v of catalogo().vehiculos; track v.id) {
+            <li class="desc__row"><span class="desc__row-main">{{ v.placa }}</span><span class="desc__row-sub">{{ v.marca }} {{ v.modelo }} · {{ v.tipo }}</span></li>
+          }
+        </ul>
+      </section>
+
+      <section class="desc__sec">
+        <h2 class="desc__sec-tit">🧑‍✈️ {{ 'Choferes' | t }}</h2><!-- tropes-allow: icono de sección (paridad con "Escenarios" de la web) -->
+        <ul class="desc__list">
+          @for (c of catalogo().choferes; track c.id) {
+            <li class="desc__row"><span class="desc__row-main">{{ c.nombre }}</span></li>
+          }
+        </ul>
+      </section>
+    }
+  </div>
+</div>

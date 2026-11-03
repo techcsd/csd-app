@@ -219,6 +219,12 @@
       "en": 100,
       "ht": 0
     },
+    "pages/buscador": {
+      "conT": 7,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
     "pages/compa": {
       "conT": 22,
       "sinT": 0,
@@ -248,6 +254,12 @@
       "sinT": 1,
       "en": 97,
       "ht": 3
+    },
+    "pages/demo/escenarios": {
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
     },
     "pages/documentos": {
       "conT": 6,
@@ -286,7 +298,7 @@
       "ht": 0
     },
     "pages/home": {
-      "conT": 28,
+      "conT": 29,
       "sinT": 0,
       "en": 100,
       "ht": 7
@@ -580,7 +592,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 73,
+      "conT": 75,
       "sinT": 0,
       "en": 100,
       "ht": 1
@@ -1143,6 +1155,12 @@
       "en": 100,
       "ht": 100
     },
+    "shared/components/compa-flotante": {
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
+      "ht": 10
+    },
     "shared/components/consentimiento-ia": {
       "conT": 8,
       "sinT": 2,
@@ -1153,6 +1171,12 @@
       "conT": 4,
       "sinT": 0,
       "en": 25,
+      "ht": 0
+    },
+    "shared/components/demo-tabs": {
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/generar-acceso": {

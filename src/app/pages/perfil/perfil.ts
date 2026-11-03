@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { environment } from '../../../environments/environment';
 import { UserContextService } from '../../core/services/user-context.service';
+import { CompaFlotanteService } from '../../core/services/compa-flotante.service';
 import { SessionService } from '../../core/services/session.service';
 import { UpdateService } from '../../core/services/update.service';
 import { NetworkService } from '../../core/services/network.service';
@@ -46,6 +47,7 @@ export class PerfilPage {
   protected theme = inject(ThemeService);
   protected motion = inject(MotionService);
   private ctx = inject(UserContextService);
+  private flotante = inject(CompaFlotanteService);
   private session = inject(SessionService);
   private updates = inject(UpdateService);
   private network = inject(NetworkService);
@@ -106,6 +108,9 @@ export class PerfilPage {
   agrupado = this.ctx.agruparHome;
   agrupadoBusy = signal(false);
   online = this.network.online;
+  // DG6 — Compa flotante: burbuja accesible desde cualquier pantalla (on por defecto).
+  compaFlotanteOn = this.flotante.activo;
+  compaFlotanteBusy = signal(false);
   // BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden alineados con el módulo
   // Configuración de la web. 'sistema' = sigue el tema del teléfono.
   readonly aparienciaOpts: { pref: ThemePref; label: string; icon: string }[] = [
@@ -370,6 +375,28 @@ export class PerfilPage {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la preferencia.');
     } finally {
       this.agrupadoBusy.set(false);
+    }
+  }
+
+  /**
+   * DG6 — enciende/apaga la burbuja de Compa flotante (preferencia por usuario,
+   * server-side, MISMO campo que la web — se apaga en todos los dispositivos).
+   */
+  async toggleCompaFlotante(): Promise<void> {
+    if (this.compaFlotanteBusy()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      return;
+    }
+    this.compaFlotanteBusy.set(true);
+    try {
+      const next = !this.compaFlotanteOn();
+      await this.flotante.setActivo(next);
+      this.toast.success(next ? 'Compa flotante activado.' : 'Compa flotante desactivado.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la preferencia.');
+    } finally {
+      this.compaFlotanteBusy.set(false);
     }
   }
 

@@ -23,6 +23,7 @@ import { LogoReveal } from './shared/ui/logo-reveal/logo-reveal';
 import { PhotoViewer } from './shared/ui/photo-viewer/photo-viewer';
 import { VideoPlayer } from './shared/ui/video-player/video-player';
 import { NotifHealthBand } from './shared/ui/notif-health-band/notif-health-band';
+import { CompaFlotante } from './shared/components/compa-flotante/compa-flotante';
 import { PoliticasService } from './core/services/politicas.service';
 import { TiendasService } from './core/services/tiendas.service';
 import { SyncService } from './core/sync/sync.service';
@@ -58,7 +59,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, TranslatePipe],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, CompaFlotante, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

@@ -1,0 +1,11 @@
+<nav class="demo-tabs" aria-label="Demo">
+  <a class="demo-tabs__tab" [class.demo-tabs__tab--on]="activo() === 'misiones'" routerLink="/practica">
+    {{ 'Misiones' | t }}
+  </a>
+  <a class="demo-tabs__tab" [class.demo-tabs__tab--on]="activo() === 'progreso'" routerLink="/demo/progreso">
+    {{ 'Mi progreso' | t }}
+  </a>
+  <a class="demo-tabs__tab" [class.demo-tabs__tab--on]="activo() === 'escenarios'" routerLink="/demo/escenarios">
+    {{ 'Escenarios' | t }}
+  </a>
+</nav>

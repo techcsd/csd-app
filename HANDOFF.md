@@ -1,5 +1,51 @@
 # HANDOFF — CSD App
 
+## 🟡 03-nov-2026 — Ronda DG (PROMPT 131, app-side) — sin versión nueva todavía, EN WORKTREE
+
+**Worktree de trabajo:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dg`, rama `feature/dg-developer-buscador-compa-demo` (desde `origin/dev` @ `67c01d7`, el cierre de la ronda DF). **Sin commit todavía** — todo queda en el working tree a la espera de que Xaviel revise (regla de la casa del PROMPT 131: nada de commit/push/deploy sin avisar primero).
+
+**Contexto clave:** el padre (SGC) ya hizo las 6 piezas web de esta ronda en una sesión paralela (`feature/dg-developer-buscador-compa-demo`, commit `7c32ce83`, **tampoco mergeado a `dev` todavía**) — ver `C:\Users\xavie\Desktop\X Dev\dev\SGC-dg\HANDOFF.md`. F0 confirmó que los contratos que necesitaba (preferencia `compa_flotante`, RPC `demo_catalogo()`, el fix de `tablero_vivo_resumen()`) ya estaban aplicados en **dev** — se consumieron tal cual, sin inventar nada.
+
+### F0 — Verificación — ver `PARIDAD.md` §DG para el detalle completo de qué aplica/no aplica
+Diagnóstico completo de las 9 piezas del prompt contra el código real de la app (no contra supuestos): 3 se construyeron (DG2/DG5/DG6), 4 son solo-web porque la app no tiene el equivalente (DG1/DG4/DG7/DG9), y **DG8 ya estaba resuelto de una ronda anterior** (DB2 — `personal-registro.ts` ya comprime a 1600px/JPEG 0.85 antes de mandar a `leer-documento-personal`; el string "No se pudo contactar el servicio" de la captura de Xaviel no existe en este repo).
+
+### F1 — Módulo "Demo" (DG5) — completo
+- `home.ts`: nuevo `DEMO_TILE` (🎓 Demo, general — como Notas), agregado a `GROUPS.general`. **Refactor sin cambio de comportamiento**: la lógica de gating de `tiles` computed (antes `workTiles`/`tileVisible`/`extra` inline en el componente) se extrajo a una función pura de módulo `visibleHomeTiles(ctx)` — la reusa también el buscador (DG2), así nunca hay dos listas de navegación que se desalineen.
+- 5 misiones nuevas en `core/practica/misiones-app.ts` (firmar conduce/chofer, solicitud de compra/ingeniero-capataz, mantenimiento/ruta/flota-elevado, orden de trabajo/ingeniero-capataz) — mismo motor de guion local (pasos/objetivos/trampa) que ya existía, NO un port de las 8 misiones nuevas de la web (motor distinto, ver PARIDAD).
+- Nuevo componente compartido `shared/components/demo-tabs` (Misiones/Mi progreso/Escenarios) montado en `practica.html`, `practica-resultados.html` y la nueva `pages/demo/escenarios`.
+- Nueva pantalla `pages/demo/escenarios` (solo lectura, RPC `sgc.demo_catalogo()`, ya desplegada en dev).
+- Rutas nuevas: `/demo` (redirect a `/practica`, como la web), `/demo/progreso` (reusa `PracticaResultadosPage`), `/demo/escenarios`.
+- Insignia en el tile: misiones pendientes por aprobar (best-effort, client-side, `cargarDemoPendientes()`).
+- `sql-para-sgc/2026-11-03-dg5-mas-misiones-app.sql` — alta aditiva de los 5 ids nuevos en el catálogo admin `sgc.practica_misiones` (sin FK real, mismo patrón que el insert del padre). **Pendiente: que el padre lo aplique a dev/prod** (regla del hijo: no aplica su propio DDL).
+
+### F2 — Compa flotante (DG6) — completo
+- **Refactor arquitectónico necesario para la correctitud**: el historial de la conversación vivía solo en el componente `CompaPage` (se perdía al salir/volver a entrar). Se extrajo a un nuevo singleton `core/services/compa-chat.store.ts` (`CompaChatStore`, `providedIn:'root'`) con TODA la lógica de envío/voz/propuestas que antes vivía en `compa.ts` — movida literal, mismo comportamiento, misma cobertura de casos (BB2/CO16/CI10/AZ5). `CompaPage` quedó como una vista fina que re-expone las señales del store (el template `compa.html` NO cambió — mismos nombres públicos).
+- Nuevo `core/services/compa-flotante.service.ts` — preferencia `compa_flotante` (server-side, RPC `mis_preferencias()`/`set_mi_preferencia()`, MISMO campo que usa la web) + estado local de abierta/cerrada.
+- Nuevo componente `shared/components/compa-flotante` — burbuja fija (abajo-derecha) + hoja propia desde abajo (~78vh, DG-19; NO reusa `<app-bottom-sheet>` para el cuerpo del chat porque necesita composer pegado abajo + lista con scroll propio — sí la reusa para la hoja de confirmación de propuesta, apilada encima). Comparte la MISMA conversación que `/compa` vía `CompaChatStore`. Simplificado a propósito (sin compartir conversación CP2, sin visor de PDF inline — esos siguen siendo de la pantalla completa; un botón "⤢" abre `/compa` si se necesita el flujo completo).
+- Montado en `app.html` dentro del mismo `@if (!enAuth())` que ya ocultaba otros overlays globales durante login/PIN.
+- Toggle "Compa flotante" en Perfil (mismo patrón que "Agrupar módulos": optimista + revert-on-error + toast), junto al resto de preferencias.
+
+### F3 — Buscador compacto (DG2) — completo
+- Lupa 🔍 en la cabecera de Home (junto a la campana) → pantalla completa nueva `pages/buscador`.
+- `core/buscador/buscador-coincidencia.util.ts` — **port literal** del algoritmo de la web (`buscador-coincidencia.util.ts` del SGC): normaliza acentos, tokeniza, Damerau-Levenshtein acotado (1-2 letras de tolerancia para palabras de 3+), ranking exacta>prefijo>aproximada. Misma paridad de matching, cero reinvención.
+- `core/buscador/buscador-indice.ts` — el índice es `visibleHomeTiles(ctx)` (la MISMA fuente que pinta Home, ver F1): nunca una segunda lista de navegación (DG-08). Sin búsqueda de datos (folios/personas/obras) — la app no tiene ese árbol de rutas profundo que sí tiene el sidebar web, así que el alcance es exactamente los módulos/pantallas que ya ves en Home.
+- "Recientes" vía `localStorage` (port de `recientes.util.ts` de la web, máx 5).
+
+### F4 — Tablero/registro rápido (DG3/DG8) — sin cambios de código (ver PARIDAD §DG)
+Ambos ya cubiertos: DG3 llega gratis (mismo RPC `tablero_vivo_resumen`, ya corregido en dev); DG8 ya estaba resuelto (DB2).
+
+### F5 — Cierre
+- `PARIDAD.md` — nueva sección `## DG` con el detalle pieza por pieza (qué se construyó, qué es solo-web y por qué, qué ya estaba resuelto).
+- i18n: ~25 claves nuevas en `public/i18n/en.json` (buscador, demo-tabs, demo-escenarios, Compa flotante), verificadas sin duplicado antes de insertar. Gate `verify-i18n` (alcance de pantallas, incluye `pages/home` y `pages/perfil`) pasa 100%.
+- `npm run build` verde — incluye los 9 guards del prebuild (**tuve que generar `environment.ts` con `npm run env:dev`**, el worktree nuevo no lo traía) y el guard `verify-no-ai-tropes` (emoji nuevos justificados con `tropes-allow`, siguiendo el patrón ya usado en `practica-resultados.html`/`demo-escenarios`/empty-states — la convención visual de la app es emoji en vez de SVG en toda la navegación, AW12 ya convive con esa excepción documentada).
+- `npx ng test --watch=false` → **63/63 verdes** (sin tests nuevos para esta ronda — el buscador/Compa flotante/misiones se verificaron manualmente por lectura + build; candidato a deuda si se quiere cobertura dedicada). `npm run test:canal` → **5/5 verdes**.
+- `cap sync` — no corrido (ningún cambio toca plugins nativos ni config de Capacitor).
+- **No se hizo commit, push, build de APK ni nada hacia tiendas** — todo queda en el worktree `csd-app-dg`, a la espera de que Xaviel revise.
+
+**Pendiente real para el padre (SGC):** mergear `feature/dg-developer-buscador-compa-demo` a `dev` (sigue sin mergear, igual que el lado app) + aplicar `sql-para-sgc/2026-11-03-dg5-mas-misiones-app.sql` (dev y luego prod).
+
+**En dev:** nada publicado todavía (ni app ni web de esta ronda). **En prod:** sin cambios de esta ronda.
+
 ## 🟢 02-nov-2026 — Ronda DF (PROMPT 129, app-side) — v2.63.0 EN PRODUCCIÓN (cierre completo)
 
 **Worktree de trabajo:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-df`, rama `feature/df-ia-agentes-animaciones` (desde `origin/dev` @ `70a772f`). Commits `b40ea59` (feat, todo F0-F5) + `6a2bd77` (chore, bump 2.62.0→2.63.0 + CAMBIOS_CURADOS/TITULO) + `8dc318c`/`78875e7` (docs/qa).

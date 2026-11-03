@@ -7,6 +7,7 @@
       }
     </div>
     <div class="home__header-actions">
+      <button type="button" class="home__bell" (click)="buscar()" [attr.aria-label]="'Buscar' | t">🔍</button><!-- tropes-allow: lupa = mismo icono de la cabecera de Mensajes/buscador (DG2) -->
       <button type="button" class="home__bell" (click)="avisos()" aria-label="Avisos">
         🔔
         @if (avisosNoLeidos() > 0) {

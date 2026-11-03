@@ -7,6 +7,7 @@ import { PracticaMision } from '../../core/practica/practica.models';
 import { MotionService } from '../../core/services/motion.service';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
+import { DemoTabs } from '../../shared/components/demo-tabs/demo-tabs';
 
 /** CM7 — un trozo de confeti para la celebración del resultado (aprobado). */
 interface Confeti {
@@ -27,7 +28,7 @@ interface Confeti {
   selector: 'app-practica',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, UpperCasePipe, RouterLink, ...MOTION_DIRECTIVES],
+  imports: [TranslatePipe, UpperCasePipe, RouterLink, DemoTabs, ...MOTION_DIRECTIVES],
   templateUrl: './practica.html',
   styleUrl: './practica.scss',
 })

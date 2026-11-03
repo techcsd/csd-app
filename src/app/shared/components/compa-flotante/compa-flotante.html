@@ -1,0 +1,132 @@
+@if (flotante.activo()) {
+  <button
+    type="button"
+    class="cf__burbuja"
+    appTapScale
+    (click)="toggleBurbuja()"
+    [attr.aria-label]="(flotante.abierta() ? 'Cerrar Compa' : 'Abrir Compa') | t"
+  >
+    <span aria-hidden="true">🤖</span><!-- tropes-allow: mismo avatar de Compa en toda la app -->
+  </button>
+}
+
+@if (flotante.abierta()) {
+  <div class="cf__overlay" (click)="cerrar()">
+    <div class="cf__panel" (click)="$event.stopPropagation()">
+      <header class="cf__header">
+        <span class="cf__handle" aria-hidden="true"></span>
+        <span class="cf__avatar" aria-hidden="true">🤖</span>
+        <span class="cf__title">Compa</span>
+        <button type="button" class="cf__expandir" appTapScale [attr.aria-label]="'Abrir chat completo' | t" (click)="irAlChatCompleto()">⤢</button>
+        <button type="button" class="cf__close" (click)="cerrar()" [attr.aria-label]="'Cerrar' | t">✕</button>
+      </header>
+
+      <div class="cf__body" #scroller>
+        @if (store.vacio()) {
+          <div class="cf__intro">
+            <span class="cf__intro-emoji" aria-hidden="true">🤖</span>
+            <h2 class="cf__intro-title">{{ store.saludo() }}</h2>
+            <p class="cf__intro-text">{{ store.subtitulo() }}</p>
+            <div class="cf__chips">
+              @for (s of store.sugerencias(); track s) {
+                <button type="button" class="cf__chip" appTapScale [disabled]="store.enviando()" (click)="usarSugerencia(s)">
+                  {{ s }}
+                </button>
+              }
+            </div>
+          </div>
+        } @else {
+          @for (m of store.mensajes(); track m.id) {
+            <div class="cf__msg" [class.cf__msg--mio]="m.rol === 'user'">
+              @if (m.rol === 'assistant') {
+                <span class="cf__burbuja"><app-markdown-view [source]="m.texto" /></span>
+                @if (m.archivos?.length) {
+                  <div class="cf__archivos">
+                    @for (a of m.archivos; track a.url) {
+                      <button type="button" class="cf__archivo-link" appTapScale (click)="abrirArchivo(a)">{{ a.nombre }}</button>
+                    }
+                  </div>
+                }
+              } @else {
+                <span class="cf__burbuja">{{ m.texto }}</span>
+              }
+              @if (m.ts) { <span class="cf__hora">{{ fmtHora(m.ts) }}</span> }
+            </div>
+          }
+        }
+
+        @if (store.pensando()) {
+          <div class="cf__msg">
+            <span class="cf__burbuja cf__typing" [attr.aria-label]="'Compa está escribiendo' | t">
+              <span class="cf__dot"></span><span class="cf__dot"></span><span class="cf__dot"></span>
+            </span>
+          </div>
+        }
+      </div>
+
+      @if (store.grabandoVoz()) {
+        <footer class="cf__compose cf__compose--rec">
+          <app-voice-recorder mode="push" (recorded)="onVozGrabada($event)" />
+        </footer>
+      } @else {
+        <footer class="cf__compose">
+          <input
+            #composerFlot
+            class="field cf__input"
+            type="text"
+            [ngModel]="store.texto()"
+            (ngModelChange)="store.texto.set($event)"
+            (keyup.enter)="enviar()"
+            [disabled]="!store.online || store.transcribiendo()"
+            [placeholder]="(store.transcribiendo() ? 'Transcribiendo…' : (store.enviando() ? 'Compa está respondiendo…' : 'Escríbele a Compa…')) | t"
+          />
+          @if (store.texto().trim()) {
+            <button type="button" class="cf__send" [disabled]="store.enviando() || !store.online" (click)="enviar()" [attr.aria-label]="'Enviar' | t">➤</button>
+          } @else {
+            <button type="button" class="cf__send cf__mic" [disabled]="!store.online || store.transcribiendo()" (click)="abrirVoz()" [attr.aria-label]="'Grabar nota de voz' | t">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+                <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/>
+                <path d="M19 12a7 7 0 0 1-6 6.92V22h-2v-3.08A7 7 0 0 1 5 12h2a5 5 0 0 0 10 0h2z"/>
+              </svg>
+            </button>
+          }
+        </footer>
+      }
+      @if (!store.online) {
+        <p class="cf__offline">{{ 'Compa necesita conexión.' | t }}</p>
+      }
+    </div>
+  </div>
+
+  <!-- Hoja de confirmación de propuesta — se apila sobre el panel flotante. -->
+  <app-bottom-sheet [open]="!!store.propuesta()" [titulo]="store.propuesta()?.titulo ?? ''" (closed)="cancelarPropuesta()">
+    @if (store.propuesta(); as p) {
+      <div class="cf__prop">
+        @if (p.lineas.length) {
+          <ul class="cf__prop-lineas">
+            @for (l of p.lineas; track $index) { <li>{{ l }}</li> }
+          </ul>
+        }
+        @if (p.accion === 'abrir') {
+          @if (p.faltan?.length) {
+            <div class="cf__prop-faltan">
+              <span class="cf__prop-faltan-dot"></span>
+              <span>{{ 'Faltan' | t }}: {{ faltanTexto(p.faltan) }}.</span>
+            </div>
+          }
+          <div class="cf__prop-acts cf__prop-acts--abrir">
+            <button type="button" class="btn-cta" (click)="abrirFormularioPropuesta()">{{ 'Abrir formulario' | t }}</button>
+            <button type="button" class="cf__prop-descartar" (click)="cancelarPropuesta()">{{ 'Descartar' | t }}</button>
+          </div>
+        } @else {
+          <div class="cf__prop-acts">
+            <button type="button" class="btn-cta" [disabled]="store.ejecutando()" (click)="confirmarPropuesta()">
+              {{ (store.ejecutando() ? 'Confirmando…' : 'Confirmar') | t }}
+            </button>
+            <button type="button" class="btn-ghost" [disabled]="store.ejecutando()" (click)="cancelarPropuesta()">{{ 'Cancelar' | t }}</button>
+          </div>
+        }
+      </div>
+    }
+  </app-bottom-sheet>
+}

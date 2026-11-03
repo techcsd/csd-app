@@ -6,6 +6,7 @@
     <button type="button" class="pres__refresh" (click)="load()" [disabled]="loading()" aria-label="Actualizar">🔄</button><!-- tropes-allow: 🔄 = patrón de refresh ya usado en Mi rendimiento -->
 
   </header>
+  <app-demo-tabs activo="progreso" />
 
   <div class="screen__body">
     @if (loading()) {

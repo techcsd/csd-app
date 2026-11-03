@@ -16,6 +16,9 @@ import { PracticaMision } from './practica.models';
 
 const CHOFER = ['chofer'];
 const CAMPO = ['ingeniero_campo', 'ingeniero_oficina', 'capataz'];
+// DG5 — roles con flota elevada (mantenimiento/ruta son decisión de jefe de flota o
+// logística, no del chofer que solo ejecuta). Mismo criterio que esFlotaElevado().
+const FLOTA = ['jefe_flota', 'logistica'];
 
 // ── Piloto (F6a) ──────────────────────────────────────────────────────────────
 const COMBUSTIBLE: PracticaMision = {
@@ -290,6 +293,150 @@ const APOYO: PracticaMision = {
   aprobarDesde: 80,
 };
 
+// DG5 — "Firmar un conduce" (chofer): aceptar/firmar uno que le transfirieron o
+// entregaron, distinto de CONDUCE (entregar en destino con foto).
+const FIRMAR_CONDUCE: PracticaMision = {
+  id: 'app-firmar-conduce',
+  titulo: 'Firmar un conduce',
+  sub: 'Revisar y firmar',
+  roles: CHOFER,
+  version: 1,
+  objetivos: [
+    { id: 'revisar', label: 'Revisar' },
+    { id: 'firma', label: 'Firma' },
+  ],
+  pasos: [
+    { id: 'revisar', tipo: 'accion', cta: 'Revisar el conduce que te transfirieron', accion: { label: 'Revisado', objetivo: 'revisar' } },
+    { id: 'firma', tipo: 'accion', cta: 'Firmar para aceptarlo', accion: { label: 'Firma', objetivo: 'firma' } },
+    { id: 'guardar', tipo: 'confirmar', cta: 'Confirmar' },
+  ],
+  reglas: {
+    puntos: [
+      { id: 'revisar', label: 'Revisaste el conduce antes de firmar', puntos: 40, objetivos: ['revisar'] },
+      { id: 'firma', label: 'Firmaste para aceptarlo', puntos: 35, objetivos: ['firma'] },
+    ],
+    tiempo: { id: 'tiempo', label: 'Sin dejarlo pendiente', puntos: 25, tiempoBonoSegundos: 90 },
+    penalizaciones: [],
+  },
+  aprobarDesde: 80,
+};
+
+// DG5 — "Pedir solicitud de compra" (ingeniero/capataz): material que NO hay en
+// almacén, distinto de PEDIR_MATERIAL (requisición de lo que sí hay en stock).
+const SOLICITUD_COMPRA: PracticaMision = {
+  id: 'app-solicitud-compra',
+  titulo: 'Pedir solicitud de compra',
+  sub: 'Lo que no hay en almacén',
+  roles: CAMPO,
+  version: 1,
+  objetivos: [
+    { id: 'obra', label: 'Obra' },
+    { id: 'items', label: 'Artículos' },
+    { id: 'enviar', label: 'Enviar' },
+  ],
+  pasos: [
+    { id: 'obra', tipo: 'accion', cta: 'Elegir la obra', accion: { label: 'Obra elegida', objetivo: 'obra' } },
+    { id: 'items', tipo: 'accion', cta: 'Agregar lo que hace falta comprar', accion: { label: 'Artículos agregados', objetivo: 'items' } },
+    { id: 'enviar', tipo: 'confirmar', cta: 'Enviar la solicitud' },
+  ],
+  reglas: {
+    puntos: [
+      { id: 'obra', label: 'Elegiste la obra', puntos: 30, objetivos: ['obra'] },
+      { id: 'items', label: 'Agregaste lo que hace falta', puntos: 45, objetivos: ['items'] },
+    ],
+    tiempo: { id: 'tiempo', label: 'Claro y completo', puntos: 25, tiempoBonoSegundos: 120 },
+    penalizaciones: [],
+  },
+  aprobarDesde: 80,
+};
+
+// DG5 — "Registrar mantenimiento" (jefe de flota/logística).
+const MANTENIMIENTO: PracticaMision = {
+  id: 'app-mantenimiento',
+  titulo: 'Registrar mantenimiento',
+  sub: 'Vehículo, tipo y qué se hizo',
+  roles: FLOTA,
+  version: 1,
+  objetivos: [
+    { id: 'veh', label: 'Vehículo' },
+    { id: 'tipo', label: 'Tipo' },
+    { id: 'desc', label: 'Descripción' },
+  ],
+  pasos: [
+    { id: 'veh', tipo: 'accion', cta: 'Elegir el vehículo', accion: { label: 'Vehículo elegido', objetivo: 'veh' } },
+    { id: 'tipo', tipo: 'accion', cta: 'Elegir el tipo (preventivo/correctivo)', accion: { label: 'Tipo elegido', objetivo: 'tipo' } },
+    { id: 'desc', tipo: 'valor', cta: 'Describir qué se le hizo', campo: { label: 'Descripción', objetivo: 'desc', valor: 'Cambio de aceite y filtro' } },
+    { id: 'guardar', tipo: 'confirmar', cta: 'Guardar' },
+  ],
+  reglas: {
+    puntos: [
+      { id: 'veh', label: 'Elegiste el vehículo', puntos: 30, objetivos: ['veh'] },
+      { id: 'tipo', label: 'Elegiste el tipo', puntos: 25, objetivos: ['tipo'] },
+      { id: 'desc', label: 'Describiste el trabajo', puntos: 30, objetivos: ['desc'] },
+    ],
+    tiempo: { id: 'tiempo', label: 'Sin dejarlo a medias', puntos: 15, tiempoBonoSegundos: 120 },
+    penalizaciones: [],
+  },
+  aprobarDesde: 80,
+};
+
+// DG5 — "Crear una ruta" (jefe de flota/logística planifica un viaje).
+const RUTA: PracticaMision = {
+  id: 'app-ruta',
+  titulo: 'Crear una ruta',
+  sub: 'Vehículo, origen y destino',
+  roles: FLOTA,
+  version: 1,
+  objetivos: [
+    { id: 'veh', label: 'Vehículo' },
+    { id: 'destino', label: 'Destino' },
+    { id: 'enviar', label: 'Enviar' },
+  ],
+  pasos: [
+    { id: 'veh', tipo: 'accion', cta: 'Elegir el vehículo', accion: { label: 'Vehículo elegido', objetivo: 'veh' } },
+    { id: 'destino', tipo: 'valor', cta: 'Escribir el destino', campo: { label: 'Destino', objetivo: 'destino', valor: 'OBRA DEMO — Torre Norte' } },
+    { id: 'enviar', tipo: 'confirmar', cta: 'Crear la ruta' },
+  ],
+  reglas: {
+    puntos: [
+      { id: 'veh', label: 'Elegiste el vehículo', puntos: 35, objetivos: ['veh'] },
+      { id: 'destino', label: 'Indicaste el destino', puntos: 40, objetivos: ['destino'] },
+    ],
+    tiempo: { id: 'tiempo', label: 'Sin demoras', puntos: 25, tiempoBonoSegundos: 90 },
+    penalizaciones: [],
+  },
+  aprobarDesde: 80,
+};
+
+// DG5 — "Crear orden de trabajo" (ingeniero/capataz, dos firmas: ingeniero + cliente).
+const ORDEN_TRABAJO: PracticaMision = {
+  id: 'app-orden-trabajo',
+  titulo: 'Crear orden de trabajo',
+  sub: 'Descripción y dos firmas',
+  roles: CAMPO,
+  version: 1,
+  objetivos: [
+    { id: 'desc', label: 'Descripción' },
+    { id: 'firma_ing', label: 'Firma ingeniero' },
+    { id: 'firma_cli', label: 'Firma cliente' },
+  ],
+  pasos: [
+    { id: 'desc', tipo: 'valor', cta: 'Describir el trabajo pedido', campo: { label: 'Descripción', objetivo: 'desc', valor: 'Reparación de filtración en la losa del nivel 2' } },
+    { id: 'firma_ing', tipo: 'accion', cta: 'Firmar como ingeniero', accion: { label: 'Firma del ingeniero', objetivo: 'firma_ing' } },
+    { id: 'firma_cli', tipo: 'accion', cta: 'Firmar como cliente', accion: { label: 'Firma del cliente', objetivo: 'firma_cli' } },
+    { id: 'guardar', tipo: 'confirmar', cta: 'Guardar' },
+  ],
+  reglas: {
+    puntos: [
+      { id: 'desc', label: 'Describiste el trabajo', puntos: 30, objetivos: ['desc'] },
+      { id: 'firmas', label: 'Capturaste las dos firmas', puntos: 50, objetivos: ['firma_ing', 'firma_cli'] },
+    ],
+    tiempo: { id: 'tiempo', label: 'Sin dejarlo a medias', puntos: 20, tiempoBonoSegundos: 150 },
+    penalizaciones: [],
+  },
+  aprobarDesde: 80,
+};
+
 /** Todas las misiones de práctica de la app. */
 export const MISIONES_APP: PracticaMision[] = [
   COMBUSTIBLE,
@@ -301,6 +448,12 @@ export const MISIONES_APP: PracticaMision[] = [
   PEDIR_MATERIAL,
   RECIBIR_CONDUCE,
   APOYO,
+  // DG5 — módulo Demo ampliado.
+  FIRMAR_CONDUCE,
+  SOLICITUD_COMPRA,
+  MANTENIMIENTO,
+  RUTA,
+  ORDEN_TRABAJO,
 ];
 
 /** Busca una misión por id. */

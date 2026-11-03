@@ -138,6 +138,9 @@
   @if (!enAuth()) {
     <!-- CK10 — cinta global: notificaciones apagadas/sin sonido (no cerrable para choferes). -->
     <app-notif-health-band />
+    <!-- DG6 — Compa flotante: burbuja accesible desde cualquier pantalla (apaga la
+         pantalla de auth/PIN; su propia preferencia decide si se renderiza). -->
+    <app-compa-flotante />
   }
   <router-outlet />
   }
