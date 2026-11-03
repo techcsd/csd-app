@@ -1,8 +1,10 @@
 # HANDOFF — CSD App
 
-## 🟡 03-nov-2026 — Ronda DH (PROMPT 133, app-side) — EN WORKTREE, sin commit
+## 🟢 03-nov-2026 — Ronda DH (PROMPT 133, app-side) v2.65.0 — EN PRODUCCIÓN
 
-**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dh`, rama `feature/dh-ronda-03nov-app` (desde `origin/dev` @ `efd7191` = v2.64.1, al día). **Sin commit/push** — regla de la casa del PROMPT 133 ("no hagas commit, push ni deploy sin avisarle"); todo queda en el working tree para que Xaviel revise. `npm run build` verde (solo warnings preexistentes de bundle-budget/CommonJS). i18n: `verify-i18n` pasa, coberturas de los archivos tocados en 100%.
+**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dh`, rama `feature/dh-ronda-03nov-app` (desde `origin/dev` @ `efd7191` = v2.64.1). Flujo completo: commit → push → fast-forward a `dev` (`efd7191..2b96888`) → Xaviel probó la actualización in-app en su teléfono real (OK) → `qa/release-2.65.0.md` → `release-check.mjs` 4/4 → PR [#17](https://github.com/techcsd/csd-app/pull/17) `dev → main` (CI verde) → merge → `npm run apk -- --env prod` + `npm run apk:publish -- --env prod` (release-check corrió solo, 4/4 verde). **v2.65.0 publicada en prod** (de paso quedó en `main` el hotfix 2.64.1 que estaba pendiente de llegar ahí). `npm run build` verde (solo warnings preexistentes de bundle-budget/CommonJS). i18n: `verify-i18n` pasa, coberturas de los archivos tocados en 100%.
+
+**En dev:** v2.65.0 (igual que prod). **En prod:** v2.65.0 — APK: `https://jeeqhgccqefbqilntcpu.supabase.co/storage/v1/object/public/app-releases/csd-app-2.65.0.apk`.
 
 **Nota de proceso:** parte de esta ronda la investigué con forks en paralelo (F1/F2/F4/F5/F6/F8); dos de ellos (F5 y F1) terminaron escribiendo código por su cuenta pese a habérseles pedido solo lectura. Revisé cada diff suyo línea por línea antes de aceptarlo: la pieza de N8 (`notif_email_requisiciones`) la acepté a pesar de que la propia investigación había concluido "sin cambios de código" — reusa el mismo patrón seguro de `compa_flotante`/`tema` (escritura genérica vía `mis_preferencias`), así que Sonia puede apagarlo HOY aunque falte que el SGC lea esa preferencia antes de enviar el correo real (mitad del contrato, documentado abajo). Una redundancia menor quedó resuelta a favor de la versión más completa (`mensajeKmRico` en vez de un párrafo inline suelto en combustible.html). Todo lo que queda abajo ya pasó esa revisión + `npm run build` + `tsc --noEmit` en verde.
 
@@ -45,14 +47,13 @@
 Lo tocado esta ronda pagina: nuevo "Cargar más" en Tecnología › Reportes de errores (antes traía 100 filas de un golpe). Auditoría de listas SIN paginación (no tocadas esta ronda, deuda pendiente — ninguna tiene "Cargar más"/scroll con tope hoy):
 `admin/conteos`, `admin/reportes` (reportes de soporte, no el de errores), `documentos/historial`, `ingenieria/cartilla`, `ingenieria/pagos`, `inventario/conteos`, `inventario/existencias`, `proyectos/personal`, `reuniones/reuniones-lista`, `solicitudes/bandeja`, `solicitudes/mis`, `transporte/apoyo-transporte`, `transporte/checklists-historial`, `transporte/conduce-externo`, `transporte/conduces-historial`, `transporte/conduces-hub`, `transporte/conduces-pendientes`, `transporte/conduces-por-firmar`, `transporte/conduces-por-implementar`, `transporte/conduces`, `transporte/mantenimientos-general`, `transporte/mantenimientos-lista`, `transporte/rutas-activas`, `transporte/solicitud-movimiento`. Patrón de referencia ya en el código: `auditoria.html`/`auditoria.ts` (señal de límite + botón "Cargar más"/"Cargando…").
 
-### Riesgos / qué falta antes de pasar a dev
+### Riesgos / pendientes para la próxima ronda (ya en prod, no bloquean)
 
-- **Nada probado en teléfono real todavía** (Compa flotante con teclado abierto, GPS/tracking en background, el toggle nuevo de correo).
-- 2 llaves nuevas que dependen de nombres elegidos en esta sesión sin confirmar con el padre: `notif_email_requisiciones` (preferencia) y el tipo `'info'` reusado para regla de negocio (ideal sería `regla_negocio` dedicado).
+- **Probado en teléfono real:** sí — Xaviel confirmó la actualización in-app 2.64.1 → 2.65.0. Pendiente aparte: Compa flotante con teclado abierto no se verificó explícitamente.
+- 2 llaves nuevas que dependen de nombres elegidos en esta sesión sin confirmar con el padre: `notif_email_requisiciones` (preferencia — el toggle escribe pero falta que el SGC la lea antes de enviar el correo) y el tipo `'info'` reusado para regla de negocio (ideal sería `regla_negocio` dedicado en el CHECK del servidor).
 - `rrhh.*` sigue sin granularidad — pendiente de que el padre confirme los nombres de submódulo.
-- Overide de Flota/admin para km bloqueado (N2) no se construyó — falta contrato del padre.
-
-**En dev:** nada todavía (worktree sin commit). **En prod:** sin cambios de esta ronda (v2.64.1 sigue siendo lo último en prod).
+- Override de Flota/admin para km bloqueado (N2) no se construyó — falta contrato del padre (RPC que acepte una excepción con motivo).
+- El bug de apertura de Compa (N6, "no abre hasta cambiar de módulo") no se pudo reproducir por lectura de código — si vuelve a pasar, repro con Chrome remote debug conectado al teléfono.
 
 ---
 
