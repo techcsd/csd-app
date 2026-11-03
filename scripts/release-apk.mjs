@@ -40,11 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Módulo Demo, buscador y Compa flotante';
+const TITULO = 'Arreglo: chofer privado ya puede tomar un vehículo';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Inicio', d: 'Buscador: toca la lupa arriba y escribe el nombre de un módulo o pantalla (por ejemplo "combustible") para ir directo, sin perderte entre tantos botones.' },
-  { t: 'nuevo', m: 'Demo', d: 'Nuevo módulo "Demo": practica el flujo de tu rol (firmar un conduce, pedir material, registrar mantenimiento, crear una ruta, orden de trabajo…) con datos de mentira — nada se guarda de verdad, y ves tu progreso y nota.' },
-  { t: 'nuevo', m: 'Compa', d: 'Compa ahora flota: una burbuja accesible desde cualquier pantalla abre su chat sin que pierdas lo que estabas haciendo. Puedes apagarla en Perfil si prefieres usar solo la pantalla completa.' },
+  { t: 'arreglo', m: 'Transporte', d: 'Un chofer privado sin vehículo autorizado por Flota ya puede tocar "Comenzar a usar" y elegir cualquier vehículo activo — antes la lista aparecía vacía y no podía avanzar.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
