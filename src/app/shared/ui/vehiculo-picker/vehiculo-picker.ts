@@ -27,15 +27,6 @@ export class VehiculoPicker {
   private usoSvc = inject(VehiculoUsoService);
   private ctx = inject(UserContextService);
 
-  /** CG7 — chofer privado SIN vehículos autorizados vigentes → mensaje propio
-   *  ("pídeselo a Flota"), no el genérico "no hay vehículos disponibles".
-   *  CK1/F4 — "Pedir autorización" queda pendiente del RPC del padre (PROMPT-90
-   *  F5.3, no entregado); por ahora solo guía al chofer a pedírselo a Flota (no se
-   *  pinta un botón que llame a un RPC inexistente). */
-  privadoSinAutorizados = computed(
-    () => this.ctx.esChoferPrivadoRestringido() && !this.loading() && !this.cargaFallo() && !this.disponibles().length,
-  );
-
   /** AT9 — identificación homologada Marca Modelo · Color · Placa (para el chip). */
   ident = vehiculoIdentidad;
 
@@ -140,15 +131,13 @@ export class VehiculoPicker {
       // a la asignación formal. Así no aparece un vehículo que no estás usando.
       const enUsoMios = misUsos.filter((u) => u.activa).map((u) => u.vehiculo_id);
       const recep = [...recepcionesEnCola];
+      // DH1 — el CHOFER PRIVADO ya no tiene el pool recortado a autorizados (CG7
+      // retirado): "los suyos" se decide IGUAL que para cualquiera (en uso/asignación/
+      // recepción), nunca "todo el pool" (eso habría etiquetado TODA la flota activa
+      // como "Tus vehículos" apenas se quitó el recorte).
       const idsMios = enUsoMios.length
         ? [...enUsoMios, ...recep]
         : [...asignaciones.map((a) => a.vehiculo_id), ...recep];
-      // CG7 — para el CHOFER PRIVADO el pool YA viene recortado a sus vehículos
-      // AUTORIZADOS (getVehiculosDisponiblesDetailed): todos son "suyos". Así el
-      // combustible (soloMios) los ofrece y no cae al "no tienes vehículo asignado".
-      if (this.ctx.esChoferPrivadoRestringido()) {
-        for (const v of disp) idsMios.push(v.vehiculo_id);
-      }
       this.misIds.set(new Set(idsMios));
       void this.resolveFotos(disp);
       // AW16 — quién tiene cada vehículo EN USO ahora (best-effort; requiere permiso).

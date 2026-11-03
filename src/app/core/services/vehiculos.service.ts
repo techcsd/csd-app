@@ -476,15 +476,15 @@ export class VehiculosService {
     // alimenta todos los selectores (picker, asignarme, semanal, generar conduce…).
     // El admin (rol) SÍ los ve para QA.
     const rows = res.data ?? [];
-    let items = this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
-    // CG7 — el CHOFER PRIVADO solo puede ver/usar los vehículos que admin o un rol
-    // elevado (Raykler) le AUTORICE. Esta es la única fuente de los selectores (uso,
-    // combustible, inspección), así que el recorte vive aquí. Un elevado que además
-    // tenga el rol privado NO se recorta (ve toda la flota).
-    if (this.ctx.esChoferPrivadoRestringido()) {
-      const ids = await this.misVehiculosAutorizadosIds();
-      items = items.filter((v) => ids.has(v.vehiculo_id));
-    }
+    // DH1 (03-nov-2026) — CG7 RETIRADO: un chofer/conductor nunca debe tener una
+    // pared que le impida tomar un vehículo o registrar su combustible (decisión de
+    // Xaviel, mismo criterio que el backend aplicó a iniciar_uso_vehiculo). Antes el
+    // CHOFER PRIVADO se recortaba a sus `vehiculo_autorizaciones` vigentes — con 0
+    // filas (Flota nunca llegó a autorizar a nadie), el pool quedaba VACÍO y ni
+    // siquiera podía intentarlo. `vehiculo_autorizaciones`/`misVehiculosAutorizadosIds()`
+    // se conservan solo para el registro informativo de Perfil ("Mis vehículos
+    // autorizados") y la pantalla de Flota (CJ12) — ya no filtran ningún selector.
+    const items = this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
     return { items, failed: res.failed, fromCache: res.fromCache };
   }
 

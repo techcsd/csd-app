@@ -445,12 +445,9 @@ export class ReporteSemanalPage extends GuardedWizard {
       // BL2 — solo error si falló Y no hay nada cacheado que mostrar.
       this.error.set(poolRes.failed && pool.length === 0);
       // W4 — "Tus vehículos" = asignados a mí + recepciones aún en la cola (U12).
-      // CG7 — para el chofer PRIVADO el pool ya viene recortado a sus autorizados →
-      // todos son "suyos" (aparecen bajo "Tus vehículos", no en "Resto de la flota").
+      // DH1 — el chofer PRIVADO ya no tiene el pool recortado a autorizados (CG7
+      // retirado): "los suyos" se decide igual que para cualquiera, nunca "todo el pool".
       const mios = [...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola];
-      if (this.ctx.esChoferPrivadoRestringido()) {
-        for (const v of pool) mios.push(v.vehiculo_id);
-      }
       this.misIds.set(new Set(mios));
       void this.loadFotos(pool.map((v) => v.vehiculo_id));
       // AE9 — marcar en el picker qué vehículos tienen un reporte a medio llenar.
