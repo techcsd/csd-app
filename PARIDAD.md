@@ -1262,3 +1262,67 @@ bloque "Hoy" del Inicio. Avisar OK antes de build/publish o de abrir el PR
   DE1/DE2 (documento huérfano con sugerencias + reverso + zoom) es, por
   ahora, **solo web** (donde si se da: lector de documentos server-side sin
   vehículo preseleccionado). No se construyó nada nuevo — ver HANDOFF.
+
+## DG (ronda 02-03/11/2026, PROMPT-131) — Developer/buscador/Compa flotante/Demo
+
+Ronda independiente de DF (01-nov). El padre (SGC, `feature/dg-developer-buscador-compa-demo`,
+commit `7c32ce83`, **NO mergeado a dev** todavía) ya construyó las 6 piezas web
+(DG1-DG9). Esta ronda aplica lo que corresponde al móvil según la matriz DG-00…DG-20
+del CONTEXTO-64: 3 piezas nuevas en la app, 1 ya resuelta sin tocar código, 4 **solo web**.
+
+- **DG1 (módulo Developer) — solo web.** La app no tiene Sistema/Dev notes/Monitoreo
+  de infraestructura; no hay equivalente que mover.
+- **DG2 (buscador maestro) — SÍ, versión compacta.** Lupa en la cabecera de Home →
+  pantalla completa (`/buscador`). Mismo algoritmo de coincidencia que el buscador
+  maestro de la web (`buscador-coincidencia.util.ts` portado literal: sin acentos,
+  palabras sueltas en cualquier orden, 1-2 letras de tolerancia, Damerau-Levenshtein
+  acotado) — paridad de matching exacta, solo cambia la fuente del índice: la web
+  indexa su árbol de sidebar; la app indexa `visibleHomeTiles()` (la MISMA función
+  que pinta los tiles del Home, extraída de `home.ts` para que nunca haya una
+  segunda lista — DG-08). Sin búsqueda de datos (folios/personas/obras), igual que
+  la web.
+- **DG3 (tablero "Hoy, en vivo") — solo web, pero el fix llega gratis a la app.**
+  La app NUNCA consumió `flujo`/`flota` (decisión de batería/datos, ver A6 en
+  `home.ts`): no hay mapa ni pipeline "en ruta" que corregir aquí. Pero el KPI
+  "En uso" de la tarjeta "Hoy" de Home SÍ usa la MISMA RPC que arregló el padre
+  (`sgc.tablero_vivo_resumen()`, `create or replace` aditivo — mismo nombre de
+  campo `kpis.vehiculos_en_uso`, ahora con ventana de 24h en vez de contar usos
+  abiertos de semanas atrás). Cero cambios de código: la migración `dg3-tablero-en-ruta`
+  ya corrió en dev: el número que pinta Home ya salió corregido sin tocar nada.
+- **DG4 (crear grupo en Dev notes) — solo web.** No hay Dev notes en la app.
+- **DG5 (módulo "Demo") — SÍ, construido.** El antes-solo-`/practica` ahora es un
+  módulo con tile propio en Home (🎓 Demo, visible a todos como Notas/Mensajes) y 3
+  pantallas: **Misiones** (= `/practica`, sin mover — mismo criterio que la web),
+  **Mi progreso** (`/demo/progreso`, reusa `PracticaResultadosPage` tal cual: ya
+  hacía exactamente esto) y **Escenarios** (`/demo/escenarios`, nueva: catálogo de
+  solo lectura de los datos DEMO-* — reusa la MISMA RPC `sgc.demo_catalogo()` que
+  construyó el padre para su propia pantalla "Escenarios", ya desplegada en dev).
+  5 misiones nuevas en `misiones-app.ts` (firmar conduce, solicitud de compra,
+  mantenimiento, ruta, orden de trabajo) con sus roles — **NO son las mismas 8
+  misiones nuevas de la web**: el simulador de la app es un motor de guion local
+  distinto (pasos/objetivos/trampa) del de la web (navega a la pantalla REAL y
+  captura las escrituras en memoria) — se diseñaron misiones equivalentes en el
+  motor de la app, no un port 1:1. Insignia en el tile con las misiones pendientes
+  por aprobar (best-effort, client-side). `sql-para-sgc/2026-11-03-dg5-mas-misiones-app.sql`
+  deja fechado el alta de esos 5 ids en el catálogo admin `sgc.practica_misiones`
+  (aditivo, sin FK real — paridad cosmética con la web).
+- **DG6 (Compa flotante) — SÍ, construido, con una decisión de paridad.** La web usa
+  ventana arrastrable/redimensionable (escritorio); la app usa **hoja desde abajo
+  (~78%, DG-19)** — no tiene sentido arrastrar/redimensionar en un teléfono. Ambas
+  comparten la MISMA preferencia server-side (`usuario_preferencias.compa_flotante`,
+  RPC `mis_preferencias()`/`set_mi_preferencia()`, ya desplegada en dev por el padre):
+  apagarla en el teléfono la apaga también en la web y viceversa — es una preferencia
+  de la PERSONA. `compa_flotante_recordar_posicion` (posición/tamaño de la ventana)
+  es **solo web**: la app no tiene ventana que recordar. Conversación compartida
+  real entre `/compa` y la burbuja flotante vía `CompaChatStore` (nuevo singleton,
+  extraído de `CompaPage` — antes el historial vivía en el componente y se perdía al
+  navegar; ahora es un service `providedIn:'root'`, el mismo en toda la sesión).
+- **DG7 (papelera de imágenes en Dev notes) — solo web.** No hay Dev notes en la app.
+- **DG8 (registro rápido comprime fotos) — YA RESUELTO, sin cambios.** Se verificó
+  `personal-registro.ts` (`imagenBase64()`): la app YA reduce a 1600px/JPEG 0.85
+  antes de mandar a `leer-documento-personal` — el mismo fix que el padre tuvo que
+  aplicarle a la web ya existía aquí de una ronda anterior (DB2). El mensaje "No se
+  pudo contactar el servicio" de la captura de Xaviel no existe en el código de la
+  app (`grep` sin resultados) — es del lado web.
+- **DG9 (outbox atascado / Pulso del sistema) — solo web**, y de todos modos es
+  acción manual pendiente del padre (prod), no código.

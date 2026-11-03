@@ -27,6 +27,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { fusionarEntregasPorRecibir } from '../../core/util/recepcion';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { formatFechaRelativa } from '../../core/util/fecha';
+import { PracticaService } from '../../core/practica/practica.service';
 
 // A6 — "Hoy": resumen del tablero en vivo (RPC `tablero_vivo_resumen`, sin params).
 // Esta app NO consume `flujo` ni `flota` (sin mapa ni pipeline de etapas — decisión
@@ -51,7 +52,7 @@ interface TableroVivoResumen {
   generado_en: string;
 }
 
-interface HomeTile {
+export interface HomeTile {
   modulo: string;
   icon: string;
   label: string;
@@ -68,7 +69,7 @@ interface PulsoObra {
 }
 
 // One button = one job. Gated by the same SGC module keys as the web.
-const TILES: HomeTile[] = [
+export const TILES: HomeTile[] = [
   { modulo: 'bitacora', icon: '📓', label: 'Bitácora', route: '/bitacora', tint: '#1e3a5f' },
   { modulo: 'flota', icon: '🚚', label: 'Transporte', route: '/transporte', tint: '#f97316' },
   // AY11 — Ingeniería: concentra lo de ingenieros/producción (Solicitud de movimiento,
@@ -112,6 +113,9 @@ const COMPA_TILE: HomeTile = { modulo: 'compa', icon: '🤖', label: 'Compa', ro
 // AF39 — Tareas: general (el chofer ve las tareas asignadas a él aunque no tenga
 // el módulo). El RPC mis_tareas_app acota la visibilidad.
 const TAREAS_TILE: HomeTile = { modulo: 'tareas_app', icon: '✅', label: 'Tareas', route: '/tareas', tint: '#0d9488' };
+// DG5 — "Demo": módulo GENERAL (todos, incl. choferes, como Notas): Misiones/Mi
+// progreso/Escenarios del simulador de práctica (antes solo /practica, sin tile).
+export const DEMO_TILE: HomeTile = { modulo: 'demo', icon: '🎓', label: 'Demo', route: '/demo', tint: '#f97316' };
 // AH15 — consulta de "Compras del proyecto" para roles con acceso a proyectos
 // (admin/proyectos/compras/obra — gerente de producción la aprovecha).
 const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label: 'Compras de obra', route: '/compras-proyecto', tint: '#b45309' };
@@ -156,7 +160,7 @@ const GROUPS: HomeGroup[] = [
   { key: 'inventario', label: 'Inventario', icon: '📦', color: '#16a34a',
     modulos: ['inventario'] },
   { key: 'general', label: 'General', icon: '💬', color: '#6d28d9',
-    modulos: ['tareas_app', 'mensajes', 'notas', 'compa'] },
+    modulos: ['tareas_app', 'mensajes', 'notas', 'compa', 'demo'] },
   { key: 'administracion', label: 'Administración y sistema', icon: '⚙️', color: '#475569',
     modulos: ['admin', 'rrhh', 'tecnologia', 'sistema'] },
 ];
@@ -167,6 +171,100 @@ const GRUPO_OTROS: HomeGroup = { key: 'otros', label: 'Otros', icon: '🗂️', 
 interface HomeGrupoRender extends HomeGroup {
   tiles: HomeTile[];
   badge: number | null;
+}
+
+// BH2 — módulos cuyo tile se retira del home de quien tiene `ingenieria` (viven en el
+// hub /ingenieria). Coincide con el set del mock: Bitácora, Requisición, Mi obra,
+// Por recibir, Personal de obra, Compras de obra. (Proyectos, Transporte e Inventario
+// se QUEDAN en el home; los generales también.)
+const MOVED_TO_INGENIERIA = new Set([
+  'bitacora', 'obra', 'compras', 'por_confirmar', 'personal_obra', 'compras_proyecto',
+]);
+
+/**
+ * Gating de un tile de trabajo por su módulo — con las excepciones que ya no
+ * dependen del módulo padre completo (mismo criterio que sus route guards):
+ * - obra (AG16): el capataz no tiene módulo padre, solo permisos `obra.*`.
+ * - compras (AY3): el rol Ingenieros origina requisiciones por `compras.solicitudes`.
+ * - proyectos (AY4): el rol Ingenieros ve sus obras por `proyectos.obras`.
+ * Regla AU8/AY5: el menú y el guard leen la MISMA matriz (nada visible que dé 403).
+ */
+function esTileVisible(t: HomeTile, ctx: UserContextService): boolean {
+  switch (t.modulo) {
+    case 'obra':
+      return ctx.puedeVerObra();
+    case 'compras':
+      return ctx.hasModulo('compras') || ctx.puedeVerSubmodulo('compras.solicitudes');
+    case 'proyectos':
+      return ctx.hasModulo('proyectos') || ctx.puedeVerSubmodulo('proyectos.obras');
+    default:
+      return ctx.hasModulo(t.modulo);
+  }
+}
+
+/**
+ * DG2 — todos los tiles de Home visibles para `ctx` (gateados, SIN ordenar — el
+ * orden por drag&drop del admin es presentación, ver `aplicarOrden`). Función
+ * PURA de módulo (no depende de un componente) para que el buscador compacto
+ * (DG2) y el Home consuman el MISMO índice de navegación gateado — una sola
+ * fuente de verdad, nunca una segunda lista que se desalinee (DG-08).
+ */
+export function visibleHomeTiles(ctx: UserContextService): HomeTile[] {
+  // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
+  // AD6 — el chofer NO ve Inventario: sus funciones de inventario viven ahora en
+  // Transporte (Recibir mercancía / Compra en ferretería).
+  const work = TILES.filter((t) => esTileVisible(t, ctx) && !(t.modulo === 'inventario' && ctx.esChofer()));
+
+  // AC4 — Notas es general (todos, incl. choferes). AF39 — Tareas también. AJ5 —
+  // Mensajes también es general. DG5 — Demo también (práctica, para todos).
+  const extra: HomeTile[] = [MENSAJES_TILE, COMPA_TILE, NOTAS_TILE, TAREAS_TILE, DEMO_TILE];
+  // AH15 — Compras de obra: admin o roles con acceso a proyectos/compras/obra.
+  if (ctx.esAdmin() || ctx.hasModulo('proyectos') || ctx.hasModulo('compras') || ctx.puedeVerObra()) {
+    extra.push(COMPRAS_TILE);
+  }
+  // BH8 — Solicitud de compra a mano: el equipo de Compras (Raykler). Donde vive
+  // quien la necesita; el ingeniero origina por Requisición, no por aquí.
+  if (ctx.esAdmin() || ctx.hasModulo('compras')) {
+    extra.push(SOLCOMPRA_TILE);
+  }
+  // AR1 — Personal de obra: quienes pueden registrar/ver (matriz). Los ingenieros/
+  // capataces entran por su obra (puedeVerObra); la RLS acota los datos.
+  if (
+    ctx.esAdmin() ||
+    ctx.hasModulo('proyectos') ||
+    ctx.hasModulo('rrhh') ||
+    ctx.hasModulo('direccion') ||
+    ctx.puedeVerSubmodulo('proyectos.personal') ||
+    ctx.puedeVerObra()
+  ) {
+    extra.push(PERSONAL_TILE);
+  }
+  // AL1 — "Sistema" (antes Tecnología): transversal, todos menos chofer.
+  if (!ctx.esChofer()) {
+    extra.push(SISTEMA_TILE);
+  }
+  // CO13 — Legal: módulo `legal` (Sonia/abogado, dirección, admin).
+  if (ctx.esAdmin() || ctx.hasModulo('legal')) {
+    extra.push(LEGAL_TILE);
+  }
+  // CO12/CO13 — Documentos: módulo `documentos` o `legal` (quien tiene Legal
+  // también necesita generar/usar documentos — contratos salen de una plantilla).
+  if (ctx.esAdmin() || ctx.hasModulo('documentos') || ctx.hasModulo('legal')) {
+    extra.push(DOCUMENTOS_TILE);
+  }
+  // CP8 — Reuniones: módulo propio (ver sql/2026-10-16-cp8-reuniones.sql §3).
+  if (ctx.esAdmin() || ctx.hasModulo('reuniones')) {
+    extra.push(REUNIONES_TILE);
+  }
+  // AL8/AS7 — entrada permanente al confirmador sin módulo flota (los de flota la
+  // tienen en el hub de Conduces). Se muestra SOLO a inventario/obra.
+  if (!ctx.hasModulo('flota') && (ctx.hasModulo('inventario') || ctx.puedeVerObra())) {
+    extra.push(CONFIRMAR_TILE);
+  }
+  // BH2 — TRASLADO PURO: quien tiene el módulo `ingenieria` accede a su trabajo
+  // desde el hub /ingenieria, así que esos tiles se RETIRAN de su home.
+  const all = [...work, ...extra];
+  return ctx.hasModulo('ingenieria') ? all.filter((t) => !MOVED_TO_INGENIERIA.has(t.modulo)) : all;
 }
 
 @Component({
@@ -193,6 +291,7 @@ export class HomePage implements OnDestroy {
   private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private supabase = inject(SupabaseService);
+  private practica = inject(PracticaService);
   avisosNoLeidos = this.notificaciones.noLeidas;
 
   // AF38 — orden de módulos configurable por el admin (drag & drop tipo launcher).
@@ -252,6 +351,8 @@ export class HomePage implements OnDestroy {
   // batería/datos para algo que solo cambia una vez al día por obra).
   pulsoObrasVisible = computed(() => this.ctx.hasModulo('proyectos') || this.ctx.esFlotaElevado());
   pulsoObras = signal<PulsoObra[] | null>(null);
+  // DG5 — insignia del tile "Demo": misiones pendientes por aprobar (del rol propio).
+  demoPendientes = signal<number | null>(null);
 
   private hoyInterval: ReturnType<typeof setInterval> | null = null;
   private hoyResumeHandle: PluginListenerHandle | null = null;
@@ -268,113 +369,16 @@ export class HomePage implements OnDestroy {
     bitacora: '📓',
   };
 
-  // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
-  // Tecnología se excluye de aquí porque NO es un módulo de trabajo (ver `tiles`).
-  // AD6 — el chofer NO ve Inventario: sus funciones de inventario viven ahora en
-  // Transporte (Recibir mercancía / Compra en ferretería). El acceso temporal al
-  // módulo se revierte en SGC tras publicar esta versión; aquí ya lo ocultamos.
-  private workTiles = computed(() =>
-    TILES.filter((t) => this.tileVisible(t) && !(t.modulo === 'inventario' && this.ctx.esChofer())),
-  );
-
-  /**
-   * Gating de un tile de trabajo por su módulo — con las excepciones que ya no
-   * dependen del módulo padre completo (mismo criterio que sus route guards):
-   * - obra (AG16): el capataz no tiene módulo padre, solo permisos `obra.*`.
-   * - compras (AY3): el rol Ingenieros origina requisiciones por `compras.solicitudes`.
-   * - proyectos (AY4): el rol Ingenieros ve sus obras por `proyectos.obras`.
-   * Regla AU8/AY5: el menú y el guard leen la MISMA matriz (nada visible que dé 403).
-   */
-  private tileVisible(t: HomeTile): boolean {
-    switch (t.modulo) {
-      case 'obra':
-        return this.ctx.puedeVerObra();
-      case 'compras':
-        return this.ctx.hasModulo('compras') || this.ctx.puedeVerSubmodulo('compras.solicitudes');
-      case 'proyectos':
-        return this.ctx.hasModulo('proyectos') || this.ctx.puedeVerSubmodulo('proyectos.obras');
-      default:
-        return this.ctx.hasModulo(t.modulo);
-    }
-  }
-
   // AC2 — Tecnología es pública para TODOS excepto el rol chofer. No se gatea por
   // el módulo 'tecnologia' (que solo tienen admin/tecnología) sino por !esChofer,
   // así lo ven también dirección/gerencia/jefes/ingenieros. El contenido
   // restringido (Versiones/Errores) sigue gateado por rol dentro de la página.
   // El contenido transversal (Dudas/guías, visitar web) está en el footer para
   // todos, incluidos los choferes.
-  tiles = computed(() => {
-    const work = this.workTiles();
-    // AC4 — Notas es general (todos, incl. choferes). AF39 — Tareas también.
-    // AJ5 — Mensajes también es general. Tecnología, todos menos chofer.
-    const extra: HomeTile[] = [MENSAJES_TILE, COMPA_TILE, NOTAS_TILE, TAREAS_TILE];
-    // AH15 — Compras de obra: admin o roles con acceso a proyectos/compras/obra.
-    if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
-      extra.push(COMPRAS_TILE);
-    }
-    // BH8 — Solicitud de compra a mano: el equipo de Compras (Raykler). Donde vive
-    // quien la necesita; el ingeniero origina por Requisición, no por aquí.
-    if (this.ctx.esAdmin() || this.ctx.hasModulo('compras')) {
-      extra.push(SOLCOMPRA_TILE);
-    }
-    // AR1 — Personal de obra: quienes pueden registrar/ver (matriz). Los ingenieros/
-    // capataces entran por su obra (puedeVerObra); la RLS acota los datos.
-    if (
-      this.ctx.esAdmin() ||
-      this.ctx.hasModulo('proyectos') ||
-      this.ctx.hasModulo('rrhh') ||
-      this.ctx.hasModulo('direccion') ||
-      this.ctx.puedeVerSubmodulo('proyectos.personal') ||
-      this.ctx.puedeVerObra()
-    ) {
-      extra.push(PERSONAL_TILE);
-    }
-    // AL1 — "Sistema" (antes Tecnología): transversal, todos menos chofer.
-    if (!this.ctx.esChofer()) {
-      extra.push(SISTEMA_TILE);
-    }
-    // CO13 — Legal: módulo `legal` (Sonia/abogado, dirección, admin).
-    if (this.ctx.esAdmin() || this.ctx.hasModulo('legal')) {
-      extra.push(LEGAL_TILE);
-    }
-    // CO12/CO13 — Documentos: módulo `documentos` o `legal` (quien tiene Legal
-    // también necesita generar/usar documentos — contratos salen de una plantilla).
-    if (this.ctx.esAdmin() || this.ctx.hasModulo('documentos') || this.ctx.hasModulo('legal')) {
-      extra.push(DOCUMENTOS_TILE);
-    }
-    // CP8 — Reuniones: módulo propio (ver sql/2026-10-16-cp8-reuniones.sql §3).
-    if (this.ctx.esAdmin() || this.ctx.hasModulo('reuniones')) {
-      extra.push(REUNIONES_TILE);
-    }
-    // AL8/AS7 — entrada permanente al confirmador sin módulo flota (los de flota la
-    // tienen en el hub de Conduces). Se muestra SOLO a inventario/obra. Antes bastaba
-    // con `porConfirmar()>0`, lo que colaba el tile en el home de un usuario SIN rol
-    // que resultara ser receptor: ahora ese caso se atiende con la BANNER accionable
-    // ("Tienes N por confirmar") de arriba — el home queda limpio.
-    if (!this.ctx.hasModulo('flota') && (this.ctx.hasModulo('inventario') || this.ctx.puedeVerObra())) {
-      extra.push(CONFIRMAR_TILE);
-    }
-    // BH2 — TRASLADO PURO (aprobado por Xaviel, con mock): quien tiene el módulo
-    // `ingenieria` accede a su trabajo desde el hub /ingenieria, así que esos tiles se
-    // RETIRAN de su home (queda enfocado: Ingeniería + Proyectos + generales). Para
-    // TODOS los demás (p. ej. un capataz con bitácora pero SIN ingeniería) el home NO
-    // cambia — así nadie pierde acceso a un módulo que no está en su hub. El "Ingeniería"
-    // tile y el hub llevan cada uno su propio gate por ruta (regla BH1).
-    const all = [...work, ...extra];
-    const filtrados = this.ctx.hasModulo('ingenieria')
-      ? all.filter((t) => !HomePage.MOVED_TO_INGENIERIA.has(t.modulo))
-      : all;
-    return this.aplicarOrden(filtrados); // AF38
-  });
-
-  // BH2 — módulos cuyo tile se retira del home de quien tiene `ingenieria` (viven en el
-  // hub /ingenieria). Coincide con el set del mock: Bitácora, Requisición, Mi obra,
-  // Por recibir, Personal de obra, Compras de obra. (Proyectos, Transporte e Inventario
-  // se QUEDAN en el home; los generales también.)
-  private static readonly MOVED_TO_INGENIERIA = new Set([
-    'bitacora', 'obra', 'compras', 'por_confirmar', 'personal_obra', 'compras_proyecto',
-  ]);
+  // DG2 — extraída a `visibleHomeTiles` (función pura, módulo) para que el
+  // buscador compacto indexe EXACTAMENTE el mismo conjunto gateado, sin una
+  // segunda lista (DG-08): una sola fuente de verdad para Home y el buscador.
+  tiles = computed(() => this.aplicarOrden(visibleHomeTiles(this.ctx)));
 
   /**
    * BC5 — reparte los tiles visibles (ya gateados y ordenados) en los grupos por
@@ -490,6 +494,7 @@ export class HomePage implements OnDestroy {
       this.iniciarPollingHoy();
     }
     void this.cargarPulsoObras();
+    void this.cargarDemoPendientes();
     if (Capacitor.isNativePlatform()) {
       void CapApp.addListener('pause', () => this.detenerPollingHoy()).then((h) => (this.hoyPauseHandle = h));
       void CapApp.addListener('resume', () => {
@@ -622,6 +627,20 @@ export class HomePage implements OnDestroy {
     }
   }
 
+  /** DG5 — insignia del tile "Demo": cuántas misiones (de las suyas por rol) le
+   *  quedan por aprobar. Best-effort: si falla, el tile queda sin número. */
+  private async cargarDemoPendientes(): Promise<void> {
+    try {
+      const visibles = this.practica.misionesVisibles();
+      const intentos = await this.practica.misResultados();
+      const aprobadas = new Set(intentos.filter((i) => i.aprobada).map((i) => i.mision_id));
+      const pendientes = visibles.filter((m) => !aprobadas.has(m.id)).length;
+      this.demoPendientes.set(pendientes || null);
+    } catch {
+      /* best-effort — el tile simplemente queda sin insignia esta vez */
+    }
+  }
+
   private iniciarPollingHoy(): void {
     this.detenerPollingHoy();
     this.hoyInterval = setInterval(() => void this.cargarHoy(), HomePage.HOY_POLL_MS);
@@ -673,6 +692,11 @@ export class HomePage implements OnDestroy {
     void this.router.navigate(['/avisos']);
   }
 
+  // DG2 — lupa de la cabecera → buscador compacto (pantalla completa).
+  buscar(): void {
+    void this.router.navigate(['/buscador']);
+  }
+
   /** Q2/DE3 — badge del tile = pendientes de aprobación del servidor, por módulo
    *  (`badges_modulos_app`, por usuario). Los borradores locales sin enviar YA NO
    *  se suman aquí: viven en su propia fila "Pendiente de terminar"/`/en-proceso`
@@ -686,6 +710,7 @@ export class HomePage implements OnDestroy {
     // solo visibles entrando al hub de Conduces; el deep-link del push aterriza
     // aquí, no en Conduces, así que el tile debe mostrarlo sin tener que entrar).
     if (modulo === 'flota') return (this.badgeCounts()['flota'] ?? 0) + this.transferenciasPendientes() || null;
+    if (modulo === 'demo') return this.demoPendientes(); // DG5 — misiones pendientes
     return this.badgeCounts()[modulo] || null;
   }
 

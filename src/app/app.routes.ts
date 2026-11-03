@@ -54,6 +54,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
   },
   {
+    // DG2 — buscador compacto (lupa en la cabecera de Home → pantalla completa).
+    // General para todo usuario autenticado (como Notas/Práctica): sin moduleGuard.
+    path: 'buscador',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/buscador/buscador').then((m) => m.BuscadorPage),
+  },
+  {
     path: 'bitacora',
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
     loadComponent: () => import('./pages/bitacora/bitacora').then((m) => m.BitacoraPage),
@@ -982,14 +989,35 @@ export const routes: Routes = [
   },
   {
     // CM7 (F6a) — modo práctica (simulador local; lo ve todo usuario, no obligatorio).
+    // DG5 — esta ruta sigue viva tal cual: es la pantalla "Misiones" del módulo
+    // Demo (ver home.ts, tile DEMO_TILE). No se mueve ni se renombra (paridad web).
     path: 'practica',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/practica/practica').then((m) => m.PracticaPage),
   },
   {
+    // DG5 — alias viejo de "Mi progreso" (se conserva para deep-links ya enviados).
     path: 'practica/resultados',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/practica/practica-resultados').then((m) => m.PracticaResultadosPage),
+  },
+  {
+    // DG5 — módulo Demo: el tile apunta a /practica = "Misiones" (paridad con la web).
+    path: 'demo',
+    redirectTo: 'practica',
+    pathMatch: 'full',
+  },
+  {
+    // DG5 — módulo Demo: "Mi progreso" (canónica; reusa el mismo componente que el alias).
+    path: 'demo/progreso',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/practica/practica-resultados').then((m) => m.PracticaResultadosPage),
+  },
+  {
+    // DG5 — módulo Demo: "Escenarios" (catálogo DEMO-* de solo lectura).
+    path: 'demo/escenarios',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/demo/escenarios/demo-escenarios').then((m) => m.DemoEscenariosPage),
   },
   {
     path: 'admin',

@@ -43,18 +43,20 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
 | pages/bitacora/parte | 204 | 4 | 98% | 0% |  |
 | pages/borrador | 13 | 0 | 100% | 0% |  |
+| pages/buscador | 7 | 0 | 100% | 0% |  |
 | pages/compa | 22 | 0 | 100% | 0% |  |
 | pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
 | pages/compa/compartidas | 6 | 0 | 100% | 0% |  |
 | pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
 | pages/compras/solicitud-compra | 32 | 1 | 97% | 3% |  |
+| pages/demo/escenarios | 8 | 0 | 100% | 0% |  |
 | pages/documentos | 6 | 0 | 50% | 0% |  |
 | pages/documentos/generar | 15 | 0 | 33% | 7% |  |
 | pages/documentos/historial | 7 | 0 | 43% | 0% |  |
 | pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 1 | 0% | 0% |  |
-| pages/home | 28 | 0 | 100% | 7% | ✅ |
+| pages/home | 29 | 0 | 100% | 7% | ✅ |
 | pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
@@ -103,7 +105,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 4% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 73 | 0 | 100% | 1% | ✅ |
+| pages/perfil | 75 | 0 | 100% | 1% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/claude | 19 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
@@ -197,8 +199,10 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/components/aceptacion-politicas | 9 | 0 | 56% | 0% |  |
 | shared/components/alarma-host | 4 | 0 | 100% | 0% |  |
 | shared/components/bienvenida | 26 | 0 | 100% | 100% |  |
+| shared/components/compa-flotante | 10 | 0 | 100% | 10% |  |
 | shared/components/consentimiento-ia | 8 | 2 | 20% | 10% |  |
 | shared/components/consentimiento-ubicacion | 4 | 0 | 25% | 0% |  |
+| shared/components/demo-tabs | 3 | 0 | 100% | 0% |  |
 | shared/components/generar-acceso | 11 | 0 | 100% | 18% |  |
 | shared/components/gps-gate-banner | 2 | 0 | 100% | 0% |  |
 | shared/components/module-placeholder | 2 | 0 | 100% | 0% |  |

@@ -1,0 +1,54 @@
+<div class="screen busc">
+  <header class="busc__header">
+    <button type="button" class="busc__back" (click)="back()" aria-label="Atrás">←</button>
+    <div class="busc__field-wrap">
+      <span class="busc__field-icon" aria-hidden="true">🔍</span><!-- tropes-allow: lupa = mismo icono del botón de Home que abre esta pantalla -->
+      <input
+        #campo
+        class="busc__field"
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="onQueryChange($event)"
+        [placeholder]="'Buscar pantalla o módulo…' | t"
+        [attr.aria-label]="'Buscar' | t"
+      />
+    </div>
+  </header>
+
+  <div class="screen__body">
+    @if (!hayTexto()) {
+      @if (recientes().length) {
+        <h2 class="busc__sec">{{ 'Recientes' | t }}</h2>
+        <ul class="busc__list" appStagger>
+          @for (f of recientes(); track f.entrada.id) {
+            <li>
+              <button type="button" class="busc__row" appTapScale (click)="elegir(f)">
+                <span class="busc__row-txt">{{ f.entrada.titulo }}</span>
+                <span class="busc__row-go">›</span>
+              </button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-empty-state icon="🔍" [title]="'Busca una pantalla' | t" [message]="'Escribe el nombre de un módulo o pantalla, por ejemplo «combustible» o «conduces».' | t" /><!-- tropes-allow: icono de empty-state (patrón establecido en todo el proyecto) -->
+      }
+    } @else if (sinResultados()) {
+      <app-empty-state icon="🔍" [title]="'No encontré eso' | t" [message]="'Prueba con otra palabra o revisa cómo lo escribiste.' | t" /><!-- tropes-allow: icono de empty-state (patrón establecido en todo el proyecto) -->
+    } @else {
+      <ul class="busc__list" appStagger>
+        @for (f of filas(); track f.entrada.id) {
+          <li>
+            <button type="button" class="busc__row" appTapScale (click)="elegir(f)">
+              <span class="busc__row-txt">
+                @for (seg of segmentos(f); track $index) {
+                  @if (seg.marcado) { <mark>{{ seg.texto }}</mark> } @else { {{ seg.texto }} }
+                }
+              </span>
+              <span class="busc__row-go">›</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

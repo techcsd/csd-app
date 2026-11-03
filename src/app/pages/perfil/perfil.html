@@ -224,6 +224,11 @@
       {{ agrupado() ? ('✅ ' + ('Módulos agrupados por sección' | t)) : ('🗂️ ' + ('Agrupar módulos por sección' | t)) }}
     </button>
 
+    <!-- DG6 — burbuja de Compa accesible desde cualquier pantalla (on por defecto) -->
+    <button type="button" class="btn-ghost perfil__btn" [disabled]="compaFlotanteBusy()" (click)="toggleCompaFlotante()">
+      {{ compaFlotanteOn() ? ('✅ ' + ('Compa flotante activado' | t)) : ('🤖 ' + ('Activar Compa flotante' | t)) }}<!-- tropes-allow: mismo patrón ✅/icono de los demás toggles de esta pantalla -->
+    </button>
+
     <!-- BF4 — preferencias de avisos (silenciar los informativos; los operativos no se tocan) -->
     <button type="button" class="btn-ghost perfil__btn" (click)="preferenciasAvisos()">
       🔔 {{ 'Preferencias de avisos' | t }}
