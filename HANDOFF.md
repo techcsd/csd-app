@@ -1,6 +1,25 @@
 # HANDOFF — CSD App
 
-## 🟡 03-nov-2026 — Ronda DG (PROMPT 131, app-side) — sin versión nueva todavía, EN WORKTREE
+## 🟢 03-nov-2026 — Ronda DG (PROMPT 131, app-side) — v2.64.0 EN PRODUCCIÓN (cierre completo)
+
+**Cierre (dev → prod, misma sesión, con el OK explícito de Xaviel en cada paso):**
+1. Commits `ba54dc3` (feat, F0-F5) + `6e691a0` (chore, bump 2.63.0→2.64.0 + CAMBIOS_CURADOS/TITULO) pusheados a `origin/feature/dg-developer-buscador-compa-demo` y fast-forwardeados directo a `origin/dev`.
+2. `npm run apk -- --env dev` + `apk:publish -- --env dev` → APK firmado (certificado `3c5316d8…5065`, el de siempre), subido a `app-releases` (dev), registrado en `sgc.app_versiones` (dev) vía `registrar_version`. **Gotcha repetido (ya documentado en la ronda DF):** `android/keystore.properties` (gitignorado) no estaba en el worktree nuevo — primer intento de `npm run apk` produjo un APK sin firmar; se copió a mano desde `csd-app/android/keystore.properties` y el segundo intento salió firmado.
+3. `qa/release-2.64.0.md` (commit `12f080f`) con el OK real de Xaviel ("i test the app bro... i already test it... i give u my OK", 03-nov-2026).
+4. `release-check.mjs --version 2.64.0` → **4/4 PASS**.
+5. PR `dev → main` (#15, con la plantilla del repo) con CI (`build-prod` + Vercel preview) en verde → **merge `b9a0161`** (Xaviel confirmó explícitamente el merge Y el build/publish a prod, nombrando "prod" tras pedírselo así de claro).
+6. `npm run apk -- --env prod --yes` → `npm run apk:publish -- --env prod --yes` → `release-check.mjs` 4/4 de nuevo (gate automático), APK firmado subido a `app-releases` (**prod**), registrado en `sgc.app_versiones` (prod) vía `registrar_version`, `apk_url` actualizado.
+7. **Gotcha de sesión (CQ6):** un `packed-refs.lock` stale en el `.git` compartido de `dev2\csd-app` (la raíz, compartida por los 7 worktrees) bloqueó un push a `dev`; se confirmó que ningún proceso git seguía corriendo y Xaviel autorizó borrarlo antes de tocarlo.
+8. **"Publicar"/"forzar mínima" NO se tocó a propósito** — paso aparte del admin en SGC.
+9. `main` en GitHub → Vercel debería desplegar `app.sgcconstructorasd.com` (hook automático en push a `main`) — no verificado manualmente.
+
+**Pendiente real, no resoluble desde aquí:** que el padre (SGC) mergee su propia rama DG (`feature/dg-developer-buscador-compa-demo` del repo SGC, commit `7c32ce83`, **todavía sin mergear a su `dev`**) y aplique `sql-para-sgc/2026-11-03-dg5-mas-misiones-app.sql` (dev y luego prod) — sin eso, las 5 misiones nuevas de la app funcionan igual (no tienen FK real) pero no aparecen en el catálogo admin del SGC.
+
+**En dev:** v2.64.0 publicada (APK + historial). **En prod:** v2.64.0 publicada (APK + historial), `main` actualizada.
+
+---
+
+## 🟡 (histórico) 03-nov-2026 — Ronda DG (PROMPT 131, app-side) — sin versión nueva todavía, EN WORKTREE
 
 **Worktree de trabajo:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dg`, rama `feature/dg-developer-buscador-compa-demo` (desde `origin/dev` @ `67c01d7`, el cierre de la ronda DF). **Sin commit todavía** — todo queda en el working tree a la espera de que Xaviel revise (regla de la casa del PROMPT 131: nada de commit/push/deploy sin avisar primero).
 
