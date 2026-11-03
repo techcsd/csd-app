@@ -1,5 +1,19 @@
 # HANDOFF — CSD App
 
+## 🟢 03-nov-2026 — Hotfix autorización vehículo chofer privado — v2.64.1 EN PRODUCCIÓN
+
+**Worktree:** `csd-app-fix-auth`, rama `fix/autorizacion-vehiculo-chofer-privado`. PR #16 merged `2eda06c`.
+
+Bug real: Felix Manuel Mateo Sanchez (chofer_privado) bloqueado en "Comenzar a usar" con "Este vehículo no está autorizado para ti." El padre (SGC) ya había quitado ese gate de `iniciar_uso_vehiculo` (migración `dh1`, decisión de Xaviel: "un chofer/conductor nunca debe tener una pared que le impida tomar un vehículo o registrar su combustible"). Verificado leyendo la migración real (no solo el mensaje relayado): el lado app tenía un bug más severo — el pool compartido de vehículos (`VehiculosService.getVehiculosDisponiblesDetailed`, única fuente de los selectores de uso/combustible/reporte semanal) recortaba a SOLO los vehículos en `vehiculo_autorizaciones`, y los 4 choferes privados reales tienen 0 filas ahí → picker vacío, ni con el fix de backend podían avanzar.
+
+Fix (3 archivos): quitado el recorte en `vehiculos.service.ts` + los atajos que asumían el pool pre-filtrado en `vehiculo-picker.ts`/`reporte-semanal.ts` (si no, habrían etiquetado TODA la flota activa como "Tus vehículos" para cualquier chofer privado). `vehiculo_autorizaciones` se conserva intacta (registro de Perfil + pantalla Flota CJ12, CJ11/CW6/CW7 sin tocar — son conceptos distintos: restricción de ROL, no de vehículo).
+
+**Hotfix sin pausa de confirmación** (Xaviel: "this is a hot fix... do it fast and without stopping to ask confirmations") — dev→main→prod de corrido en la misma sesión: v2.64.0→2.64.1, APK dev+prod firmados y publicados, `release-check` 4/4 en ambos. **Sin prueba de teléfono real** (ver `qa/release-2.64.1.md` — verificación por código + consulta directa a sgc-dev en su lugar, autorizado explícitamente para este caso).
+
+**En dev:** v2.64.1 publicada. **En prod:** v2.64.1 publicada.
+
+---
+
 ## 🟢 03-nov-2026 — Ronda DG (PROMPT 131, app-side) — v2.64.0 EN PRODUCCIÓN (cierre completo)
 
 **Cierre (dev → prod, misma sesión, con el OK explícito de Xaviel en cada paso):**
