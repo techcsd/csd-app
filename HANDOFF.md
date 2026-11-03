@@ -8,7 +8,7 @@ Bug real: Felix Manuel Mateo Sanchez (chofer_privado) bloqueado en "Comenzar a u
 
 Fix (3 archivos): quitado el recorte en `vehiculos.service.ts` + los atajos que asumían el pool pre-filtrado en `vehiculo-picker.ts`/`reporte-semanal.ts` (si no, habrían etiquetado TODA la flota activa como "Tus vehículos" para cualquier chofer privado). `vehiculo_autorizaciones` se conserva intacta (registro de Perfil + pantalla Flota CJ12, CJ11/CW6/CW7 sin tocar — son conceptos distintos: restricción de ROL, no de vehículo).
 
-**Hotfix sin pausa de confirmación** (Xaviel: "this is a hot fix... do it fast and without stopping to ask confirmations") — dev→main→prod de corrido en la misma sesión: v2.64.0→2.64.1, APK dev+prod firmados y publicados, `release-check` 4/4 en ambos. **Sin prueba de teléfono real** (ver `qa/release-2.64.1.md` — verificación por código + consulta directa a sgc-dev en su lugar, autorizado explícitamente para este caso).
+**Hotfix sin pausa de confirmación** (Xaviel: "this is a hot fix... do it fast and without stopping to ask confirmations") — dev→main→prod de corrido en la misma sesión: v2.64.0→2.64.1, APK dev+prod firmados y publicados, `release-check` 4/4 en ambos. Xaviel probó la actualización in-app en su teléfono real y confirmó ("i tested it") — ver `qa/release-2.64.1.md`.
 
 **En dev:** v2.64.1 publicada. **En prod:** v2.64.1 publicada.
 
