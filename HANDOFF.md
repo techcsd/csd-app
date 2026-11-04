@@ -1,8 +1,10 @@
 # HANDOFF — CSD App
 
-## 🟡 04-nov-2026 — Ronda DI #2 (PROMPT 135, app-side) v2.66.0 — EN WORKTREE, SIN COMMIT
+## 🟢 04-nov-2026 — Ronda DI #2 (PROMPT 135, app-side) v2.66.0 — EN PRODUCCIÓN (cierre completo)
 
-**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di`, rama `feature/di-ronda-03nov-2-app` (desde `origin/dev` @ `33edb2a` = v2.65.0, ronda DH ya en producción). **Nada commiteado ni pusheado** (instrucción explícita del prompt: avisar antes). `npm run build` (prebuild completo, guards incl. `verify-no-ai-tropes`) **verde**; `npm test` 63/63 verdes. Contraparte web: PROMPT 134 (SGC) **ya está en producción** (`SGC-di`, v1.210.0, mergeado a `main`) — el backend que esta ronda consume (edges + RPCs de cupo + columnas nuevas) ya existe en prod, verificado contra el HANDOFF del SGC (no re-verificado por SQL directo, se confió en su registro de ronda cerrada).
+**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di`, rama `feature/di-ronda-03nov-2-app` (desde `origin/dev` @ `33edb2a` = v2.65.0, ronda DH ya en producción). Flujo completo: push → merge directo a `dev` (sin PR, convención de este repo para feature→dev) → APK dev v2.66.0 build+publish (`qa/release-2.66.0.md`, Xaviel confirmó "ok, do it" tras publicar) → `release-check.mjs` 4/4 PASS → PR [#19](https://github.com/techcsd/csd-app/pull/19) `dev → main` (CI `build-prod` verde) → merge → `npm run apk -- --env prod` + `npm run apk:publish -- --env prod` (regla 18 verificó que 2.66.0 ya existía en dev; release-check volvió a correr solo, 4/4 verde). **v2.66.0 publicada en prod** — `publicada`/`minima` quedaron en `false` en ambos entornos (verificado por fila; nadie es forzado a actualizar, es una publicación normal). `npm run build` (prebuild completo, guards incl. `verify-no-ai-tropes`) **verde** en los 3 puntos (dev worktree, dev mergeado, main mergeado); `npm test` 63/63 verdes. Contraparte web: PROMPT 134 (SGC) **ya estaba en producción** (`SGC-di`, v1.210.0) antes de que esta ronda empezara — el backend que esta ronda consume (edges + RPCs de cupo + columnas nuevas) ya existía en prod, verificado contra el HANDOFF del SGC (no re-verificado por SQL directo, se confió en su registro de ronda cerrada).
+
+**En dev:** v2.66.0. **En prod:** v2.66.0 — APK: `https://jeeqhgccqefbqilntcpu.supabase.co/storage/v1/object/public/app-releases/csd-app-2.66.0.apk`.
 
 ### F0 — Verificación (corrigió 2 supuestos del prompt)
 - **Versión de partida:** el prompt asumía `origin/dev` en 2.64.0; en realidad ya estaba en **2.65.0** (ronda DH, ya en prod) al momento de empezar. Por eso esta ronda bump a **2.66.0**, no 2.65.0 como decía el prompt (mismo gotcha que rondas anteriores — CA13: "docs decían X, otra ronda ya se lo había llevado").
@@ -47,12 +49,13 @@ El guard de diseño (congela emoji-como-icono por archivo+texto exacto, falla so
 3. KPI de Pagos de la semana (conteo pendientes/semana) quedó fuera — no era trivial sin una llamada nueva al servidor; revisar si vale la pena con el padre.
 
 ### Pendiente — Xaviel únicamente
-1. **Probar en dev** una vez se abra PR y se mergee `feature/di-ronda-03nov-2-app → dev`: modo rápido con un recibo y un tablero reales (incluida una aguja analógica de nivel de gasolina), la decisión de diferencias con 1000 vs 4000, pedir cupo, uso de vehículo leyendo el tablero.
-2. Aprobar o ajustar boards DI1/DI3/DI4/DI5/DI7 (lienzo `https://claude.ai/artifact/SUX68yer4hrM8ujFyndc5o`) antes de la pasada de CSS (F8).
-3. OK para `npm run apk -- --env dev` + publicar, y después el flujo normal dev→main cuando confirme en su teléfono.
+1. ✅ Probó la actualización in-app desde 2.65.0 en su teléfono real ("ok, do it", 04-nov-2026).
+2. ✅ Autorizó mergear PR #19 (`dev → main`) y publicar en prod.
+3. **Aprobar o ajustar boards DI1/DI3/DI4/DI5/DI7** (lienzo `https://claude.ai/artifact/SUX68yer4hrM8ujFyndc5o`) antes de la pasada de CSS (F8) — único pendiente real de esta ronda.
+4. Si quiere forzar la actualización a todos (`minima=true`) o marcar `publicada=true` en algún entorno, es un paso de admin aparte (no se tocó — quedó en `false` en ambos).
 
 ### Verificar al retomar
-- `cd "C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di" && git status --short` — debe mostrar los archivos de combustible/uso-vehiculo/cupo/ingenieria/molde-esquema-visor, nada más.
+- `cd "C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di" && git log --oneline -5` — debe mostrar los commits de la ronda DI ya en `dev`/`main` (feature branch mergeada, PR #19 cerrado).
 - `npm run build && npm test` — deben seguir verdes, versión 2.66.0.
 - `scripts/release-apk.mjs`: `TITULO`/`CAMBIOS_CURADOS` ya curados para esta ronda — no tocar hasta la próxima.
 
