@@ -16,6 +16,18 @@
       <div class="pg-band pg-band--err">{{ 'No se pudieron cargar las semanas de pago.' | t }}</div>
       <button type="button" class="pg-retry" (click)="cargar()">{{ 'Reintentar' | t }}</button>
     } @else {
+      @if (pagos().length) {
+        <label class="field-label" for="pg-buscar">{{ 'Buscar' | t }}</label>
+        <input
+          id="pg-buscar" class="field" type="search"
+          [placeholder]="'Buscar por obra o semana…' | t"
+          [ngModel]="q()" (ngModelChange)="q.set($event); resetPag()"
+        />
+        <p class="pg-resumen">
+          {{ '{n} semana(s) · {p} pendiente(s)' | t: { n: pagos().length, p: pendientesCount() } }}
+        </p>
+      }
+
       @if (puedeOperar()) {
         <button type="button" class="pg-accion pg-accion--primary" (click)="abrirCrear()">
           {{ glyphNuevo }} {{ 'Crear semana de pago' | t }}
@@ -23,7 +35,7 @@
       }
 
       <div class="pg-list" appStagger>
-        @for (p of pagos(); track p.id) {
+        @for (p of visibles(); track p.id) {
           <div class="pg-row" appTapScale (click)="abrir(p)">
             <div class="pg-row__main">
               <span class="pg-row__obra">{{ glyphObra }} {{ nombreObra(p.proyecto_id) }}</span>
@@ -34,13 +46,22 @@
             </span>
           </div>
         } @empty {
-          <app-empty-state
-            [icon]="glyphPagos"
-            [title]="'Aún no hay semanas de pago' | t"
-            [message]="puedeOperar() ? ('Crea la primera semana de pago de tu obra.' | t) : ('Cuando se cree una semana de pago, aparecerá aquí.' | t)"
-          />
+          @if (q().trim() && pagos().length) {
+            <app-empty-state [title]="'Sin resultados' | t" [message]="'Ninguna semana coincide con tu búsqueda.' | t" />
+          } @else {
+            <app-empty-state
+              [icon]="glyphPagos"
+              [title]="'Aún no hay semanas de pago' | t"
+              [message]="puedeOperar() ? ('Crea la primera semana de pago de tu obra.' | t) : ('Cuando se cree una semana de pago, aparecerá aquí.' | t)"
+            />
+          }
         }
       </div>
+      @if (hayMas()) {
+        <button type="button" class="btn-ghost pg-mas" (click)="cargarMas()">
+          {{ 'Cargar más ({n} restantes)' | t: { n: filtradas().length - visibleCount() } }}
+        </button>
+      }
     }
   </div>
 

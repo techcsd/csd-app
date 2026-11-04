@@ -7,6 +7,7 @@ import {
   PropuestaMantenimientoIA,
   PropuestaChecklistIA,
   PropuestaRequisicionIA,
+  PropuestaUsoVehiculoIA,
 } from '../models/formulario-ia.model';
 
 /**
@@ -49,6 +50,14 @@ export class FormularioIaService {
   async leerRequisicionVoz(input: { audio: Blob }): Promise<PropuestaRequisicionIA> {
     return this.invocar('requisicion', {
       audio: { data: await blobABase64(input.audio), mime: input.audio.type || 'audio/webm' },
+    });
+  }
+
+  /** PROMPT di-ronda-03nov — lectura del tablero (km/horas, nivel, luces) al
+   *  tomar/recibir o soltar un vehículo en "Uso de vehículo". */
+  async leerUsoVehiculo(input: { foto: CapturedPhoto }): Promise<PropuestaUsoVehiculoIA> {
+    return this.invocar('uso_vehiculo', {
+      fotos: [{ data: await blobABase64(input.foto.blob), mime: input.foto.blob.type || 'image/jpeg' }],
     });
   }
 

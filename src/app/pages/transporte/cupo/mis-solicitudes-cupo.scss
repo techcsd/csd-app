@@ -1,0 +1,31 @@
+// CSS tras OK (pendiente mockup de Xaviel) — solo espaciado trivial, sin color/visual nuevo.
+.screen__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cupo-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.cupo-row__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+}
+
+.cupo-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

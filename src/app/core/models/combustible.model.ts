@@ -383,6 +383,14 @@ export interface CombustibleCaptura {
    * el servidor inserta sin volver a pedir confirmación (mismo client_uuid).
    */
   confirmado?: boolean;
+  /** DI5 — 'rapido_ia' (tablero+recibo, la IA llena el formulario) o 'normal' (de siempre). */
+  captura?: 'normal' | 'rapido_ia';
+  /**
+   * DI6 — diferencias que el chofer decidió mantener contra lo leído del recibo
+   * (nunca incluye las que aceptó corregir: esas ya viajan con el valor del recibo).
+   * Avisa a Flota (`combustible_diferencia`) sin bloquear el registro.
+   */
+  diferencias?: Array<{ campo: string; valor_usuario: number; valor_leido: number; decision: 'mantener_mio'; motivo: string }> | null;
 }
 
 /**

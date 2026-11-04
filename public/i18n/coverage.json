@@ -1,5 +1,5 @@
 {
-  "en": 89,
+  "en": 88,
   "ht": 3,
   "alcance": true,
   "byScreen": {
@@ -208,7 +208,7 @@
       "ht": 3
     },
     "pages/bitacora/parte": {
-      "conT": 204,
+      "conT": 205,
       "sinT": 4,
       "en": 98,
       "ht": 0
@@ -322,15 +322,15 @@
       "ht": 0
     },
     "pages/ingenieria/cartilla": {
-      "conT": 58,
+      "conT": 63,
       "sinT": 0,
-      "en": 100,
+      "en": 97,
       "ht": 0
     },
     "pages/ingenieria/pagos": {
-      "conT": 55,
+      "conT": 61,
       "sinT": 0,
-      "en": 42,
+      "en": 43,
       "ht": 2
     },
     "pages/inventario": {
@@ -856,10 +856,10 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 130,
+      "conT": 156,
       "sinT": 2,
-      "en": 86,
-      "ht": 2
+      "en": 74,
+      "ht": 1
     },
     "pages/transporte/combustible-log": {
       "conT": 15,
@@ -937,6 +937,12 @@
       "conT": 28,
       "sinT": 0,
       "en": 100,
+      "ht": 0
+    },
+    "pages/transporte/cupo": {
+      "conT": 25,
+      "sinT": 0,
+      "en": 28,
       "ht": 0
     },
     "pages/transporte/despachos": {
@@ -1126,9 +1132,9 @@
       "ht": 0
     },
     "pages/transporte/uso-vehiculo": {
-      "conT": 23,
+      "conT": 31,
       "sinT": 0,
-      "en": 100,
+      "en": 74,
       "ht": 0
     },
     "pages/transporte/vehiculos": {
@@ -1406,6 +1412,12 @@
       "sinT": 0,
       "en": 100,
       "ht": 0
+    },
+    "shared/ui/molde-esquema-visor": {
+      "conT": 1,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/momento": {
       "conT": 1,
