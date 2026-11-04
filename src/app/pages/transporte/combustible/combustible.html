@@ -732,22 +732,22 @@
             (valueChange)="km.set($event)"
             [ultimo]="odometro()"
           />
-          @if (nivelConfianza('km') === 'alta') { <p class="comb__hint">✓ {{ 'Leído del tablero con confianza alta.' | t }}</p> }
-          @else if (nivelConfianza('km') === 'media') { <p class="comb__hint comb__hint--warn">⚠ {{ '¿Seguro? Revisa este dato.' | t }}</p> }
-          @else if (km() == null) { <p class="comb__warn">{{ 'Completa este dato.' | t }}</p> }
+          @if (nivelConfianza('km') === 'alta') { <app-estado-chip [label]="'Confianza alta' | t" tono="success" /> }
+          @else if (nivelConfianza('km') === 'media') { <app-estado-chip [label]="'¿Seguro? Revisa' | t" tono="warning" /> }
+          @else if (km() == null) { <app-estado-chip [label]="'Completa este dato' | t" tono="danger" /> }
         }
 
         <label class="field-label" for="rk-gal">{{ 'Galones echados' | t }}</label>
         <input id="rk-gal" class="field comb__num" type="text" inputmode="decimal" [ngModel]="galonesRaw()" (ngModelChange)="onGalonesInput($event)" placeholder="0" />
-        @if (nivelConfianza('galones') === 'alta') { <p class="comb__hint">✓ {{ 'Leído del recibo con confianza alta.' | t }}</p> }
-        @else if (nivelConfianza('galones') === 'media') { <p class="comb__hint comb__hint--warn">⚠ {{ '¿Seguro? Revisa este dato.' | t }}</p> }
-        @else if (galones() == null) { <p class="comb__warn">{{ 'Completa este dato.' | t }}</p> }
+        @if (nivelConfianza('galones') === 'alta') { <app-estado-chip [label]="'Confianza alta' | t" tono="success" /> }
+        @else if (nivelConfianza('galones') === 'media') { <app-estado-chip [label]="'¿Seguro? Revisa' | t" tono="warning" /> }
+        @else if (galones() == null) { <app-estado-chip [label]="'Completa este dato' | t" tono="danger" /> }
 
         <label class="field-label" for="rk-monto">{{ 'Monto pagado (RD$)' | t }}</label>
         <input id="rk-monto" class="field comb__num" type="text" inputmode="decimal" [ngModel]="montoRaw()" (ngModelChange)="onMontoInput($event)" placeholder="0" />
-        @if (nivelConfianza('monto') === 'alta') { <p class="comb__hint">✓ {{ 'Leído del recibo con confianza alta.' | t }}</p> }
-        @else if (nivelConfianza('monto') === 'media') { <p class="comb__hint comb__hint--warn">⚠ {{ '¿Seguro? Revisa este dato.' | t }}</p> }
-        @else if (monto() == null) { <p class="comb__warn">{{ 'Completa este dato.' | t }}</p> }
+        @if (nivelConfianza('monto') === 'alta') { <app-estado-chip [label]="'Confianza alta' | t" tono="success" /> }
+        @else if (nivelConfianza('monto') === 'media') { <app-estado-chip [label]="'¿Seguro? Revisa' | t" tono="warning" /> }
+        @else if (monto() == null) { <app-estado-chip [label]="'Completa este dato' | t" tono="danger" /> }
 
         <label class="field-label comb__mt" for="rk-estacion">{{ 'Estación' | t }}</label>
         <input id="rk-estacion" class="field" type="text" [ngModel]="estacionOtroTexto() || estacion()" (ngModelChange)="pickEstacionOtro(); estacionOtroTexto.set($event)" [placeholder]="'Nombre de la estación' | t" />

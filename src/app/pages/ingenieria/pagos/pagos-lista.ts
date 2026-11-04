@@ -6,6 +6,8 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { EstadoChip } from '../../../shared/ui/estado-chip/estado-chip';
+import { TecTono } from '../../../shared/utils/tec-tono.util';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -44,7 +46,7 @@ function sumarDias(iso: string, dias: number): string {
   selector: 'app-pagos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, EstadoChip, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './pagos-lista.html',
   styleUrl: './pagos-lista.scss',
 })
@@ -177,6 +179,11 @@ export class PagosListaPage {
 
   abrir(p: PagoObra): void {
     void this.router.navigate(['/ingenieria/pagos', p.id]);
+  }
+
+  /** F8 — estado = punto + palabra + fondo suave (app-estado-chip, CB v2). */
+  estadoTono(estado: string): TecTono {
+    return estado === 'enviado' ? 'success' : 'warning';
   }
 
   back(): void {

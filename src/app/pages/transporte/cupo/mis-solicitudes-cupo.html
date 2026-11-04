@@ -9,7 +9,7 @@
         <div class="cupo-row">
           <div class="cupo-row__top">
             <span class="cupo-row__tarjeta">···{{ r.codigo_tarjeta }}</span>
-            <span>{{ estadoLabel[r.estado] | t }}</span>
+            <app-estado-chip [label]="estadoLabel[r.estado] | t" [tono]="estadoTono[r.estado]" />
           </div>
           <div class="cupo-row__meta">
             @if (r.galones_pedidos != null) {

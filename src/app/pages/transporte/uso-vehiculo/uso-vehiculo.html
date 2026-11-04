@@ -63,16 +63,16 @@
           <label class="field-label usov__mt" for="km">{{ (esTelehandler() ? 'Horas actuales (horómetro)' : 'Kilometraje actual') | t }}</label>
           <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="Ej. 125400" />
           @if (confianzaMedida() === 'alta') {
-            <p class="usov__hint">{{ '✓ Confianza alta' | t }}</p>
+            <app-estado-chip [label]="'Confianza alta' | t" tono="success" />
           } @else if (confianzaMedida() === 'dudosa') {
-            <p class="usov__hint usov__hint--warn">{{ '¿Seguro? Revisa' | t }}</p>
+            <app-estado-chip [label]="'¿Seguro? Revisa' | t" tono="warning" />
           }
 
           <label class="field-label usov__mt">{{ 'Nivel de gasolina' | t }} <span class="usov__req">*</span></label>
           @if (confianzaNivel() === 'dudosa') {
-            <p class="usov__hint usov__hint--warn">{{ '¿Seguro? Revisa' | t }}</p>
+            <app-estado-chip [label]="'¿Seguro? Revisa' | t" tono="warning" />
           } @else if (confianzaNivel() === 'alta') {
-            <p class="usov__hint">{{ '✓ Confianza alta' | t }}</p>
+            <app-estado-chip [label]="'Confianza alta' | t" tono="success" />
           }
           <div class="usov__niveles">
             @for (n of niveles; track n) {

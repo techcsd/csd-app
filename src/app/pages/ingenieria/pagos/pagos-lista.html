@@ -41,9 +41,10 @@
               <span class="pg-row__obra">{{ glyphObra }} {{ nombreObra(p.proyecto_id) }}</span>
               <span class="pg-row__semana">{{ fmt(p.semana_desde) }} – {{ fmt(p.semana_hasta) }}</span>
             </div>
-            <span class="pg-chip" [class.pg-chip--enviado]="p.estado === 'enviado'">
-              {{ p.estado === 'enviado' ? ('Enviado' | t) : ('Borrador' | t) }}
-            </span>
+            <app-estado-chip
+              [label]="(p.estado === 'enviado' ? 'Enviado' : 'Borrador') | t"
+              [tono]="estadoTono(p.estado)"
+            />
           </div>
         } @empty {
           @if (q().trim() && pagos().length) {
