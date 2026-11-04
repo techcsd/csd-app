@@ -29,6 +29,20 @@
       />
     </div>
   </div>
+} @else if (modoSelectorVisible()) {
+  <!-- DI5/F2 — ¿Rápido con IA o Normal? Solo aplica a echada de vehículo (no persona/depósito/reenvío/corrección). -->
+  <div class="screen comb">
+    <app-wizard-exit [title]="'Registrar combustible' | t" (exit)="intentarSalir()" />
+    <div class="screen__body">
+      <h1 class="screen__title">{{ '¿Cómo quieres registrarlo?' | t }}</h1>
+      @if (rapidoDisponible()) {
+        <app-option-button appTapScale [label]="'Rápido con IA (recomendado)' | t" (pressed)="elegirModo('rapido')" />
+        <p class="field-hint">{{ 'Toma la foto del tablero y del recibo; la IA llena el formulario. Tú confirmas antes de enviar.' | t }}</p>
+      }
+      <app-option-button appTapScale icon="📝" [label]="'Normal' | t" (pressed)="elegirModo('normal')" />
+      <p class="field-hint">{{ 'Llenas los datos tú mismo, paso a paso (como siempre).' | t }}</p>
+    </div>
+  </div>
 } @else if (done()) {
   <!-- Confirmation: "Combustible registrado" -->
   <div class="screen comb">
@@ -216,6 +230,56 @@
         </div>
       }
 
+      <!-- DI5 — Rápido con IA: foto del tablero + del recibo (bomba opcional) -->
+      @if (stepKey() === 'rapido_fotos') {
+        <h1 class="screen__title" appWizardStep>{{ 'Tablero y recibo' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Toma las 2 fotos; la IA llena el formulario por ti (solo cámara).' | t }}</p>
+        <div class="comb__fotos">
+          <app-photo-slot
+            [label]="'Tablero (km)' | t"
+            hint="🎛️"
+            [gallery]="false"
+            [foto]="fotoTablero()"
+            [restore]="{ clave: 'combustible', slot: 'tablero' }"
+            (captured)="onFotoTablero($event)"
+            (cleared)="onFotoTableroCleared()"
+            (galeriaFallback)="fotoOrigenGaleria.set(true)"
+          />
+          <app-photo-slot
+            [label]="'Recibo' | t"
+            hint="🧾"
+            [gallery]="false"
+            [foto]="fotoRecibo()"
+            [restore]="{ clave: 'combustible', slot: 'recibo' }"
+            (captured)="onFotoRecibo($event)"
+            (cleared)="onFotoReciboCleared()"
+            (galeriaFallback)="fotoOrigenGaleria.set(true)"
+          />
+          <app-photo-slot
+            [label]="'Bomba en 0 (opcional)' | t"
+            hint="⛽"
+            [gallery]="false"
+            [foto]="fotoBomba()"
+            [restore]="{ clave: 'combustible', slot: 'bomba' }"
+            (captured)="onFotoBomba($event)"
+            (cleared)="onFotoBombaCleared()"
+            (galeriaFallback)="fotoOrigenGaleria.set(true)"
+          />
+        </div>
+
+        @if (leyendoRecibo()) {
+          <p class="comb__lectura">{{ 'Leyendo tus fotos…' | t }}</p>
+        } @else if (lecturaError()) {
+          <div class="comb__lectura comb__lectura--muted">
+            <span>{{ lecturaError() }}</span>
+            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Volver a leer' | t }}</button>
+          </div>
+        } @else if (leidoCampos().length) {
+          <p class="comb__lectura comb__lectura--ok">{{ 'Leído:' | t }} {{ leidoCampos().join(' · ') }}. {{ 'Sigue para revisar.' | t }}</p>
+        }
+        <button type="button" class="btn-ghost comb__mt" (click)="cambiarANormal()">{{ 'Prefiero llenarlo yo (modo normal)' | t }}</button>
+      }
+
       <!-- AE6 · Paso 1: la foto de la bomba en 0 es lo PRIMERO (evidencia en depósito) -->
       @if (stepKey() === 'bomba') {
         <!-- AC11 — telehandler: elegir dónde se echó (depósito en obra por defecto) -->
@@ -354,11 +418,6 @@
           placeholder="0"
         />
 
-        <!-- CF4 — bandera si lo confirmado difiere > 2% de lo leído del recibo -->
-        @if (discrepanciaRecibo()) {
-          <p class="comb__lectura comb__lectura--warn">{{ discrepanciaRecibo() }}</p>
-        }
-
         <!-- AW3 — valor INTERPRETADO en vivo: el chofer ve exactamente lo que se
              guardará antes de guardar (a prueba de dedazos). -->
         @if (galones() != null) {
@@ -445,6 +504,26 @@
             <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()" data-testid="combustible-leer-recibo">{{ 'Leer recibo' | t }}</button>
           </div>
         }
+
+        <!-- DI6 — diferencias entre lo leído y lo que el chofer ya había escrito: decisión obligatoria -->
+        @for (d of camposDiferenciaPendientes(); track d.campo) {
+          <div class="comb__warn">
+            <p>⚠ {{ d.etiqueta }}: {{ 'escribiste' | t }} {{ d.valorUsuario }} {{ d.sufijo }}, {{ 'el recibo dice' | t }} {{ d.valorLeido }} {{ d.sufijo }}.</p>
+            <button type="button" class="btn-cta" (click)="usarValorLeido(d)">{{ 'Usar el del recibo ({v} {s})' | t: { v: d.valorLeido, s: d.sufijo } }}</button>
+            <button type="button" class="btn-ghost" (click)="abrirMotivoDiferencia(d.campo)">{{ 'Mantener el mío y dar un motivo' | t }}</button>
+            @if (motivoAbiertoPara() === d.campo) {
+              <input
+                class="field"
+                type="text"
+                [ngModel]="motivoTexto()"
+                (ngModelChange)="motivoTexto.set($event)"
+                [placeholder]="'¿Por qué mantienes tu número?' | t"
+              />
+              <button type="button" class="btn-cta" [disabled]="!motivoTexto().trim()" (click)="confirmarMantener(d)">{{ 'Confirmar' | t }}</button>
+              <button type="button" class="btn-ghost" (click)="cerrarMotivoDiferencia()">{{ 'Cancelar' | t }}</button>
+            }
+          </div>
+        }
       }
 
       <!-- Paso 4: producto + Regular/Premium + tarjeta/titular/obra -->
@@ -519,6 +598,8 @@
             (ngModelChange)="numeroRecibo.set($event)"
             [placeholder]="'El número que dice RECIBO en el ticket' | t"
           />
+          <!-- DI4 — pedir más cupo (solicitud manual; sin cupo anotado esto solo abre el formulario) -->
+          <button type="button" class="btn-ghost comb__mt" (click)="pedirCupo()">{{ '¿Se te acabó el cupo de la tarjeta? Pedir más' | t }}</button>
         }
       }
 
@@ -604,16 +685,92 @@
             <li><span>{{ 'Rendimiento' | t }}</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} {{ calc().unidad }} } @else { {{ 'Primera echada' | t }} }</b></li>
           }
         </ul>
+        <!-- DI6 — segunda revisión (defensiva): si el chofer volvió atrás y cambió un
+             número, la diferencia puede reaparecer aquí incluso si ya pasó 'fotos'. -->
+        @for (d of camposDiferenciaPendientes(); track d.campo) {
+          <div class="comb__warn">
+            <p>⚠ {{ d.etiqueta }}: {{ 'escribiste' | t }} {{ d.valorUsuario }} {{ d.sufijo }}, {{ 'el recibo dice' | t }} {{ d.valorLeido }} {{ d.sufijo }}.</p>
+            <button type="button" class="btn-cta" (click)="usarValorLeido(d)">{{ 'Usar el del recibo ({v} {s})' | t: { v: d.valorLeido, s: d.sufijo } }}</button>
+            <button type="button" class="btn-ghost" (click)="abrirMotivoDiferencia(d.campo)">{{ 'Mantener el mío y dar un motivo' | t }}</button>
+            @if (motivoAbiertoPara() === d.campo) {
+              <input
+                class="field"
+                type="text"
+                [ngModel]="motivoTexto()"
+                (ngModelChange)="motivoTexto.set($event)"
+                [placeholder]="'¿Por qué mantienes tu número?' | t"
+              />
+              <button type="button" class="btn-cta" [disabled]="!motivoTexto().trim()" (click)="confirmarMantener(d)">{{ 'Confirmar' | t }}</button>
+              <button type="button" class="btn-ghost" (click)="cerrarMotivoDiferencia()">{{ 'Cancelar' | t }}</button>
+            }
+          </div>
+        }
+
         <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma la echada al incentivo) -->
         <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />
+      }
+
+      <!-- DI5 — "Revisa y confirma" del modo rápido -->
+      @if (stepKey() === 'rapido_confirmar') {
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y confirma' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Esto leímos de tus fotos. Confirma o corrige antes de enviar.' | t }}</p>
+
+        @if (leyendoRecibo()) {
+          <p class="comb__lectura">{{ 'Leyendo tus fotos…' | t }}</p>
+        } @else if (lecturaError()) {
+          <div class="comb__lectura comb__lectura--muted">
+            <span>{{ lecturaError() }}</span>
+            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Volver a leer' | t }}</button>
+          </div>
+        }
+
+        @if (!modoPersona()) {
+          <label class="field-label" for="rk-km">{{ vehDetalle()?.medida_uso === 'horas' ? ('Horas de uso actuales' | t) : ('Kilometraje actual' | t) }}</label>
+          <app-km-input
+            [label]="''"
+            [value]="km()"
+            (valueChange)="km.set($event)"
+            [ultimo]="odometro()"
+          />
+          @if (nivelConfianza('km') === 'alta') { <p class="comb__hint">✓ {{ 'Leído del tablero con confianza alta.' | t }}</p> }
+          @else if (nivelConfianza('km') === 'media') { <p class="comb__hint comb__hint--warn">⚠ {{ '¿Seguro? Revisa este dato.' | t }}</p> }
+          @else if (km() == null) { <p class="comb__warn">{{ 'Completa este dato.' | t }}</p> }
+        }
+
+        <label class="field-label" for="rk-gal">{{ 'Galones echados' | t }}</label>
+        <input id="rk-gal" class="field comb__num" type="text" inputmode="decimal" [ngModel]="galonesRaw()" (ngModelChange)="onGalonesInput($event)" placeholder="0" />
+        @if (nivelConfianza('galones') === 'alta') { <p class="comb__hint">✓ {{ 'Leído del recibo con confianza alta.' | t }}</p> }
+        @else if (nivelConfianza('galones') === 'media') { <p class="comb__hint comb__hint--warn">⚠ {{ '¿Seguro? Revisa este dato.' | t }}</p> }
+        @else if (galones() == null) { <p class="comb__warn">{{ 'Completa este dato.' | t }}</p> }
+
+        <label class="field-label" for="rk-monto">{{ 'Monto pagado (RD$)' | t }}</label>
+        <input id="rk-monto" class="field comb__num" type="text" inputmode="decimal" [ngModel]="montoRaw()" (ngModelChange)="onMontoInput($event)" placeholder="0" />
+        @if (nivelConfianza('monto') === 'alta') { <p class="comb__hint">✓ {{ 'Leído del recibo con confianza alta.' | t }}</p> }
+        @else if (nivelConfianza('monto') === 'media') { <p class="comb__hint comb__hint--warn">⚠ {{ '¿Seguro? Revisa este dato.' | t }}</p> }
+        @else if (monto() == null) { <p class="comb__warn">{{ 'Completa este dato.' | t }}</p> }
+
+        <label class="field-label comb__mt" for="rk-estacion">{{ 'Estación' | t }}</label>
+        <input id="rk-estacion" class="field" type="text" [ngModel]="estacionOtroTexto() || estacion()" (ngModelChange)="pickEstacionOtro(); estacionOtroTexto.set($event)" [placeholder]="'Nombre de la estación' | t" />
+
+        <label class="field-label comb__mt" for="rk-tarjeta">{{ 'Tarjeta (opcional)' | t }}</label>
+        <input id="rk-tarjeta" class="field" type="text" inputmode="numeric" [ngModel]="tarjeta()" (ngModelChange)="tarjeta.set($event)" [placeholder]="'N.º o nombre de la tarjeta' | t" />
+
+        <label class="field-label comb__mt" for="rk-recibo">{{ 'N.º de recibo (opcional)' | t }}</label>
+        <input id="rk-recibo" class="field" type="text" inputmode="numeric" [ngModel]="numeroRecibo()" (ngModelChange)="numeroRecibo.set($event)" [placeholder]="'El número que dice RECIBO en el ticket' | t" />
+
+        @if (validacion().bloqueo; as b) {
+          <p class="comb__warn">⛔ {{ b }}</p>
+        }
+
+        <button type="button" class="btn-ghost comb__mt" (click)="cambiarANormal()">{{ 'Prefiero llenarlo yo (modo normal)' | t }}</button>
       }
     </div>
 
     <!-- Nav -->
     <app-wizard-footer
       [backLabel]="step() > 1 ? ('Atrás' | t) : ('Cancelar' | t)"
-      [primaryLabel]="step() < total() ? ('Siguiente' | t) : (submitting() ? ('Guardando…' | t) : (fotosCompletas() ? ('Guardar registro' | t) : ('Faltan fotos para guardar' | t)))"
-      [primaryDisabled]="step() >= total() && (submitting() || !fotosCompletas())"
+      [primaryLabel]="step() < total() ? ('Siguiente' | t) : (submitting() ? ('Guardando…' | t) : (diferenciasPendientes() ? ('Resuelve las diferencias' | t) : (fotosCompletas() ? ('Guardar registro' | t) : ('Faltan fotos para guardar' | t))))"
+      [primaryDisabled]="step() >= total() && (submitting() || !fotosCompletas() || diferenciasPendientes())"
       (back)="step() > 1 ? prev() : intentarSalir()"
       (primary)="step() < total() ? next() : submit()"
     />

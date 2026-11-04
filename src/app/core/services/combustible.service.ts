@@ -654,6 +654,8 @@ export class CombustibleService {
         foto_origen: input.fotoOrigen ?? 'camara', // CK3 — 'galeria' = último recurso
         ayudante_id: input.ayudanteId ?? null, // AT4
         confirmado: input.confirmado ?? false, // AW3 — echada inusual ya confirmada
+        captura: input.captura ?? 'normal', // DI5 — 'rapido_ia' | 'normal'
+        diferencias: input.diferencias ?? null, // DI6 — diferencias que el chofer decidió mantener
         capturado_en, // BB6 — hora REAL de captura (para corregir created_at si se sincroniza tarde)
       },
       fotos,
@@ -708,6 +710,8 @@ export class CombustibleService {
         p_proyecto_id: payload['proyecto_id'] ?? null, // AC11
         p_confirmado: payload['confirmado'] === true, // AW3 — echada inusual ya confirmada por el chofer
         p_foto_origen: payload['foto_origen'] ?? 'camara', // CK3 — 22-arg (LIVE dev+prod 1.160.0)
+        p_captura: payload['captura'] ?? 'normal', // DI5 — 26-arg (LIVE dev+prod 1.210.0)
+        p_diferencias: payload['diferencias'] ?? null, // DI6
       };
       // CC6 — nº de recibo detrás de COMPROBACIÓN DE CAPACIDAD: el padre añadió la
       // columna `registros_combustible.numero_recibo` pero AÚN no el parámetro

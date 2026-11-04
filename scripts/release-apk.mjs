@@ -40,19 +40,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Mensajes de error más claros + menos avisos duplicados';
+const TITULO = 'Registro de combustible rápido con IA + uso de vehículo que lee el tablero';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Combustible', d: 'Cuando el kilometraje de una echada choca con otra lectura, ahora se ve contra cuál lectura chocó (de quién, cuándo, cuántos km) — antes solo decía que no era válido, sin decir por qué.' },
-  { t: 'arreglo', m: 'Flota', d: 'El mismo mensaje más claro al registrar un mantenimiento con kilometraje inconsistente.' },
-  { t: 'arreglo', m: 'Transporte', d: 'El rastreo de ubicación ya no se queda atascado reintentando el mismo punto rechazado una y otra vez.' },
-  { t: 'arreglo', m: 'Notificaciones', d: 'Se resolvió una condición de carrera que a veces impedía recibir avisos nuevos en tiempo real hasta reabrir la app.' },
-  { t: 'arreglo', m: 'Sistema', d: 'El GPS ahora intenta de nuevo con menor precisión cuando el primer intento falla por tiempo agotado, en vez de rendirse.' },
-  { t: 'arreglo', m: 'Tecnología', d: 'La pestaña de Dudas ya no muestra "sin resultados" por un instante antes de cargar el contenido real.' },
-  { t: 'mejora', m: 'Tecnología', d: 'Reportes de errores ahora tiene "Cargar más" en vez de traer cientos de filas de una vez.' },
-  { t: 'mejora', m: 'Tecnología', d: 'Los errores comunes de uso (fecha pasada, conduce no despachado, etc.) ya no se mezclan con errores técnicos reales en el panel de Tecnología.' },
-  { t: 'nuevo', m: 'Notificaciones', d: 'Nuevo interruptor para apagar el correo de requisiciones sin afectar los avisos dentro de la app.' },
-  { t: 'nuevo', m: 'Tecnología', d: 'El detalle de una cotización ahora muestra los renglones (artículos, cantidades, precios) leídos automáticamente del documento.' },
-  { t: 'mejora', m: 'Compa', d: 'El saludo inicial de la ventana de Compa ahora se puede ocultar para ver la conversación con más espacio.' },
+  { t: 'nuevo', m: 'Combustible', d: 'Al registrar combustible ahora puedes elegir "Rápido con IA": tomas la foto del tablero y del recibo, y el sistema llena el formulario por ti. Tú siempre confirmas antes de enviar.' },
+  { t: 'mejora', m: 'Combustible', d: 'Si lo que escribiste no coincide con lo que dice el recibo (por ejemplo, pusiste RD$1,000 y el recibo dice RD$4,000), ahora te avisamos y te dejamos elegir: usar el del recibo o mantener el tuyo explicando por qué.' },
+  { t: 'arreglo', m: 'Combustible', d: 'La lectura automática del recibo ya no cambia en silencio un dato que tú ya habías escrito.' },
+  { t: 'nuevo', m: 'Flota', d: 'Uso de vehículo ahora puede leer el tablero (kilometraje/horas y nivel de gasolina) desde una foto; llenarlo a mano sigue estando disponible siempre.' },
+  { t: 'nuevo', m: 'Flota', d: 'Si tu tarjeta de combustible se queda sin cupo, ahora puedes pedir más desde la misma pantalla y ver el estado de tu solicitud.' },
+  { t: 'mejora', m: 'Ingeniería', d: 'Pagos de la semana y Cartillas de acero ahora tienen buscador y "Cargar más" en vez de traer todas las filas de una vez.' },
+  { t: 'mejora', m: 'Ingeniería', d: 'El esquema de un molde ahora se puede abrir en pantalla grande tocándolo, en vez de verlo diminuto en la fila.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

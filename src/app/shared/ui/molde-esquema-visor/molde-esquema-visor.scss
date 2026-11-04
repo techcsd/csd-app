@@ -1,0 +1,39 @@
+// DI10 — overlay simple a pantalla completa para el esquema del molde (SVG en
+// vivo, no una foto — por eso no usa PhotoViewerService). z-index por encima
+// del visor de fotos (.pv = 10000) para que, si alguna vez coexisten, este gane.
+.mev {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.82); // tokens-allow-dark — overlay a pantalla completa
+}
+
+.mev__panel {
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.mev__close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.14);
+  color: #fff; // tokens-allow-dark — botón blanco sobre el velo oscuro del overlay
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}

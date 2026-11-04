@@ -1,0 +1,85 @@
+<div class="screen">
+  <app-wizard-exit [title]="'Pedir más cupo' | t" (exit)="salir()" />
+
+  <div class="screen__body">
+    @if (!enviado()) {
+      <h1 class="screen__title">{{ 'Pedir más cupo de tarjeta' | t }}</h1>
+      <p class="screen__subtitle">{{ 'Avísale a Flota que necesitas más cupo en esta tarjeta.' | t }}</p>
+
+      @if (cargandoTarjeta()) {
+        <p class="field-hint">{{ 'Consultando tu tarjeta…' | t }}</p>
+      }
+      @for (linea of lineasEstado(); track linea) {
+        <p class="field-hint">{{ linea }}</p>
+      }
+
+      <!-- Tarjeta -->
+      <label class="field-label" for="cupo-tarjeta">{{ 'Últimos 4 dígitos o nombre de la tarjeta' | t }}</label>
+      <input
+        id="cupo-tarjeta"
+        class="field"
+        type="text"
+        [ngModel]="tarjeta()"
+        (ngModelChange)="tarjeta.set($event)"
+        [placeholder]="'Ej. 4521' | t"
+      />
+
+      <!-- Motivo -->
+      <label class="field-label">{{ '¿Qué pasó?' | t }}</label>
+      @for (m of motivos; track m.valor) {
+        <app-option-button
+          appTapScale
+          [icon]="m.icon"
+          [label]="m.label | t"
+          [selected]="motivo() === m.valor"
+          (pressed)="elegirMotivo(m)"
+        />
+      }
+
+      <!-- Cantidad pedida (opcional, al menos una da más contexto) -->
+      <label class="field-label" for="cupo-galones">{{ 'Galones pedidos (opcional)' | t }}</label>
+      <input
+        id="cupo-galones"
+        class="field"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        [ngModel]="galones()"
+        (ngModelChange)="galones.set($event)"
+        placeholder="0"
+      />
+
+      <label class="field-label" for="cupo-monto">{{ 'Monto pedido en RD$ (opcional)' | t }}</label>
+      <input
+        id="cupo-monto"
+        class="field"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        [ngModel]="monto()"
+        (ngModelChange)="monto.set($event)"
+        placeholder="0"
+      />
+
+      <label class="field-label" for="cupo-nota">{{ 'Nota (opcional)' | t }}</label>
+      <textarea
+        id="cupo-nota"
+        class="field"
+        rows="3"
+        [ngModel]="nota()"
+        (ngModelChange)="nota.set($event)"
+        [placeholder]="'Cuéntale a Flota qué pasó' | t"
+      ></textarea>
+
+      <button type="button" class="btn-cta" [disabled]="!puedeEnviar()" (click)="enviar()">
+        {{ (enviando() ? 'Enviando…' : 'Enviar solicitud') | t }}
+      </button>
+    } @else {
+      <h1 class="screen__title">{{ 'Solicitud enviada' | t }}</h1>
+      <p class="screen__subtitle">{{ 'Flota la va a revisar. Te avisamos cuando respondan.' | t }}</p>
+
+      <button type="button" class="btn-cta" (click)="verMisSolicitudes()">{{ 'Ver mis solicitudes' | t }}</button>
+      <button type="button" class="btn-ghost" (click)="salir()">{{ 'Volver' | t }}</button>
+    }
+  </div>
+</div>
