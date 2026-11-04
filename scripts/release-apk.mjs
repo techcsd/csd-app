@@ -40,15 +40,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Registro de combustible rápido con IA + uso de vehículo que lee el tablero';
+const TITULO = 'Pulido visual: cupo de tarjeta, combustible y cartillas con el mismo estilo de la app';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Combustible', d: 'Al registrar combustible ahora puedes elegir "Rápido con IA": tomas la foto del tablero y del recibo, y el sistema llena el formulario por ti. Tú siempre confirmas antes de enviar.' },
-  { t: 'mejora', m: 'Combustible', d: 'Si lo que escribiste no coincide con lo que dice el recibo (por ejemplo, pusiste RD$1,000 y el recibo dice RD$4,000), ahora te avisamos y te dejamos elegir: usar el del recibo o mantener el tuyo explicando por qué.' },
-  { t: 'arreglo', m: 'Combustible', d: 'La lectura automática del recibo ya no cambia en silencio un dato que tú ya habías escrito.' },
-  { t: 'nuevo', m: 'Flota', d: 'Uso de vehículo ahora puede leer el tablero (kilometraje/horas y nivel de gasolina) desde una foto; llenarlo a mano sigue estando disponible siempre.' },
-  { t: 'nuevo', m: 'Flota', d: 'Si tu tarjeta de combustible se queda sin cupo, ahora puedes pedir más desde la misma pantalla y ver el estado de tu solicitud.' },
-  { t: 'mejora', m: 'Ingeniería', d: 'Pagos de la semana y Cartillas de acero ahora tienen buscador y "Cargar más" en vez de traer todas las filas de una vez.' },
-  { t: 'mejora', m: 'Ingeniería', d: 'El esquema de un molde ahora se puede abrir en pantalla grande tocándolo, en vez de verlo diminuto en la fila.' },
+  { t: 'mejora', m: 'Combustible', d: 'La confianza de cada dato leído (kilometraje, galones, monto) ahora se ve como una etiqueta de color, igual que en el resto de la app.' },
+  { t: 'mejora', m: 'Flota', d: 'Mis solicitudes de cupo y el aviso de "% de tu cupo" ahora usan la misma etiqueta de estado que el resto de la app.' },
+  { t: 'mejora', m: 'Ingeniería', d: 'El estado de Pagos de la semana y de Cartillas de acero ahora se ve con la misma etiqueta de color en toda la app.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

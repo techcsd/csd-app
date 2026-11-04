@@ -31,7 +31,7 @@
               <span class="cart-list__kg">{{ c.peso_total_kg | number:'1.0-1' }} kg</span>
             }
           </div>
-          <span class="cart-list__estado" [appEstadoPulse]="c.estado" [attr.data-estado]="c.estado">{{ estadoLabel(c.estado) | t }}</span>
+          <app-estado-chip [appEstadoPulse]="c.estado" [label]="estadoLabel(c.estado) | t" [tono]="estadoTono(c.estado)" />
         </button>
       } @empty {
         <app-empty-state [title]="'Sin resultados' | t" [message]="'Ninguna cartilla coincide con tu búsqueda.' | t" />
