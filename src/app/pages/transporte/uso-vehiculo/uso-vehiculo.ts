@@ -20,10 +20,15 @@ import {
   NIVELES_COMBUSTIBLE,
   VehiculoEnUsoError,
 } from '../../../core/services/vehiculo-uso.service';
+import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { FormularioIaService } from '../../../core/services/formulario-ia.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
+import { PropuestaUsoVehiculoIA } from '../../../core/models/formulario-ia.model';
+import { clasificarConfianza, ClasificacionConfianza } from '../../../shared/utils/bitacora-ia.util';
 
 type Modo = 'usar' | 'soltar';
 
@@ -46,11 +51,14 @@ export class UsoVehiculoPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private usoSvc = inject(VehiculoUsoService);
+  private vehiculosSvc = inject(VehiculosService);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
   private i18n = inject(I18nService);
   private motion = inject(MotionService);
+  private formularioIa = inject(FormularioIaService);
+  private iaGate = inject(IaConsentGate);
 
   readonly niveles = NIVELES_COMBUSTIBLE;
   readonly fmtFechaHora = formatFechaHumana;
@@ -79,6 +87,33 @@ export class UsoVehiculoPage {
   fotoIzq = signal<CapturedPhoto | null>(null);
   fotoDer = signal<CapturedPhoto | null>(null);
   fotoTrasera = signal<CapturedPhoto | null>(null);
+
+  /** 'km' (default) o 'horas' (telehandler/maquinaria) — viene del picker o, si se
+   *  llegó por deep-link con el id, de getVehiculoDetalle. */
+  medidaUso = signal<string | null>(null);
+  esTelehandler = computed(() => this.medidaUso() === 'horas');
+
+  // PROMPT di-ronda-03nov — foto del tablero + lectura IA (km/horas, nivel, luces).
+  // Convenience SOLO: nunca gatea `puedeGuardar`, siempre hay fallback manual.
+  fotoTablero = signal<CapturedPhoto | null>(null);
+  leyendoTablero = signal(false);
+  lecturaTableroError = signal('');
+  lecturaTablero = signal<PropuestaUsoVehiculoIA | null>(null);
+
+  /** Confianza del campo de medida (km u horas, según corresponda) de la última lectura. */
+  confianzaMedida = computed<ClasificacionConfianza | null>(() => {
+    const l = this.lecturaTablero();
+    if (!l) return null;
+    const campo = this.esTelehandler() ? l.horas : l.km;
+    if (!campo) return null;
+    return clasificarConfianza(campo.valor, campo.confianza);
+  });
+  /** Confianza del nivel leído (el gauge analógico rara vez pasa de 'dudosa' — es normal). */
+  confianzaNivel = computed<ClasificacionConfianza | null>(() => {
+    const campo = this.lecturaTablero()?.nivel;
+    if (!campo) return null;
+    return clasificarConfianza(campo.valor, campo.confianza);
+  });
 
   /** El vehículo lo tiene otro → flujo "recibir de X". */
   enUsoPorOtro = computed(() => {
@@ -162,6 +197,7 @@ export class UsoVehiculoPage {
     this.vehiculoId.set(v.vehiculo_id);
     this.placa.set(v.placa);
     this.etiqueta.set(`${v.placa} · ${v.marca} ${v.modelo}`);
+    this.medidaUso.set(v.medida_uso ?? null);
     if (v.km != null) this.km.set(v.km);
     void this.cargarEstado();
   }
@@ -169,6 +205,14 @@ export class UsoVehiculoPage {
   private async cargarEstado(): Promise<void> {
     this.loading.set(true);
     try {
+      // Deep-link (el id llegó por ruta/query, no por el picker) → medidaUso aún no
+      // se sabe; búscala en paralelo (best-effort, nunca tumba el flujo).
+      if (this.medidaUso() == null) {
+        void this.vehiculosSvc
+          .getVehiculoDetalle(this.vehiculoId())
+          .then((d) => this.medidaUso.set(d?.medida_uso ?? null))
+          .catch(() => void 0);
+      }
       const e = await this.usoSvc.estadoUso(this.vehiculoId());
       this.estado.set(e);
       // BO2 — si me DESVIARON aquí (returnUrl, desde conduce/ruta) para poner el
@@ -198,6 +242,61 @@ export class UsoVehiculoPage {
     this.estado.set(null);
     this.nivel.set(null);
     this.km.set(null);
+    this.medidaUso.set(null);
+    this.fotoTablero.set(null);
+    this.lecturaTablero.set(null);
+    this.lecturaTableroError.set('');
+  }
+
+  /** Foto del tablero capturada → lectura IA automática (si hay consentimiento y
+   *  conexión; si no, no pasa nada — el modo manual sigue disponible, sin avisos). */
+  async onFotoTablero(foto: CapturedPhoto): Promise<void> {
+    this.fotoTablero.set(foto);
+    await this.leerTablero(foto);
+  }
+
+  fotoTableroCleared(): void {
+    this.fotoTablero.set(null);
+    this.lecturaTablero.set(null);
+    this.lecturaTableroError.set('');
+  }
+
+  /** Reintento manual visible tras un fallo (misma foto, sin tener que recapturar). */
+  reintentarLecturaTablero(): void {
+    const foto = this.fotoTablero();
+    if (foto) void this.leerTablero(foto);
+  }
+
+  private async leerTablero(foto: CapturedPhoto): Promise<void> {
+    if (this.leyendoTablero()) return;
+    this.lecturaTableroError.set('');
+    // Sin conexión o sin consentimiento de IA: sin mensajes forzados, la foto se
+    // conserva y el formulario manual sigue abajo, intacto.
+    if (!this.network.online()) return;
+    if (!(await this.iaGate.pedir())) return;
+    this.leyendoTablero.set(true);
+    try {
+      const res = await this.formularioIa.leerUsoVehiculo({ foto });
+      if (!res.ok) {
+        this.lecturaTableroError.set(res.error || this.i18n.t('No se pudo leer el tablero. Llénalo a mano.'));
+        return;
+      }
+      this.lecturaTablero.set(res);
+      // Fill-empty-only — nunca pisa lo que el chofer ya escribió.
+      const medida = this.esTelehandler() ? res.horas?.valor : res.km?.valor;
+      if (medida != null && this.km() == null) this.km.set(medida);
+      if (res.nivel?.valor != null && this.nivel() == null) this.nivel.set(res.nivel.valor);
+      // Luces encendidas → se anexan a las notas (solo informa, nunca bloquea).
+      if (res.luces?.length) {
+        const texto = this.i18n.t('Luces encendidas: {luces}', { luces: res.luces.map((l) => l.nombre).join(', ') });
+        const actual = this.notas();
+        if (!actual.includes(texto)) this.notas.set(actual ? `${actual}\n${texto}` : texto);
+      }
+    } catch {
+      this.lecturaTableroError.set(this.i18n.t('No se pudo leer el tablero. Intenta de nuevo o llénalo a mano.'));
+    } finally {
+      this.leyendoTablero.set(false);
+    }
   }
 
   async guardar(): Promise<void> {

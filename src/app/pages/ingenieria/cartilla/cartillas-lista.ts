@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Location } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -27,7 +28,7 @@ const ESTADO_LABEL: Record<CartillaEstado, string> = {
   selector: 'app-cartillas-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, EmptyState, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cartillas-lista.html',
   styleUrl: './cartillas-lista.scss',
 })
@@ -40,6 +41,31 @@ export class CartillasListaPage {
   error = signal(false);
   cartillas = signal<CartillaListado[]>([]);
   fmtFecha = formatFecha;
+  q = signal('');
+
+  // DI8 — paginación por lotes (regla de la casa): solo se pinta el lote visible.
+  private readonly LOTE = 20;
+  visibleCount = signal(this.LOTE);
+
+  /** Filtro local por folio u obra. */
+  filtradas = computed(() => {
+    const q = this.q().trim().toLowerCase();
+    const list = this.cartillas();
+    if (!q) return list;
+    return list.filter((c) =>
+      [c.folio, c.proyecto].filter(Boolean).some((s) => s!.toLowerCase().includes(q)),
+    );
+  });
+
+  visibles = computed(() => this.filtradas().slice(0, this.visibleCount()));
+  hayMas = computed(() => this.filtradas().length > this.visibleCount());
+  cargarMas(): void {
+    this.visibleCount.update((n) => n + this.LOTE);
+  }
+  /** Reinicia el lote visible (nueva carga o nuevo filtro). */
+  resetPag(): void {
+    this.visibleCount.set(this.LOTE);
+  }
 
   constructor() {
     void this.cargar();
@@ -50,6 +76,7 @@ export class CartillasListaPage {
     this.error.set(false);
     try {
       this.cartillas.set(await this.service.misCartillas());
+      this.resetPag(); // nueva carga arranca en el primer lote
     } catch {
       this.error.set(true);
     } finally {

@@ -30,6 +30,10 @@
   font-weight: 800;
 }
 
+.cart-list__buscar {
+  margin-bottom: 12px;
+}
+
 .cart-list__retry {
   width: 100%;
   min-height: 56px;
@@ -85,6 +89,13 @@
 .cart-list__estado[data-estado='observada'] {
   border-color: var(--color-warning);
   color: var(--color-warning);
+}
+
+// DI8 — "Cargar más" (paginación por lotes)
+.cart-list__mas {
+  display: block;
+  width: 100%;
+  margin: 4px 0 70px; // deja espacio para no quedar bajo el FAB
 }
 
 .cart-list__fab {

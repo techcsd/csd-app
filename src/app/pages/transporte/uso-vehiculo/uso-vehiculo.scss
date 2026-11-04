@@ -82,8 +82,25 @@
   color: var(--color-text-secondary);
   margin: 2px 0 8px;
 }
+.usov__hint--warn {
+  color: var(--color-warning, #ca8a04);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.usov__hint--ok {
+  color: var(--color-success, #16a34a);
+}
 .usov__fotos {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+// PROMPT di-ronda-03nov — foto del tablero (lectura IA de km/horas + nivel)
+.usov__tablero {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-width: 180px;
 }

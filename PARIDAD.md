@@ -1326,3 +1326,39 @@ del CONTEXTO-64: 3 piezas nuevas en la app, 1 ya resuelta sin tocar código, 4 *
   app (`grep` sin resultados) — es del lado web.
 - **DG9 (outbox atascado / Pulso del sistema) — solo web**, y de todos modos es
   acción manual pendiente del padre (prod), no código.
+
+## DI (ronda 03-04/11/2026 #2, PROMPT-135) — combustible rápido con IA + cupo de tarjeta + uso de vehículo con tablero — app 2.66.0
+
+Contraparte: SGC PROMPT-134, **ya en producción** (v1.210.0) antes de que esta ronda
+empezara — nada quedó detrás de bandera por falta de backend.
+
+- **DI1 (Pagos de la semana) — aplicado, app-only (no era un problema de paridad real).**
+  La hipótesis de "mismo selector de obra que la web" era falsa: la app nunca tuvo
+  selector ahí (lista todas las semanas visibles del usuario). Se agregó buscador +
+  paginación (`Cargar más`); el "no hay nada que hacer" de Xaviel resultó ser el
+  estado correcto para roles de solo-lectura sin datos, no un dead-end.
+- **DI2 (Medidas de molde) — aplicado, mismo componente que la web (`molde-esquema`
+  es compartido/espejado).** Nuevo `shared/ui/molde-esquema-visor` (overlay a
+  pantalla completa, back físico cierra el visor) en `bitacora/parte`. Pinch-zoom
+  deliberadamente fuera de alcance (el pedido literal era "verlo grande").
+- **DI3 (Cartillas de acero) — aplicado.** Buscador + paginación. La app nunca tuvo
+  los filtros "al revés" que describía la captura (eso era la web) — aquí no había
+  ningún filtro, solo la lista plana.
+- **DI4 (cupo de tarjeta) — aplicado completo, app + web ya construidos en paralelo
+  por sus respectivas rondas.** Decisión de Xaviel: "Solicitud manual + cupo
+  opcional por tarjeta" — el sistema NUNCA inventa un límite; si Flota no anota un
+  cupo, no hay barra ni alerta, el chofer simplemente puede pedir más cuando
+  quiera. 2 páginas nuevas (`transporte/cupo/*`) + botón en Registrar combustible.
+  La bandeja de Flota para atender solicitudes es **solo web** (`/flota/cupos-combustible`).
+- **DI5/DI6 (combustible rápido + diferencias con el recibo) — aplicado completo,
+  es el centro de esta ronda.** Ver HANDOFF para el detalle técnico. Paridad con
+  la web: el contrato (`p_captura`/`p_diferencias`/`captura='rapido_ia'`) es
+  EXACTAMENTE el mismo que usa `registrar_combustible_app` desde cualquier canal;
+  no hay divergencia de datos entre app y web, solo que la web no tiene un wizard
+  de captura "rápido" (no lo necesita — un administrativo no está parado frente al
+  tanque con el teléfono).
+- **DI7 (uso de vehículo con tablero) — app-only, no existe un "uso de vehículo"
+  equivalente en la web** (es un flujo de campo, chofer con el teléfono en la
+  mano). Sin divergencia que registrar.
+- **DI8 (paginación)** — aplicada en Pagos/Cartillas/Mis solicitudes de cupo con el
+  mismo patrón `Cargar más` que ya usaba `combustible-log.ts` (visibleCount/hayMas).

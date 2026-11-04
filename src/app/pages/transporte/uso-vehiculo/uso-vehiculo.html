@@ -41,10 +41,39 @@
 
         <!-- Formulario de captura (km + nivel) -->
         @if (mostrarForm()) {
-          <label class="field-label" for="km">{{ 'Kilometraje actual' | t }}</label>
+          <!-- PROMPT di-ronda-03nov — foto del tablero: IA propone km/horas + nivel, el
+               chofer siempre confirma o corrige. Nunca gatea el guardado. -->
+          <label class="field-label">{{ 'Foto del tablero' | t }}</label>
+          <p class="usov__hint">{{ 'Toma una foto del tablero y la IA te propone el kilometraje y el nivel. Siempre puedes llenarlo a mano.' | t }}</p>
+          <div class="usov__tablero">
+            <app-photo-slot [label]="'Tablero' | t" [gallery]="false" [foto]="fotoTablero()" (captured)="onFotoTablero($event)" (cleared)="fotoTableroCleared()" />
+          </div>
+          @if (leyendoTablero()) {
+            <p class="usov__hint">{{ 'Leyendo el tablero…' | t }}</p>
+          } @else if (lecturaTableroError()) {
+            <p class="usov__hint usov__hint--warn">
+              {{ lecturaTableroError() }}
+              <button type="button" class="btn-ghost" (click)="reintentarLecturaTablero()">{{ 'Volver a leer' | t }}</button>
+            </p>
+          } @else if (lecturaTablero()?.ok) {
+            <p class="usov__hint usov__hint--ok">{{ 'Esto leímos del tablero, confirma o corrige abajo.' | t }}</p>
+          }
+          <p class="usov__hint">{{ 'O llénalo a mano' | t }}</p>
+
+          <label class="field-label usov__mt" for="km">{{ (esTelehandler() ? 'Horas actuales (horómetro)' : 'Kilometraje actual') | t }}</label>
           <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="Ej. 125400" />
+          @if (confianzaMedida() === 'alta') {
+            <p class="usov__hint">{{ '✓ Confianza alta' | t }}</p>
+          } @else if (confianzaMedida() === 'dudosa') {
+            <p class="usov__hint usov__hint--warn">{{ '¿Seguro? Revisa' | t }}</p>
+          }
 
           <label class="field-label usov__mt">{{ 'Nivel de gasolina' | t }} <span class="usov__req">*</span></label>
+          @if (confianzaNivel() === 'dudosa') {
+            <p class="usov__hint usov__hint--warn">{{ '¿Seguro? Revisa' | t }}</p>
+          } @else if (confianzaNivel() === 'alta') {
+            <p class="usov__hint">{{ '✓ Confianza alta' | t }}</p>
+          }
           <div class="usov__niveles">
             @for (n of niveles; track n) {
               <app-option-button appTapScale [label]="n | t" [selected]="nivel() === n" (pressed)="setNivel(n)" />

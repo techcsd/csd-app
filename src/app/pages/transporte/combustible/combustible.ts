@@ -36,6 +36,7 @@ import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 import { CombustibleService, PermisoRetro, LecturaRecibo, ValidacionKm } from '../../../core/services/combustible.service';
 import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
+import { ConsentService } from '../../../core/services/consent.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -77,8 +78,29 @@ import { MOTION_DIRECTIVES } from '../../../shared/motion';
  *   5) `estacion` — "¿En qué estación?" + el cálculo automático (paso propio para
  *                   quitar el scroll largo del antiguo paso 3); no aplica al depósito.
  *   6) `revisar`  — resumen y envío.
+ *
+ * DI5 — en modo "Rápido con IA" la secuencia es otra: `rapido_fotos` (tablero +
+ * recibo, bomba opcional) → `detalles` (se reutiliza tal cual) → `rapido_confirmar`
+ * (revisa/corrige lo que la IA leyó y envía).
  */
-type CombStep = 'bomba' | 'digits' | 'fotos' | 'detalles' | 'estacion' | 'revisar';
+type CombStep =
+  | 'bomba'
+  | 'digits'
+  | 'fotos'
+  | 'detalles'
+  | 'estacion'
+  | 'revisar'
+  | 'rapido_fotos'
+  | 'rapido_confirmar';
+
+/** DI6 — una diferencia detectada entre lo leído del recibo y lo que el chofer escribió. */
+export interface CampoDiferencia {
+  campo: 'galones' | 'monto' | 'km';
+  etiqueta: string;
+  valorUsuario: number;
+  valorLeido: number;
+  sufijo: string;
+}
 
 /**
  * Fuel-log wizard (registro de combustible). The chofer digits only 3 numbers
@@ -101,6 +123,7 @@ export class CombustiblePage extends GuardedWizard {
   private vehiculos = inject(VehiculosService);
   private combustible = inject(CombustibleService);
   private iaGate = inject(IaConsentGate);
+  private consent = inject(ConsentService);
   private conductores = inject(ConductoresService);
   private conduces = inject(ConducesService);
   private ctx = inject(UserContextService);
@@ -162,6 +185,11 @@ export class CombustiblePage extends GuardedWizard {
         ? ['digits', 'detalles', 'revisar']
         : ['digits', 'detalles', 'estacion', 'revisar'];
     }
+    // DI5 — modo "Rápido con IA": dos fotos (tablero + recibo, bomba opcional) y
+    // una pantalla de "Revisa y confirma" en vez del wizard paso a paso.
+    if (this.modoRegistro() === 'rapido') {
+      return ['rapido_fotos', 'detalles', 'rapido_confirmar'];
+    }
     return this.esDeposito()
       ? ['bomba', 'digits', 'detalles', 'revisar']
       : ['bomba', 'digits', 'fotos', 'detalles', 'estacion', 'revisar'];
@@ -169,6 +197,42 @@ export class CombustiblePage extends GuardedWizard {
   total = computed(() => this.steps().length);
   /** Clave lógica del paso actual (1-based → índice del array). */
   stepKey = computed<CombStep>(() => this.steps()[this.step() - 1] ?? 'revisar');
+
+  // ── DI5/F2/F3 — selector Rápido con IA / Normal ─────────────────────────────
+  /** null = aún no eligió; el selector se muestra. El borrador recuerda el modo. */
+  modoRegistro = signal<'rapido' | 'normal' | null>(null);
+  /** El selector solo aplica a una echada normal de vehículo (no persona/depósito/reenvío/corrección). */
+  modoSeleccionable = computed(
+    () => !this.modoPersona() && !this.esDeposito() && !this.reenvioDe() && !this.correccionDe(),
+  );
+  /** "Rápido" solo aparece con conexión + consentimiento de IA ya otorgado (sin mensajes de error si falta). */
+  rapidoDisponible = computed(() => this.network.online() && this.consent.tiene('ia') === true);
+  modoSelectorVisible = computed(
+    () =>
+      !this.loading() &&
+      !this.necesitaVehiculo() &&
+      !this.done() &&
+      this.modoRegistro() === null &&
+      this.modoSeleccionable(),
+  );
+  elegirModo(m: 'rapido' | 'normal'): void {
+    this.modoRegistro.set(m);
+    this.step.set(1);
+  }
+  /** F3 (respaldo) — "Prefiero llenarlo yo": pasa a normal SIN perder las fotos ya tomadas. */
+  cambiarANormal(): void {
+    this.modoRegistro.set('normal');
+    const idxBomba = this.steps().indexOf('bomba');
+    const idxDigits = this.steps().indexOf('digits');
+    const idx = this.fotoBomba() ? idxDigits : idxBomba;
+    this.step.set(idx >= 0 ? idx + 1 : 1);
+  }
+  /** F5 (DI4) — el chofer pide más cupo de la tarjeta (solicitud manual, cupo opcional). */
+  pedirCupo(): void {
+    void this.router.navigate(['/transporte/cupo/solicitar'], {
+      queryParams: { vehiculoId: this.vehiculoId || null, tarjeta: this.tarjeta().trim() || null },
+    });
+  }
 
   km = signal<number | null>(null);
   galones = signal<number | null>(null);
@@ -417,6 +481,10 @@ export class CombustiblePage extends GuardedWizard {
     // BY5 — reenvío: las fotos del original se reutilizan en el servidor.
     if (this.reenvioDe()) return true;
     if (this.esDeposito()) return !!this.fotoEvidencia();
+    // DI5 — rápido con IA: tablero + recibo; la bomba es OPCIONAL (decisión de
+    // Xaviel "Bomba opcional en rápido") — sin ella, la echada viaja anotada
+    // `sin_foto_bomba` para Logística, sin abrir revisión.
+    if (this.modoRegistro() === 'rapido') return !!this.fotoTablero() && !!this.fotoRecibo();
     return this.modoPersona()
       ? !!this.fotoRecibo() && !!this.fotoBomba()
       : !!this.fotoRecibo() && !!this.fotoTablero() && !!this.fotoBomba();
@@ -506,16 +574,17 @@ export class CombustiblePage extends GuardedWizard {
       this.ultimaRestauracion = r.at;
       void this.reatachFotoRestaurada(r.slot);
     });
-    // CF4 (spec F1.2) — si el recibo se fotografió sin señal, leerlo en cuanto
-    // vuelva la red (mientras el borrador siga abierto y la echada no se haya
-    // enviado). Se limpia el flag ANTES de leer para no re-disparar en loop, y la
-    // lectura NO sobrescribe lo que el chofer ya haya escrito a mano.
+    // CF4 (spec F1.2) — si el recibo (o el tablero) se fotografió sin señal, leerlo
+    // en cuanto vuelva la red (mientras el borrador siga abierto y la echada no se
+    // haya enviado). Se limpia el flag ANTES de leer para no re-disparar en loop.
+    // DI6 — `leerReciboAuto`/`aplicarLectura` ya NO pisan lo que el chofer escribió
+    // a mano (solo rellenan vacíos); las diferencias se marcan para que decida.
     effect(() => {
       if (!this.network.online()) return;        // dep: se re-evalúa al volver la red
       if (!this.reciboPendienteDeLeer()) return; // dep: nada que leer
       if (this.reenvioDe() || this.submitting() || this.done()) return;
       this.reciboPendienteDeLeer.set(false);
-      void this.leerReciboAuto(false); // false = no pisar campos ya llenos
+      void this.leerReciboAuto();
     });
     // CZ1 — valida el km contra TODAS las lecturas con fecha del vehículo (online,
     // con debounce). Espeja CH1 de mantenimientos: reemplaza el falso positivo
@@ -567,6 +636,7 @@ export class CombustiblePage extends GuardedWizard {
       estacionOtroTexto: this.estacionOtroTexto(),
       fechaRetro: this.fechaRetro(), // BV1
       step: this.step(),
+      modoRegistro: this.modoRegistro(), // DI5 — el borrador recuerda el modo elegido
     };
   }
 
@@ -601,6 +671,7 @@ export class CombustiblePage extends GuardedWizard {
       this.estacionOtro.set(d['estacionOtro'] === true);
       this.estacionOtroTexto.set((d['estacionOtroTexto'] as string) ?? '');
       this.fechaRetro.set((d['fechaRetro'] as string | null) ?? null); // BV1
+      this.modoRegistro.set((d['modoRegistro'] as 'rapido' | 'normal' | null) ?? null); // DI5
 
       // Fotos.
       const fotos = await this.borrador.loadFotos(this.claveBorrador);
@@ -1070,31 +1141,42 @@ export class CombustiblePage extends GuardedWizard {
   onFotoRecibo(photo: CapturedPhoto): void {
     this.fotoRecibo.set(photo);
     this.persistirFoto('recibo', photo);
-    // CF4 — leer el recibo en segundo plano (solo online; no al reenviar una rechazada).
     if (this.reenvioDe()) return;
-    if (this.network.online()) void this.leerReciboAuto();
-    // Sin señal: queda pendiente; el effect de reconexión la lee al volver la red.
-    else this.reciboPendienteDeLeer.set(true);
+    this.intentarLectura();
   }
   onFotoReciboCleared(): void {
     this.fotoRecibo.set(null);
     this.quitarFotoBorrador('recibo');
     this.leidoCampos.set([]);
     this.lecturaCruda.set(null);
+    this.lecturaConfianza.set({});
     this.lecturaError.set('');
     this.reciboPendienteDeLeer.set(false);
+    this.decisiones.set({});
   }
+  // DI10 (F1) — arreglo del tablero: antes solo re-leía si YA había recibo; ahora
+  // lee también con el tablero SOLO (el endpoint ya acepta tablero/bomba/recibo por
+  // separado o juntos). Prerrequisito de F3 (rápido: tablero primero) y F6.
   onFotoTablero(photo: CapturedPhoto): void {
     this.fotoTablero.set(photo);
     this.persistirFoto('tablero', photo);
-    // CF4 — si ya hay recibo, re-leer incluyendo el tablero (km/horas).
-    if (this.reenvioDe() || !this.fotoRecibo()) return;
-    if (this.network.online()) void this.leerReciboAuto();
-    else this.reciboPendienteDeLeer.set(true); // sin señal: leer al reconectar
+    if (this.reenvioDe()) return;
+    this.intentarLectura();
   }
   onFotoTableroCleared(): void {
     this.fotoTablero.set(null);
     this.quitarFotoBorrador('tablero');
+  }
+  /**
+   * DI5 — decide si ya toca leer: en modo rápido espera a tener AMBAS fotos (una
+   * sola lectura conjunta, el contrato de `leer-recibo` no cambió); en normal (y al
+   * tomar cualquiera de las dos sueltas) lee con lo que haya tan pronto como pueda.
+   */
+  private intentarLectura(): void {
+    if (!this.fotoRecibo() && !this.fotoTablero()) return;
+    if (this.modoRegistro() === 'rapido' && !(this.fotoRecibo() && this.fotoTablero())) return;
+    if (this.network.online()) void this.leerReciboAuto();
+    else this.reciboPendienteDeLeer.set(true); // sin señal: el effect de reconexión la lee al volver la red
   }
   onFotoBomba(photo: CapturedPhoto): void {
     this.fotoBomba.set(photo);
@@ -1119,76 +1201,170 @@ export class CombustiblePage extends GuardedWizard {
     return { data: dataUrl.split(',')[1] ?? '', mime: 'image/jpeg' };
   }
 
+  /** DI10 (F1) — caché por huella de imagen: no paga 2 veces la misma foto al
+   *  volver atrás, reintentar, o al re-leer tras pasar por el borrador. */
+  private lecturaCache = new Map<string, { lectura: LecturaRecibo; confianza: Record<string, number> }>();
+  private async hashBlob(blob: Blob): Promise<string> {
+    const buf = await blob.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  private async claveLectura(recibo: CapturedPhoto | null, tablero: CapturedPhoto | null): Promise<string> {
+    const h = async (p: CapturedPhoto | null) => (p ? await this.hashBlob(p.blob) : '0');
+    return `${await h(recibo)}:${await h(tablero)}`;
+  }
+
   /**
-   * CF4 — lee el recibo (+ tablero si lo hay). `sobrescribir=true` (acción del
-   * chofer: capturar la foto o *Volver a leer*) pisa los campos; `false` (lectura
-   * automática al reconectar) solo rellena los que estén vacíos, para no borrar lo
-   * que el chofer escribió a mano sin señal (spec F1.2 "se ofrece rellenar").
+   * CF4/DI10 — lee el recibo y/o el tablero (al menos una de las dos fotos debe
+   * existir; el endpoint ya acepta tablero/bomba/recibo sueltos o juntos). Un solo
+   * estado de lectura (`leyendoRecibo`/`lecturaError`) con reintento manual visible
+   * ("Volver a leer"/"Leer recibo" en el HTML). NUNCA pisa un campo que el chofer ya
+   * escribió a mano (ver `aplicarLectura`): si lo leído difiere, queda como
+   * diferencia para decidir (DI6), no como sobrescritura silenciosa.
    */
-  async leerReciboAuto(sobrescribir = true): Promise<void> {
+  async leerReciboAuto(): Promise<void> {
     const recibo = this.fotoRecibo();
-    if (!recibo || this.leyendoRecibo()) return;
+    const tablero = this.fotoTablero();
+    if ((!recibo && !tablero) || this.leyendoRecibo()) return;
+    const clave = await this.claveLectura(recibo, tablero);
+    const cacheada = this.lecturaCache.get(clave);
+    if (cacheada) { this.aplicarLectura(cacheada.lectura, cacheada.confianza); return; }
     // CW5 — sin señal, la lectura automática no puede intentarse (es una edge
     // function): avisa claro y deja llenar a mano SIN perder la foto, en vez de
     // un "no se pudo leer" genérico tras un intento condenado a fallar.
     if (!this.network.online()) {
-      this.lecturaError.set(this.i18n.t('Necesitas conexión para leer el recibo automáticamente. Llena los datos a mano; tu foto se conserva y podrás reintentar la lectura al reconectar.'));
+      this.lecturaError.set(this.i18n.t('Necesitas conexión para leer automáticamente. Llena los datos a mano; tus fotos se conservan y podrás reintentar la lectura al reconectar.'));
       return;
     }
-    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA (lectura de recibos)
+    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA (lectura de fotos)
     this.leyendoRecibo.set(true);
     this.lecturaError.set('');
     try {
       const imgs: { tipo: 'recibo' | 'tablero' | 'bomba'; data: string; mime: string }[] = [];
-      imgs.push({ tipo: 'recibo', ...(await this.imagenBase64(recibo.blob)) });
-      const tablero = this.fotoTablero();
+      if (recibo) imgs.push({ tipo: 'recibo', ...(await this.imagenBase64(recibo.blob)) });
       if (tablero) imgs.push({ tipo: 'tablero', ...(await this.imagenBase64(tablero.blob)) });
       const res = await this.combustible.leerRecibo(imgs);
-      if (!res.ok || !res.lectura) { this.lecturaError.set(res.error ?? 'No se pudo leer el recibo.'); return; }
-      this.aplicarLectura(res.lectura, res.confianza ?? {}, sobrescribir);
+      if (!res.ok || !res.lectura) {
+        // DI10 — motivo real del fallo (la edge ya distingue truncado/no-interpretable);
+        // nunca un error genérico cuando el servidor nos dio uno concreto.
+        this.lecturaError.set(res.error || this.i18n.t('No se pudo leer: la foto puede estar borrosa, sin buena luz, o la IA no respondió. Llena los datos a mano.'));
+        return;
+      }
+      this.lecturaCache.set(clave, { lectura: res.lectura, confianza: res.confianza ?? {} });
+      this.aplicarLectura(res.lectura, res.confianza ?? {});
     } catch {
-      this.lecturaError.set('No se pudo leer el recibo.');
+      this.lecturaError.set(this.i18n.t('No se pudo leer. Intenta de nuevo o llena los datos a mano.'));
     } finally {
       this.leyendoRecibo.set(false);
     }
   }
 
+  /** DI7 — confianza de un campo leído por IA (para el chip ✓ / ¿seguro? / completar). */
+  lecturaConfianza = signal<Record<string, number>>({});
+  nivelConfianza(campo: string): 'alta' | 'media' | 'baja' | null {
+    if (!this.lecturaCruda()) return null;
+    const c = this.lecturaConfianza()[campo] ?? 0;
+    return c >= 0.9 ? 'alta' : c >= 0.7 ? 'media' : 'baja';
+  }
+
   /**
-   * Rellena los campos con confianza ≥ 0.9; el chofer confirma o corrige. Con
-   * `sobrescribir=false` solo toca los campos vacíos (lectura al reconectar).
+   * DI6/DI10 — SOLO rellena campos VACÍOS con confianza ≥ 0.9 (nunca pisa lo que el
+   * chofer ya escribió — se eliminó el pisado silencioso). Si un campo YA tenía un
+   * valor distinto al leído, queda reflejado en `camposDiferencia` para que el
+   * chofer decida (usar el del recibo / mantener el suyo con motivo).
    */
-  private aplicarLectura(l: LecturaRecibo, conf: Record<string, number>, sobrescribir = true): void {
+  private aplicarLectura(l: LecturaRecibo, conf: Record<string, number>): void {
     const UMBRAL = 0.9;
     this.lecturaCruda.set(l);
+    this.lecturaConfianza.set(conf);
     const llenados: string[] = [];
     const ok = (campo: keyof LecturaRecibo) => {
       const v = l[campo];
       return v !== null && v !== undefined && v !== '' && (conf[campo as string] ?? 0) >= UMBRAL;
     };
-    if (ok('galones') && (sobrescribir || this.galones() == null)) { this.galones.set(Number(l.galones)); this.galonesRaw.set(String(l.galones)); llenados.push('Galones'); }
-    if (ok('monto') && (sobrescribir || this.monto() == null)) { this.monto.set(Number(l.monto)); this.montoRaw.set(String(l.monto)); llenados.push('Monto'); }
-    if (ok('km') && l.km != null && (sobrescribir || this.km() == null)) { this.km.set(Number(l.km)); llenados.push('Kilometraje'); }
-    if (ok('producto') && (l.producto === 'diesel' || l.producto === 'gasolina')) { this.producto.set(l.producto); llenados.push('Producto'); }
-    if (ok('estacion') && (sobrescribir || !this.estacionOtro())) { this.estacionOtro.set(true); this.estacionOtroTexto.set(String(l.estacion)); llenados.push('Estación'); }
-    if (ok('numero_recibo') && (sobrescribir || !this.numeroRecibo())) { this.numeroRecibo.set(String(l.numero_recibo).replace(/\D/g, '')); llenados.push('N° recibo'); }
-    if (ok('tarjeta_ult4') && (sobrescribir || !this.tarjeta())) { this.tarjeta.set(String(l.tarjeta_ult4)); llenados.push('Tarjeta'); }
-    if (ok('fecha') && this.permisoRetro() && (sobrescribir || !this.fechaRetro())) { this.fechaRetro.set(String(l.fecha)); llenados.push('Fecha'); }
+    if (ok('galones') && this.galones() == null) { this.galones.set(Number(l.galones)); this.galonesRaw.set(String(l.galones)); llenados.push(this.i18n.t('Galones')); }
+    if (ok('monto') && this.monto() == null) { this.monto.set(Number(l.monto)); this.montoRaw.set(String(l.monto)); llenados.push(this.i18n.t('Monto')); }
+    if (ok('km') && l.km != null && this.km() == null) { this.km.set(Number(l.km)); llenados.push(this.i18n.t('Kilometraje')); }
+    if (ok('producto') && (l.producto === 'diesel' || l.producto === 'gasolina')) { this.producto.set(l.producto); llenados.push(this.i18n.t('Producto')); }
+    if (ok('estacion') && !this.estacionOtro() && this.estacion() === 'Total Energies') { this.estacionOtro.set(true); this.estacionOtroTexto.set(String(l.estacion)); llenados.push(this.i18n.t('Estación')); }
+    if (ok('numero_recibo') && !this.numeroRecibo()) { this.numeroRecibo.set(String(l.numero_recibo).replace(/\D/g, '')); llenados.push(this.i18n.t('N° recibo')); }
+    if (ok('tarjeta_ult4') && !this.tarjeta()) { this.tarjeta.set(String(l.tarjeta_ult4)); llenados.push(this.i18n.t('Tarjeta')); }
+    if (ok('fecha') && this.permisoRetro() && !this.fechaRetro()) { this.fechaRetro.set(String(l.fecha)); llenados.push(this.i18n.t('Fecha')); }
     this.leidoCampos.set(llenados);
   }
 
-  /** CF4 — bandera "No coincide con el recibo": lo confirmado difiere > 2% de lo leído. */
-  discrepanciaRecibo = computed(() => {
+  /**
+   * DI6 (F4) — diferencias EN VIVO entre lo leído (confianza ≥ 0.9) y lo que el
+   * chofer ya tiene escrito: solo cuenta si además supera 2% Y el mínimo absoluto
+   * (0.2 gal / RD$5 / 5 km) — evita molestar por redondeos. Es un computed (no un
+   * snapshot): se re-evalúa si el chofer vuelve a 'digits' y cambia un número, o si
+   * se re-lee la foto — por eso el aviso ya NO queda "atrás" en el paso equivocado.
+   */
+  camposDiferencia = computed<CampoDiferencia[]>(() => {
     const l = this.lecturaCruda();
-    if (!l) return '';
-    const dif: string[] = [];
-    const chk = (leido: number | null, actual: number | null, etq: string) => {
-      if (leido == null || actual == null || leido === 0) return;
-      if (Math.abs(actual - leido) / Math.abs(leido) > 0.02) dif.push(`${etq} (recibo ${leido}, tú ${actual})`);
-    };
-    chk(l.galones, this.galones(), 'galones');
-    chk(l.monto, this.monto(), 'monto');
-    return dif.length ? 'No coincide con el recibo: ' + dif.join(' · ') : '';
+    if (!l) return [];
+    const conf = this.lecturaConfianza();
+    const UMBRAL = 0.9;
+    const candidatos: Array<{ campo: CampoDiferencia['campo']; etiqueta: string; leido: number | null; actual: number | null; minAbs: number; sufijo: string }> = [
+      { campo: 'galones', etiqueta: this.i18n.t('Galones'), leido: l.galones, actual: this.galones(), minAbs: 0.2, sufijo: 'gal' },
+      { campo: 'monto', etiqueta: this.i18n.t('Monto'), leido: l.monto, actual: this.monto(), minAbs: 5, sufijo: 'RD$' },
+      { campo: 'km', etiqueta: this.i18n.t('Kilometraje'), leido: l.km, actual: this.modoPersona() ? null : this.km(), minAbs: 5, sufijo: 'km' },
+    ];
+    const out: CampoDiferencia[] = [];
+    for (const c of candidatos) {
+      if (c.leido == null || c.actual == null) continue;
+      if ((conf[c.campo] ?? 0) < UMBRAL) continue;
+      const diff = Math.abs(c.actual - c.leido);
+      const pct = c.leido !== 0 ? diff / Math.abs(c.leido) : 0;
+      if (pct > 0.02 && diff >= c.minAbs) {
+        out.push({ campo: c.campo, etiqueta: c.etiqueta, valorUsuario: c.actual, valorLeido: c.leido, sufijo: c.sufijo });
+      }
+    }
+    return out;
   });
+  /** DI6 — decisiones "mantener el mío" vigentes (keyed por campo; se invalidan solas
+   *  si el chofer vuelve a cambiar el valor, porque entonces valorUsuario ya no calza). */
+  decisiones = signal<Record<string, { valorUsuario: number; valorLeido: number; motivo: string }>>({});
+  private estaResuelta(d: CampoDiferencia): boolean {
+    const dec = this.decisiones()[d.campo];
+    return !!dec && dec.valorUsuario === d.valorUsuario && dec.valorLeido === d.valorLeido;
+  }
+  /** Diferencias que TODAVÍA esperan una decisión (gatea avanzar/guardar). */
+  camposDiferenciaPendientes = computed(() => this.camposDiferencia().filter((d) => !this.estaResuelta(d)));
+  diferenciasPendientes = computed(() => this.camposDiferenciaPendientes().length > 0);
+
+  /** "Usar el del recibo (X)": aplica el valor leído — la diferencia desaparece sola. */
+  usarValorLeido(d: CampoDiferencia): void {
+    if (d.campo === 'galones') { this.galones.set(d.valorLeido); this.galonesRaw.set(String(d.valorLeido)); }
+    else if (d.campo === 'monto') { this.monto.set(d.valorLeido); this.montoRaw.set(String(d.valorLeido)); }
+    else if (d.campo === 'km') { this.km.set(d.valorLeido); }
+  }
+  motivoAbiertoPara = signal<string | null>(null);
+  motivoTexto = signal('');
+  abrirMotivoDiferencia(campo: string): void {
+    this.motivoAbiertoPara.set(campo);
+    this.motivoTexto.set('');
+  }
+  cerrarMotivoDiferencia(): void {
+    this.motivoAbiertoPara.set(null);
+    this.motivoTexto.set('');
+  }
+  /** "Mantener el mío y dar un motivo": sin motivo no deja avanzar (botón deshabilitado). */
+  confirmarMantener(d: CampoDiferencia): void {
+    const motivo = this.motivoTexto().trim();
+    if (!motivo) return;
+    this.decisiones.update((r) => ({ ...r, [d.campo]: { valorUsuario: d.valorUsuario, valorLeido: d.valorLeido, motivo } }));
+    this.motivoAbiertoPara.set(null);
+    this.motivoTexto.set('');
+  }
+  /** Payload DI6 para `registrar_combustible_app`: solo lo que el chofer decidió MANTENER (lo que aceptó corregir ya viaja con el valor del recibo, sin marca especial). */
+  private construirDiferenciasPayload(): Array<{ campo: string; valor_usuario: number; valor_leido: number; decision: 'mantener_mio'; motivo: string }> | null {
+    const entries = Object.entries(this.decisiones());
+    if (!entries.length) return null;
+    return entries.map(([campo, dec]) => ({
+      campo, valor_usuario: dec.valorUsuario, valor_leido: dec.valorLeido, decision: 'mantener_mio', motivo: dec.motivo,
+    }));
+  }
 
   next(): void {
     if (!this.canAdvance()) return;
@@ -1312,6 +1488,60 @@ export class CombustiblePage extends GuardedWizard {
           this.toast.error(this.i18n.t('Falta la foto del tablero.'));
           return false;
         }
+        if (this.leyendoRecibo()) {
+          this.toast.error(this.i18n.t('Espera, estamos leyendo el recibo…'));
+          return false;
+        }
+        // DI6 — no se avanza con diferencias sin decidir (se detectan al leer la foto).
+        if (this.diferenciasPendientes()) {
+          this.toast.error(this.i18n.t('Resuelve las diferencias con el recibo antes de continuar.'));
+          return false;
+        }
+        return true;
+      }
+      // DI5 — rápido con IA: las 2 fotos (tablero + recibo); la bomba es opcional.
+      case 'rapido_fotos': {
+        if (!this.fotoTablero()) {
+          this.toast.error(this.i18n.t('Toma la foto del tablero.'));
+          return false;
+        }
+        if (!this.fotoRecibo()) {
+          this.toast.error(this.i18n.t('Toma la foto del recibo.'));
+          return false;
+        }
+        if (this.leyendoRecibo()) {
+          this.toast.error(this.i18n.t('Espera, estamos leyendo las fotos…'));
+          return false;
+        }
+        return true;
+      }
+      // DI5 — "Revisa y confirma": los campos que el formulario necesita deben
+      // quedar completos (nunca se inventan) antes de enviar.
+      case 'rapido_confirmar': {
+        if (!this.modoPersona()) {
+          const km = this.km();
+          if (km == null || km <= 0) {
+            this.toast.error(this.i18n.t('Escribe el kilometraje.'));
+            return false;
+          }
+          if (this.kmBloqueado()) {
+            this.toast.error(this.kmMensajeBloqueo());
+            return false;
+          }
+        }
+        if (!this.galones() || this.galones()! <= 0) {
+          this.toast.error(this.i18n.t('Escribe los galones.'));
+          return false;
+        }
+        if (!this.monto() || this.monto()! <= 0) {
+          this.toast.error(this.i18n.t('Escribe el monto pagado.'));
+          return false;
+        }
+        const bloqueo = this.validacion().bloqueo;
+        if (bloqueo) {
+          this.toast.error(bloqueo);
+          return false;
+        }
         return true;
       }
       // Paso detalles: producto + Regular/Premium + tarjeta/titular/obra.
@@ -1350,6 +1580,11 @@ export class CombustiblePage extends GuardedWizard {
     try {
       if (!this.fotosCompletas()) {
         this.toast.error(this.i18n.t('Faltan fotos para guardar.'));
+        return;
+      }
+      // DI6 — última barrera: no se guarda con diferencias del recibo sin decidir.
+      if (this.diferenciasPendientes()) {
+        this.toast.error(this.i18n.t('Resuelve las diferencias con el recibo antes de guardar.'));
         return;
       }
       // AW3 — última barrera espejo del servidor antes de encolar.
@@ -1433,12 +1668,15 @@ export class CombustiblePage extends GuardedWizard {
         // AC11 — fotos según el origen: depósito=evidencia; estación=recibo/tablero/bomba.
         fotoRecibo: deposito ? null : this.fotoRecibo()!.blob,
         fotoTablero: persona || deposito ? null : this.fotoTablero()!.blob,
-        fotoBomba: deposito ? null : this.fotoBomba()!.blob,
+        // DI5 — en rápido con IA la bomba es opcional: puede no haberse tomado.
+        fotoBomba: deposito ? null : (this.fotoBomba()?.blob ?? null),
         fotoEvidencia: deposito ? this.fotoEvidencia()!.blob : null,
         placa: persona ? '' : this.placa(),
         ayudanteId: this.ayudanteId(), // AT4
         confirmado: this.confirmado(), // AW3 — echada inusual ya confirmada
         fotoOrigen: this.fotoOrigenGaleria() ? 'galeria' : 'camara', // CK3
+        captura: this.modoRegistro() === 'rapido' ? 'rapido_ia' : 'normal', // DI5
+        diferencias: this.construirDiferenciasPayload(), // DI6
       });
       this.lastId.set(nuevoId); // AW2 — para "Revisar y corregir"
       // BM1 — corrección de una echada atascada: la corregida YA quedó encolada

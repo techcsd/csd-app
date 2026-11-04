@@ -74,6 +74,11 @@ export class PagosListaPage {
   error = signal(false);
   pagos = signal<PagoObra[]>([]);
   obras = signal<ProyectoPickable[]>([]);
+  q = signal('');
+
+  // DI8 — paginación por lotes (regla de la casa): solo se pinta el lote visible.
+  private readonly LOTE = 20;
+  visibleCount = signal(this.LOTE);
 
   mostrarCrear = signal(false);
   nuevoObraId = signal('');
@@ -82,6 +87,31 @@ export class PagosListaPage {
   creando = signal(false);
 
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
+
+  /** Filtro local por obra o por la semana (fechas formateadas). */
+  filtradas = computed(() => {
+    const q = this.q().trim().toLowerCase();
+    const list = this.pagos();
+    if (!q) return list;
+    return list.filter((p) => {
+      const obra = this.nombreObra(p.proyecto_id).toLowerCase();
+      const semana = `${this.fmt(p.semana_desde)} ${this.fmt(p.semana_hasta)}`.toLowerCase();
+      return obra.includes(q) || semana.includes(q);
+    });
+  });
+
+  /** KPI simple a partir de los datos ya cargados (sin RPCs nuevos). */
+  pendientesCount = computed(() => this.pagos().filter((p) => p.estado === 'borrador').length);
+
+  visibles = computed(() => this.filtradas().slice(0, this.visibleCount()));
+  hayMas = computed(() => this.filtradas().length > this.visibleCount());
+  cargarMas(): void {
+    this.visibleCount.update((n) => n + this.LOTE);
+  }
+  /** Reinicia el lote visible (nueva carga o nuevo filtro). */
+  resetPag(): void {
+    this.visibleCount.set(this.LOTE);
+  }
 
   constructor() {
     void this.cargar();
@@ -101,6 +131,7 @@ export class PagosListaPage {
       ]);
       this.pagos.set(pagos);
       this.obras.set(obras);
+      this.resetPag(); // nueva carga arranca en el primer lote
     } catch {
       this.error.set(true);
     } finally {

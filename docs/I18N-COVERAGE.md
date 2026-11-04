@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 89%** del alcance · **Kreyòl (ht): 3%**
+- **Inglés (en): 88%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -41,7 +41,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/mis-partes | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/orden-trabajo | 60 | 1 | 98% | 2% |  |
 | pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
-| pages/bitacora/parte | 204 | 4 | 98% | 0% |  |
+| pages/bitacora/parte | 205 | 4 | 98% | 0% |  |
 | pages/borrador | 13 | 0 | 100% | 0% |  |
 | pages/buscador | 7 | 0 | 100% | 0% |  |
 | pages/compa | 22 | 0 | 100% | 0% |  |
@@ -60,8 +60,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
-| pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
-| pages/ingenieria/pagos | 55 | 0 | 42% | 2% |  |
+| pages/ingenieria/cartilla | 63 | 0 | 97% | 0% |  |
+| pages/ingenieria/pagos | 61 | 0 | 43% | 2% |  |
 | pages/inventario | 15 | 0 | 100% | 0% |  |
 | pages/inventario/almacen-inventario | 23 | 0 | 100% | 0% |  |
 | pages/inventario/almacenes | 30 | 0 | 100% | 3% |  |
@@ -149,7 +149,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 3% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 130 | 2 | 86% | 2% |  |
+| pages/transporte/combustible | 156 | 2 | 74% | 1% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
 | pages/transporte/conduce-externo | 84 | 1 | 82% | 4% |  |
@@ -163,6 +163,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/conduces/entrega | 33 | 0 | 100% | 3% |  |
 | pages/transporte/conductores | 44 | 0 | 100% | 0% |  |
 | pages/transporte/confirmaciones | 28 | 0 | 100% | 0% |  |
+| pages/transporte/cupo | 25 | 0 | 28% | 0% |  |
 | pages/transporte/despachos | 24 | 0 | 100% | 4% |  |
 | pages/transporte/devolver-material | 44 | 0 | 100% | 2% |  |
 | pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
@@ -194,7 +195,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/solicitud-movimiento | 33 | 0 | 76% | 0% |  |
 | pages/transporte/trabajos-transporte | 35 | 0 | 97% | 9% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
-| pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
+| pages/transporte/uso-vehiculo | 31 | 0 | 74% | 0% |  |
 | pages/transporte/vehiculos | 64 | 2 | 97% | 0% |  |
 | shared/components/aceptacion-politicas | 9 | 0 | 56% | 0% |  |
 | shared/components/alarma-host | 4 | 0 | 100% | 0% |  |
@@ -228,6 +229,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
+| shared/ui/molde-esquema-visor | 1 | 0 | 100% | 100% |  |
 | shared/ui/momento | 1 | 0 | 100% | 100% |  |
 | shared/ui/notif-health-band | 22 | 3 | 36% | 8% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |

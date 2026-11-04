@@ -751,8 +751,10 @@
             }
             <button type="button" class="btn-ghost parte__molde-add-lado" (click)="addLado()">+ {{ 'Agregar lado' | t }}</button>
 
-            <!-- Esquema en vivo -->
-            <app-molde-esquema [forma]="mForma()" [tramos]="mTramosPreview()" [medidaPlano]="mPlanoPreview()" [toleranciaCm]="moldeTolerancia" />
+            <!-- Esquema en vivo (tocar para verlo grande) -->
+            <button type="button" class="parte__molde-esquema-tap" (click)="abrirVisorMolde(mForma(), mTramosPreview(), mPlanoPreview())" [attr.aria-label]="'Ver esquema en grande' | t">
+              <app-molde-esquema [forma]="mForma()" [tramos]="mTramosPreview()" [medidaPlano]="mPlanoPreview()" [toleranciaCm]="moldeTolerancia" />
+            </button>
 
             <label class="field-label">{{ 'Nota (opcional)' | t }}</label>
             <input class="field" type="text" [ngModel]="mNotas()" (ngModelChange)="mNotas.set($event)" [placeholder]="'Algo que aclarar del molde' | t" aria-label="Nota del molde" />
@@ -775,7 +777,9 @@
                 <span class="parte__dano-name">{{ m.identificador }}@if (m.estructura) { <small class="parte__molde-estr"> · {{ m.estructura }}</small> }</span>
                 <button type="button" class="parte__act-x" (click)="removeMolde(m.key)">{{ 'Quitar' | t }}</button>
               </div>
-              <app-molde-esquema [forma]="m.forma" [tramos]="moldeTramos(m)" [medidaPlano]="moldePlano(m)" [toleranciaCm]="moldeTolerancia" />
+              <button type="button" class="parte__molde-esquema-tap" (click)="abrirVisorMolde(m.forma, moldeTramos(m), moldePlano(m))" [attr.aria-label]="'Ver esquema en grande' | t">
+                <app-molde-esquema [forma]="m.forma" [tramos]="moldeTramos(m)" [medidaPlano]="moldePlano(m)" [toleranciaCm]="moldeTolerancia" />
+              </button>
             </div>
           }
         }
@@ -926,5 +930,15 @@
     [cancelLabel]="'Seguir aquí' | t"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"
+  />
+
+  <!-- DI10 — esquema del molde a pantalla completa (tocar el SVG en miniatura lo abre). -->
+  <app-molde-esquema-visor
+    [open]="!!visorMolde()"
+    [forma]="visorMolde()?.forma ?? 'rectangular'"
+    [tramos]="visorMolde()?.tramos ?? []"
+    [medidaPlano]="visorMolde()?.medidaPlano ?? null"
+    [toleranciaCm]="moldeTolerancia"
+    (closed)="visorMolde.set(null)"
   />
 }

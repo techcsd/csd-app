@@ -78,6 +78,19 @@
   }
 }
 
+.pg-resumen {
+  margin: 8px 0 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// DI8 — "Cargar más" (paginación por lotes)
+.pg-mas {
+  display: block;
+  width: 100%;
+  margin: 14px 0 4px;
+}
+
 .pg-list {
   display: flex;
   flex-direction: column;

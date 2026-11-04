@@ -1,5 +1,62 @@
 # HANDOFF — CSD App
 
+## 🟡 04-nov-2026 — Ronda DI #2 (PROMPT 135, app-side) v2.66.0 — EN WORKTREE, SIN COMMIT
+
+**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di`, rama `feature/di-ronda-03nov-2-app` (desde `origin/dev` @ `33edb2a` = v2.65.0, ronda DH ya en producción). **Nada commiteado ni pusheado** (instrucción explícita del prompt: avisar antes). `npm run build` (prebuild completo, guards incl. `verify-no-ai-tropes`) **verde**; `npm test` 63/63 verdes. Contraparte web: PROMPT 134 (SGC) **ya está en producción** (`SGC-di`, v1.210.0, mergeado a `main`) — el backend que esta ronda consume (edges + RPCs de cupo + columnas nuevas) ya existe en prod, verificado contra el HANDOFF del SGC (no re-verificado por SQL directo, se confió en su registro de ronda cerrada).
+
+### F0 — Verificación (corrigió 2 supuestos del prompt)
+- **Versión de partida:** el prompt asumía `origin/dev` en 2.64.0; en realidad ya estaba en **2.65.0** (ronda DH, ya en prod) al momento de empezar. Por eso esta ronda bump a **2.66.0**, no 2.65.0 como decía el prompt (mismo gotcha que rondas anteriores — CA13: "docs decían X, otra ronda ya se lo había llevado").
+- **DI1 (Pagos de la semana):** la hipótesis "selector de obra igual al de la web" era falsa — la app NUNCA tuvo selector de obra en esta pantalla; lista TODAS las semanas de las obras visibles del usuario, sin paginar. El "no hay forma de hacer nada" de Xaviel describe la pantalla SIN DATOS para roles de solo-lectura (correcto: no deben poder operar) — no un dead-end real. Lo que sí faltaba era paginación (DI8) y buscador.
+- **DI2 (Moldes):** SÍ existe en la app (`shared/ui/molde-esquema`, usado en `bitacora/parte` y `bitacora/detalle`) — SVG en vivo, no una foto. Aplica completo (visor a pantalla grande).
+- **DI4 (cupo):** `tarjeta` en `combustible.ts` era un campo de texto libre sin ningún concepto de límite/cupo — confirmado, nada que migrar.
+- **Lightbox:** el prompt/CLAUDE.md lo llama `app-lightbox`; el componente real es `PhotoViewerService`/`app-photo-viewer` (URLs firmadas, no sirve para el SVG en vivo de moldes → se construyó un visor aparte, `molde-esquema-visor`).
+- **Contrato con 134:** confirmado LIVE en prod — `registrar_combustible_app` ahora de **26 args** (`p_captura`, `p_diferencias` al final; backward-compatible), `set_uso_fotos` con `p_tablero_inicio/fin`, `leer-recibo` más robusto (reintento si viene truncado), `leer-formulario` tipo `uso_vehiculo` nuevo, 9 RPCs de cupo de tarjeta (`solicitar_cupo_tarjeta`, `mi_tarjeta_vehiculo`, `mis_solicitudes_cupo`, `cancelar_solicitud_cupo`, etc.). Nada quedó detrás de bandera — todo lo que esta ronda necesitaba ya estaba en prod.
+
+### F1 (DI10) — Lectura robusta en el cliente
+`combustible.ts`: `leerReciboAuto` generalizado para leer con recibo solo, tablero solo, o ambos (antes `onFotoTablero` solo re-leía SI YA había recibo — bug real, confirmado en F0, prerrequisito de F3/F6). Caché por huella SHA-256 de cada foto (`lecturaCache`) para no pagar dos veces la misma imagen al volver atrás/reintentar. Un solo estado de lectura (`leyendoRecibo`/`lecturaError`) con reintento manual visible ("Volver a leer"/"Leer recibo"), motivo real del fallo (la edge ya distingue truncado/no-interpretable; el mensaje genérico solo aparece si de verdad no hay nada mejor).
+
+### F2/F3 (DI5) — Selector Rápido con IA / Normal + flujo rápido
+Pantalla "¿Cómo quieres registrarlo?" al entrar a Registrar combustible (`modoSelectorVisible`): "Rápido con IA" solo aparece con conexión + consentimiento de IA ya otorgado (sin mensajes de error si falta — se oculta, nada más); "Normal" siempre. No aplica a persona/depósito/reenvío/corrección (van directo a normal). El borrador recuerda el modo elegido. Modo rápido: `['rapido_fotos', 'detalles', 'rapido_confirmar']` — tablero + recibo (bomba **opcional**, decisión de Xaviel "Bomba opcional en rápido"; sin ella la echada viaja `captura='rapido_ia'` y el servidor la anota `sin_foto_bomba` sin abrir revisión), luego "Revisa y confirma" (km/galones/monto/estación/tarjeta/n.º recibo editables, con pista de confianza ✓/¿seguro?/completar vía `nivelConfianza()`). Respaldo siempre visible: "Prefiero llenarlo yo (modo normal)" cambia de modo SIN perder las fotos ya tomadas (`cambiarANormal`).
+
+### F4 (DI6) — Diferencias con el recibo (el reclamo literal de Xaviel)
+Se eliminó el pisado silencioso de `aplicarLectura`: ahora SOLO rellena campos vacíos; si el chofer ya había escrito un valor y el recibo (confianza ≥0.9) difiere >2% (mínimo 0.2 gal / RD$5 / 5 km), aparece una decisión obligatoria — "Usar el del recibo (X)" o "Mantener el mío y dar un motivo" (sin motivo no deja avanzar) — en el paso 'fotos' (donde se lee la foto) Y de nuevo en 'revisar' (defensivo, por si vuelve atrás y cambia un número). El viejo aviso vivía en el paso 'digits', ANTES de tomar las fotos — por diseño siempre estaba vacío ahí (bug confirmado en F0, ahora corregido). "Guardar registro" queda deshabilitado mientras haya una diferencia sin decidir. Las que el chofer decide "mantener" viajan en `p_diferencias` (jsonb) y avisan a Flota (`combustible_diferencia`) — nunca bloquean el envío.
+
+### F5 (DI4) — Cupo de tarjeta
+`core/services/cupo-tarjeta.service.ts` + 2 páginas nuevas bajo `pages/transporte/cupo/`: **Solicitar cupo** (motivo en 4 botones, galones/monto/nota opcionales, muestra "vas en X% del cupo" SOLO si hay cupo anotado — nunca inventa un límite) y **Mis solicitudes** (paginada, `Cargar más`, cancelar mientras esté pendiente). Botón "¿Se te acabó el cupo? Pedir más" en Registrar combustible (paso detalles, junto a Tarjeta). Rutas `transporte/cupo/solicitar` y `transporte/cupo/mis-solicitudes` (mismo guard que `combustible-log`: `flota`).
+
+### F6 (DI7) — Uso de vehículo con foto del tablero
+`uso-vehiculo.ts`: nuevo paso "Foto del tablero" (antes de km/nivel, en usar/recibir Y en soltar) → `leer-formulario` tipo `uso_vehiculo` (nuevo método `FormularioIaService.leerUsoVehiculo`) → rellena km/horas (según `esTelehandler`) y nivel SOLO si estaban vacíos, con pista de confianza; luces de advertencia detectadas se anexan a las notas del uso. `puedeGuardar` NO cambió (sigue sin exigir foto) — el manual "O llénalo a mano" siempre está, sin mensajes de error si falta consentimiento/señal.
+
+### F7 (DI1/DI2/DI3/DI8) — Paridad
+Pagos de la semana y Cartillas de acero: buscador + paginación (`Cargar más`, mismo patrón de `combustible-log.ts`). Moldes: nuevo `shared/ui/molde-esquema-visor` (overlay a pantalla completa, back físico de Android cierra el visor) — el esquema SVG en `bitacora/parte` ahora es tocable para verlo grande (pinch-zoom deliberadamente fuera de alcance, solo "verlo grande" que era el pedido literal).
+
+### F8 — CSS tras OK
+**Nada de esta ronda tiene CSS nuevo de diseño** — todo reusa clases/tokens ya desplegados (`.field`, `.btn-cta`, `.btn-ghost`, `app-option-button`, el patrón `Cargar más` de `combustible-log`). Los boards DI1/DI3/DI4/DI5/DI7 siguen **pendientes de aprobación** de Xaviel; cuando los apruebe, la visual real de estas pantallas es trabajo nuevo, no un ajuste de lo ya construido.
+
+### Hallazgos propios (DI8/DI9/DI10)
+- **DI8 paginación:** aplicada en Pagos, Cartillas y Mis solicitudes de cupo (`Cargar más`); Registrar combustible/Uso de vehículo no son listas, no aplica.
+- **DI9 `confirm()` nativo:** no se encontró ninguno nuevo ni viejo en los módulos tocados (Pagos/Cartillas ya usaban `app-confirm-dialog` donde hacía falta).
+- **DI10 lectura robusta:** ver F1.
+
+### Gotcha de esta sesión — guard `verify-no-ai-tropes`
+El guard de diseño (congela emoji-como-icono por archivo+texto exacto, falla solo con tropos NUEVOS) rechazó 8 emoji nuevos introducidos por el trabajo paralelo de esta ronda (⚡/✍️ en el selector de modo, 🔍 en 2 buscadores nuevos, ⛽ en un empty-state nuevo, 🎛️/⚠ en uso-vehiculo). Corregido reutilizando un emoji YA aprobado en el mismo archivo cuando existía uno semánticamente razonable (📝 para "Normal"), o quitando el atributo `icon`/`hint` para que el componente caiga a su default (que no deja un carácter literal nuevo en el HTML) cuando no había nada que reusar. **Regla para la próxima ronda:** antes de poner un emoji nuevo en una plantilla, correr `node scripts/verify-no-ai-tropes.mjs` o revisar `scripts/no-ai-tropes.baseline.json` por ese archivo — reusar lo que ya esté aprobado ahí en vez de inventar un ícono nuevo.
+
+### Pendiente — Claude puede hacerlo (próxima sesión)
+1. Nada bloqueado por backend — todo lo que esta ronda necesitaba ya está en prod (134 cerrado).
+2. Si Xaviel aprueba los boards DI1/DI3/DI4/DI5/DI7: pasada de CSS real sobre lo ya construido (F8).
+3. KPI de Pagos de la semana (conteo pendientes/semana) quedó fuera — no era trivial sin una llamada nueva al servidor; revisar si vale la pena con el padre.
+
+### Pendiente — Xaviel únicamente
+1. **Probar en dev** una vez se abra PR y se mergee `feature/di-ronda-03nov-2-app → dev`: modo rápido con un recibo y un tablero reales (incluida una aguja analógica de nivel de gasolina), la decisión de diferencias con 1000 vs 4000, pedir cupo, uso de vehículo leyendo el tablero.
+2. Aprobar o ajustar boards DI1/DI3/DI4/DI5/DI7 (lienzo `https://claude.ai/artifact/SUX68yer4hrM8ujFyndc5o`) antes de la pasada de CSS (F8).
+3. OK para `npm run apk -- --env dev` + publicar, y después el flujo normal dev→main cuando confirme en su teléfono.
+
+### Verificar al retomar
+- `cd "C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di" && git status --short` — debe mostrar los archivos de combustible/uso-vehiculo/cupo/ingenieria/molde-esquema-visor, nada más.
+- `npm run build && npm test` — deben seguir verdes, versión 2.66.0.
+- `scripts/release-apk.mjs`: `TITULO`/`CAMBIOS_CURADOS` ya curados para esta ronda — no tocar hasta la próxima.
+
+
 ## 🟢 03-nov-2026 — Ronda DH (PROMPT 133, app-side) v2.65.0 — EN PRODUCCIÓN
 
 **Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dh`, rama `feature/dh-ronda-03nov-app` (desde `origin/dev` @ `efd7191` = v2.64.1). Flujo completo: commit → push → fast-forward a `dev` (`efd7191..2b96888`) → Xaviel probó la actualización in-app en su teléfono real (OK) → `qa/release-2.65.0.md` → `release-check.mjs` 4/4 → PR [#17](https://github.com/techcsd/csd-app/pull/17) `dev → main` (CI verde) → merge → `npm run apk -- --env prod` + `npm run apk:publish -- --env prod` (release-check corrió solo, 4/4 verde). **v2.65.0 publicada en prod** (de paso quedó en `main` el hotfix 2.64.1 que estaba pendiente de llegar ahí). `npm run build` verde (solo warnings preexistentes de bundle-budget/CommonJS). i18n: `verify-i18n` pasa, coberturas de los archivos tocados en 100%.

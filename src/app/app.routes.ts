@@ -626,6 +626,20 @@ export const routes: Routes = [
       import('./pages/transporte/combustible-log/combustible-log').then((m) => m.CombustibleLogPage),
   },
   {
+    // DI — "cupo de tarjeta de combustible": pedir más cupo de una tarjeta (solicitud manual).
+    path: 'transporte/cupo/solicitar',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/cupo/solicitar-cupo').then((m) => m.SolicitarCupoPage),
+  },
+  {
+    // DI — historial de mis solicitudes de cupo (mis_solicitudes_cupo).
+    path: 'transporte/cupo/mis-solicitudes',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/cupo/mis-solicitudes-cupo').then((m) => m.MisSolicitudesCupoPage),
+  },
+  {
     // AQ13/AQ6 — detalle de una echada (fila del registro + deep-link de consumo anormal).
     // La RLS de registros_combustible acota: elevado ve todas; el chofer, las suyas.
     path: 'transporte/echada/:id',

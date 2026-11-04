@@ -10,6 +10,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { MoldeEsquema, MoldeTramo } from '../../../shared/ui/molde-esquema/molde-esquema';
+import { MoldeEsquemaVisor } from '../../../shared/ui/molde-esquema-visor/molde-esquema-visor';
 import { MoldeCompositor, CompositorFigura } from '../../../shared/ui/molde-compositor/molde-compositor';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Counter } from '../../../shared/ui/counter/counter';
@@ -79,7 +80,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeEsquemaVisor, MoldeCompositor, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -1303,6 +1304,12 @@ export class PartePage implements OnDestroy {
           })),
         ]
       : null;
+  }
+
+  /** DI2 — visor a pantalla completa del esquema (tocar para verlo grande). null = cerrado. */
+  visorMolde = signal<{ forma: string; tramos: MoldeTramo[]; medidaPlano: MoldeTramo[] | null } | null>(null);
+  abrirVisorMolde(forma: string, tramos: MoldeTramo[], medidaPlano: MoldeTramo[] | null): void {
+    this.visorMolde.set({ forma, tramos, medidaPlano });
   }
 
   // ── BQ8(c) — modo Compositor (lienzo de figuras) ──────────────────────────
