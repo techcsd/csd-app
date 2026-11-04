@@ -29,6 +29,7 @@ import { FormularioIaService } from '../../../core/services/formulario-ia.servic
 import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 import { PropuestaUsoVehiculoIA } from '../../../core/models/formulario-ia.model';
 import { clasificarConfianza, ClasificacionConfianza } from '../../../shared/utils/bitacora-ia.util';
+import { EstadoChip } from '../../../shared/ui/estado-chip/estado-chip';
 
 type Modo = 'usar' | 'soltar';
 
@@ -43,7 +44,7 @@ type Modo = 'usar' | 'soltar';
   selector: 'app-uso-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog, EstadoChip, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './uso-vehiculo.html',
   styleUrl: './uso-vehiculo.scss',
 })

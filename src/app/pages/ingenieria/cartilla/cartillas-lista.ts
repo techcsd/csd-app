@@ -8,6 +8,8 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CartillaService } from '../../../core/services/cartilla.service';
 import { CartillaEstado, CartillaListado } from '../../../shared/models/cartilla.model';
+import { EstadoChip } from '../../../shared/ui/estado-chip/estado-chip';
+import { TecTono } from '../../../shared/utils/tec-tono.util';
 import { formatFecha } from '../../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
@@ -17,6 +19,14 @@ const ESTADO_LABEL: Record<CartillaEstado, string> = {
   revisada: 'Revisada',
   observada: 'Observada',
   ejecutada: 'Ejecutada',
+};
+/** F8 — estado = punto + palabra + fondo suave (app-estado-chip, CB v2). */
+const ESTADO_TONO: Record<CartillaEstado, TecTono> = {
+  borrador: 'neutral',
+  enviada: 'info',
+  revisada: 'success',
+  observada: 'warning',
+  ejecutada: 'success',
 };
 
 /**
@@ -28,7 +38,7 @@ const ESTADO_LABEL: Record<CartillaEstado, string> = {
   selector: 'app-cartillas-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, EmptyState, DecimalPipe, EstadoChip, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cartillas-lista.html',
   styleUrl: './cartillas-lista.scss',
 })
@@ -86,6 +96,9 @@ export class CartillasListaPage {
 
   estadoLabel(e: CartillaEstado): string {
     return ESTADO_LABEL[e] ?? e;
+  }
+  estadoTono(e: CartillaEstado): TecTono {
+    return ESTADO_TONO[e] ?? 'neutral';
   }
 
   nueva(): void {

@@ -149,7 +149,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 3% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 156 | 2 | 74% | 1% |  |
+| pages/transporte/combustible | 155 | 2 | 75% | 1% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
 | pages/transporte/conduce-externo | 84 | 1 | 82% | 4% |  |

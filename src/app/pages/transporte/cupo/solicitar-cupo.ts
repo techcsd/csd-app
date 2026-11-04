@@ -9,7 +9,15 @@ import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MotivoCupo, TarjetaConsumo } from '../../../core/models/cupo-tarjeta.model';
+import { EstadoChip } from '../../../shared/ui/estado-chip/estado-chip';
+import { TecTono } from '../../../shared/utils/tec-tono.util';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+
+/** F8 — línea de estado de cupo como chip (punto + palabra + fondo suave). */
+interface LineaEstadoCupo {
+  texto: string;
+  tono: TecTono;
+}
 
 /** DI — opción de motivo (ícono + etiqueta + valor enviado al servidor). */
 interface MotivoOpt {
@@ -34,7 +42,7 @@ const MOTIVOS: MotivoOpt[] = [
   selector: 'app-solicitar-cupo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, WizardExit, OptionButton, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, WizardExit, OptionButton, EstadoChip, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './solicitar-cupo.html',
   styleUrl: './solicitar-cupo.scss',
 })
@@ -61,17 +69,23 @@ export class SolicitarCupoPage {
   enviando = signal(false);
   enviado = signal(false);
 
-  /** Línea de estado "Tu tarjeta ···NNNN va en X% de su cupo este período" (una por métrica con cupo anotado). */
-  lineasEstado = computed<string[]>(() => {
+  /**
+   * F8 — "Tu tarjeta ···NNNN va en X% de su cupo" como chip (punto + palabra):
+   * <80% informativo, 80-99% ámbar (cerca del límite), ≥100% rojo (lo superó).
+   */
+  lineasEstado = computed<LineaEstadoCupo[]>(() => {
     const t = this.tarjetaInfo();
     if (!t) return [];
     const codigo = this.ultimos4(t.codigo_tarjeta);
-    const lineas: string[] = [];
+    const tono = (pct: number): TecTono => (pct >= 100 ? 'danger' : pct >= 80 ? 'warning' : 'info');
+    const lineas: LineaEstadoCupo[] = [];
     if (t.cupo_gal != null && t.pct_gal != null) {
-      lineas.push(this.i18n.t('Tu tarjeta ···{codigo} va en {pct}% de su cupo en galones este período.', { codigo, pct: Math.round(t.pct_gal) }));
+      const pct = Math.round(t.pct_gal);
+      lineas.push({ tono: tono(pct), texto: this.i18n.t('···{codigo} · {pct}% del cupo en galones', { codigo, pct }) });
     }
     if (t.cupo_monto != null && t.pct_monto != null) {
-      lineas.push(this.i18n.t('Tu tarjeta ···{codigo} va en {pct}% de su cupo en RD$ este período.', { codigo, pct: Math.round(t.pct_monto) }));
+      const pct = Math.round(t.pct_monto);
+      lineas.push({ tono: tono(pct), texto: this.i18n.t('···{codigo} · {pct}% del cupo en RD$', { codigo, pct }) });
     }
     return lineas;
   });

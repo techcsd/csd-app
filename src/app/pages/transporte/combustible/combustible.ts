@@ -37,6 +37,7 @@ import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transp
 import { CombustibleService, PermisoRetro, LecturaRecibo, ValidacionKm } from '../../../core/services/combustible.service';
 import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 import { ConsentService } from '../../../core/services/consent.service';
+import { EstadoChip } from '../../../shared/ui/estado-chip/estado-chip';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -113,7 +114,7 @@ export interface CampoDiferencia {
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker, EstadoChip, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })

@@ -9,8 +9,8 @@
       @if (cargandoTarjeta()) {
         <p class="field-hint">{{ 'Consultando tu tarjeta…' | t }}</p>
       }
-      @for (linea of lineasEstado(); track linea) {
-        <p class="field-hint">{{ linea }}</p>
+      @for (linea of lineasEstado(); track linea.texto) {
+        <app-estado-chip [label]="linea.texto" [tono]="linea.tono" />
       }
 
       <!-- Tarjeta -->

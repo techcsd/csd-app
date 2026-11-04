@@ -5,20 +5,28 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
+import { EstadoChip } from '../../../shared/ui/estado-chip/estado-chip';
 import { CupoTarjetaService } from '../../../core/services/cupo-tarjeta.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { EstadoSolicitudCupo, SolicitudCupo } from '../../../core/models/cupo-tarjeta.model';
+import { TecTono } from '../../../shared/utils/tec-tono.util';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
-/** Emoji + etiqueta por estado (regla de UI: nunca depender solo del color). */
+/** F8 — estado = punto + palabra + fondo suave (app-estado-chip, CB v2). */
 const ESTADO_LABEL: Record<EstadoSolicitudCupo, string> = {
-  pendiente: '🟡 Pendiente',
-  ampliada: '🟢 Ampliada',
-  rechazada: '🔴 Rechazada',
-  cancelada: '⚪ Cancelada',
+  pendiente: 'Pendiente',
+  ampliada: 'Ampliada',
+  rechazada: 'Rechazada',
+  cancelada: 'Cancelada',
+};
+const ESTADO_TONO: Record<EstadoSolicitudCupo, TecTono> = {
+  pendiente: 'warning',
+  ampliada: 'success',
+  rechazada: 'danger',
+  cancelada: 'neutral',
 };
 
 /**
@@ -29,7 +37,7 @@ const ESTADO_LABEL: Record<EstadoSolicitudCupo, string> = {
   selector: 'app-mis-solicitudes-cupo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, WizardExit, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, WizardExit, EstadoChip, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis-solicitudes-cupo.html',
   styleUrl: './mis-solicitudes-cupo.scss',
 })
@@ -42,6 +50,7 @@ export class MisSolicitudesCupoPage {
 
   readonly fechaHora = formatFechaCortaHora;
   readonly estadoLabel = ESTADO_LABEL;
+  readonly estadoTono = ESTADO_TONO;
 
   // DI8 — paginación por lotes (ninguna lista sin paginar).
   private readonly LOTE = 30;
