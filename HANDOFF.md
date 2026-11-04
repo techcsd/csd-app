@@ -4,7 +4,22 @@
 
 **Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di`, rama `feature/di-ronda-03nov-2-app` (desde `origin/dev` @ `33edb2a` = v2.65.0, ronda DH ya en producción). Flujo completo: push → merge directo a `dev` (sin PR, convención de este repo para feature→dev) → APK dev v2.66.0 build+publish (`qa/release-2.66.0.md`, Xaviel confirmó "ok, do it" tras publicar) → `release-check.mjs` 4/4 PASS → PR [#19](https://github.com/techcsd/csd-app/pull/19) `dev → main` (CI `build-prod` verde) → merge → `npm run apk -- --env prod` + `npm run apk:publish -- --env prod` (regla 18 verificó que 2.66.0 ya existía en dev; release-check volvió a correr solo, 4/4 verde). **v2.66.0 publicada en prod** — `publicada`/`minima` quedaron en `false` en ambos entornos (verificado por fila; nadie es forzado a actualizar, es una publicación normal). `npm run build` (prebuild completo, guards incl. `verify-no-ai-tropes`) **verde** en los 3 puntos (dev worktree, dev mergeado, main mergeado); `npm test` 63/63 verdes. Contraparte web: PROMPT 134 (SGC) **ya estaba en producción** (`SGC-di`, v1.210.0) antes de que esta ronda empezara — el backend que esta ronda consume (edges + RPCs de cupo + columnas nuevas) ya existía en prod, verificado contra el HANDOFF del SGC (no re-verificado por SQL directo, se confió en su registro de ronda cerrada).
 
-**En dev:** v2.66.0. **En prod:** v2.66.0 — APK: `https://jeeqhgccqefbqilntcpu.supabase.co/storage/v1/object/public/app-releases/csd-app-2.66.0.apk`.
+**En dev:** v2.66.1. **En prod:** v2.66.1 — APK: `https://jeeqhgccqefbqilntcpu.supabase.co/storage/v1/object/public/app-releases/csd-app-2.66.1.apk`.
+
+### F8 cerrado — v2.66.1
+Xaviel aprobó los boards DI1/DI3/DI4/DI5/DI7 ("yes i look it, look good"). Como el
+artifact de claude.ai no se puede leer por fetch (mismo límite que ya documentó
+el SGC), el pulido se hizo aplicando el sistema de diseño YA desplegado (no
+pixeles del mockup): `app-estado-chip` (punto + palabra + fondo suave, ya
+existía en `shared/ui/estado-chip/`) reemplazó los indicadores de estado hechos
+a mano en combustible (confianza del modo rápido), uso de vehículo (confianza
+del tablero), cupo de tarjeta (estado de solicitudes + aviso de % con tono por
+umbral: <80% info, 80-99% ámbar, ≥100% rojo) y Pagos/Cartillas (chip de la
+lista). Auditoría de "una acción naranja por pantalla": ya cumplía en todo lo
+tocado (`.btn-cta` = `--color-primary` = `#f97316`, un solo botón primario por
+estado de pantalla). Sin tokens/colores nuevos. PR [#20](https://github.com/techcsd/csd-app/pull/20)
+`dev → main`, `qa/release-2.66.1.md` con el OK de Xaviel, `release-check.mjs`
+4/4 PASS (corrido 2 veces: dev y prod), publicado en ambos entornos.
 
 ### F0 — Verificación (corrigió 2 supuestos del prompt)
 - **Versión de partida:** el prompt asumía `origin/dev` en 2.64.0; en realidad ya estaba en **2.65.0** (ronda DH, ya en prod) al momento de empezar. Por eso esta ronda bump a **2.66.0**, no 2.65.0 como decía el prompt (mismo gotcha que rondas anteriores — CA13: "docs decían X, otra ronda ya se lo había llevado").
