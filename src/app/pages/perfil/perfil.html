@@ -224,6 +224,15 @@
       {{ agrupado() ? ('✅ ' + ('Módulos agrupados por sección' | t)) : ('🗂️ ' + ('Agrupar módulos por sección' | t)) }}
     </button>
 
+    <!-- DJ3 — mostrar/ocultar "Hoy" y "Pulso de obras" del inicio (on por defecto; también
+         son plegables directo en el inicio sin tocar esta preferencia). -->
+    <button type="button" class="btn-ghost perfil__btn" [disabled]="hoyOcultoBusy()" (click)="toggleHoyOculto()">
+      {{ (hoyOculto() ? 'Mostrar "Hoy" en el inicio' : 'Ocultar "Hoy" del inicio') | t }}
+    </button>
+    <button type="button" class="btn-ghost perfil__btn" [disabled]="pulsoOcultoBusy()" (click)="togglePulsoOculto()">
+      {{ (pulsoOculto() ? 'Mostrar "Pulso de obras" en el inicio' : 'Ocultar "Pulso de obras" del inicio') | t }}
+    </button>
+
     <!-- DG6 — burbuja de Compa accesible desde cualquier pantalla (on por defecto) -->
     <button type="button" class="btn-ghost perfil__btn" [disabled]="compaFlotanteBusy()" (click)="toggleCompaFlotante()">
       {{ compaFlotanteOn() ? ('✅ ' + ('Compa flotante activado' | t)) : ('🤖 ' + ('Activar Compa flotante' | t)) }}<!-- tropes-allow: mismo patrón ✅/icono de los demás toggles de esta pantalla -->

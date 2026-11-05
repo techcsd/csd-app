@@ -113,6 +113,11 @@
 .home__group--collapsed .home__group-hd {
   padding-bottom: 10px;
 }
+// DJ3 — plegado: sin el padding inferior extra de la tarjeta (el header ya trae el suyo).
+.home__hoy.home__group--collapsed,
+.home__pulso.home__group--collapsed {
+  padding-bottom: 0;
+}
 .home__group-badge {
   flex: 0 0 auto;
   min-width: 18px;
@@ -367,21 +372,27 @@
 
 // A6 — "Hoy": KPIs que cuentan + feed de eventos (polling 30s en foreground, sin
 // Realtime/mapa — decisión explícita de batería/datos en el teléfono).
+// DJ3 — ahora plegable: la cabecera es un botón (home__group-hd, mismo patrón de
+// los grupos del home agrupado) que ya trae su propio padding horizontal, así que
+// la tarjeta solo aporta el padding INFERIOR/lateral del cuerpo (no duplica el de
+// la cabecera).
 .home__hoy {
   margin: 0 16px 12px;
-  padding: 14px 16px;
+  padding: 0 0 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
+  > :not(.home__group-hd) { margin-left: 16px; margin-right: 16px; }
 }
 
-// DF4 (PROMPT 129) — Pulso de obras.
+// DF4 (PROMPT 129) — Pulso de obras. DJ3 — plegable, ver nota de "Hoy".
 .home__pulso {
   margin: 0 16px 12px;
-  padding: 14px 16px;
+  padding: 0 0 14px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
+  > :not(.home__group-hd) { margin-left: 16px; margin-right: 16px; }
 }
 .home__pulso-row {
   display: flex;

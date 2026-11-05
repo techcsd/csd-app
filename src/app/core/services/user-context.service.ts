@@ -71,6 +71,15 @@ export class UserContextService {
   agruparHome = computed(() => this._profile()?.preferencias?.['agrupar_home'] === true);
 
   /**
+   * DJ3 — ¿el usuario apagó el bloque "Hoy"/"Pulso de obras" del Home? Preferencia
+   * por usuario (server-side, mismo mecanismo que agruparHome). Por defecto ON
+   * (visible) para quien ya tiene el gate de módulo/rol; el que no lo quiera ver lo
+   * apaga en Perfil.
+   */
+  homeHoyOculto = computed(() => this._profile()?.preferencias?.['home_hoy_oculto'] === true);
+  homePulsoOculto = computed(() => this._profile()?.preferencias?.['home_pulso_oculto'] === true);
+
+  /**
    * BD1 — fija una preferencia del usuario (RPC self-scoped `mi_preferencia_set`).
    * Aplica OPTIMISTA en local (signal + caché de disco) para que la UI reaccione
    * al instante y sobreviva un reinicio offline; revierte si el servidor falla.

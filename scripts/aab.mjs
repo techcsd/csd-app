@@ -18,11 +18,16 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, copyFileSync, statSync, readFileSync, readdirSync } from 'node:fs';
 import { resolverEnv } from './lib/entorno.mjs';
 import { writeCanalGenerated, verificarCanalEnZip } from './lib/canal.mjs';
+import { verificarGoogleServicesProd } from './lib/google-services-guard.mjs';
 
 const isWin = process.platform === 'win32';
 const env = await resolverEnv(process.argv.slice(2));
 const ENV = env.entorno;                 // 'dev' | 'prod'
 const CAP = ENV[0].toUpperCase() + ENV.slice(1); // 'Dev' | 'Prod'
+
+// DJ1 (incidente 05-nov-2026) — mismo riesgo que el APK: un AAB de prod sin
+// google-services.json crashea en cualquier teléfono al abrir (ver build-apk.mjs).
+verificarGoogleServicesProd(ENV);
 
 function firstExisting(paths) { return paths.find((p) => p && existsSync(p)); }
 
