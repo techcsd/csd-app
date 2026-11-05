@@ -1,6 +1,21 @@
 # HANDOFF — CSD App
 
-## 🟡 05-nov-2026 — Ronda DJ (hotfix de crash + versiones + dashboards plegables) v2.66.3 — EN WORKTREE, SIN COMMIT
+## 🟢 05-nov-2026 — Ronda DJ (hotfix de crash + versiones + dashboards plegables) v2.66.3 — EN PRODUCCIÓN (cierre completo)
+
+**Cierre:** v2.66.3 verificada EN VIVO en un teléfono Android real (login con cuenta
+QA de dev, plegar/desplegar "Hoy", apagar/encender ambas secciones desde Perfil con
+confirmación de persistencia server-side — ver `qa/release-2.66.3.md`) → PR
+[#23](https://github.com/techcsd/csd-app/pull/23) `dev → main` (CI verde) → merge →
+`npm run apk -- --env prod` + verificación on-device del APK firmado (sin crash,
+"FirebaseApp initialization successful", proceso vivo) → `npm run apk:publish --
+env prod`. **En dev: v2.66.3. En prod: v2.66.3** —
+`publicada`/`minima` en `false` (publicación normal, nadie forzado).
+
+Pendiente real que sigue abierto (no es código del hijo): los 2 SQL en
+`sql-para-sgc/` (corrección del dato de `publicada` + el trigger de unicidad)
+siguen esperando que el padre (SGC) los aplique — hasta entonces
+`version_publicada()` puede seguir sirviendo una respuesta inconsistente si
+alguien vuelve a marcar dos filas como publicadas a la vez.
 
 **Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dj`, rama `hotfix/dj-crash-versiones-dashboards` (desde `origin/dev`). Xaviel reportó 3 cosas en una: (1) la app se cerraba sola al abrirla, reportado por Misael y reproducido por Xaviel en 2 teléfonos distintos; (2) marcar una versión vieja como "publicada" en el admin de SGC no cambiaba qué APK se ofrece a descargar (seguía dando la última, no la seleccionada); (3) pidió que "Hoy" y "Pulso de obras" del inicio fueran plegables y apagables desde Configuración.
 
