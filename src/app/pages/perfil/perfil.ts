@@ -107,6 +107,12 @@ export class PerfilPage {
   // BD1 — preferencia por usuario: agrupar el home por sección (off por defecto).
   agrupado = this.ctx.agruparHome;
   agrupadoBusy = signal(false);
+  // DJ3 — apagar del todo "Hoy"/"Pulso de obras" del home (on por defecto; además
+  // de apagable aquí, son plegables directo en el home sin tocar esta preferencia).
+  hoyOculto = this.ctx.homeHoyOculto;
+  hoyOcultoBusy = signal(false);
+  pulsoOculto = this.ctx.homePulsoOculto;
+  pulsoOcultoBusy = signal(false);
   online = this.network.online;
   // DG6 — Compa flotante: burbuja accesible desde cualquier pantalla (on por defecto).
   compaFlotanteOn = this.flotante.activo;
@@ -375,6 +381,44 @@ export class PerfilPage {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la preferencia.');
     } finally {
       this.agrupadoBusy.set(false);
+    }
+  }
+
+  /** DJ3 — enciende/apaga el bloque "Hoy" del home (preferencia por usuario, server-side). */
+  async toggleHoyOculto(): Promise<void> {
+    if (this.hoyOcultoBusy()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      return;
+    }
+    this.hoyOcultoBusy.set(true);
+    try {
+      const next = !this.hoyOculto();
+      await this.ctx.setPreferencia('home_hoy_oculto', next);
+      this.toast.success(next ? 'Se ocultó "Hoy" del inicio.' : 'Se volvió a mostrar "Hoy" en el inicio.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la preferencia.');
+    } finally {
+      this.hoyOcultoBusy.set(false);
+    }
+  }
+
+  /** DJ3 — enciende/apaga el bloque "Pulso de obras" del home (preferencia por usuario, server-side). */
+  async togglePulsoOculto(): Promise<void> {
+    if (this.pulsoOcultoBusy()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      return;
+    }
+    this.pulsoOcultoBusy.set(true);
+    try {
+      const next = !this.pulsoOculto();
+      await this.ctx.setPreferencia('home_pulso_oculto', next);
+      this.toast.success(next ? 'Se ocultó "Pulso de obras" del inicio.' : 'Se volvió a mostrar "Pulso de obras" en el inicio.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la preferencia.');
+    } finally {
+      this.pulsoOcultoBusy.set(false);
     }
   }
 

@@ -1,5 +1,48 @@
 # HANDOFF — CSD App
 
+## 🟡 05-nov-2026 — Ronda DJ (hotfix de crash + versiones + dashboards plegables) v2.66.3 — EN WORKTREE, SIN COMMIT
+
+**Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dj`, rama `hotfix/dj-crash-versiones-dashboards` (desde `origin/dev`). Xaviel reportó 3 cosas en una: (1) la app se cerraba sola al abrirla, reportado por Misael y reproducido por Xaviel en 2 teléfonos distintos; (2) marcar una versión vieja como "publicada" en el admin de SGC no cambiaba qué APK se ofrece a descargar (seguía dando la última, no la seleccionada); (3) pidió que "Hoy" y "Pulso de obras" del inicio fueran plegables y apagables desde Configuración.
+
+### N1/DJ1 — Crash al abrir (CERRADO, v2.66.2 ya en prod)
+**No era un bug de código de la ronda DI** — fue un error de proceso mío: los APK de prod de 2.66.0 y 2.66.1 se construyeron desde git worktrees nuevos a los que no copié `android/app/google-services.json` (gitignored, vive solo en el checkout principal). Sin Firebase inicializado, `PushNotifications.register()` (que corre en CADA apertura de la app, sin excepción — `app.ts` constructor) lanza una `IllegalStateException` nativa no atrapable desde JS que Android trata como FATAL — mata el proceso completo, siempre, en cualquier teléfono. Diagnosticado reproduciendo el crash EXACTO con `adb logcat` instalando el APK real de prod en un dispositivo conectado (ver stack trace completo abajo en "Gotchas"). Corregido reconstruyendo con el archivo correcto; agregado además un try/catch defensivo en `PushService.init()` (DJ1, red de seguridad barata, no la causa raíz). **Verificado en dispositivo real antes de publicar**: instalé el APK corregido, confirmé "FirebaseApp initialization successful" + proceso vivo + PIN screen normal, sin FATAL EXCEPTION. v2.66.2 publicada en prod (PR #21). APK directo para reinstalar manualmente (el teléfono de Misael no puede auto-actualizarse: crashea antes de poder revisar): `https://jeeqhgccqefbqilntcpu.supabase.co/storage/v1/object/public/app-releases/csd-app-2.66.2.apk`.
+
+### N2/DJ2 — "Versiones de app" no respeta la seleccionada (diagnosticado, SQL dejado para el padre)
+`sgc.app_versiones.publicada` es un boolean plano SIN restricción de unicidad — nada impide que 2+ filas queden con `publicada=true` a la vez para la misma plataforma. Confirmado en vivo: 2.50.0 y 2.66.1 (la rota) ambas `publicada=true` simultáneamente; `sgc.version_publicada()` devolvía la más nueva de las marcadas (2.66.1), por lo que el aviso "hay una versión nueva" seguía mandando al APK que crashea incluso DESPUÉS de publicar el hotfix 2.66.2 en el bucket. Esto es exactamente el síntoma que reportó Xaviel ("selecciono 2.50.0 como publicada pero el sistema sigue dando la última"). Dos archivos dejados en `sql-para-sgc/` (regla 19 — el hijo no aplica DDL/datos directo a prod):
+- `2026-11-05-dj-publicar-2.66.2-hotfix-crash.sql` — corrige el dato de HOY (publica 2.66.2, despublica el resto).
+- `2026-11-05-dj-publicada-unica-trigger.sql` — corrige la causa estructural: trigger `before insert/update of publicada` que apaga automáticamente las demás filas de la misma plataforma en cuanto una queda en `true`, para que no se repita sin importar qué camino la ponga en true (admin de SGC, un SQL de publicación, o código futuro).
+**Pendiente: que el padre (SGC) aplique ambos SQL** (o que Xaviel haga el primero a mano desde el admin mientras tanto — instrucción ya le fue dada en el chat).
+
+### N3/DJ3 — "Hoy"/"Pulso de obras" plegables + apagables (código completo, en este worktree)
+- **Plegable** (sin tocar preferencia del servidor): el título de cada sección ahora es un botón con chevron (▸/▾), mismo patrón visual que ya usaba el home agrupado para sus grupos (`home__group-hd`/`home__group--collapsed`) — estado guardado en `localStorage` (comodidad de pantalla, no dato de negocio), igual que el plegado de grupos existente.
+- **Apagado completo** (Perfil › dos botones nuevos "Ocultar/Mostrar 'Hoy'"/"'Pulso de obras' del inicio"): preferencia por usuario SERVER-SIDE, mismo mecanismo genérico que ya existía para `agrupar_home` (`UserContextService.setPreferencia`/RPC `mi_preferencia_set` — sin RPC nueva, solo 2 claves nuevas en el jsonb `preferencias`: `home_hoy_oculto`/`home_pulso_oculto`). Apagado reutiliza el gate existente (`hoyVisible`/`pulsoObrasVisible`), así que también detiene el polling de 30s de "Hoy" cuando está oculto (ahorro de batería/datos, no solo visual).
+- `npm run build` + `npm test` 63/63 verdes. Sin emoji nuevos en los 2 botones de Perfil (evita el guard `verify-no-ai-tropes`, que ya tenía compound-signatures aprobadas en ese archivo pero ninguna con un emoji nuevo).
+
+### Gotcha de esta sesión — el crash exacto (para que no se repita)
+```
+FATAL EXCEPTION: CapacitorPlugins
+java.lang.IllegalStateException: Default FirebaseApp is not initialized in this process com.constructorasd.csdapp.
+  at com.google.firebase.FirebaseApp.getInstance(FirebaseApp.java:179)
+  at com.google.firebase.messaging.FirebaseMessaging.getInstance(FirebaseMessaging.java:120)
+  at com.capacitorjs.plugins.pushnotifications.PushNotificationsPlugin.register(PushNotificationsPlugin.java:103)
+```
+**Regla para la próxima vez que se construya un APK de PROD desde un worktree nuevo:** copiar SIEMPRE `android/app/google-services.json` (gitignored) junto con `.env.local` y `android/keystore.properties` — los 3 archivos gitignored que un `git worktree add` nuevo NUNCA trae. Vale la pena un checklist o un guard de prebuild que falle fuerte si `--env prod --canal apk` corre sin ese archivo presente (no se hizo en esta ronda por foco en el hotfix; queda pendiente).
+
+### Pendiente — Claude puede hacerlo (próxima sesión)
+1. Guard de prebuild que falle si se intenta `--env prod` sin `android/app/google-services.json` presente (evita que el incidente de hoy se repita por el mismo camino).
+2. Si el padre tarda en aplicar el trigger de unicidad, el riesgo de "2 filas publicada=true" sigue latente — vale la pena un chequeo client-side defensivo (la app podría preferir la fila de `fecha` más reciente Y con el `version_code` más alto consistente, aunque la causa real debe arreglarse en la base).
+
+### Pendiente — Xaviel únicamente
+1. **Enviar el APK de 2.66.2 a Misael** (link arriba) — su teléfono no puede auto-actualizarse.
+2. **Aplicar o pedirle al padre que aplique** los 2 SQL de `sql-para-sgc/` (o hacerlo ya desde el admin de SGC: marcar 2.66.2 publicada, despublicar 2.66.1 y 2.50.0) — mientras tanto el aviso de "nueva versión" en la app sigue roto.
+3. Probar en dev/teléfono real: plegar "Hoy"/"Pulso de obras" en el inicio, apagarlos desde Perfil, confirmar que vuelven a aparecer al re-encenderlos.
+4. OK para publicar 2.66.3 en dev → prod cuando confirme lo de arriba.
+
+### Verificar al retomar
+- `cd "C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dj" && git status --short` — debe mostrar solo los archivos de este HANDOFF + home/perfil/user-context + los 2 SQL nuevos.
+- `npm run build && npm test` — deben seguir verdes, versión 2.66.3.
+- Confirmar en prod: `select version, publicada, minima from sgc.app_versiones where plataforma='movil' and publicada;` — debe dar UNA sola fila, 2.66.2 o más nueva.
+
 ## 🟢 04-nov-2026 — Ronda DI #2 (PROMPT 135, app-side) v2.66.0 — EN PRODUCCIÓN (cierre completo)
 
 **Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-di`, rama `feature/di-ronda-03nov-2-app` (desde `origin/dev` @ `33edb2a` = v2.65.0, ronda DH ya en producción). Flujo completo: push → merge directo a `dev` (sin PR, convención de este repo para feature→dev) → APK dev v2.66.0 build+publish (`qa/release-2.66.0.md`, Xaviel confirmó "ok, do it" tras publicar) → `release-check.mjs` 4/4 PASS → PR [#19](https://github.com/techcsd/csd-app/pull/19) `dev → main` (CI `build-prod` verde) → merge → `npm run apk -- --env prod` + `npm run apk:publish -- --env prod` (regla 18 verificó que 2.66.0 ya existía en dev; release-check volvió a correr solo, 4/4 verde). **v2.66.0 publicada en prod** — `publicada`/`minima` quedaron en `false` en ambos entornos (verificado por fila; nadie es forzado a actualizar, es una publicación normal). `npm run build` (prebuild completo, guards incl. `verify-no-ai-tropes`) **verde** en los 3 puntos (dev worktree, dev mergeado, main mergeado); `npm test` 63/63 verdes. Contraparte web: PROMPT 134 (SGC) **ya estaba en producción** (`SGC-di`, v1.210.0) antes de que esta ronda empezara — el backend que esta ronda consume (edges + RPCs de cupo + columnas nuevas) ya existía en prod, verificado contra el HANDOFF del SGC (no re-verificado por SQL directo, se confió en su registro de ronda cerrada).

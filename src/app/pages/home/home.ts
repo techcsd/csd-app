@@ -333,11 +333,12 @@ export class HomePage implements OnDestroy {
   // (costo de batería/datos en el teléfono): polling fijo cada 30s, solo en foreground.
   hoyVisible = computed(
     () =>
-      this.ctx.esAdmin() ||
-      this.ctx.hasModulo('inventario') ||
-      this.ctx.hasModulo('flota') ||
-      this.ctx.hasModulo('proyectos') ||
-      this.ctx.hasModulo('direccion'),
+      !this.ctx.homeHoyOculto() && // DJ3 — apagado en Perfil
+      (this.ctx.esAdmin() ||
+        this.ctx.hasModulo('inventario') ||
+        this.ctx.hasModulo('flota') ||
+        this.ctx.hasModulo('proyectos') ||
+        this.ctx.hasModulo('direccion')),
   );
   // BL2 — "no hay eventos hoy" (hoyResumen con eventos=[]) ≠ "la llamada falló"
   // (hoyFallo, solo cuando NUNCA hubo una carga exitosa — un poll fallido con datos
@@ -349,7 +350,9 @@ export class HomePage implements OnDestroy {
   // reportó hoy, verde al llegar. Dato de granularidad diaria — se carga una vez
   // por re-ingreso/resume (NO un polling de 30s como "Hoy", sería desperdiciar
   // batería/datos para algo que solo cambia una vez al día por obra).
-  pulsoObrasVisible = computed(() => this.ctx.hasModulo('proyectos') || this.ctx.esFlotaElevado());
+  pulsoObrasVisible = computed(
+    () => !this.ctx.homePulsoOculto() && (this.ctx.hasModulo('proyectos') || this.ctx.esFlotaElevado()),
+  );
   pulsoObras = signal<PulsoObra[] | null>(null);
   // DG5 — insignia del tile "Demo": misiones pendientes por aprobar (del rol propio).
   demoPendientes = signal<number | null>(null);
@@ -430,6 +433,26 @@ export class HomePage implements OnDestroy {
 
   grupoColapsado(key: string): boolean {
     return this.colapsados().has(key);
+  }
+
+  // DJ3 — "Hoy" y "Pulso de obras" son plegables (no se apagan, solo se achican),
+  // independiente del apagado completo de Perfil. Mismo mecanismo local
+  // (localStorage) que el plegado de grupos — es una comodidad de pantalla, no
+  // una preferencia de negocio.
+  private static readonly HOY_PLEGADO_KEY = 'home_hoy_plegado';
+  private static readonly PULSO_PLEGADO_KEY = 'home_pulso_plegado';
+  hoyPlegado = signal<boolean>(localStorage.getItem(HomePage.HOY_PLEGADO_KEY) === '1');
+  pulsoPlegado = signal<boolean>(localStorage.getItem(HomePage.PULSO_PLEGADO_KEY) === '1');
+
+  toggleHoyPlegado(): void {
+    const next = !this.hoyPlegado();
+    this.hoyPlegado.set(next);
+    try { localStorage.setItem(HomePage.HOY_PLEGADO_KEY, next ? '1' : '0'); } catch { /* best-effort */ }
+  }
+  togglePulsoPlegado(): void {
+    const next = !this.pulsoPlegado();
+    this.pulsoPlegado.set(next);
+    try { localStorage.setItem(HomePage.PULSO_PLEGADO_KEY, next ? '1' : '0'); } catch { /* best-effort */ }
   }
 
   toggleGrupo(key: string): void {

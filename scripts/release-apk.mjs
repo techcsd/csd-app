@@ -40,9 +40,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Arreglo urgente: la app se cerraba sola al abrirla';
+const TITULO = 'Hoy y Pulso de obras: plegables y apagables desde Perfil';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Sistema', d: 'La app se cerraba sola justo al abrirla en algunos teléfonos. Era un problema del empaquetado de la versión anterior, no del código; ya está corregido.' },
+  { t: 'nuevo', m: 'Inicio', d: '"Hoy" y "Pulso de obras" ahora se pueden plegar (tocando el título) para ver menos en la pantalla de inicio.' },
+  { t: 'nuevo', m: 'Perfil', d: 'Nuevo interruptor para apagar "Hoy" y otro para "Pulso de obras" si no los quieres ver en el inicio.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
