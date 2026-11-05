@@ -40,11 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Pulido visual: cupo de tarjeta, combustible y cartillas con el mismo estilo de la app';
+const TITULO = 'Arreglo urgente: la app se cerraba sola al abrirla';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Combustible', d: 'La confianza de cada dato leído (kilometraje, galones, monto) ahora se ve como una etiqueta de color, igual que en el resto de la app.' },
-  { t: 'mejora', m: 'Flota', d: 'Mis solicitudes de cupo y el aviso de "% de tu cupo" ahora usan la misma etiqueta de estado que el resto de la app.' },
-  { t: 'mejora', m: 'Ingeniería', d: 'El estado de Pagos de la semana y de Cartillas de acero ahora se ve con la misma etiqueta de color en toda la app.' },
+  { t: 'arreglo', m: 'Sistema', d: 'La app se cerraba sola justo al abrirla en algunos teléfonos. Era un problema del empaquetado de la versión anterior, no del código; ya está corregido.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

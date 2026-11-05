@@ -60,6 +60,20 @@ export class PushService {
     // y relaja este guard.
     if (environment.entorno === 'dev') return;
 
+    // DJ1 — incidente real (04-nov-2026): un build de PROD se empaquetó sin
+    // `android/app/google-services.json` (archivo gitignored, se perdió al construir
+    // desde un worktree nuevo) y produjo EXACTAMENTE el crash nativo descrito arriba,
+    // pero en prod, donde el guard de arriba no protege. Causa raíz = proceso de build,
+    // no este código — pero el try/catch de abajo es una red de seguridad barata por si
+    // el error nativo sí llega a superficie como rechazo de promesa en vez de fatal.
+    try {
+      await this.registrarPush();
+    } catch (e) {
+      void this.errorReport.report('error', 'push_init_fallo', { mensaje: e instanceof Error ? e.message : String(e) });
+    }
+  }
+
+  private async registrarPush(): Promise<void> {
     await PushNotifications.addListener('registration', (t) => {
       this.token = t.value;
       void this.syncToken();
