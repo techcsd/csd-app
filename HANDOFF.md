@@ -11,11 +11,19 @@ confirmación de persistencia server-side — ver `qa/release-2.66.3.md`) → PR
 env prod`. **En dev: v2.66.3. En prod: v2.66.3** —
 `publicada`/`minima` en `false` (publicación normal, nadie forzado).
 
-Pendiente real que sigue abierto (no es código del hijo): los 2 SQL en
-`sql-para-sgc/` (corrección del dato de `publicada` + el trigger de unicidad)
-siguen esperando que el padre (SGC) los aplique — hasta entonces
-`version_publicada()` puede seguir sirviendo una respuesta inconsistente si
-alguien vuelve a marcar dos filas como publicadas a la vez.
+**Cerrado (06-nov-2026):** el padre (SGC) aplicó el trigger de unicidad
+(`sgc.tg_app_versiones_publicada_unica()`) en dev y en prod. El data-fix que
+este repo había dejado staged (`2026-11-05-dj-publicar-2.66.2-hotfix-crash.sql`)
+había quedado stale — prod ya había avanzado a 2.66.3 — así que el padre lo
+saltó y en su lugar corrigió un duplicado DISTINTO que encontró al verificar
+(2.66.3 + un 2.50.0 viejo del 13-oct, fuera de la ventana de "últimas 10 filas"
+que yo había revisado). También colapsó un duplicado viejo no relacionado en
+dev (2.58.1+2.62.0). Verificado independientemente por esta sesión vía REST
+directo: **prod** tiene exactamente 1 fila `publicada=true` (2.66.3,
+`version_publicada()` la devuelve bien); **dev** tiene exactamente 1
+(2.62.0, ídem). Gotcha para la próxima: revisar solo las últimas N filas por
+fecha NO basta para encontrar un duplicado viejo — hay que filtrar directo por
+`publicada=true`.
 
 **Worktree:** `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dj`, rama `hotfix/dj-crash-versiones-dashboards` (desde `origin/dev`). Xaviel reportó 3 cosas en una: (1) la app se cerraba sola al abrirla, reportado por Misael y reproducido por Xaviel en 2 teléfonos distintos; (2) marcar una versión vieja como "publicada" en el admin de SGC no cambiaba qué APK se ofrece a descargar (seguía dando la última, no la seleccionada); (3) pidió que "Hoy" y "Pulso de obras" del inicio fueran plegables y apagables desde Configuración.
 
