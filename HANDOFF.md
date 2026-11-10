@@ -1,5 +1,87 @@
 # HANDOFF — CSD App
 
+## 🟡 10-nov-2026 — Ronda DL (PROMPT 139, lado receptor de Compa en WhatsApp) — v2.67.0 construida, SIN commit (esperando OK de Xaviel)
+
+**TL;DR:** app = lado receptor (push/bandeja/Compa), nunca administra grupos
+(DL-00, igual que la ronda DB). Trabajo completo en worktree
+`C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dl`, rama `feature/dl-compa-whatsapp-receptor`
+(desde `dev` @ `bb3e3ed1`). **Nada commiteado/pusheado** — regla de la ronda
+("ningún commit, push, build ni deploy sin avisarle"). `npm run build` + `npm test`
+(66/66) verdes. Detalle completo: `CONTEXTO-ACTUALIZACION-68.md` y
+`PROMPT-139-CSD-APP.md` en `C:\developer\improvements\noviembre 2026\imp 10112026\`.
+
+**Hecho esta sesión:**
+- **F1 (DL4):** `notifAppRoute()` (`notificaciones.service.ts:365`) mapea
+  `wa_recordatorio`/`wa_recap` → `/compa?q=<pregunta precargada>` (mismo patrón
+  BQ10); compartido por el tap del push y el de la campana (una sola función).
+  Test unitario nuevo (`notificaciones.service.spec.ts`, 3 casos incl. regresión
+  de tipo desconocido).
+- **F2 (DL-14):** verificado que el panel de Avisos es 100% catálogo-driven
+  (`mis_notif_estado`/`mis_notif_prefs`/`setNotifPref`, todo por `tipo` string) —
+  los dos tipos nuevos aparecerán y se podrán silenciar en cuanto 138 F2 los
+  siembre en `sgc.notif_tipo`, **sin ningún cambio de código en la app**.
+- **F3 (DL3/DL4):** sugerencia "¿Qué me falta de los grupos?" añadida al fallback
+  de `compa-chat.store.ts` (la fuente real por rol es `compa_sugerencias`, 138
+  F7.4 — este fallback solo cubre si la RPC falla). **No se pudo verificar punta a
+  punta** (`mis_pendientes_de_grupos` depende de 138 F7, que a esta hora no
+  estaba desplegado) — queda anotado en `qa/release-2.67.0.md`.
+- **F4 (DL-00):** entrada nueva en `PARIDAD.md` (Compa en WhatsApp: administrar =
+  solo web; recibir/preguntar = web+app). Confirmado por grep: la app no tiene
+  NADA de `wa_grupos`/módulo de WhatsApp (todas las coincidencias de "hallazgo"
+  son de checklists/flota/agentes IA, nada relacionado).
+- **F4b (DL7/N6) — 2 hallazgos propios que CORRIGEN una suposición del prompt:**
+  1. **La app SÍ tiene "Entrar como" y "Gestión de Usuarios"** (no es
+     web-only como asumía 139 F4b.4) — `ImpersonationService`
+     (`core/services/impersonation.service.ts`) + `pages/admin/usuarios/usuarios.ts`,
+     reutilizando los MISMOS edges `admin-entrar-como`/`admin-fin-impersonacion`
+     que el caso N6b de Xaviel en la web. Cuando 138 aplique `verify_jwt=false`
+     (DL-35) a esos edges, el "Entrar como" de la APP se beneficia gratis (mismo
+     despliegue). Revisado: el error de una acción en `usuarios.ts` (app) NO
+     borra la lista (no comparte una señal `error` entre carga y acciones, a
+     diferencia del bug de la web en `usuarios.html:72`) — nada que arreglar ahí.
+  2. **La app SÍ tiene el submódulo `tecnologia.inventario`** (`app.routes.ts:1188-1206`,
+     `moduleOrSubmoduleGuard('tecnologia', 'tecnologia.inventario')`), mismo
+     predicado espejo (`puedeVerSubmodulo`) que la web — tampoco era "no existe
+     en la app" como asumía 139 F4b.3.
+  3. **Bug real confirmado y arreglado:** `UserContextService.loadProfile()`
+     (roles/módulos/permisos) solo corría al login/arranque — NUNCA se refrescaba
+     al volver a primer plano (peor que la web: ni siquiera el tope de 5 min).
+     Fix (`user-context.service.ts`): nuevo `loadedAt` + `refreshIfStale(minMs=60_000)`,
+     llamado desde `app.ts` en el listener `resume` nativo (junto a
+     `syncAlarmaNativa`/`checkExpiracion`) y en un `visibilitychange` nuevo para
+     PWA/iPhone (mismo patrón que `activity-ping.service.ts`). Así un cambio de
+     rol se nota al volver a la app sin cerrar sesión (paridad con DL-33 web).
+- **F0.3 (DL1 — SIN cambio, confirmado que NO aplica):** el bug de `appStagger`+
+  popover-tapado-por-filas-siguientes es específico de la web: su
+  `StaggerDirective` usa CSS `animation: … both` (nunca se suelta). La de la app
+  (`shared/motion/stagger.directive.ts`) usa la Web Animations API con
+  `fill: 'backwards'` (sin `'both'`/`'forwards'`) — el navegador la retira sola al
+  terminar, sin dejar contexto de apilamiento. Además, el único componente con
+  popover `position:absolute` en la app (`selector-categorias`) nunca coexiste con
+  un `appStagger` en la misma lista (`pedir.html`: uno está en la hoja "selección",
+  el otro en la hoja "resumen"). **No se tocó nada** — no había nada que arreglar.
+- **Versión:** `2.66.3` → **`2.67.0`** (siguiente libre; verificado contra las 10
+  ramas de ronda activas en paralelo — ninguna reclama 2.67.x) en
+  `environment.prod.ts`, `environment.dev.ts` y `android/app/build.gradle`.
+  `scripts/release-apk.mjs` (`TITULO`/`CAMBIOS_CURADOS`) actualizado para esta
+  ronda. `qa/release-2.67.0.md` creado con las casillas a probar (PENDIENTE,
+  nada construido en ningún entorno).
+
+**Pendiente / depende de 138:**
+- Backend (sgc.notif_tipo con `wa_recordatorio`/`wa_recap`, `mis_pendientes_de_grupos`,
+  `compa_sugerencias`) — sin esto, F1/F2 no tienen datos reales que ejercitar
+  (el código no regresiona: tipo desconocido se comporta igual que hoy).
+- Candidata para la ronda DM (NO esta): tarjeta "Mis pendientes de grupos" en
+  Inicio (anotado en `PARIDAD.md`, no construida — DL-00).
+
+**En dev:** nada — el worktree tiene los cambios sin commitear (`feature/dl-compa-whatsapp-receptor`).
+**En prod:** nada — v2.66.3 sigue siendo la publicada.
+
+**Siguiente paso:** Xaviel revisa el diff (`git -C "..\csd-app-dl" diff`), da el OK
+para commitear/empujar `feature/dl-compa-whatsapp-receptor` → PR a `dev` → build/publish
+APK dev → su prueba en teléfono real (casillas de `qa/release-2.67.0.md`) → PR a `main`
+(regla 18, nunca sin su OK).
+
 ## ✅ Graphify (09-nov-2026) — knowledge graph wired into Claude Code — EN `dev` (commit `5468d72`)
 
 **TL;DR:** Graphify (grafo de dependencias por AST) instalado y registrado con Claude Code en este repo (y en paralelo en SGC). Completo, commiteado y pusheado a `dev`. Nada pendiente. Detalle completo de la sesión (incluye el fix del CLI roto) en `C:\Users\xavie\Desktop\X Dev\dev\SGC\HANDOFF.md` (sección "Graphify 09-nov-2026").

@@ -40,10 +40,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-17';
 
-const TITULO = 'Hoy y Pulso de obras: plegables y apagables desde Perfil';
+const TITULO = 'Compa en WhatsApp: recordatorios y recap (lado receptor)';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Inicio', d: '"Hoy" y "Pulso de obras" ahora se pueden plegar (tocando el título) para ver menos en la pantalla de inicio.' },
-  { t: 'nuevo', m: 'Perfil', d: 'Nuevo interruptor para apagar "Hoy" y otro para "Pulso de obras" si no los quieres ver en el inicio.' },
+  { t: 'nuevo', m: 'Compa', d: 'Los recordatorios y el resumen diario/semanal de los grupos de WhatsApp ahora abren Compa con la pregunta ya escrita; nueva sugerencia "¿Qué me falta de los grupos?".' },
+  { t: 'mejora', m: 'Avisos', d: 'Esos dos avisos nuevos se pueden silenciar igual que el resto, desde Avisos → ajustes.' },
+  { t: 'mejora', m: 'Sesión', d: 'Si Tecnología te cambia un permiso, la app lo refleja al volver a abrirla (sin tener que cerrar sesión).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

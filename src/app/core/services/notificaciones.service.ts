@@ -411,6 +411,15 @@ export function notifAppRoute(n: {
     const convId = r.match(/[?&]compartida=([0-9a-fA-F-]{36})/)?.[1] ?? n.referencia_id ?? null;
     return convId ? `/compa/compartidas?conversacion=${convId}` : '/compa/compartidas';
   }
+  // DL4 (PROMPT 139) — recordatorio/recap de grupos de WhatsApp: deep-link a Compa
+  // con la pregunta ya precargada (mismo patrón BQ10, por TIPO y no por ruta — el
+  // padre aún no manda `ruta` para estos dos tipos nuevos).
+  if (n.tipo === 'wa_recordatorio') {
+    return `/compa?q=${encodeURIComponent('¿Qué me falta de los grupos?')}`;
+  }
+  if (n.tipo === 'wa_recap') {
+    return `/compa?q=${encodeURIComponent('¿Qué se decidió ayer en mis grupos?')}`;
+  }
   // BQ10 — "Compa ya puede ayudarte con esto": el padre guarda la ruta WEB
   // '/asistente?q=<pregunta>'. En la app el asistente vive en /compa; preservamos
   // la pregunta para precargarla en el composer (CompaPage lee ?q=).

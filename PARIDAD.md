@@ -1362,3 +1362,12 @@ empezara — nada quedó detrás de bandera por falta de backend.
   mano). Sin divergencia que registrar.
 - **DI8 (paginación)** — aplicada en Pagos/Cartillas/Mis solicitudes de cupo con el
   mismo patrón `Cargar más` que ya usaba `combustible-log.ts` (visibleCount/hayMas).
+- **DL — Compa en WhatsApp (PROMPT 138/139, 10-nov-2026): administrar grupos,
+  hallazgos, resúmenes — SOLO WEB; recibir recordatorios/recap y preguntar a
+  Compa — web + app.** La app **no** administra grupos de WhatsApp (sin módulo,
+  sin pantallas, sin rutas — igual que la ronda DB). Es el **lado receptor**: deep-link
+  de `notifAppRoute` para `wa_recordatorio`/`wa_recap` → `/compa?q=…` precargado
+  (mismo patrón BQ10), silenciar/ver esos dos tipos en el panel de Avisos (100%
+  catálogo-driven, sin código nuevo), y la sugerencia "¿Qué me falta de los grupos?"
+  en el fallback de Compa. Candidata para la ronda DM (no esta): tarjeta "Mis
+  pendientes de grupos" en Inicio.
