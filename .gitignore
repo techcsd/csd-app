@@ -80,3 +80,6 @@ scratchpad/
 
 # CI — store build artifacts (AAB, capturas, iconos). El gráfico versionado vive en docs/tienda/.
 dist-store/
+
+# Graphify
+/graphify-out/
