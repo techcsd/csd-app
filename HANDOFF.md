@@ -64,8 +64,13 @@
   ramas de ronda activas en paralelo — ninguna reclama 2.67.x) en
   `environment.prod.ts`, `environment.dev.ts` y `android/app/build.gradle`.
   `scripts/release-apk.mjs` (`TITULO`/`CAMBIOS_CURADOS`) actualizado para esta
-  ronda. `qa/release-2.67.0.md` creado con las casillas a probar (PENDIENTE,
-  nada construido en ningún entorno).
+  ronda. `qa/release-2.67.0.md` creado con las casillas a probar.
+- **Commit + push + PR:** `d1a424b` en `feature/dl-compa-whatsapp-receptor`,
+  PR #26 → `dev`, merge `59cc654` (todo con OK explícito de Xaviel, paso a paso).
+- **Build + publish APK dev:** `npm run apk -- --env dev` (firmado, canal `apk`,
+  versión registrada vía `registrar_version` en el historial de **dev**) +
+  `npm run apk:publish -- --env dev` (subido al bucket de dev,
+  `csd-app-2.67.0.apk` + `apk_url` actualizado).
 
 **Pendiente / depende de 138:**
 - Backend (sgc.notif_tipo con `wa_recordatorio`/`wa_recap`, `mis_pendientes_de_grupos`,
@@ -74,13 +79,13 @@
 - Candidata para la ronda DM (NO esta): tarjeta "Mis pendientes de grupos" en
   Inicio (anotado en `PARIDAD.md`, no construida — DL-00).
 
-**En dev:** nada — el worktree tiene los cambios sin commitear (`feature/dl-compa-whatsapp-receptor`).
-**En prod:** nada — v2.66.3 sigue siendo la publicada.
+**En dev:** v2.67.0 — APK publicado, historial registrado.
+**En prod:** nada todavía — v2.66.3 sigue siendo la publicada.
 
-**Siguiente paso:** Xaviel revisa el diff (`git -C "..\csd-app-dl" diff`), da el OK
-para commitear/empujar `feature/dl-compa-whatsapp-receptor` → PR a `dev` → build/publish
-APK dev → su prueba en teléfono real (casillas de `qa/release-2.67.0.md`) → PR a `main`
-(regla 18, nunca sin su OK).
+**Siguiente paso:** Xaviel prueba la actualización in-app a 2.67.0 en un teléfono
+real desde la versión anterior (casillas de `qa/release-2.67.0.md`, CP5/CL4). Con
+su OK → PR `dev → main` → `npm run apk -- --env prod` + `apk:publish -- --env prod`
+(regla 18, nunca sin su OK explícito en ese paso).
 
 ## ✅ Graphify (09-nov-2026) — knowledge graph wired into Claude Code — EN `dev` (commit `5468d72`)
 
