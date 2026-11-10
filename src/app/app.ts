@@ -158,6 +158,14 @@ export class App {
         void this.tracking.evaluarModoContinuo(); // AS1 — re-arma el tracking continuo
         void this.notifHealth.evaluar(); // CK10 — re-evalúa por si tocó ajustes del SO
         this.imp.checkExpiracion(); // BB — sal de "entrar como" si venció el tope de 1h
+        void this.ctx.refreshIfStale(); // DL-33 — un cambio de rol se nota al volver, sin cerrar sesión
+      });
+    }
+    // DL-33 (PROMPT 139) — PWA/iPhone no dispara 'resume' nativo; visibilitychange cubre
+    // el mismo caso (paridad con activity-ping.service.ts).
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void this.ctx.refreshIfStale();
       });
     }
     void this.notificaciones.iniciarRealtime(); // AM4 — realtime de avisos (idempotente)

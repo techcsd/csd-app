@@ -9,11 +9,15 @@ import { CompaMensaje, Propuesta } from '../models/compa.model';
 /** BB2 — clave del borrador persistente del composer (sobrevive al navegar). */
 const BORRADOR_KEY = 'compa_borrador';
 
-/** Sugerencias iniciales (chips) por defecto — fallback si la RPC por rol falla. */
+/** Sugerencias iniciales (chips) por defecto — fallback si la RPC por rol falla.
+ *  DL3/DL4 (PROMPT 139) — "¿Qué me falta de los grupos?" usa `mis_pendientes_de_grupos`
+ *  (138 F7), solo lo propio (responsable_id = usuario actual); la fuente real por rol
+ *  vive en `compa_sugerencias` (138 F7.4), esta lista solo cubre el caso degradado. */
 const SUGERENCIAS = [
   '¿Qué tareas tengo?',
   '¿Tengo conduces por firmar?',
   'Créame una tarea en mi obra',
+  '¿Qué me falta de los grupos?',
 ];
 /** Saludo/subtítulo por defecto (fallback del intro por rol, BA3). */
 const SALUDO_DEFAULT = 'Hola, soy Compa';
