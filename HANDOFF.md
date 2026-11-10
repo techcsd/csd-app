@@ -1,5 +1,24 @@
 # HANDOFF — CSD App
 
+## ✅ Graphify (09-nov-2026) — knowledge graph wired into Claude Code — EN `dev` (commit `5468d72`)
+
+**TL;DR:** Graphify (grafo de dependencias por AST) instalado y registrado con Claude Code en este repo (y en paralelo en SGC). Completo, commiteado y pusheado a `dev`. Nada pendiente. Detalle completo de la sesión (incluye el fix del CLI roto) en `C:\Users\xavie\Desktop\X Dev\dev\SGC\HANDOFF.md` (sección "Graphify 09-nov-2026").
+
+**Hecho esta sesión:**
+- `graphify claude install --project` + `graphify hook install` + `graphify install --project --strict` — `CLAUDE.md` con sección `## graphify` añadida (apéndice, nada sobrescrito), `.claude/CLAUDE.md` nuevo (no existía), `.claude/settings.json` nuevo con hooks PreToolUse (Bash|Grep, Read|Glob) + SessionStart, git hooks post-commit/checkout/merge/rewrite instalados, merge driver en `.gitattributes`.
+- `/graphify-out/` añadido a `.gitignore` — nunca se commitea.
+- Grafo: 9,911 nodos / 22,948 aristas / 644 comunidades. Build avisó: 21% de archivos (sobre todo `.scss`/plantillas HTML) sin extractor → faltan del grafo (conocido, no arreglado).
+- **Parche manual en los 4 git hooks** (`export GRAPHIFY_VIZ_NODE_LIMIT=0` tras `export PYTHONHASHSEED=0`): los auto-rebuilds ya NO generan `graph.html` (pesado de renderizar) — solo refrescan `graph.json`+`GRAPH_REPORT.md`. Se genera a mano con `graphify cluster-only .` cuando se quiera ver.
+
+**Gotchas:**
+- El parche `GRAPHIFY_VIZ_NODE_LIMIT=0` vive SOLO en `.git/hooks/*` (no en el repo) — si se vuelve a correr `graphify hook install` en el futuro, se pierde silenciosamente. Reaplicar insertando esa línea en los 4 hooks.
+- `git pull` NO dispara los hooks de graphify — correr `graphify update .` a mano tras un pull.
+- Strict mode activo: los hooks PreToolUse empujan a correr `graphify query/explain/path` antes del primer Read/Grep de la sesión (una vez por sesión, informativo no bloqueante tras la primera consulta).
+
+**Verificar al retomar:**
+- `graphify --version` (si falla con "trampoline failed to canonicalize script path" → `uv tool install "graphifyy[sql]" --force`)
+- `graphify query "<algo del proyecto>"` debe devolver resultados reales (si no, `graphify update .` primero)
+
 ## 🟢 05-nov-2026 — Ronda DJ (hotfix de crash + versiones + dashboards plegables) v2.66.3 — EN PRODUCCIÓN (cierre completo)
 
 **Cierre:** v2.66.3 verificada EN VIVO en un teléfono Android real (login con cuenta
