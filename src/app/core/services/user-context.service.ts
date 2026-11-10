@@ -32,6 +32,11 @@ export class UserContextService {
   private _profile = signal<Usuario | null>(null);
   profile = this._profile.asReadonly();
 
+  /** DL-33 (PROMPT 139/138) — cuándo se cargó el perfil por última vez; la usa
+   *  `refreshIfStale()` para que un cambio de rol se note al volver a primer plano,
+   *  sin tener que cerrar sesión (antes `loadProfile` solo corría al login). */
+  private loadedAt = 0;
+
   private _obraActiva = signal<{ id: string; nombre: string } | null>(null);
   obraActiva = this._obraActiva.asReadonly();
 
@@ -325,11 +330,28 @@ export class UserContextService {
 
     if (data) this._profile.set(data);
     else if (!cached) this._profile.set(null);
+    this.loadedAt = Date.now();
 
     // BR7 — el idioma del servidor sigue al usuario entre dispositivos: adoptarlo
     // al cargar el perfil (best-effort; no re-escribe el servidor, solo aplica local).
     const idioma = (data ?? cached)?.idioma;
     if (idioma) void this.i18n.adoptFromServer(idioma);
+  }
+
+  /**
+   * DL-33 — recarga el perfil (roles/módulos/permisos) si pasaron más de `minMs`
+   * desde la última carga (default 60 s, mismo umbral que la web). Pensado para
+   * llamarse al volver a primer plano (`resume`/`visibilitychange`): así, si
+   * Tecnología cambió un rol mientras el usuario tenía la app abierta en segundo
+   * plano, el menú (los `computed` sobre `_profile`) lo refleja sin que tenga que
+   * cerrar sesión. No-op sin perfil cargado o si aún no pasó el umbral (evita red
+   * de más en cada resume).
+   */
+  async refreshIfStale(minMs = 60_000): Promise<void> {
+    const id = this._profile()?.id;
+    if (!id) return;
+    if (Date.now() - this.loadedAt < minMs) return;
+    await this.loadProfile(id);
   }
 
   /**
