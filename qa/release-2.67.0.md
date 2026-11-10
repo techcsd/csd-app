@@ -25,5 +25,4 @@
   checklist de arriba funcionó.
 - **Fecha:** 2026-11-10.
 
-OK: Xaviel — "sure do it" tras confirmar prueba en teléfono Android real, todo OK
-(2026-11-10). Autoriza continuar el pipeline a `main`/prod.
+OK: Xaviel, 2026-11-10 — "sure do it" tras confirmar prueba en teléfono Android real, todo el checklist OK. Autoriza continuar el pipeline a main/prod.
