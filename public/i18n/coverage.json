@@ -225,6 +225,12 @@
       "en": 100,
       "ht": 0
     },
+    "pages/claude": {
+      "conT": 39,
+      "sinT": 0,
+      "en": 95,
+      "ht": 0
+    },
     "pages/compa": {
       "conT": 22,
       "sinT": 0,
@@ -330,7 +336,7 @@
     "pages/ingenieria/pagos": {
       "conT": 61,
       "sinT": 0,
-      "en": 43,
+      "en": 44,
       "ht": 2
     },
     "pages/inventario": {
@@ -592,7 +598,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 75,
+      "conT": 76,
       "sinT": 0,
       "en": 100,
       "ht": 1
@@ -868,9 +874,9 @@
       "ht": 0
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 75,
+      "conT": 80,
       "sinT": 1,
-      "en": 84,
+      "en": 83,
       "ht": 5
     },
     "pages/transporte/conduce-externo": {

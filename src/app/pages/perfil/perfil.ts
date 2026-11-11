@@ -535,6 +535,11 @@ export class PerfilPage {
     void this.router.navigate(['/perfil/claude']);
   }
 
+  /** DM1 — módulo Claude (Setup, skills por rol, crear, encuesta). */
+  claudeModulo(): void {
+    void this.router.navigate(['/claude']);
+  }
+
   /** Z26 — el encabezado (avatar + nombre + rol) abre el detalle de mi propio usuario. */
   verMiDetalle(): void {
     void this.router.navigate(['/perfil/mi-detalle']);

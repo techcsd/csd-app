@@ -144,9 +144,12 @@ export class ConducesPendientesPage implements OnDestroy {
     void this.load(true);
   }
 
-  /** AL9 — abrir el detalle del conduce (fuera de los botones de acción). */
+  /** AL9 — abrir el detalle del conduce (fuera de los botones de acción). DM-23 —
+   *  pasa los ids de esta lista para "Anterior/Siguiente" en el detalle. */
   verDetalle(id: string): void {
-    void this.router.navigate(['/transporte/conduce-detalle', id]);
+    void this.router.navigate(['/transporte/conduce-detalle', id], {
+      state: { ids: this.pendientes().map((p) => p.id) },
+    });
   }
 
   /** Entregar: abre el flujo de entrega del conduce (receptor + foto + firma). */

@@ -63,8 +63,11 @@ export class ConducesPorImplementarPage {
     return c.conduce_numero || 'CND-' + c.salida_id.slice(0, 8).toUpperCase();
   }
 
+  /** DM-23 — pasa los ids de esta lista para "Anterior/Siguiente" en el detalle. */
   abrir(c: ConducePorImplementar): void {
-    void this.router.navigate(['/transporte/conduce-detalle', c.salida_id]);
+    void this.router.navigate(['/transporte/conduce-detalle', c.salida_id], {
+      state: { ids: this.conduces_().map((x) => x.salida_id) },
+    });
   }
 
   back(): void {

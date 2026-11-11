@@ -253,10 +253,15 @@
       </button>
     }
 
+    <!-- DM1 (ronda DM) — módulo Claude: Setup, skills por rol, crear, encuesta. -->
+    <button type="button" class="btn-ghost perfil__btn" (click)="claudeModulo()">
+      🤖 {{ 'Claude: Setup y skills' | t }}
+    </button>
+
     <!-- CR1 — Perfil › Claude: estado de la conexión + borradores pendientes (todos los
          usuarios del SGC pueden conectarlo; conectar en sí es solo-web). -->
     <button type="button" class="btn-ghost perfil__btn" (click)="claudeConector()">
-      🤖 {{ 'Claude y el SGC' | t }}
+      🤖 {{ 'Claude y el SGC — mi conexión' | t }}
     </button>
 
     <button type="button" class="btn-ghost perfil__btn" (click)="soporte()">

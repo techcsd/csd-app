@@ -294,11 +294,16 @@ export class MantenimientosService {
    * debounce); offline el wizard cae a la regla local (km < odómetro cacheado).
    */
   async validarKm(vehiculoId: string, km: number, fecha: string, excluir: string | null = null): Promise<ValidacionKm | null> {
+    // DM-21 — DH2 agregó un 2º overload (p_forzar/p_motivo) a validar_km_vehiculo;
+    // llamar sin esos 2 es ambiguo entre los dos overloads (42725 "not unique").
+    // Se pasan TODOS los parámetros para que PostgREST resuelva un único candidato.
     const { data, error } = await this.supabase.client.rpc('validar_km_vehiculo', {
       p_vehiculo: vehiculoId,
       p_km: km,
       p_fecha: fecha,
       p_excluir_mant: excluir,
+      p_forzar: false,
+      p_motivo: null,
     });
     if (error) throw error;
     return (data ?? null) as ValidacionKm | null;

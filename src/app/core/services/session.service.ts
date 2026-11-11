@@ -71,7 +71,7 @@ export class SessionService {
 
   async logout(): Promise<void> {
     await this.tracking.apagar(); // AS1 — deja de rastrear al usuario saliente
-    this.notificaciones.detenerRealtime(); // AM4 — cierra el canal del usuario saliente
+    await this.notificaciones.detenerRealtime(); // AM4/DM-28 — cierra el canal y ESPERA la baja real
     await this.push.clearToken(); // AF7 — desactiva el token antes de cerrar sesión
     await this.auth.signOut();
     await this.pin.clear();

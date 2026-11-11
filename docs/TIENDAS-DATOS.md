@@ -14,6 +14,8 @@ Respuestas listas para **Seguridad de datos (Google Play)** y **Privacidad de la
 | Texto/dictado enviado al asistente, foto del recibo | Asistente IA / lectura de recibo (con consentimiento) | Sí | Anthropic, Groq/OpenAI |
 | Foto de documento de identidad + foto de la persona con el documento (registro rápido de personal); foto de documento de vehículo (seguro/matrícula/marbete) | Lectura con IA para precargar el formulario (con consentimiento); **no se guarda la transcripción**, solo los campos del registro | Sí | Anthropic |
 | Biometría | Desbloqueo | **No sale del teléfono** | — (local) |
+| **(DM, 11-nov-2026)** Texto que la persona escribe para crear una "skill" de Claude (qué hace/cuándo usarla/pasos/ejemplo) | Guardar/descargar/compartir atajos de trabajo con Claude, por rol | Sí (owner_id) | Supabase (bucket privado `claude-skills`); el servidor escanea el texto buscando secretos antes de guardarlo |
+| **(DM, 11-nov-2026)** Respuestas de texto libre a la encuesta de uso de Claude (opcional) | Auditoría interna de adopción de IA | Sí (una por persona, editable) | Supabase |
 
 **Terceros (procesadores):** Supabase (BD/archivos), Vercel (hosting web), Google (FCM, Maps Platform), Anthropic (Compa, leer-recibo, lector de documentos de personal y de flota — ronda DB), Groq/OpenAI (transcripción), Open-Meteo (clima), OpenStreetMap (mapas).
 **No hay** rastreo publicitario. Datos cifrados en tránsito (HTTPS). Se puede **pedir eliminación** de la cuenta.
@@ -28,7 +30,7 @@ Respuestas listas para **Seguridad de datos (Google Play)** y **Privacidad de la
   - **Ubicación** → Ubicación precisa (sí; en segundo plano).
   - **Información personal** → Nombre, Correo, Teléfono, **Otros (cédula)**.
   - **Fotos y videos** → Fotos.
-  - **Archivos y documentos** → PDFs/firmas.
+  - **Archivos y documentos** → PDFs/firmas, skills de Claude (texto/`.md`) creadas por la persona.
   - **Audio** → Grabaciones de voz.
   - **ID del dispositivo u otros** → ID de dispositivo, token de notificaciones.
   - **Registros de la app** → Diagnóstico/errores (opcional, "Análisis/Funcionalidad").

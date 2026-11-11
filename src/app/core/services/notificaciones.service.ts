@@ -303,7 +303,7 @@ export class NotificacionesService {
    * (idempotente): sirve a todas las pantallas vivas que observan `tick`. Se activa
    * tras el login (app.ts) y se mantiene mientras la sesión esté abierta.
    */
-  private canal: { unsubscribe: () => void } | null = null;
+  private canal: { unsubscribe: () => Promise<unknown> } | null = null;
   // DH15 — `this.canal` se asignaba DESPUÉS del await a `auth.getUser()`: dos llamadas
   // casi simultáneas a `iniciarRealtime` (login + resume en primer plano, p. ej.) pasan
   // AMBAS el guard antes de que la primera termine, y las dos suscriben el MISMO canal
@@ -311,18 +311,38 @@ export class NotificacionesService {
   // `subscribe()`" (47 ocurrencias/11 dispositivos). `conectando` cierra la carrera
   // síncronamente, antes de cualquier await.
   private conectando = false;
+  // DM-28 — contador de instancia: cada llamada a iniciarRealtime arma un canal con
+  // nombre ÚNICO (no reutiliza `notificaciones-app-<uid>` pelado). El bug seguía
+  // ocurriendo pese al guard `conectando` porque éste solo cierra la carrera DENTRO
+  // del mismo tick; un detener→iniciar en sucesión (reanudar + cerrar/abrir sesión)
+  // alcanzaba a disparar un 2º `subscribe()` sobre el MISMO nombre de canal antes de
+  // que la baja del 1º terminara (`removeChannel` nunca se esperaba).
+  private instancia = 0;
   async iniciarRealtime(): Promise<void> {
-    if (this.canal || this.conectando) return;
+    if (this.conectando) return;
     this.conectando = true;
     try {
       const { data } = await this.supabase.client.auth.getUser();
       const uid = data.user?.id;
-      if (!uid || this.canal) return;
+      if (!uid) return;
+      // DM-28 — si ya había un canal armado (reanudar en primer plano mientras el
+      // anterior seguía vivo), ciérralo y ESPERA la baja real antes de abrir otro.
+      await this.detenerRealtime();
+      // DM-28 — por si quedó un canal homónimo vivo que este servicio ya no rastrea
+      // (p. ej. una instancia anterior de la pestaña/webview), bórralo del cliente de
+      // Supabase antes de suscribir uno nuevo — `subscribe()` sobre un canal repetido
+      // es justo lo que dispara "cannot add callbacks after subscribe()".
+      for (const ch of this.supabase.client.getChannels()) {
+        if (ch.topic.includes(`notificaciones-app-${uid}`)) {
+          await this.supabase.client.removeChannel(ch);
+        }
+      }
       // CA1 — con sesión confirmada, refresca el estado operativo (activa/silenciada por
       // admin) que usa el gate de alarmas nativas. Best-effort, una vez por login.
       void this.refreshOperativas();
+      const nombre = `notificaciones-app-${uid}-${++this.instancia}`;
       const channel = this.supabase.client
-        .channel(`notificaciones-app-${uid}`)
+        .channel(nombre)
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'sgc', table: 'notificaciones', filter: `usuario_id=eq.${uid}` },
@@ -335,14 +355,16 @@ export class NotificacionesService {
           },
         )
         .subscribe();
-      this.canal = { unsubscribe: () => void this.supabase.client.removeChannel(channel) };
+      this.canal = { unsubscribe: () => this.supabase.client.removeChannel(channel) };
     } finally {
       this.conectando = false;
     }
   }
-  detenerRealtime(): void {
-    this.canal?.unsubscribe();
+  /** DM-28 — ahora SÍ espera la baja real del canal antes de devolver el control. */
+  async detenerRealtime(): Promise<void> {
+    const c = this.canal;
     this.canal = null;
+    if (c) await c.unsubscribe();
   }
 
   /** AF6 — "borrar todas": elimina todos los avisos del usuario (RLS acota a los suyos). */
@@ -414,6 +436,13 @@ export function notifAppRoute(n: {
   // DL4 (PROMPT 139) — recordatorio/recap de grupos de WhatsApp: deep-link a Compa
   // con la pregunta ya precargada (mismo patrón BQ10, por TIPO y no por ruta — el
   // padre aún no manda `ruta` para estos dos tipos nuevos).
+  // DM-39 (ronda DM, PROMPT 141 F3) — Agente de Pendientes: el padre manda
+  // `p_ruta: '/notas'` (ruta WEB genérica), pero la nota fija "Pendientes" es
+  // `ambito='dev'` (gatea por esDesarrollador, no por es_tecnologia — ver BX1) y
+  // vive en Dev Notes, no en la bandeja general de Notas (que ni siquiera la
+  // mostraría). El padre aún no manda `referencia_id` de la nota; si lo hace en
+  // una ronda futura, esto puede saltar directo a `/tecnologia/dev-notes/<id>`.
+  if (n.tipo === 'agente_pendientes') return '/tecnologia/dev-notes';
   if (n.tipo === 'wa_recordatorio') {
     return `/compa?q=${encodeURIComponent('¿Qué me falta de los grupos?')}`;
   }
