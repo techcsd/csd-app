@@ -22,15 +22,15 @@
         da un error de servidor (antes fallaba siempre tras DH2 en prod — ver CONTEXTO DM §2.2).
   - [ ] GPS: un chequeo de "¿hay GPS?" (p. ej. abrir una pantalla que lo exige) responde más rápido
         que antes cuando hay señal; negar el permiso no genera un reporte de error.
-- **Resultado:** OK PARCIAL — Xaviel confirmó en conversación (2026-11-11) "i test
-  it, it works good, continue working", pero **no especificó** si probó la PWA o
-  un APK instalado — y en ese momento **no existía ningún APK 2.68.0** (recién se
-  construyó/publicó después de su OK). Autoriza el pipeline hasta `dev` (esta
-  sesión), pero el checklist de CP5/CL4 — **actualización in-app desde 2.67.0 en
-  un teléfono Android real** — sigue pendiente una vez que el APK dev 2.68.0 esté
-  publicado. No marcar esto como cumplido hasta esa prueba específica.
+- **Resultado:** OK — el primer "continue working" de Xaviel (antes de que
+  existiera un APK 2.68.0) se registró como parcial, ya que no podía ser la
+  prueba de actualización in-app de CP5. Se le preguntó explícitamente y
+  **confirmó que sí actualizó in-app en su teléfono Android real de 2.67.0 a
+  2.68.0 y que funciona** — esa es la prueba CP5/CL4. Autoriza continuar el
+  pipeline hacia `main`/prod.
 - **Fecha:** 2026-11-11.
 
-OK: Xaviel, 2026-11-11 — "i test it, it works good, continue working". Autoriza
-avanzar el pipeline hasta `dev` (push/merge/APK dev). **No** autoriza aún PR a
-`main`/prod — falta la prueba de actualización in-app CP5 sobre el APK real.
+OK: Xaviel, 2026-11-11 — confirmó la actualización in-app real en su teléfono
+Android (2.67.0 → 2.68.0, "sí hice la prueba real en el dispositivo") tras
+preguntarle directamente para no asumirlo de un "continue working" ambiguo.
+Autoriza PR dev → main y continuar a prod.
