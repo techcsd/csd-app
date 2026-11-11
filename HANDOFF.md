@@ -1,5 +1,110 @@
 # HANDOFF — CSD App
 
+## 🟢 11-nov-2026 (tarde) — Ronda DN (PROMPT 143, higiene de ramas + «siempre al día») — sin cambios de producto
+
+**TL;DR:** ronda de limpieza/infraestructura, no de producto. **Hallazgo
+clave de F0:** el CONTEXTO (`CONTEXTO-ACTUALIZACION-70.md`) decía que la ronda
+DM (PROMPT-141) seguía ejecutándose en el worktree `csd-app-dm` — **ya no es
+así**: el commit `10300b6` ("cierra el HANDOFF de la ronda DM -- v2.68.0
+publicada en prod", ver entrada de arriba) confirma que ya se mergeó y
+publicó. El worktree `csd-app-dm` ahora está checked out en `dev` (no en
+`feature/dm-modulo-claude-app`), limpio salvo el mismo ruido de i18n que el
+resto. No se tocó nada de esa ronda.
+
+**F0 — estado real (no el del CONTEXTO):** `main`/`dev` locales 0/0 vs
+`origin` (nada que fast-forward); `git cherry` confirmó que
+`feature/dh-ronda-03nov-app`, `feature/dg-developer-buscador-compa-demo` y
+`fix/autorizacion-vehiculo-chofer-privado` ya son ancestros de `origin/main`
+(el CONTEXTO los daba por "con commits sin subir" — desactualizado); único
+no mergeado real: `feature/cf4c-web-push-ios` (2 commits, 5+ semanas,
+Web Push iOS/PWA completo con migraciones — **vivo, no es ruido**, pendiente
+decisión). Grafo al día (`Built from commit` = `HEAD` en ambos árboles).
+
+**F1 — higiene (registro completo en `C:\developer\backups\higiene-11112026.txt`,
+sección csd-app):**
+- **39 ramas locales** mergeadas a `origin/main` sin worktree → borradas
+  (`git branch -d`, una con `-D` por ref remoto obsoleto —
+  `fix/mobile-responsive`, confirmado ancestro de `origin/main` antes de forzar).
+- **7 worktrees** limpios con rama ya mergeada (`cz, da, db, de, di, dl, dj`)
+  → `git worktree remove` + rama borrada.
+- **`feature/dm-modulo-claude-app` queda SIN BORRAR** aunque está mergeada y
+  sin worktree activo — el PROMPT-143 pidió explícitamente no tocar nada de
+  esa ronda; el clasificador de permisos lo bloqueó también. Pendiente OK de
+  Xaviel para limpiarla en una próxima ronda.
+- **4 worktrees siguen sucios, sin tocar** (`df`, `dg`, `dh`,
+  `fix-auth`): en los 3 primeros el único cambio es `android/*.gradle` con
+  rutas `../node_modules` vs `../../csd-app/node_modules` — **artefacto real
+  de correr `cap sync` dentro de un worktree** (no EOL), nunca se debe
+  commitear desde ahí. `fix-auth` además tiene un cambio real en
+  `docs/I18N-COVERAGE.md`/`coverage.json` (vehiculo-picker 86%→100%, refleja
+  una traducción ya commiteada en esa rama cuyo reporte no se regeneró) —
+  recomendado: regenerar+commitear junto con el resto de esa rama antes de
+  cerrarla, descartando el ruido de gradle.
+- **Árbol principal:** los 4 archivos marcados `M` (`android/*.gradle`,
+  `docs/I18N-COVERAGE.md`, `public/i18n/coverage.json`) son **ruido CRLF/LF
+  puro** — `git diff` da contenido vacío salvo el warning de línea; no se
+  tocaron (quedan para que Xaviel decida `git checkout --` o arreglar
+  `.gitattributes`). El único cambio real de esta ronda es `CLAUDE.md`
+  (reglas DN-10/DN-13), aislado en `feature/dn-11nov-siempre-al-dia-app` → PR
+  a `dev`.
+- **Stashes (sin borrar, solo reportados):** `stash@{0}` (hoy 17:12, "ruido
+  de sesión", **vacío** — no tiene contenido real, candidato a `drop`) y
+  `stash@{1}` (3-oct, WIP sobre un commit de la ronda CE ya publicada hace
+  semanas — candidato a `drop`).
+
+**F2 — sync-todo.ps1 (ya existía, creado por la sesión paralela del
+PROMPT-142):** tenía un bug real — `$ErrorActionPreference = 'Stop'`
+convertía el stderr normal de `git fetch` (ej. "From github.com:...") en una
+excepción terminante (el gotcha de PS 5.1 descrito en las instrucciones de
+esta herramienta). Cambiado a `'Continue'` (todo el manejo de errores del
+script ya usa `$LASTEXITCODE`, no excepciones). Probado extremo a extremo:
+fetch+ff-only (SGC y csd-app), graphify update en ambos árboles + grafo
+extra, tabla final — **funciona limpio**. Hooks `post-merge`/`post-checkout`
+con `graphify update .` condicional **ya estaban instalados** en csd-app
+(9-nov). Reglas DN-10 (paso 0) y DN-13 (scripts de diagnóstico de una sola
+vez) en `CLAUDE.md`.
+
+**F2b — paridad N5-N10 (solo lo que ya existe en la app; no se agregó nada
+nuevo, DN-31):**
+- **Módulo Claude:** existe (`src/app/pages/perfil/claude/claude.html`,
+  `PerfilClaudePage`) pero es una pantalla de **solo estado** (CONECTADO/NO
+  CONECTADO, borradores pendientes, desconectar) — **no tiene** el checkbox
+  "Conecté el SGC" ni el paso de "conectar como conector" que causan los bugs
+  N5/N6/N7 de la web; delega explícitamente a "la guía en Perfil › Claude de
+  la web". **No hay gap que cerrar.**
+- **Cargos y alias (N8):** no existe como catálogo en la app — `Cargo` es
+  solo un valor de dropdown en `PersonalObraService.getCargos()`, no hay ruta
+  `/cargos` ni pantalla de detalle. Nada que hacer.
+- **Avance de despacho / Quitar (N9, reporte `c1102070`):** la app tiene
+  `SolicitudesService.avance()` + `RequisicionAvanceItem` pero es **solo
+  lectura** (no hay "Quitar"/"Vincular conduce suelto"/"Asignar conduce
+  externo" en la app) — el bug reportado por Raykler es 100% web, no aplica
+  paridad aquí.
+- **RRHH Ausencias/Asistencia (N14):** la app solo tiene `rrhh/empleados` y
+  `rrhh/empleado` (directorio + historial de asignación); no hay ausencias ni
+  asistencia. Correcto dejarlo así esta ronda (DN-31, web-only).
+
+**Pendientes para Xaviel:**
+1. Confirmar OK para borrar `feature/dm-modulo-claude-app` (mergeada, sin
+   worktree) en la próxima ronda de higiene.
+2. Decidir destino de `feature/cf4c-web-push-ios` (Web Push iOS/PWA, 2
+   commits reales desde oct-05): ¿retomar, abrir PR, o descartar?
+3. Revisar los 4 worktrees sucios (`df`, `dg`, `dh`, `fix-auth`) — ninguno se
+   tocó.
+4. Decidir si limpiar el ruido CRLF del árbol principal (`git checkout --
+   android/app/capacitor.build.gradle android/capacitor.settings.gradle
+   docs/I18N-COVERAGE.md public/i18n/coverage.json`) o ajustar
+   `.gitattributes` para que deje de aparecer.
+5. Revisar y mergear (o cerrar) el PR `feature/dn-11nov-siempre-al-dia-app →
+   dev` (solo agrega las reglas DN-10/DN-13 a `CLAUDE.md`).
+
+## En dev / En prod
+- **Sin cambios de producto esta ronda.** En prod sigue csd-app v2.68.0
+  (ver entrada de arriba). `CLAUDE.md` (reglas de proceso) queda en PR hacia
+  `dev`, sin tocar `main`.
+
+---
+
 ## 🟢 11-nov-2026 — Ronda DM (PROMPT 141, módulo Claude + 8 arreglos) — v2.68.0 PUBLICADA EN PROD
 
 **TL;DR:** PROMPT-140 (SGC/web) **ya estaba completo y en prod** (v1.213.0,
