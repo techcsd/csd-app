@@ -44,6 +44,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/parte | 205 | 4 | 98% | 0% |  |
 | pages/borrador | 13 | 0 | 100% | 0% |  |
 | pages/buscador | 7 | 0 | 100% | 0% |  |
+| pages/claude | 39 | 0 | 95% | 0% |  |
 | pages/compa | 22 | 0 | 100% | 0% |  |
 | pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
 | pages/compa/compartidas | 6 | 0 | 100% | 0% |  |
@@ -61,7 +62,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
 | pages/ingenieria/cartilla | 63 | 0 | 97% | 0% |  |
-| pages/ingenieria/pagos | 61 | 0 | 43% | 2% |  |
+| pages/ingenieria/pagos | 61 | 0 | 44% | 2% |  |
 | pages/inventario | 15 | 0 | 100% | 0% |  |
 | pages/inventario/almacen-inventario | 23 | 0 | 100% | 0% |  |
 | pages/inventario/almacenes | 30 | 0 | 100% | 3% |  |
@@ -105,7 +106,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 4% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 75 | 0 | 100% | 1% | ✅ |
+| pages/perfil | 76 | 0 | 100% | 1% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/claude | 19 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
@@ -151,7 +152,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 155 | 2 | 75% | 1% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 75 | 1 | 84% | 5% |  |
+| pages/transporte/conduce-detalle | 80 | 1 | 83% | 5% |  |
 | pages/transporte/conduce-externo | 84 | 1 | 82% | 4% |  |
 | pages/transporte/conduce-transferencias | 46 | 0 | 98% | 2% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 3% |  |

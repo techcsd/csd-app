@@ -6,6 +6,18 @@
     <button type="button" class="cdet__refresh" (click)="load()" [disabled]="loading()" [attr.aria-label]="'Actualizar' | t">🔄</button>
   </header>
 
+  <!-- DM-23 — navegar entre conduces sin volver a la lista (reporte de Soporte 1e56426e). -->
+  <div class="cdet__acciones">
+    @if (hayListaNav()) {
+      <button type="button" class="btn-ghost" [disabled]="!idAnterior()" (click)="irAnterior()">← {{ 'Anterior' | t }}</button>
+      <span class="cdet__nav-contador">{{ posicionActual() + 1 }} {{ 'de' | t }} {{ listaTotal }}</span>
+      <button type="button" class="btn-ghost" [disabled]="!idSiguiente()" (click)="irSiguiente()">{{ 'Siguiente' | t }} →</button>
+    }
+    <button type="button" class="btn-ghost" [disabled]="buscandoPendiente()" (click)="irSiguientePendiente()">
+      @if (buscandoPendiente()) { {{ 'Buscando…' | t }} } @else { {{ 'Siguiente pendiente para mí' | t }} }
+    </button>
+  </div>
+
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="6" />

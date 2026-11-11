@@ -1371,3 +1371,29 @@ empezara — nada quedó detrás de bandera por falta de backend.
   catálogo-driven, sin código nuevo), y la sugerencia "¿Qué me falta de los grupos?"
   en el fallback de Compa. Candidata para la ronda DM (no esta): tarjeta "Mis
   pendientes de grupos" en Inicio.
+- **DM — Módulo Claude (PROMPT 140/141, 11-nov-2026): biblioteca de skills,
+  Setup, auditoría — web completo; app recibe el subconjunto de uso (DM-00).**
+  La web tiene las 4 pestañas (Inicio/Skills/Crear/Auditoría, esta última
+  web-only) sobre `sgc.claude_skills`/`claude_packs`/`claude_progreso`/
+  `claude_encuesta_respuestas` (migraciones `dm1`/`dm4`/`dm4b`, YA en prod). La
+  app (`/claude`) tiene Inicio (Setup + link a "Mi conexión" existente)/Skills
+  (ver+descargar+compartir por hoja nativa, por rol)/Crear (formulario guiado →
+  `claude-skill-validar`, mismas 3 edges del padre)/Encuesta (offline vía
+  outbox, `claude_encuesta_guardar`). **Administrar (aprobar/publicar/
+  archivar) y Auditoría (encuesta agregada + organización) son SOLO WEB** —
+  la app no tiene esas pantallas ni los submódulos `tecnologia.claude_*`.
+  Sin divergencia de datos: mismas tablas/RLS/edges que el padre.
+- **DM5/DM-23 — conduce "Anterior/Siguiente" (web+app, mismo contrato lógico,
+  implementación propia por repo):** la web pasa `ids` por `history.state`
+  desde `conduces.ts`; la app pasa `ids` por `router.navigate(..., {state})`
+  desde 5 listas (`conduces-pendientes`/`conduces-por-firmar`/
+  `conduces-historial`/`conduces-por-implementar`/`por-confirmar`) hacia
+  `conduce-detalle.ts`, con el mismo workaround de navegar por una ruta
+  intermedia (`conduces-hub`, no `dashboard`) porque ninguno de los dos
+  componentes reacciona a un cambio de `:id` en la misma ruta. "Siguiente
+  pendiente para mí" usa `misConducesPorFirmar`/`misConducesPendientesEntrega`
+  (ya existían) en vez de las RPCs equivalentes del padre.
+- **DM-21/24/25/26/27/28 — errores de la app (PROMPT-141 F4): app-only,
+  sin contraparte web.** Son fixes de cliente (firma RPC/clasificación/GPS/
+  tracking/vercel.json/realtime); el triaje server-side (`dm6`) ya marcó estas
+  firmas `en_revision` a la espera de este round — sin divergencia de datos.

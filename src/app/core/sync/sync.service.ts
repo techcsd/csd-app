@@ -678,7 +678,9 @@ export class SyncService {
    * token válido. Best-effort: si el refresh falla (refresh token vencido de verdad),
    * el drain sigue y el error real se manejará como siempre. Verificado en dispositivo.
    */
-  private async ensureFreshSession(): Promise<void> {
+  /** DM-26 — pública para que TrackingService.flush() también la use (mismo
+   *  patrón BN1c: refresca ANTES de subir, no reactivo a un 401 ya ocurrido). */
+  async ensureFreshSession(): Promise<void> {
     try {
       const { data } = await this.supabase.client.auth.getSession();
       const s = data.session;

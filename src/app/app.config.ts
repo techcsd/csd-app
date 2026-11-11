@@ -42,6 +42,7 @@ import { CartillaService } from './core/services/cartilla.service';
 import { SolicitudesCompraService } from './core/services/solicitudes-compra.service';
 import { ReunionesService } from './core/services/reuniones.service';
 import { PagosObraService } from './core/services/pagos-obra.service';
+import { ClaudeModuloService } from './core/services/claude-modulo.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { environment } from '../environments/environment';
 
@@ -133,6 +134,9 @@ export const appConfig: ApplicationConfig = {
       // A4 — S30-class: sin bootearlo, el handler 'pagos_firma' no se registra y
       // las firmas/monto-concepto de "Pagos" quedarían "En cola" para siempre.
       inject(PagosObraService);
+      // DM1 — S30-class: sin bootearlo, 'claude_encuesta'/'claude_skill_crear'
+      // no se registran y quedarían "En cola" para siempre si se crean sin red.
+      inject(ClaudeModuloService);
 
       // BJ5 — al estrenar versión, suelta las cachés de proyectos que pudieron
       // guardar un VACÍO bajo la RLS vieja (lista/pickers/liberación/conduces). El

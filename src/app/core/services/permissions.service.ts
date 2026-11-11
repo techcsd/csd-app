@@ -149,25 +149,34 @@ export class PermissionsService {
     const enableHighAccuracy = opts?.highAccuracy ?? true;
     const timeout = opts?.timeout ?? 25000;
     const maximumAge = opts?.maximumAge ?? 60000;
+
+    // DM-25 — firma única, timeout ADAPTATIVO: si se pidió alta precisión, primero
+    // se intenta un fix RÁPIDO de baja precisión / último punto conocido (maximumAge
+    // ya cubre "último punto"; 5s basta para wifi/red o un fix en caché). Solo si eso
+    // no alcanza se escala a la precisión alta con el timeout completo pedido. Esto
+    // era la causa de la firma más ruidosa de Y6 (583 timeouts/mes): cada chequeo
+    // (p. ej. "¿hay GPS?") esperaba el timeout largo satelital aunque solo hiciera
+    // falta saber que SÍ hay señal. Permiso negado no escala (sería el mismo fallo).
+    if (enableHighAccuracy) {
+      try {
+        const rapido = await this.acquireFirstFix({ enableHighAccuracy: false, timeout: 5000, maximumAge });
+        return { ok: true, lat: rapido.coords.latitude, lng: rapido.coords.longitude };
+      } catch (eRapido) {
+        const motivoRapido = this.classifyPosError(eRapido);
+        if (motivoRapido === 'denied-permanent') {
+          void this.reportGpsFallo(eRapido, { native: this.native, high_accuracy: false, timeout: 5000 });
+          return { ok: false, reason: motivoRapido };
+        }
+        // Sin fix rápido (ni denegado): escala a precisión alta abajo.
+      }
+    }
+
     try {
       const pos = await this.acquireFirstFix({ enableHighAccuracy, timeout, maximumAge });
       return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
     } catch (e) {
       const reason = this.classifyPosError(e);
-      // DH15 — un timeout en alta precisión (GPS satelital, lento en interiores/
-      // sombra) a veces SÍ resuelve con baja precisión (red/wifi, más rápido).
-      // Un segundo intento corto antes de rendirse evita el "no se pudo obtener
-      // ubicación" cuando una posición menos exacta hubiera bastado.
-      if (reason === 'timeout' && enableHighAccuracy) {
-        try {
-          const pos = await this.acquireFirstFix({ enableHighAccuracy: false, timeout: 8000, maximumAge });
-          return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
-        } catch (e2) {
-          void this.reportGpsFallo(e2, { native: this.native, high_accuracy: false, timeout: 8000, reintento: true });
-          return { ok: false, reason: this.classifyPosError(e2) };
-        }
-      }
-      void this.reportGpsFallo(e, { native: this.native, high_accuracy: enableHighAccuracy, timeout });
+      void this.reportGpsFallo(e, { native: this.native, high_accuracy: enableHighAccuracy, timeout, escalado: enableHighAccuracy });
       return { ok: false, reason };
     }
   }

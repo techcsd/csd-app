@@ -3,7 +3,7 @@
   "buildCommand": "node scripts/build-env.mjs",
   "outputDirectory": "dist/csd-app/browser",
   "framework": null,
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/:path((?!.*\\.[^/]+$).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/ngsw-worker.js",
