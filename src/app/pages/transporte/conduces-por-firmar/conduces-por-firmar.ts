@@ -65,8 +65,11 @@ export class ConducesPorFirmarPage {
     return 'CND-' + id.slice(0, 8).toUpperCase();
   }
 
+  /** DM-23 — pasa los ids de esta bandeja para "Anterior/Siguiente" en el detalle. */
   firmar(id: string): void {
-    void this.router.navigate(['/transporte/conduce-detalle', id]);
+    void this.router.navigate(['/transporte/conduce-detalle', id], {
+      state: { ids: this.conduces_().map((c) => c.id) },
+    });
   }
 
   back(): void {

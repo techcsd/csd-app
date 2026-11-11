@@ -203,8 +203,67 @@ export class ConduceDetallePage {
   /** Confirmación pendiente de asignar a alguien fuera de la obra (forzar). */
   confirmForzar = signal<{ id: string; nombre: string } | null>(null);
 
+  // DM-23 — "Anterior/Siguiente" sobre la MISMA lista filtrada desde la que se abrió
+  // el conduce (ids recibidos por Router state desde la lista de origen, que ya
+  // persiste sus filtros). Si se entra directo (notificación, deep-link), no hay
+  // lista → los botones no se muestran. Mismo patrón que la web (ronda DM).
+  private readonly listaIds: string[] = (history.state?.['ids'] as string[] | undefined) ?? [];
+  readonly listaTotal = this.listaIds.length;
+  posicionActual = computed(() => this.listaIds.indexOf(this.salidaId));
+  hayListaNav = computed(() => this.listaIds.length > 1 && this.posicionActual() !== -1);
+  idAnterior = computed(() => (this.posicionActual() > 0 ? this.listaIds[this.posicionActual() - 1] : null));
+  idSiguiente = computed(() =>
+    this.posicionActual() !== -1 && this.posicionActual() < this.listaIds.length - 1
+      ? this.listaIds[this.posicionActual() + 1]
+      : null,
+  );
+  buscandoPendiente = signal(false);
+
   constructor() {
     void this.load();
+  }
+
+  /** DM-23 — navega a otro conduce preservando la lista. Este componente lee
+   *  `salidaId`/la lista UNA vez (constructor/campo), así que un simple
+   *  `router.navigate` al mismo path con otro `:salidaId` no lo reactiva — se
+   *  fuerza un ciclo de destrucción/creación rebotando por conduces-hub
+   *  (`skipLocationChange`, invisible en la URL). */
+  private async navegarAConduce(id: string): Promise<void> {
+    await this.router.navigateByUrl('/transporte/conduces-hub', { skipLocationChange: true });
+    await this.router.navigate(['/transporte/conduce-detalle', id], { state: { ids: this.listaIds } });
+  }
+
+  irAnterior(): void {
+    const id = this.idAnterior();
+    if (id) void this.navegarAConduce(id);
+  }
+
+  irSiguiente(): void {
+    const id = this.idSiguiente();
+    if (id) void this.navegarAConduce(id);
+  }
+
+  /** DM-23 — "Siguiente pendiente para mí": el próximo conduce, entre los que
+   *  esperan algo de esta persona (por firmar o por confirmar entrega), que no sea
+   *  el actual. Prioriza por firmar (acción más urgente) y luego por fecha. */
+  async irSiguientePendiente(): Promise<void> {
+    if (this.buscandoPendiente()) return;
+    this.buscandoPendiente.set(true);
+    try {
+      const actual = this.salidaId;
+      const [porFirmar, pendEntrega] = await Promise.all([
+        this.conduces.misConducesPorFirmar().catch(() => []),
+        this.conduces.misConducesPendientesEntrega().catch(() => []),
+      ]);
+      const candidato = porFirmar.find((r) => r.id !== actual) ?? pendEntrega.find((r) => r.id !== actual);
+      if (!candidato) {
+        this.toast.show(this.i18n.t('No tienes otros conduces pendientes por firmar o confirmar.'), 'info');
+        return;
+      }
+      await this.navegarAConduce(candidato.id);
+    } finally {
+      this.buscandoPendiente.set(false);
+    }
   }
 
   // ── CK4 — acciones "Entregar a" ─────────────────────────────────────────────

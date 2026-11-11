@@ -1,0 +1,173 @@
+<div class="screen">
+  <div class="screen__body">
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <button type="button" class="btn-ghost" style="width:auto;" (click)="back()" aria-label="Atrás">←</button>
+      <h1 class="screen__title" style="margin:0;">{{ 'Claude' | t }}</h1>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button type="button" [class]="tab() === 'inicio' ? 'btn-cta' : 'btn-ghost'" (click)="setTab('inicio')">{{ 'Inicio' | t }}</button>
+      <button type="button" [class]="tab() === 'skills' ? 'btn-cta' : 'btn-ghost'" (click)="setTab('skills')">{{ 'Skills' | t }}</button>
+      <button type="button" [class]="tab() === 'crear' ? 'btn-cta' : 'btn-ghost'" (click)="setTab('crear')">{{ 'Crear' | t }}</button>
+      <button type="button" [class]="tab() === 'encuesta' ? 'btn-cta' : 'btn-ghost'" (click)="setTab('encuesta')">{{ 'Encuesta' | t }}</button>
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else {
+      <!-- ── Inicio: Setup + Mi conexión ─────────────────────────────────── -->
+      @if (tab() === 'inicio') {
+        <section>
+          <h2>{{ 'Empieza aquí' | t }}</h2>
+          <p>{{ 'Un paquete corto para arrancar con Claude en tu trabajo.' | t }} ({{ pasosCompletos() }}/4)</p>
+
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [checked]="progreso()?.conecto_sgc" (change)="irAMiConexion()" />
+            {{ 'Conecté el SGC' | t }}
+          </label>
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [checked]="progreso()?.descargo_setup" disabled />
+            {{ 'Descargué el Setup' | t }}
+          </label>
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [checked]="progreso()?.subio_primera_skill" disabled />
+            {{ 'Subí mi primera skill' | t }}
+          </label>
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" [checked]="progreso()?.probo_pregunta" (change)="marcar('probo_pregunta')" />
+            {{ 'Probé una pregunta' | t }}
+          </label>
+
+          <h3>{{ 'Mi conexión' | t }}</h3>
+          <button type="button" class="btn-ghost" (click)="irAMiConexion()">{{ 'Ver mi conexión con Claude' | t }}</button>
+
+          @if (packs().length) {
+            <h3>{{ 'Paquete de arranque' | t }}</h3>
+            @for (p of packs(); track p.id) {
+              <div class="field">
+                <strong>{{ p.nombre }}</strong>
+                <p>{{ p.descripcion }}</p>
+                <button type="button" class="btn-cta" [disabled]="descargandoId() === p.id" (click)="descargarPack(p)">
+                  {{ (descargandoId() === p.id ? 'Generando…' : 'Descargar') | t }}
+                </button>
+              </div>
+            }
+          }
+        </section>
+      }
+
+      <!-- ── Skills: biblioteca por rol ──────────────────────────────────── -->
+      @if (tab() === 'skills') {
+        <section>
+          @if (skillsRecomendadas().length) {
+            <h3>{{ 'Recomendadas para tu rol' | t }}</h3>
+            @for (s of skillsRecomendadas(); track s.id) {
+              <div class="field">
+                <strong>{{ s.nombre }}</strong>
+                <p>{{ s.descripcion }}</p>
+                <button type="button" class="btn-cta" [disabled]="descargandoId() === s.id" (click)="descargar(s)">{{ 'Descargar' | t }}</button>
+                <button type="button" class="btn-ghost" [disabled]="descargandoId() === s.id" (click)="compartir(s)">{{ 'Compartir' | t }}</button>
+              </div>
+            }
+          }
+
+          <h3>{{ 'De la empresa' | t }}</h3>
+          @if (!skillsEmpresa().length) {
+            <app-empty-state [title]="'Aún no hay skills de empresa' | t" [message]="'Cuando Tecnología publique una, aparecerá aquí.' | t" />
+          }
+          @for (s of skillsEmpresa(); track s.id) {
+            <div class="field">
+              <strong>{{ s.nombre }}</strong>
+              <p>{{ s.descripcion }}</p>
+              <button type="button" class="btn-cta" [disabled]="descargandoId() === s.id" (click)="descargar(s)">{{ 'Descargar' | t }}</button>
+              <button type="button" class="btn-ghost" [disabled]="descargandoId() === s.id" (click)="compartir(s)">{{ 'Compartir' | t }}</button>
+            </div>
+          }
+
+          @if (misSkills().length) {
+            <h3>{{ 'Mis skills' | t }}</h3>
+            @for (s of misSkills(); track s.id) {
+              <div class="field">
+                <strong>{{ s.nombre }}</strong>
+                <span>{{ s.estado }}</span>
+                <p>{{ s.descripcion }}</p>
+                @if (s.tiene_codigo_ejecutable) {
+                  <p>{{ 'Trae código: requiere revisión antes de proponerla a tu rol o la empresa.' | t }}</p>
+                }
+                <button type="button" class="btn-cta" [disabled]="descargandoId() === s.id" (click)="descargar(s)">{{ 'Descargar' | t }}</button>
+                <button type="button" class="btn-ghost" [disabled]="descargandoId() === s.id" (click)="compartir(s)">{{ 'Compartir' | t }}</button>
+              </div>
+            }
+          }
+        </section>
+      }
+
+      <!-- ── Crear: formulario guiado (DM-09) ────────────────────────────── -->
+      @if (tab() === 'crear') {
+        <section>
+          <p>{{ 'Describe un atajo que repites seguido; se convierte en una skill lista para usar.' | t }}</p>
+          <label>{{ 'Título' | t }}
+            <input class="field" type="text" [(ngModel)]="borrador.titulo" [placeholder]="'Ej. Revisar una cotización' | t" />
+          </label>
+          <label>{{ 'Qué hace' | t }}
+            <textarea class="field" [(ngModel)]="borrador.queHace" rows="2"></textarea>
+          </label>
+          <label>{{ 'Cuándo usarla' | t }}
+            <textarea class="field" [(ngModel)]="borrador.cuandoUsarla" rows="2"></textarea>
+          </label>
+          <label>{{ 'Pasos' | t }}
+            <textarea class="field" [(ngModel)]="borrador.pasos" rows="3"></textarea>
+          </label>
+          <label>{{ 'Ejemplo' | t }}
+            <textarea class="field" [(ngModel)]="borrador.ejemplo" rows="2"></textarea>
+          </label>
+
+          @if (vistaPreviaMd()) {
+            <details>
+              <summary>{{ 'Vista previa del SKILL.md' | t }}</summary>
+              <pre style="white-space:pre-wrap;">{{ vistaPreviaMd() }}</pre>
+            </details>
+          }
+
+          <button type="button" class="btn-cta" [disabled]="!crearValido() || guardandoSkill()" (click)="guardarSkill()">
+            {{ (guardandoSkill() ? 'Guardando…' : 'Guardar como personal') | t }}
+          </button>
+          @if (!network.online()) {
+            <p>{{ 'Sin conexión: se creará al reconectar.' | t }}</p>
+          }
+        </section>
+      }
+
+      <!-- ── Encuesta de auditoría (DM-17) ────────────────────────────────── -->
+      @if (tab() === 'encuesta') {
+        <section>
+          <p>{{ 'Corta (≤ 3 min), opcional. Puedes editar tu respuesta después.' | t }}</p>
+          <label>{{ '¿Usas Claude hoy y dónde?' | t }}
+            <textarea class="field" [(ngModel)]="encuestaForm.usa_hoy" rows="2"></textarea>
+          </label>
+          <label>{{ '¿Para qué tareas?' | t }}
+            <textarea class="field" [(ngModel)]="encuestaForm.tareas" rows="2"></textarea>
+          </label>
+          <label>{{ '¿Qué tarea repetida te quita más tiempo?' | t }}
+            <textarea class="field" [(ngModel)]="encuestaForm.tarea_repetida" rows="2"></textarea>
+          </label>
+          <label>{{ '¿Qué te frena? (cuenta, no sé usarlo, desconfianza, datos…)' | t }}
+            <textarea class="field" [(ngModel)]="encuestaForm.que_frena" rows="2"></textarea>
+          </label>
+          <label>{{ '¿Qué documento o reporte armas a mano cada semana?' | t }}
+            <textarea class="field" [(ngModel)]="encuestaForm.documento_semanal" rows="2"></textarea>
+          </label>
+          <label>{{ '¿Qué te gustaría que Compa/Claude hiciera por ti?' | t }}
+            <textarea class="field" [(ngModel)]="encuestaForm.que_deberia_hacer" rows="2"></textarea>
+          </label>
+          <button type="button" class="btn-cta" [disabled]="guardandoEncuesta()" (click)="guardarEncuesta()">
+            {{ (guardandoEncuesta() ? 'Guardando…' : 'Guardar respuesta') | t }}
+          </button>
+          @if (encuesta()?.updated_at) {
+            <p>{{ 'Ya respondiste. Puedes editar y guardar de nuevo cuando quieras.' | t }}</p>
+          }
+        </section>
+      }
+    }
+  </div>
+</div>

@@ -1214,6 +1214,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/notas/notas').then((m) => m.NotasPage),
   },
   {
+    // DM1-DM4/DM-00 (ronda DM) — Módulo Claude: Inicio/Skills/Crear/Encuesta,
+    // general accesible por todos (sin moduleGuard, como Notas). Administrar/
+    // auditoría son web-only.
+    path: 'claude',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/claude/claude-modulo').then((m) => m.ClaudeModuloPage),
+  },
+  {
     // AF39 — Tareas: general (el RPC mis_tareas_app acota lo que ve cada usuario).
     path: 'tareas',
     canActivate: [authGuard, pinGuard],

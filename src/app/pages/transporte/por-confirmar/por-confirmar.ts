@@ -200,9 +200,12 @@ export class PorConfirmarPage {
   }
 
   /** AL8 — ver el documento completo del conduce ANTES de recibir (items
-   *  esperados, origen/destino, chofer, fotos de entrega, firmas). */
+   *  esperados, origen/destino, chofer, fotos de entrega, firmas). DM-23 — pasa los
+   *  ids de esta bandeja para "Anterior/Siguiente" en el detalle. */
   verConduce(id: string): void {
-    void this.router.navigate(['/transporte/conduce-detalle', id]);
+    void this.router.navigate(['/transporte/conduce-detalle', id], {
+      state: { ids: this.entregas().map((e) => e.salidaId) },
+    });
   }
 
   /** AL8 — historial del propio confirmador (accesible aunque no sea flota). */

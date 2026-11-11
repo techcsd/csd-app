@@ -85,6 +85,30 @@ export class ErrorReportService implements ErrorHandler {
     // es el MISMO chunk perdido con otra redacción; antes no disparaba autoRepair.
     /error loading dynamically imported module/i,
     /chunkloaderror/i,
+    // DM-27 — `sw_update: instalación falló` es el mismo origen (service worker
+    // desincronizado con el deploy actual); mismo auto-arreglo.
+    /sw_update: instalaci[oó]n fall[oó]/i,
+  ];
+
+  /** DM-27 — localStorage, no sessionStorage: el auto-arreglo recarga la página (mata
+   *  la pestaña, no la app), así que el conteo de intentos debe sobrevivir al reload. */
+  private static readonly CHUNK_REPAIR_KEY = 'csd_chunk_repair_v1';
+  private static readonly CHUNK_REPAIR_MAX_INTENTOS = 2;
+  private static readonly CHUNK_REPAIR_VENTANA_MS = 10 * 60_000;
+
+  /**
+   * DM-24 — mensajes que son una REGLA DE NEGOCIO o un permiso denegado por el
+   * usuario, no un fallo del sistema: no deben contarse como error (se guardan
+   * como 'info', ya excluido de `listRecent`). Lista cerrada — ver CONTEXTO DM §2.2.
+   */
+  private static readonly REGLA_ESPERADA_PATTERNS = [
+    /User denied Geolocation/i,
+    /^\[conduce_/i,
+    /existencia insuficiente/i,
+    /no hay existencia/i,
+    /fecha pasada/i,
+    /permiso de registro retroactivo/i,
+    /Failed to read the 'localStorage' property/i,
   ];
 
   constructor() {
@@ -135,18 +159,61 @@ export class ErrorReportService implements ErrorHandler {
     // Mantener el log de consola (reemplazamos el ErrorHandler por defecto).
     console.error(error);
     const mensaje = this.messageOf(error);
-    void this.report('crash', mensaje, {}, this.stackOf(error));
 
-    // DB14 — chunk perdido tras un deploy nuevo: auto-reparar (desregistra el SW +
-    // limpia cachés + recarga) en vez de dejar al usuario con una pantalla rota.
-    // Lazy injector (no un campo inyectado) a propósito: UpdateService ya inyecta
-    // ErrorReportService, así que un campo aquí sería un ciclo de DI.
+    // DB14/DM-27 — chunk perdido tras un deploy nuevo: auto-reparar (desregistra el
+    // SW + limpia cachés + recarga) en vez de dejar al usuario con una pantalla rota.
     if (ErrorReportService.CHUNK_ERROR_PATTERNS.some((p) => p.test(mensaje))) {
+      this.handleChunkError(mensaje, this.stackOf(error));
+      return;
+    }
+
+    void this.report('crash', mensaje, {}, this.stackOf(error));
+  }
+
+  /**
+   * DM-27 — el 1er intento de auto-arreglo NO cuenta como error (se registra como
+   * 'info' "auto-reparado"): si el reload resuelve el chunk perdido, el usuario
+   * nunca lo nota y no hay nada que investigar. Solo si el MISMO tipo de falla
+   * reaparece dentro de la ventana (el auto-arreglo no lo resolvió) se reporta
+   * como 'crash' real y se deja de reintentar (evita un bucle de recargas).
+   */
+  private handleChunkError(mensaje: string, stack: string | null): void {
+    let intentos = 0;
+    let at = 0;
+    try {
+      const raw = localStorage.getItem(ErrorReportService.CHUNK_REPAIR_KEY);
+      if (raw) ({ intentos, at } = JSON.parse(raw) as { intentos: number; at: number });
+      if (Date.now() - at > ErrorReportService.CHUNK_REPAIR_VENTANA_MS) intentos = 0;
+    } catch {
+      intentos = 0;
+    }
+
+    if (intentos >= ErrorReportService.CHUNK_REPAIR_MAX_INTENTOS) {
+      // Ya se intentó reparar y el problema persiste: esto sí es un fallo real.
       try {
-        void this.injector.get(UpdateService).autoRepair('chunk_perdido');
+        localStorage.removeItem(ErrorReportService.CHUNK_REPAIR_KEY);
       } catch {
         /* best-effort */
       }
+      void this.report('crash', mensaje, { auto_reparado_intentos: intentos }, stack);
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        ErrorReportService.CHUNK_REPAIR_KEY,
+        JSON.stringify({ intentos: intentos + 1, at: Date.now() }),
+      );
+    } catch {
+      /* best-effort */
+    }
+    void this.report('info', `auto-reparado: ${mensaje}`, { auto_reparado_intento: intentos + 1 }, stack);
+    // Lazy injector (no un campo inyectado) a propósito: UpdateService ya inyecta
+    // ErrorReportService, así que un campo aquí sería un ciclo de DI.
+    try {
+      void this.injector.get(UpdateService).autoRepair('chunk_perdido');
+    } catch {
+      /* best-effort */
     }
   }
 
@@ -166,13 +233,20 @@ export class ErrorReportService implements ErrorHandler {
     if (this.isSelfError(cleanMsg, stack)) return;
     if (!this.allowByRate()) return;
 
+    // DM-24 — reclasifica a 'info' (no cuenta como error) lo que ya es una regla de
+    // negocio esperada o un permiso que el usuario negó, sea cual sea el tipo con
+    // que se llamó a report(). Lista cerrada, ver CONTEXTO DM §2.2.
+    const tipoFinal: AppErrorType = ErrorReportService.REGLA_ESPERADA_PATTERNS.some((p) => p.test(cleanMsg))
+      ? 'info'
+      : errorType;
+
     this.reentrant = true;
     try {
       const d = await this.device.ready();
       const id = crypto.randomUUID();
       const payload = {
         id,
-        error_type: String(errorType).slice(0, 40),
+        error_type: String(tipoFinal).slice(0, 40),
         message: cleanMsg.slice(0, 2000) || '(sin mensaje)',
         stack: stack ? this.sanitize(stack).slice(0, 8000) : null,
         // BT5 — adjunta el estado de memoria del dispositivo/pestaña. Un cierre por

@@ -15,7 +15,7 @@ import { ErrorReportService } from './error-report.service';
 import { ChoferEstadoService, estadoMeta } from './chofer-estado.service';
 import { ConsentService } from './consent.service';
 import { db, PosicionBuffer } from '../db/app-db';
-import { throwSyncError, PermanentSyncError } from '../sync/sync.service';
+import { throwSyncError, PermanentSyncError, SyncService } from '../sync/sync.service';
 
 const LEGACY_BUFFER_KEY = 'tracking_buffer'; // AU7 — buffer viejo en LocalStore (se migra a Dexie)
 const FLUSH_MS = 45_000; // AF27 — lote cada ~45 s en ruta activa
@@ -59,6 +59,7 @@ export class TrackingService {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private errors = inject(ErrorReportService);
+  private sync = inject(SyncService);
   private choferEstado = inject(ChoferEstadoService);
   private consent = inject(ConsentService);
 
@@ -108,6 +109,12 @@ export class TrackingService {
   private flushing = false;
   /** QA-10 — se pidió un flush mientras había uno en vuelo → re-ejecutar al terminar. */
   private flushAgain = false;
+  /** DM-26 — "lote venenoso": el mismo lote-cabeza (por su primer seq) rechazado por
+   *  datos/referencia inválidos N veces seguidas. Da margen (3 intentos en flushes
+   *  sucesivos) antes de descartarlo, por si el rechazo era transitorio mal clasificado. */
+  private loteVenenosoSeq: number | null = null;
+  private loteVenenosoIntentos = 0;
+  private static readonly LOTE_VENENOSO_MAX_INTENTOS = 3;
 
   constructor() {
     void this.bootBuffer();
@@ -334,12 +341,15 @@ export class TrackingService {
           },
           (location, error) => {
             if (error) {
-              // AG15 — el error del watcher nativo (permiso "always" no concedido,
-              // servicio detenido por el SO) ya no se traga: a Y6 (rate-limited).
-              this.errors.report('tracking', 'watcher nativo devolvió error', {
-                code: (error as { code?: string }).code ?? null,
-                message: (error as { message?: string }).message ?? String(error),
-              });
+              // AG15/DM-26 — el error del watcher nativo (permiso "always" no concedido,
+              // servicio detenido por el SO) ya no se traga: a Y6 (rate-limited). El
+              // permiso revocado es la causa más común (confirmada por la auditoría
+              // DM3) y no es un fallo del sistema — se clasifica 'info' como el resto
+              // de denegaciones de GPS (DM-24), no 'tracking'.
+              const code = (error as { code?: string }).code ?? null;
+              const msg = (error as { message?: string }).message ?? String(error);
+              const esPermiso = /not.?authoriz|denied|permission/i.test(`${code ?? ''} ${msg}`);
+              this.errors.report(esPermiso ? 'info' : 'tracking', 'watcher nativo devolvió error', { code, message: msg });
               return;
             }
             if (!location) return;
@@ -583,6 +593,10 @@ export class TrackingService {
     }
     this.flushing = true;
     try {
+      // DM-26 — refresca el token ANTES de subir (mismo patrón BN1c del outbox
+      // principal): evita el rechazo transitorio por sesión vencida en vez de
+      // reaccionar a él después de que el RPC ya lo rechazó.
+      await this.sync.ensureFreshSession();
       // Drena en varios lotes mientras queden puntos y haya señal.
       for (;;) {
         const lote = await db.posiciones.orderBy('seq').limit(FLUSH_BATCH).toArray();
@@ -600,25 +614,56 @@ export class TrackingService {
         });
         if (error) {
           // DH15 — un rechazo PERMANENTE (datos inválidos, regla del servidor, firma
-          // desactualizada) nunca se arregla reintentando: antes se conservaba el lote
-          // entero y el MISMO error se reportaba en cada flush (212 ocurrencias/7
-          // dispositivos, un lote "atascado" para siempre). `throwSyncError` clasifica
-          // por SQLSTATE (mismo contrato BG1 del outbox); permanente → se descarta ESE
-          // lote (puntos de tracking, bajo valor) y se sigue drenando el resto.
+          // desactualizada) nunca se arregla reintentando. `throwSyncError` clasifica
+          // por SQLSTATE (mismo contrato BG1 del outbox).
           let permanente = false;
+          let kind: string | null = null;
           try {
             throwSyncError(error);
           } catch (e) {
             permanente = e instanceof PermanentSyncError;
+            kind = e instanceof PermanentSyncError ? e.kind : null;
           }
           this.errors.report('tracking', 'registrar_posiciones rechazó el lote', {
             code: error.code,
             message: error.message,
             lote: lote.length,
             permanente,
+            kind,
           });
-          if (!permanente) return; // transitorio: conserva el buffer para reintentar
+          if (!permanente) return; // transitorio (incl. 401 ya refrescado arriba): conserva el buffer
+
+          // DM-26 — 'permiso' (RLS) no tiene "intento 3" que lo vaya a arreglar: es un
+          // fix server-side, no un dato corregible reintentando. Se descarta directo.
+          if (kind === 'permiso') {
+            await db.posiciones.bulkDelete(lote.map((p) => p.seq!).filter((s) => s != null));
+            this.loteVenenosoSeq = null;
+            this.loteVenenosoIntentos = 0;
+            continue;
+          }
+
+          // DM-26 — carga inválida: da 3 intentos (en flushes sucesivos) al MISMO
+          // lote-cabeza antes de descartarlo como venenoso, por si el rechazo fue un
+          // falso-permanente pasajero. Se identifica por su primer `seq` (nada cambia
+          // en Dexie entre intentos, así que el lote vuelto a leer es el mismo).
+          const cabezaSeq = lote[0]?.seq ?? null;
+          if (this.loteVenenosoSeq === cabezaSeq) {
+            this.loteVenenosoIntentos++;
+          } else {
+            this.loteVenenosoSeq = cabezaSeq;
+            this.loteVenenosoIntentos = 1;
+          }
+          if (this.loteVenenosoIntentos < TrackingService.LOTE_VENENOSO_MAX_INTENTOS) {
+            return; // conserva el buffer; lo reintenta el próximo flush
+          }
+          this.errors.report('tracking', 'lote de posiciones descartado tras 3 intentos', {
+            code: error.code,
+            kind,
+            lote: lote.length,
+          });
           await db.posiciones.bulkDelete(lote.map((p) => p.seq!).filter((s) => s != null));
+          this.loteVenenosoSeq = null;
+          this.loteVenenosoIntentos = 0;
           continue; // descartado: sigue drenando el resto del buffer
         }
         // Borra EXACTAMENTE lo enviado (por seq); los push() concurrentes tienen seq

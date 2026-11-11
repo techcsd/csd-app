@@ -166,9 +166,12 @@ export class ConducesHistorialPage {
     this.expandido.update((cur) => (cur === id ? null : id));
   }
 
-  /** AL9/AL4 — abrir el documento del conduce (detalle + Ver conduce/PDF). */
+  /** AL9/AL4 — abrir el documento del conduce (detalle + Ver conduce/PDF). DM-23 —
+   *  pasa los ids de la lista YA filtrada para "Anterior/Siguiente". */
   verConduce(id: string): void {
-    void this.router.navigate(['/transporte/conduce-detalle', id]);
+    void this.router.navigate(['/transporte/conduce-detalle', id], {
+      state: { ids: this.lista().map((c) => c.id) },
+    });
   }
 
   // ─── AH5 — transferir la responsabilidad de un conduce a otro chofer ────────

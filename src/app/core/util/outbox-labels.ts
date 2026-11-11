@@ -67,6 +67,8 @@ export const TIPO_LABEL: Record<string, string> = {
   obra_prueba_campo: 'Prueba de campo',
   obra_mano_obra: 'Registro de mano de obra',
   obra_pedido_urgente: 'Pedido urgente',
+  claude_encuesta: 'Encuesta de Claude',
+  claude_skill_crear: 'Skill de Claude creada',
 };
 
 export const TIPO_ICON: Record<string, string> = {
@@ -133,6 +135,8 @@ export const TIPO_ICON: Record<string, string> = {
   obra_prueba_campo: '🧪',
   obra_mano_obra: '👷',
   obra_pedido_urgente: '🛒',
+  claude_encuesta: '🤖',
+  claude_skill_crear: '🤖',
 };
 
 export function tipoOpLabel(t: string): string {

@@ -1,5 +1,81 @@
 # HANDOFF — CSD App
 
+## 🟡 11-nov-2026 — Ronda DM (PROMPT 141, módulo Claude + 8 arreglos) — v2.68.0 construida, SIN publicar (esperando prueba de Xaviel)
+
+**TL;DR:** PROMPT-140 (SGC/web) **ya estaba completo y en prod** (v1.213.0,
+hoy) cuando arrancó esta sesión — incluyendo las migraciones `dm1`/`dm2`/
+`dm4`/`dm4b`/`dm6` y `dh2`/`dh23` (aplicadas a prod HOY, 11-nov, no en la
+fecha del archivo). Trabajo en worktree `C:\Users\xavie\Desktop\X Dev\dev2\csd-app-dm`,
+rama `feature/dm-modulo-claude-app` (desde `origin/dev` @ `6dcbaca`). **Nada
+commiteado/pusheado todavía** en esta sesión. `npm run build` verde.
+
+**Hallazgo urgente de F0 (no estaba en el CONTEXTO):** al aplicarse `dh2` a
+prod hoy, `sgc.validar_km_vehiculo` pasó a tener **2 overloads** (4 y 6
+argumentos). La app llamaba con 3-4 named args, que ahora son **ambiguos
+entre ambos** (`42725 "is not unique"`, confirmado con una query real contra
+prod) — la validación de km de combustible/mantenimiento estaba fallando
+SIEMPRE desde que `dh2` se aplicó (silencioso: el wizard cae a la regla local,
+no es un crash visible, pero perdía exactamente la mejora que `dh2`/CZ1 vino a
+dar). Arreglado (DM-21): ambos call sites pasan los 6 parámetros.
+
+**F1-F3 (módulo Claude):** `/claude` (Inicio/Skills/Crear/Encuesta), entrada
+en Perfil. Administrar/Auditoría son web-only (DM-00). Offline vía outbox
+(`claude_encuesta`/`claude_skill_crear`, eager-booteado en `app.config.ts`).
+Detalle en `docs/CLAUDE-MODULO.md`.
+
+**F4 (8 arreglos de errores, con archivo:línea):**
+- **DM-21** — ver arriba (urgente, confirmado contra prod con una query de
+  solo lectura; no se aplicó ninguna migración desde la app).
+- **DM-23** — "Anterior/Siguiente"/"Siguiente pendiente para mí" en
+  `conduce-detalle.ts`, alimentado por 5 listas (`conduces-pendientes`/
+  `conduces-por-firmar`/`conduces-historial`/`conduces-por-implementar`/
+  `por-confirmar`) vía `router.navigate(..., {state:{ids}})`. Mismo
+  workaround que la web (bounce por `conduces-hub`, no reacciona a cambios
+  de `:id` en la misma ruta).
+- **DM-24** — `error-report.service.ts`: patrones de "regla esperada" (GPS
+  denegado, `[conduce_*]`, existencia insuficiente, fecha pasada,
+  localStorage privado) se reclasifican a `'info'` dentro de `report()`,
+  sea cual sea el tipo con que se llamó.
+- **DM-25** — `permissions.service.ts: getPosition()` ahora es adaptativo:
+  intento rápido de baja precisión primero (5s), escala a alta precisión
+  solo si hace falta. `tracking.service.ts` ya pasaba por este helper en 2
+  de los 3 sitios señalados por la auditoría (el 3º, el watcher continuo,
+  es arquitectónicamente distinto — no se tocó).
+- **DM-26** — `tracking.service.ts: flush()` ahora llama
+  `sync.ensureFreshSession()` ANTES de subir (mismo patrón BN1c del outbox
+  principal); "carga inválida" da 3 intentos antes de descartar el lote
+  (antes era inmediato); `'permiso'` (RLS) se descarta directo (no tiene
+  "intento 3" que lo arregle). El watcher nativo reclasifica el permiso
+  revocado como `'info'`, no `'tracking'`.
+- **DM-27** — `vercel.json`: el rewrite SPA (`/(.*)`) capturaba CUALQUIER
+  ruta, incluyendo un `.js`/`.css` inexistente tras un deploy — servía
+  `index.html` en vez de un 404 real (la causa raíz del "chunk perdido",
+  mismo bug que el padre encontró en su propio `vercel.json`). Cambiado al
+  mismo patrón `/:path((?!.*\.[^/]+$).*)`. Además, `error-report.service.ts`
+  ya no cuenta el 1er intento de auto-reparación como error (se guarda como
+  `'info' "auto-reparado"`; solo escala a `'crash'` si el MISMO fallo
+  reaparece tras 2 intentos).
+- **DM-28** — `notificaciones.service.ts`: `detenerRealtime()` ahora
+  `await`s `removeChannel`; `iniciarRealtime()` espera esa baja, limpia
+  cualquier canal homónimo vivo vía `getChannels()`, y el nombre del canal
+  lleva un contador de instancia (`notificaciones-app-<uid>-<n>`).
+
+**No se tocó** (fuera de alcance, documentado en vez de adivinar): DM-20/22
+(diálogo de "Registrar entrada"/reasignar — son pantallas de Compras/Órdenes
+que **no existen en la app**, son web-only); el conector fase 2 de Claude
+(sigue apagado, sin tools nuevos en la app).
+
+## En dev / En prod
+- **En prod (ajeno a esta sesión, ya estaba así al empezar):** SGC v1.213.0
+  (módulo Claude web completo + triaje de errores + `dh2`/`dh23` — aplicadas
+  HOY). csd-app v2.67.0 (ronda DL).
+- **En dev (esta sesión, SIN mergear):** csd-app v2.68.0 en
+  `feature/dm-modulo-claude-app` — build verde, SIN APK construido/publicado,
+  SIN PR abierto todavía. `qa/release-2.68.0.md` es un stub con checklist
+  (falta que Xaviel pruebe en un dispositivo real antes de PR a `main`).
+
+---
+
 ## 🟡 10-nov-2026 — Ronda DL (PROMPT 139, lado receptor de Compa en WhatsApp) — v2.67.0 construida, SIN commit (esperando OK de Xaviel)
 
 **TL;DR:** app = lado receptor (push/bandeja/Compa), nunca administra grupos
