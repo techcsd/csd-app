@@ -1,6 +1,6 @@
 # HANDOFF — CSD App
 
-## 🟡 11-nov-2026 — Ronda DM (PROMPT 141, módulo Claude + 8 arreglos) — v2.68.0 construida, SIN publicar (esperando prueba de Xaviel)
+## 🟢 11-nov-2026 — Ronda DM (PROMPT 141, módulo Claude + 8 arreglos) — v2.68.0 PUBLICADA EN PROD
 
 **TL;DR:** PROMPT-140 (SGC/web) **ya estaba completo y en prod** (v1.213.0,
 hoy) cuando arrancó esta sesión — incluyendo las migraciones `dm1`/`dm2`/
@@ -66,13 +66,16 @@ que **no existen en la app**, son web-only); el conector fase 2 de Claude
 (sigue apagado, sin tools nuevos en la app).
 
 ## En dev / En prod
-- **En prod (ajeno a esta sesión, ya estaba así al empezar):** SGC v1.213.0
-  (módulo Claude web completo + triaje de errores + `dh2`/`dh23` — aplicadas
-  HOY). csd-app v2.67.0 (ronda DL).
-- **En dev (esta sesión, SIN mergear):** csd-app v2.68.0 en
-  `feature/dm-modulo-claude-app` — build verde, SIN APK construido/publicado,
-  SIN PR abierto todavía. `qa/release-2.68.0.md` es un stub con checklist
-  (falta que Xaviel pruebe en un dispositivo real antes de PR a `main`).
+- **En prod:** SGC v1.213.0 (módulo Claude web + triaje de errores + `dh2`/
+  `dh23` — ajeno a esta sesión, ya estaba así al empezar). **csd-app v2.68.0
+  — PUBLICADA** (PR #28 feature→dev, PR #29 dev→main mergeados; APK dev y
+  prod construidos/firmados/publicados vía `npm run apk(:publish) -- --env
+  dev|prod`; `app_versiones` registrado en ambos entornos). Xaviel confirmó
+  la actualización in-app 2.67.0→2.68.0 en su Android real antes del PR a
+  `main` (CP5). `release-check.mjs --version 2.68.0` en PASS (4/4).
+- **Pendiente de Xaviel:** decidir si/cuándo marcar 2.68.0 `publicada`/`minima`
+  para forzar la actualización a todos (hoy solo queda registrada en el
+  historial — eso no publica ni fuerza nada, es un paso aparte en SGC admin).
 
 ---
 
