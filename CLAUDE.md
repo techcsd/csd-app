@@ -13,6 +13,12 @@ Angular 21 (standalone + signals, zoneless) · Capacitor 8 (Android + camera/fil
 - **iOS (CI9):** compila en la nube (`.github/workflows/ios-testflight.yml`, manual, Xcode 26 → fastlane → TestFlight). `ios/` NO se versiona (lo genera `cap add ios` en el runner). **Bloqueado en la cuenta Apple + secretos de Xaviel** — ver `docs/TIENDAS-IOS.md`.
 - Secrets in `.env.local` (gitignored): Supabase URL, anon key, and admin keys.
 
+## Paso 0 de toda ronda (DN-10, SGC — regla permanente, aplica a este repo también)
+Antes de diagnosticar o tocar nada: `powershell -File C:\developer\tools\sync-todo.ps1` (fetch + ff-only de `main`/`dev` donde el árbol esté limpio + `graphify update .` en SGC y csd-app). Luego confirma que `Built from commit` en `graphify-out/GRAPH_REPORT.md` coincide con `git rev-parse --short HEAD`. El script nunca toca un árbol/worktree sucio (se detiene y avisa).
+
+## Scripts de diagnóstico de una sola vez (DN-13)
+No se commitean salvo que dejen un registro útil: nombre `YYYY-MM-DD-<id>-<tema>.mjs` + un encabezado de 3 líneas (qué investigó, qué encontró, por qué queda). Los que no cumplan eso van a `scripts/diagnosticos/_archivo-<ronda>/` o se descartan antes del PR; no se mezclan con `data-fixes/` ni migraciones.
+
 ## The one rule that shapes everything
 This app is **not a mini-SGC** — it's a different experience over the *same data*. One button = one job; wizard one-question-per-screen; photo-first; huge targets (≥56px); works 100% offline. Users have low digital literacy, gloves, sun, bad signal. See UI/UX doc §1.
 
