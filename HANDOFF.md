@@ -2,10 +2,11 @@
 
 ## 🟡 12-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — EN WORKTREE, sin PR aún
 
-**Estado al 12-nov:** código completo y `npm run build` verde en el worktree
-`csd-app-do` (rama `feature/do-ronda-12nov-app`, creada desde `origin/main`).
-**Falta abrir el PR a `dev`** (no mergeado aún — el cierre de esta sesión
-termina en "PR listo para abrir", ver más abajo). Alcance: solo DO1/DO1b/DO2/DO5
+**Estado al 12-nov:** código completo, `npm run build` verde, commit `b8d4b24`
+empujado y **PR abierto a `dev`:** https://github.com/techcsd/csd-app/pull/32
+(rama `feature/do-ronda-12nov-app`, worktree `csd-app-do`). **No mergeado
+todavía** — falta la verificación visual pendiente (ver F1/F2 abajo) antes de
+mergear. Alcance: solo DO1/DO1b/DO2/DO5
 (Compa + apoyo de transporte + demos). RRHH/organigrama/reclutamiento/módulo
 Claude (DO3/DO4/DO4b/DO6/DO7) son del `PROMPT 144` (SGC web) — no tocados aquí.
 
@@ -93,8 +94,9 @@ republicar (`npm run apk:publish -- --env prod` / redeploy PWA), no código.
   reutilizan RPCs ya vigentes en prod).
 
 ### Próximo paso (siguiente sesión)
-1. Abrir PR `feature/do-ronda-12nov-app` → `dev` (build ya verde).
-2. Tras merge a `dev`: `npm run apk -- --env dev` + `npm run apk:publish -- --env dev`,
+1. Verificación visual pendiente (Mensajes/Requisición/2 wizard-footer) antes
+   de mergear el PR #32.
+2. Merge PR #32 → `dev`: `npm run apk -- --env dev` + `npm run apk:publish -- --env dev`,
    avisar a Xaviel para la prueba en dispositivo real (regla 18/CP5) antes de
    PR a `main`.
 3. Pendiente físico de Xaviel: confirmar versión del APK/PWA distribuida (F4,
