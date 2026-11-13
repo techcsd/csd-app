@@ -19,6 +19,21 @@ export class CompaFlotanteService {
   activo = signal(true);
   abierta = signal(false);
 
+  /**
+   * DO1 — posición de la burbuja elegida por el usuario (arrastre), por
+   * DISPOSITIVO (localStorage, no se sincroniza entre dispositivos). null =
+   * sin preferencia → posición por defecto (abajo-derecha) del CSS.
+   */
+  posicion = signal<{ left: number; top: number } | null>(this.leerPosicionGuardada());
+
+  /**
+   * DO1b — cuánto empuja la burbuja hacia arriba (px) la pantalla activa para
+   * no tapar su propio footer de acción fijo (compose de Mensajes, CTA de los
+   * wizards). 0 = posición normal. Cada pantalla lo reserva al entrar y lo
+   * libera al salir — ver `reservarEspacioCompa()` en shared/util.
+   */
+  reservadoPx = signal(0);
+
   constructor() {
     this.supabase.client.auth.onAuthStateChange((event) => {
       if (event !== 'SIGNED_OUT') void this.sincronizar();
@@ -56,4 +71,37 @@ export class CompaFlotanteService {
     });
     if (error) throw new Error(error.message);
   }
+
+  /** DO1 — guarda la posición elegida al soltar el arrastre (por dispositivo). */
+  guardarPosicion(pos: { left: number; top: number } | null): void {
+    this.posicion.set(pos);
+    try {
+      if (pos) localStorage.setItem(POSICION_KEY, JSON.stringify(pos));
+      else localStorage.removeItem(POSICION_KEY);
+    } catch {
+      /* best-effort: sin storage, se queda solo en memoria de la sesión */
+    }
+  }
+
+  private leerPosicionGuardada(): { left: number; top: number } | null {
+    try {
+      const raw = localStorage.getItem(POSICION_KEY);
+      if (!raw) return null;
+      const p = JSON.parse(raw) as { left?: unknown; top?: unknown };
+      if (typeof p.left === 'number' && typeof p.top === 'number') return { left: p.left, top: p.top };
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** DO1b — reserva/libera el espacio que empuja la burbuja hacia arriba. */
+  reservarEspacio(px: number): void {
+    this.reservadoPx.set(px);
+  }
+  liberarEspacio(): void {
+    this.reservadoPx.set(0);
+  }
 }
+
+const POSICION_KEY = 'csd_compa_flotante_pos';
