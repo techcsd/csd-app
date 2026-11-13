@@ -31,6 +31,7 @@ import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { reservarEspacioCompa } from '../../../shared/util/compa-safe-bottom';
 
 /** Una línea en edición (BB10). Conserva el id del renglón + si es no catalogado. */
 interface EditItem {
@@ -208,6 +209,9 @@ export class RequisicionDetallePage {
   });
 
   constructor() {
+    // DO1b — N3: la burbuja de Compa se veía "flotando" sobre la lista de
+    // artículos; se empuja arriba mientras esta ficha está abierta.
+    reservarEspacioCompa(64);
     void this.load();
   }
 

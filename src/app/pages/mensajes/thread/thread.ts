@@ -19,6 +19,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { PhotoViewerService } from '../../../shared/ui/photo-viewer/photo-viewer.service';
+import { reservarEspacioCompa } from '../../../shared/util/compa-safe-bottom';
 import { App as CapApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 
@@ -172,6 +173,9 @@ export class MensajesThreadPage implements OnDestroy {
   private recibosTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
+    // DO1b — N2: la burbuja de Compa tapaba el botón de enviar; se empuja arriba
+    // mientras este hilo está abierto (se libera sola al salir, ver el helper).
+    reservarEspacioCompa(72);
     this.conversacionId = this.route.snapshot.paramMap.get('id') ?? '';
     void this.init();
     // QA-20: filtra server-side por esta conversación (antes escuchaba TODO).

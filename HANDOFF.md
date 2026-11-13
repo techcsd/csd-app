@@ -1,5 +1,105 @@
 # HANDOFF — CSD App
 
+## 🟡 12-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — EN WORKTREE, sin PR aún
+
+**Estado al 12-nov:** código completo y `npm run build` verde en el worktree
+`csd-app-do` (rama `feature/do-ronda-12nov-app`, creada desde `origin/main`).
+**Falta abrir el PR a `dev`** (no mergeado aún — el cierre de esta sesión
+termina en "PR listo para abrir", ver más abajo). Alcance: solo DO1/DO1b/DO2/DO5
+(Compa + apoyo de transporte + demos). RRHH/organigrama/reclutamiento/módulo
+Claude (DO3/DO4/DO4b/DO6/DO7) son del `PROMPT 144` (SGC web) — no tocados aquí.
+
+**F1 — Compa arrastrable (DO1/DO-01):** `compa-flotante.ts/html/scss` — arrastre
+real por `pointerdown/pointermove/pointerup` (sin CDK, para no pelear con el
+`position:fixed` ya existente). Umbral de 6px distingue tap de arrastre (el
+`(click)` sigue abriendo/cerrando la hoja si NO hubo arrastre). Clampa dentro
+del viewport leyendo `--safe-top`/`--safe-bottom` en vivo (`getComputedStyle`).
+Posición persistida en `localStorage` (`csd_compa_flotante_pos`, por
+dispositivo — `CompaFlotanteService.posicion`/`guardarPosicion()`), no se
+sincroniza al servidor (según el default DO-01).
+
+**F2 — Compa se reposiciona solo (DO1b/DO-02):** `CompaFlotanteService.reservadoPx`
++ helper `reservarEspacioCompa(px)` (`shared/util/compa-safe-bottom.ts`, usa
+`DestroyRef` — se libera solo al salir de la pantalla). El valor llega al CSS
+vía `--compa-safe-bottom` (host binding en `CompaFlotante`, heredado por
+`.cf__burbuja`), que empuja la burbuja hacia arriba — **sin efecto si el
+usuario ya la arrastró** (ahí `bottom` pasa a `auto` por el `[style]` inline).
+Aplicado en:
+- `thread.ts` (Mensajes) — 72px, corrige que tapaba el botón de enviar (N2).
+- `detalle.ts` (Requisición, solicitudes) — 64px, corrige que "flotaba" sobre
+  la lista de artículos (N3).
+- **`wizard-footer.ts`** (76px) — la regla GENERAL pedida: este componente
+  compartido es el footer-CTA de **24 pantallas** (pedir/combustible/checklist/
+  mantenimiento/salida/entrada/parte/orden-trabajo/etc.), así que una sola
+  línea ahí cubre el mismo patrón "burbuja tapa el CTA" en todas esas pantallas
+  sin tocarlas una por una.
+- Revisado con graphify: `selector-categorias.scss` (`.selcat__bar`, usado en
+  entrada/salida/pedir) y `salida.scss` (`.mov__nav`) tienen footers fijos
+  propios adicionales — **no tocados** (son internos a pantallas ya cubiertas
+  por el wizard-footer general o de un solo uso; se prioriza bajo riesgo sobre
+  cobertura 100%, según el riesgo #1 del CONTEXTO).
+- **Sin verificación visual en navegador/dispositivo todavía** — este entorno
+  no tiene herramienta de browser/captura disponible. Verificado: `npm run
+  build` (prod) y `npm start` (dev-serve) ambos compilan y levantan sin errores
+  de bootstrap; revisión manual del código/CSS (cálculo de `bottom`/clamp).
+  **Pendiente antes de dar F1/F2 por cerrado:** abrir Mensajes, Requisición
+  (detalle) y 2 pantallas con `wizard-footer` (ej. Combustible, Checklist) en
+  un navegador/dispositivo real y confirmar que la burbuja no tapa ningún CTA
+  y que el arrastre + persistencia funcionan (riesgo #1 del CONTEXTO lo pide
+  explícito).
+
+**F3 — Apoyo de transporte: "Aprobar" (DO2/DO-03):** `apoyo-detalle.ts` —
+nueva acción `{estado:'asignada', label:'Aprobar', accion:'asignar'}` en
+`acciones()` cuando `estado==='pendiente'` Y `ctx.esFlotaElevado()` (mismo
+permiso que `trabajos-transporte`, que no gatea client-side — el dato lo tapa
+la RLS/RPC; aquí sí se gatea para no pintar un botón que fallaría). No cambia
+el estado directo: navega a `/transporte/trabajos?asignarOrigen=apoyo&asignarId=<id>`;
+`trabajos-transporte.ts` lee esos query params al cargar, pone la pestaña
+"Sin asignar" y abre la hoja de **Asignar ya existente** (`abrirAsignar()` →
+`asignarA()` → `trabajo_asignar`) — cero lógica de permisos/asignación
+duplicada. El lado web (SGC `apoyo-transporte.html:158-159`) es del
+PROMPT-144, no se tocó aquí.
+
+**F4 — Demos (DO5/DO-08):** sin cambios de código (confirmado: el catálogo ya
+tiene 14 misiones en ambos repos). Tabla de verificación:
+
+| Dato | Valor |
+|---|---|
+| Commit que agregó las 5 misiones DG5 faltantes | `ba54dc3` (2026-11-03, "feat(demo): módulo Demo, buscador compacto, Compa flotante") |
+| ¿Ese commit es ancestro del HEAD actual de `main`? | Sí |
+| ¿Es ancestro del commit que cerró "v2.68.0 publicada en prod"? | **Sí** — `10300b6` (2026-11-11) es descendiente de `ba54dc3` |
+| Versión actual en `environment.prod.ts` / `build.gradle` (fuente única) | **2.68.0** |
+| Conclusión de repo | El código fuente de **main** en 2.68.0 ya incluye las 14 misiones (9+5) |
+| Dato que NO se puede confirmar desde el repo | Si el APK/PWA **realmente instalado/distribuido hoy** en el dispositivo de Xaviel o en la tienda corresponde a ese build 2.68.0 o a uno previo con solo 9 misiones |
+
+**Paso físico de Xaviel (único pendiente de F4):** abrir el módulo Demo en su
+teléfono/PWA y contar las misiones (o revisar "Acerca de" → versión instalada
+vs. "hay una publicada más nueva"). Si da <14 o versión <2.68.0, el fix es
+republicar (`npm run apk:publish -- --env prod` / redeploy PWA), no código.
+
+### Riesgos aplicados / decisiones
+- Compa es un componente global montado una sola vez en `app.html` — el riesgo
+  #1 del CONTEXTO pide probar explícitamente Mensajes, Requisición y ≥2
+  pantallas más antes de reportar hecho; **eso sigue pendiente** (ver arriba).
+- `apoyo-detalle.ts` reutiliza 100% el permiso/RPC de `trabajos-transporte.ts`
+  (ningún `if (rol===...)` nuevo) — evita que diverjan los roles permitidos
+  entre las dos pantallas (riesgo #2 del CONTEXTO).
+
+### En dev / En prod
+- **En dev:** nada todavía — el código vive solo en el worktree `csd-app-do`
+  (rama `feature/do-ronda-12nov-app`), no mergeado.
+- **En prod:** sin cambios (2.68.0 sigue siendo lo publicado; F1-F3 de esta
+  ronda son compatibles con esa versión y no necesitan ningún SQL nuevo —
+  reutilizan RPCs ya vigentes en prod).
+
+### Próximo paso (siguiente sesión)
+1. Abrir PR `feature/do-ronda-12nov-app` → `dev` (build ya verde).
+2. Tras merge a `dev`: `npm run apk -- --env dev` + `npm run apk:publish -- --env dev`,
+   avisar a Xaviel para la prueba en dispositivo real (regla 18/CP5) antes de
+   PR a `main`.
+3. Pendiente físico de Xaviel: confirmar versión del APK/PWA distribuida (F4,
+   tabla arriba) — paso de tienda/dispositivo, no de código.
+
 ## 🟢 11-nov-2026 (tarde) — Ronda DN (PROMPT 143, higiene de ramas + «siempre al día») — sin cambios de producto
 
 **TL;DR:** ronda de limpieza/infraestructura, no de producto. **Hallazgo

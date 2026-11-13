@@ -1,8 +1,11 @@
 // DG6 — burbuja fija (abajo a la derecha, nunca tapa la acción naranja principal).
+// DO1b — `--compa-safe-bottom` la empuja hacia arriba cuando la pantalla activa
+// reserva espacio (ver CompaFlotanteService.reservarEspacio); sin efecto si el
+// usuario ya la arrastró (bottom pasa a 'auto' vía el `[style]` inline, DO1).
 .cf__burbuja {
   position: fixed;
   right: 16px;
-  bottom: calc(16px + var(--safe-bottom, 0px));
+  bottom: calc(16px + var(--safe-bottom, 0px) + var(--compa-safe-bottom, 0px));
   z-index: 850;
   width: 56px;
   height: 56px;
@@ -14,6 +17,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  touch-action: none; // DO1 — el pointermove del arrastre no debe hacer scroll/zoom
 }
 
 .cf__overlay {
