@@ -1,14 +1,22 @@
 # HANDOFF — CSD App
 
-## 🟡 12-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — EN WORKTREE, sin PR aún
+## 🟡 12-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — EN DEV, pendiente prueba de Xaviel
 
-**Estado al 12-nov:** código completo, `npm run build` verde, commit `b8d4b24`
-empujado y **PR abierto a `dev`:** https://github.com/techcsd/csd-app/pull/32
-(rama `feature/do-ronda-12nov-app`, worktree `csd-app-do`). **No mergeado
-todavía** — falta la verificación visual pendiente (ver F1/F2 abajo) antes de
-mergear. Alcance: solo DO1/DO1b/DO2/DO5
+**Estado al 12-nov:** **PR #32 mergeado a `dev`** (merge commit `226fbdb`) +
+bump de versión `2.69.0` (commit `1468799`, directo a `dev` — se olvidó en el
+commit del PR, corregido justo después) + changelog curado en
+`scripts/release-apk.mjs` actualizado para esta ronda. **APK dev v2.69.0
+construido, firmado y publicado** en el bucket de dev
+(`npm run apk -- --env dev` + `npm run apk:publish -- --env dev`, ambos OK) y
+registrado en `app_versiones` de dev (Y1). Alcance: solo DO1/DO1b/DO2/DO5
 (Compa + apoyo de transporte + demos). RRHH/organigrama/reclutamiento/módulo
 Claude (DO3/DO4/DO4b/DO6/DO7) son del `PROMPT 144` (SGC web) — no tocados aquí.
+
+**Pendiente de Xaviel ahora:** actualizar la app a v2.69.0 en un teléfono real
+(entorno dev) y probar ahí mismo — el riesgo #1 del CONTEXTO pedía probar
+Mensajes, Requisición y ≥2 pantallas más antes de dar F1/F2 por cerrado, y este
+entorno no tiene browser/dispositivo para hacerlo (ver detalle en F1/F2 abajo).
+Con el OK: PR `dev → main` + build/publish a prod (regla 18/CP5).
 
 **F1 — Compa arrastrable (DO1/DO-01):** `compa-flotante.ts/html/scss` — arrastre
 real por `pointerdown/pointermove/pointerup` (sin CDK, para no pelear con el
@@ -87,18 +95,21 @@ republicar (`npm run apk:publish -- --env prod` / redeploy PWA), no código.
   entre las dos pantallas (riesgo #2 del CONTEXTO).
 
 ### En dev / En prod
-- **En dev:** nada todavía — el código vive solo en el worktree `csd-app-do`
-  (rama `feature/do-ronda-12nov-app`), no mergeado.
-- **En prod:** sin cambios (2.68.0 sigue siendo lo publicado; F1-F3 de esta
-  ronda son compatibles con esa versión y no necesitan ningún SQL nuevo —
-  reutilizan RPCs ya vigentes en prod).
+- **En dev:** `main` de `dev` ya en `1468799` (PR #32 mergeado + bump).
+  **APK dev v2.69.0 construido, firmado y publicado** al bucket de dev y
+  registrado en `app_versiones` (dev). PWA dev (`app-dev.`) se construye sola
+  en el próximo deploy de Vercel sobre `dev`.
+- **En prod:** sin cambios (2.68.0 sigue siendo lo publicado; esta ronda no
+  necesita ningún SQL nuevo — reutiliza RPCs ya vigentes en prod).
 
 ### Próximo paso (siguiente sesión)
-1. Verificación visual pendiente (Mensajes/Requisición/2 wizard-footer) antes
-   de mergear el PR #32.
-2. Merge PR #32 → `dev`: `npm run apk -- --env dev` + `npm run apk:publish -- --env dev`,
-   avisar a Xaviel para la prueba en dispositivo real (regla 18/CP5) antes de
-   PR a `main`.
+1. **Xaviel prueba v2.69.0 en dev** (actualización in-app desde 2.68.0 en un
+   teléfono real) — cubre a la vez el riesgo #1 del CONTEXTO (Mensajes,
+   Requisición, y ≥2 pantallas más con `wizard-footer`, ej. Combustible y
+   Checklist) y la "Aprobar" de apoyo de transporte. Anotar resultado en
+   `qa/release-2.69.0.md` (CP5/CL4).
+2. Con el OK: PR `dev → main` → merge → `npm run apk -- --env prod` +
+   `npm run apk:publish -- --env prod` (pasa porque ya salió en dev).
 3. Pendiente físico de Xaviel: confirmar versión del APK/PWA distribuida (F4,
    tabla arriba) — paso de tienda/dispositivo, no de código.
 
