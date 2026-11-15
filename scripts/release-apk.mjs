@@ -38,16 +38,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-17';
+const RELEASED_AT = '2026-11-13';
 
-const TITULO = 'Módulo Claude + arreglos de combustible, GPS y conduces';
+const TITULO = 'Compa arrastrable + aprobar apoyo de transporte';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Claude', d: 'Nueva sección en Perfil → "Claude: Setup y skills": guarda, descarga y comparte atajos (skills) para trabajar con Claude, recomendados según tu cargo, y crea los tuyos con un formulario guiado.' },
-  { t: 'nuevo', m: 'Claude', d: 'Encuesta corta y opcional (dentro de la sección Claude) para contarle a Tecnología cómo usas la IA hoy.' },
-  { t: 'mejora', m: 'Conduces', d: 'En el detalle de un conduce ahora puedes pasar al "Anterior/Siguiente" de la misma lista, o saltar directo a "Siguiente pendiente para mí".' },
-  { t: 'arreglo', m: 'Combustible', d: 'La validación del kilometraje contra el historial del vehículo (echadas y mantenimientos) volvió a funcionar; una actualización reciente del servidor la había dejado fallando siempre.' },
-  { t: 'arreglo', m: 'Ubicación', d: 'Los chequeos de GPS son más rápidos (ya no esperan el tiempo completo de alta precisión cuando basta un fix rápido) y los avisos de ubicación duplicados o esperados ya no se cuentan como error.' },
-  { t: 'arreglo', m: 'Sistema', d: 'Tras una actualización, un archivo viejo en caché ya no deja la app mostrando una pantalla rota — se repara sola con más certeza.' },
+  { t: 'mejora', m: 'Compa', d: 'La burbuja de Compa ahora se puede arrastrar a cualquier parte de la pantalla (queda guardada en tu teléfono) y se corre sola cuando tapaba el botón de enviar en Mensajes o la lista de una requisición.' },
+  { t: 'nuevo', m: 'Transporte', d: 'En un apoyo de transporte pendiente ahora hay un botón "Aprobar" que lleva directo a asignarle un chofer, sin tener que buscarlo en otra pantalla.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

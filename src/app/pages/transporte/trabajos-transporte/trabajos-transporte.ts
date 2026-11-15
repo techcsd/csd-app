@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
-import { TrabajosService, BandejaRow, ChoferPanel } from '../../../core/services/trabajos.service';
+import { TrabajosService, BandejaRow, ChoferPanel, TrabajoOrigen } from '../../../core/services/trabajos.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -75,6 +75,7 @@ export class TrabajosTransportePage {
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
 
   fmtDia = formatFecha;
@@ -137,7 +138,7 @@ export class TrabajosTransportePage {
   private hoy = this.hoyLocal();
 
   constructor() {
-    void this.load();
+    void this.load().then(() => this.abrirAsignarDesdeQuery());
   }
 
   async load(): Promise<void> {
@@ -147,6 +148,19 @@ export class TrabajosTransportePage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** DO2/DO-03 — "Aprobar" en la ficha de un apoyo trae a esta bandeja ya con la
+   *  hoja de Asignar abierta para ese ticket (reutiliza el flujo, no uno nuevo). */
+  private abrirAsignarDesdeQuery(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const origen = qp.get('asignarOrigen') as TrabajoOrigen | null;
+    const origenId = qp.get('asignarId');
+    if (!origen || !origenId) return;
+    const row = this.rows().find((r) => r.origen === origen && r.origenId === origenId);
+    if (!row) return;
+    this.tab.set('sin_asignar');
+    void this.abrirAsignar(row);
   }
 
   async refrescar(): Promise<void> {

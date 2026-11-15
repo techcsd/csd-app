@@ -1,9 +1,16 @@
 @if (flotante.activo()) {
+  <!-- DO1 — arrastrable (pointer events); DO1b — empuja hacia arriba vía --compa-safe-bottom (host). -->
   <button
+    #burbujaBtn
     type="button"
     class="cf__burbuja"
     appTapScale
+    [style]="burbujaStyle()"
     (click)="toggleBurbuja()"
+    (pointerdown)="onBurbujaPointerDown($event)"
+    (pointermove)="onBurbujaPointerMove($event)"
+    (pointerup)="onBurbujaPointerUp($event)"
+    (pointercancel)="onBurbujaPointerUp($event)"
     [attr.aria-label]="(flotante.abierta() ? 'Cerrar Compa' : 'Abrir Compa') | t"
   >
     <span aria-hidden="true">🤖</span><!-- tropes-allow: mismo avatar de Compa en toda la app -->

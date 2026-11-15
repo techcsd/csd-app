@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -34,6 +34,9 @@ interface AccionEstado {
   nota: 'none' | 'optional' | 'required';
   notaLabel?: string;
   tone: 'primary' | 'ghost';
+  /** DO2 — 'asignar' abre el flujo de Asignar de `trabajos-transporte` en vez de
+   *  cambiar el estado directo (asignar exige elegir chofer). */
+  accion?: 'estado' | 'asignar';
 }
 
 /**
@@ -56,6 +59,7 @@ export class ApoyoDetallePage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
@@ -87,6 +91,11 @@ export class ApoyoDetallePage {
     const d = this.detalle();
     if (!d) return [];
     const out: AccionEstado[] = [];
+    // DO2/DO-03 — "Aprobar" = asignar a un chofer (no existe estado "aprobada";
+    // en este dominio aprobar ES asignar). Mismo permiso que trabajos-transporte.
+    if (d.estado === 'pendiente' && this.ctx.esFlotaElevado()) {
+      out.push({ estado: 'asignada', label: 'Aprobar', nota: 'none', tone: 'primary', accion: 'asignar' });
+    }
     if (d.estado === 'pendiente' || d.estado === 'asignada') {
       out.push({ estado: 'cancelada', label: 'Cancelar', nota: 'optional', notaLabel: 'Motivo (opcional)', tone: 'ghost' });
     }
@@ -168,6 +177,14 @@ export class ApoyoDetallePage {
   }
 
   tocarAccion(a: AccionEstado): void {
+    if (a.accion === 'asignar') {
+      // DO2/DO-03 — reutiliza el flujo de Asignar YA existente en trabajos-transporte
+      // (mismo permiso, misma RPC `trabajo_asignar`) en vez de duplicar la lógica aquí.
+      void this.router.navigate(['/transporte/trabajos'], {
+        queryParams: { asignarOrigen: 'apoyo', asignarId: this.id },
+      });
+      return;
+    }
     if (a.nota === 'none') {
       void this.aplicar(a, null);
     } else {
