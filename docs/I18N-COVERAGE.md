@@ -3,20 +3,21 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (7865 textos medidos en 288 pantallas)
-- Textos con t(): 7865 · sin t(): 0
-- Pantallas `enforce:true`: 248 de 288
+- **English: 100%** · **Kreyòl: 100%** (8388 textos medidos en 288 pantallas)
+- Textos con t(): 8388 · sin t(): 0
+- Pantallas `enforce:true`: 250 de 288
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
 | (raíz) | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/models | 115 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/models | 157 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/practica | 156 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/services | 151 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/util | 10 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/services | 258 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/util | 154 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/utils | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/actualizar | 28 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/admin/auditoria | 45 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/admin/auditoria | 67 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/catalogos | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/conteos | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/parametros | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -24,8 +25,8 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/admin/roles | 28 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/unidades | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/usuarios | 73 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/admin/vault | 21 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/admin/vault/vault-entrada | 17 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/admin/vault | 26 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/admin/vault/vault-entrada | 21 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/vault/vault-generador | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/versiones | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/auth/login | 28 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -48,26 +49,26 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/bitacora/orden-trabajo | 78 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/bitacora/orden-trabajo-ficha | 40 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/bitacora/parte | 257 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/borrador | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/borrador | 24 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/buscador | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/claude | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/compa | 24 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/compa/compartida-detalle | 8 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/compa/compartidas | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/compras-proyecto | 37 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/compras/solicitud-compra | 38 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/compras/solicitud-compra | 41 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/demo/escenarios | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/generar | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/historial | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/documentos/plantillas | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/documentos/plantillas | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/en-proceso | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/forbidden | 1 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/home | 58 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/incentivos | 54 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/incentivos/participantes | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/ingenieria | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/ingenieria/cartilla | 79 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/ingenieria/cartilla | 84 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/ingenieria/pagos | 77 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/almacen-inventario | 26 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -88,8 +89,8 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/inventario/retiros | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/salida | 45 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/legal | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/legal/contratos | 38 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/legal/expedientes | 40 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/legal/contratos | 48 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/legal/expedientes | 55 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/mensajes | 16 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/mensajes/grupo-info | 36 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/mensajes/nuevo-grupo | 16 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -110,7 +111,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/obra/plan-dia | 42 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/obra/recursos | 26 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/obra/subcontratistas | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/pendientes | 50 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/pendientes | 65 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/pendientes/outbox-detalle | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil | 113 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -136,11 +137,11 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/solicitudes/pedir | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/soporte | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tareas | 72 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/tecnologia | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/tecnologia | 33 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia-inventario | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/tecnologia-inventario/equipo-detalle | 69 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/tecnologia-inventario/equipo-detalle | 71 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia-inventario/equipo-form | 92 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/tecnologia/agentes | 26 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/tecnologia/agentes | 33 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia/compras-tec | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia/cotizaciones | 14 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia/cotizaciones/cotizacion-detalle | 14 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -149,11 +150,11 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/tecnologia/dev-notes/editor | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte | 55 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/acta-detalle | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/apoyo-transporte | 75 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/apoyo-transporte | 81 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/asignar | 45 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/asignarme | 42 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/aviso-vehiculo | 42 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/avisos | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/avisos | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/checklist | 82 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/checklists-historial | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible | 185 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -161,16 +162,16 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/conduce-detalle | 105 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-externo | 104 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-transferencias | 53 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conduces | 91 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conduces-historial | 42 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conduces | 97 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conduces-historial | 46 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces-hub | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces-pendientes | 36 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces-por-firmar | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces-por-implementar | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conduces/entrega | 46 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conductores | 56 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conduces/entrega | 52 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conductores | 60 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/confirmaciones | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/cupo | 36 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/cupo | 40 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/despachos | 31 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/devolver-material | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/echada-detalle | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -186,10 +187,10 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/mi-recorrido | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/mi-registro | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/mis-actas | 12 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/mis-choferes | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/mis-trabajos | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/perfil-conductor | 44 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/perfil-vehiculo | 42 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/mis-choferes | 24 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/mis-trabajos | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/perfil-conductor | 45 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/perfil-vehiculo | 44 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/por-aprobar | 33 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/por-confirmar | 47 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/preuso | 96 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -199,8 +200,8 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/rutas | 91 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/rutas-activas | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/seguimiento | 17 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/solicitud-movimiento | 56 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/trabajos-transporte | 49 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/solicitud-movimiento | 61 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/trabajos-transporte | 63 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/trayectoria | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/uso-vehiculo | 49 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/vehiculos | 75 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -215,7 +216,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/components/gps-gate-banner | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/module-placeholder | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/novedades | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| shared/components/onboarding | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/components/onboarding | 19 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/permisos-onboarding | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/tienda-aviso | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/articulo-picker | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -229,15 +230,15 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/ui/km-input | 8 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/language-onboarding | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/language-selector | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| shared/ui/leer-documento-vehiculo | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/leer-documento-vehiculo | 37 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/location-picker | 17 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/logo-reveal | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/lugar-picker | 12 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/mant-adjuntos | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/molde-compositor | 14 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| shared/ui/molde-esquema | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/molde-esquema | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/molde-esquema-visor | 1 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| shared/ui/momento | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/momento | 12 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/notif-health-band | 28 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/pdf-viewer | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/personal-carnet | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -250,6 +251,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/ui/skeleton | 1 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/step-bar | 1 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/sticker-editor | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/sync-badge | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/taller-picker | 10 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/vehiculo-card | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/vehiculo-picker | 12 | 0 | 0 | 0 | 100% | 100% | ✅ |

@@ -57,6 +57,9 @@ function traducible(s) {
   if (/@(if|else|for|empty|switch|case|default|defer|placeholder|loading|error)\b/.test(t)) return false;
   if (/^[@#*(\[]/.test(t)) return false;
   if (whitelist.has(t)) return false;
+  // Identificadores técnicos (clases CSS, claves de módulo `flota.vehiculos`, `suceso_equipo`).
+  if (/^[a-z0-9_.:\-\/]+$/.test(t)) return false;
+  if (/^[MLHVCQZmlhvcqz0-9 .,\-]+$/.test(t)) return false; // trazos SVG (path d="…")
   const soloLetras = t.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑüÜ]/g, '');
   return soloLetras.length >= 3;
 }
@@ -114,13 +117,13 @@ function analizarHtml(rawTxt) {
 const TS_TOAST_LIT = /\b(?:toast|snackbar)\.(?:error|success|warning|info|show|withAction|errorFrom)\(\s*(['"`])((?:\\.|(?!\1).)*?)\1/g;
 const TS_CONFIRM_LIT = /\b(?:window\.)?(?:confirm|alert)\(\s*(['"`])((?:\\.|(?!\1).)*?)\1/g;
 // (?<!\.) evita `x.mensaje : y` (acceso a propiedad) vs. clave de objeto `mensaje: 'y'`.
-const TS_PROP_LIT = /(?<![.'"`\w])\b(placeholder|label|titulo|texto|sub|mensaje|error|subtitulo|descripcion|hint|cta)\s*:\s*(['"`])((?:\\.|(?!\2).)*?)\2/g;
+const TS_PROP_LIT = /(?<![.'"`\w])\b(placeholder|label|titulo|texto|sub|mensaje|error|subtitulo|descripcion|hint|cta|title|text|body|subtitle|desc|caption)\s*:\s*(['"`])((?:\\.|(?!\2).)*?)\2/g;
 const TS_THROW_LIT = /\bthrow new Error\(\s*(['"`])((?:\\.|(?!\1).)*?)\1/g;
 const TS_SET_LIT = /\b\w*(?:error|Error|msg|Msg|mensaje|Mensaje|aviso|Aviso|hint|Hint)\w*\.set\(\s*(['"`])((?:\\.|(?!\1).)*?)\1/g;
 const TS_RETURN_LIT = /\breturn\s+(['"`])([A-ZÁÉÍÓÚ¿¡](?:\\.|(?!\1).)*?)\1\s*;/g;
 // Props de ETIQUETA: se declaran en español y se traducen al MOSTRAR (`| t`) → cuentan como
 // clave de catálogo requerida, no como «sin t()». El resto (mensaje/error/…) se muestra tal cual.
-const PROP_ETIQUETA = new Set(['label', 'titulo', 'texto', 'sub', 'cta']);
+const PROP_ETIQUETA = new Set(['label', 'titulo', 'texto', 'sub', 'cta', 'title', 'text', 'body', 'subtitle', 'desc', 'caption']);
 
 /** Rangos [ini,fin) de arreglos/mapas constantes `= [...]`, `Record<…> = {…}` (DP-09:
  *  se declaran en español y se traducen al MOSTRAR; sus literales deben EXISTIR en el
@@ -159,7 +162,7 @@ function spansCatalogo(ts) {
       else if (ts[j] === '}') p2--;
       j++;
     }
-    spans.push([ini, j]);
+    spans.push([ini, j, 'rec']);
   }
   return spans;
 }
@@ -179,6 +182,18 @@ function analizarTs(raw) {
     }
   }
   const spans = spansCatalogo(ts);
+  // Mapas `Record<K,string> = { clave: 'Etiqueta' }`: cada VALOR es una clave de catálogo
+  // (se traduce al mostrar, DP-09) aunque la propiedad no se llame label/titulo.
+  for (const [ini, fin, tipo] of spans) {
+    if (tipo !== 'rec') continue;
+    const VAL = /:\s*(['"`])((?:\\.|(?!\1).)*?)\1/g;
+    const cuerpo = ts.slice(ini, fin);
+    let mv;
+    while ((mv = VAL.exec(cuerpo))) {
+      const s = unesc(mv[2]).replace(/\s+/g, ' ');
+      if (!(mv[1] === '`' && s.includes('${')) && traducible(s)) conT.add(s);
+    }
+  }
   const add = (lit, tpl) => {
     if (tpl && lit.includes('${')) return; // template con datos → no es copy plano
     const s = unesc(lit).replace(/\s+/g, ' ');

@@ -1,8 +1,8 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 7865,
-  "conT": 7865,
+  "literales": 8388,
+  "conT": 8388,
   "sinT": 0,
   "pantallas": 288,
   "byScreen": {
@@ -55,7 +55,7 @@
       "ht": 100
     },
     "core/models": {
-      "conT": 115,
+      "conT": 157,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -79,7 +79,7 @@
       "ht": 100
     },
     "core/services": {
-      "conT": 151,
+      "conT": 258,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -95,7 +95,7 @@
       "ht": 100
     },
     "core/util": {
-      "conT": 10,
+      "conT": 154,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -103,7 +103,7 @@
       "ht": 100
     },
     "core/utils": {
-      "conT": 0,
+      "conT": 3,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -127,7 +127,7 @@
       "ht": 100
     },
     "pages/admin/auditoria": {
-      "conT": 45,
+      "conT": 67,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -191,7 +191,7 @@
       "ht": 100
     },
     "pages/admin/vault": {
-      "conT": 21,
+      "conT": 26,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -199,7 +199,7 @@
       "ht": 100
     },
     "pages/admin/vault/vault-entrada": {
-      "conT": 17,
+      "conT": 21,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -383,7 +383,7 @@
       "ht": 100
     },
     "pages/borrador": {
-      "conT": 20,
+      "conT": 24,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -439,7 +439,7 @@
       "ht": 100
     },
     "pages/compras/solicitud-compra": {
-      "conT": 38,
+      "conT": 41,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -479,7 +479,7 @@
       "ht": 100
     },
     "pages/documentos/plantillas": {
-      "conT": 9,
+      "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -535,7 +535,7 @@
       "ht": 100
     },
     "pages/ingenieria/cartilla": {
-      "conT": 79,
+      "conT": 84,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -703,7 +703,7 @@
       "ht": 100
     },
     "pages/legal/contratos": {
-      "conT": 38,
+      "conT": 48,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -711,7 +711,7 @@
       "ht": 100
     },
     "pages/legal/expedientes": {
-      "conT": 40,
+      "conT": 55,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -879,7 +879,7 @@
       "ht": 100
     },
     "pages/pendientes": {
-      "conT": 50,
+      "conT": 65,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1087,7 +1087,7 @@
       "ht": 100
     },
     "pages/tecnologia": {
-      "conT": 27,
+      "conT": 33,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1103,7 +1103,7 @@
       "ht": 100
     },
     "pages/tecnologia-inventario/equipo-detalle": {
-      "conT": 69,
+      "conT": 71,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1119,7 +1119,7 @@
       "ht": 100
     },
     "pages/tecnologia/agentes": {
-      "conT": 26,
+      "conT": 33,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1191,7 +1191,7 @@
       "ht": 100
     },
     "pages/transporte/apoyo-transporte": {
-      "conT": 75,
+      "conT": 81,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1223,7 +1223,7 @@
       "ht": 100
     },
     "pages/transporte/avisos": {
-      "conT": 20,
+      "conT": 27,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1287,7 +1287,7 @@
       "ht": 100
     },
     "pages/transporte/conduces": {
-      "conT": 91,
+      "conT": 97,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1295,7 +1295,7 @@
       "ht": 100
     },
     "pages/transporte/conduces-historial": {
-      "conT": 42,
+      "conT": 46,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1335,7 +1335,7 @@
       "ht": 100
     },
     "pages/transporte/conduces/entrega": {
-      "conT": 46,
+      "conT": 52,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1343,7 +1343,7 @@
       "ht": 100
     },
     "pages/transporte/conductores": {
-      "conT": 56,
+      "conT": 60,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1359,7 +1359,7 @@
       "ht": 100
     },
     "pages/transporte/cupo": {
-      "conT": 36,
+      "conT": 40,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1487,7 +1487,7 @@
       "ht": 100
     },
     "pages/transporte/mis-choferes": {
-      "conT": 13,
+      "conT": 24,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1495,7 +1495,7 @@
       "ht": 100
     },
     "pages/transporte/mis-trabajos": {
-      "conT": 15,
+      "conT": 29,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1503,7 +1503,7 @@
       "ht": 100
     },
     "pages/transporte/perfil-conductor": {
-      "conT": 44,
+      "conT": 45,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1511,7 +1511,7 @@
       "ht": 100
     },
     "pages/transporte/perfil-vehiculo": {
-      "conT": 42,
+      "conT": 44,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1591,7 +1591,7 @@
       "ht": 100
     },
     "pages/transporte/solicitud-movimiento": {
-      "conT": 56,
+      "conT": 61,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1599,7 +1599,7 @@
       "ht": 100
     },
     "pages/transporte/trabajos-transporte": {
-      "conT": 49,
+      "conT": 63,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1727,7 +1727,7 @@
       "ht": 100
     },
     "shared/components/onboarding": {
-      "conT": 7,
+      "conT": 19,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1975,7 +1975,7 @@
       "ht": 100
     },
     "shared/ui/leer-documento-vehiculo": {
-      "conT": 23,
+      "conT": 37,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -2039,7 +2039,7 @@
       "ht": 100
     },
     "shared/ui/molde-esquema": {
-      "conT": 4,
+      "conT": 3,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -2055,7 +2055,7 @@
       "ht": 100
     },
     "shared/ui/momento": {
-      "conT": 2,
+      "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -2191,7 +2191,7 @@
       "ht": 100
     },
     "shared/ui/sync-badge": {
-      "conT": 0,
+      "conT": 4,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

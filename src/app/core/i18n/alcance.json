@@ -16,6 +16,9 @@
     "core/util": {
       "enforce": true
     },
+    "core/utils": {
+      "enforce": true
+    },
     "pages/actualizar": {
       "enforce": true
     },
@@ -722,6 +725,9 @@
       "enforce": true
     },
     "shared/ui/sticker-editor": {
+      "enforce": true
+    },
+    "shared/ui/sync-badge": {
       "enforce": true
     },
     "shared/ui/taller-picker": {

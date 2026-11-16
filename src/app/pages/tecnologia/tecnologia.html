@@ -103,7 +103,7 @@
               <ul class="tec__cambios">
                 @for (c of v.cambios; track $index) {
                   <li class="tec__cambio">
-                    <span class="tec__tag tec__tag--{{ c.t }}">{{ cambioLabel[c.t] ?? c.t }}</span>
+                    <span class="tec__tag tec__tag--{{ c.t }}">{{ (cambioLabel[c.t] ?? c.t) | t }}</span>
                     <span class="tec__cambio-d">{{ c.d }}</span>
                   </li>
                 }
