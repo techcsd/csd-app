@@ -9,6 +9,4 @@
 - Resultado: OK por instrucción explícita de Xaviel (sin prueba en dispositivo)
 - Fecha: 2026-11-16
 
-OK: Xaviel autorizó explícitamente en el chat de esta sesión ("do the merge by urself. i approve it.
---yes do the bump, release, and all that stuff") el 2026-11-16, asumiendo el riesgo de no haber
-probado la actualización in-app en un teléfono real. El Kreyòl no está validado por un hablante.
+OK: Xaviel autorizó explícitamente en el chat de esta sesión (2026-11-16) mergear, versionar y publicar 2.70.0 a prod ("do the merge by urself. i approve it. --yes do the bump, release, and all that stuff"). Riesgo asumido por él: la actualización in-app y el Kreyòl quedan sin validar en dispositivo/hablante (ver líneas de arriba).

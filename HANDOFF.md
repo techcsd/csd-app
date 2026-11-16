@@ -1,8 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 13-nov-2026 — Ronda DP (PROMPT 147: idioma al 100 % es/en/ht) — EN RAMA, PR a `dev` pendiente de merge
+## 🟢 16-nov-2026 — Ronda DP (PROMPT 147: idioma al 100 % es/en/ht) — v2.70.0 PUBLICADA EN PROD
 
-**En dev / En prod:** **En dev:** nada publicado aún (rama `feature/dp-ronda-13nov-app`, PR a `dev`; sin bump de versión ni APK). **En prod:** nada (no se tocó `main`).
+**En dev / En prod:** **En dev:** 2.70.0 (APK + registro + publicada). **En prod:** 2.70.0 publicada (PR #35 → dev, #36 bump, #37 dev→main; APK en bucket prod; `minima` sin cambios; data-fix `scripts/data-fixes/2026-11-16-dp-publicar-2.70.0.mjs`). **Sin prueba in-app en teléfono real** (OK explícito de Xaviel en el chat, ver `qa/release-2.70.0.md`). El Kreyòl sigue sin validar por un hablante.
 `#32` (ronda DO) ya estaba en `dev`, así que la rama sale de `origin/dev` (no hizo falta apilar).
 
 **Estado al 13-nov (por fase):**
