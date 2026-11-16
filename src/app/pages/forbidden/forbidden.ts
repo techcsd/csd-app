@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 /** CW6/CW7 (D6) — texto fijo cuando el motivo es el rol chofer_privado restringido
  *  (sin conduces/rutas de empresa): explica el porqué en vez de un 403 genérico. */
 @Component({
   selector: 'app-forbidden',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './forbidden.html',
   styleUrl: './forbidden.scss',
 })

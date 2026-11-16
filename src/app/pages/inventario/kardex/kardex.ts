@@ -6,6 +6,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { localeActual } from '../../../core/i18n/locale.util';
 import { InventarioService, Kardex, KardexMovimiento } from '../../../core/services/inventario.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
@@ -171,7 +172,7 @@ export class KardexPage {
   fechaHora(ts: string): string {
     const d = new Date(ts);
     if (isNaN(d.getTime())) return ts;
-    return d.toLocaleString('es-DO', {
+    return d.toLocaleString(localeActual(this.i18n.idioma()), {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',

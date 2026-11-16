@@ -731,7 +731,7 @@
             @for (l of mLados(); track $index) {
               <div class="parte__molde-lado">
                 <div class="parte__dano-top">
-                  <span class="parte__dano-name">Lado {{ l.lado }}</span>
+                  <span class="parte__dano-name">{{ 'Lado' | t }} {{ l.lado }}</span>
                   <button type="button" class="parte__act-x" (click)="removeLado($index)">{{ 'Quitar' | t }}</button>
                 </div>
                 <div class="parte__molde-dims">
@@ -740,7 +740,7 @@
                   <label>{{ 'Espesor' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.espesor_cm" (ngModelChange)="setMLadoCampo($index, 'espesor_cm', $event)" aria-label="Espesor real del lado en cm" /></label>
                 </div>
                 @if (mTienePlano()) {
-                  <label class="field-label">Plano del lado {{ l.lado }} (cm)</label>
+                  <label class="field-label">{{ 'Plano del lado {n} (cm)' | t: { n: l.lado } }}</label>
                   <div class="parte__molde-dims">
                     <label>{{ 'Largo' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_largo_cm" (ngModelChange)="setMLadoCampo($index, 'p_largo_cm', $event)" aria-label="Largo del plano del lado en cm" /></label>
                     <label>{{ 'Alto' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_alto_cm" (ngModelChange)="setMLadoCampo($index, 'p_alto_cm', $event)" aria-label="Alto del plano del lado en cm" /></label>
@@ -877,7 +877,7 @@
                 <li>
                   {{ e.equipo }}
                   @if (e.para_retirar) { <span class="parte__tag parte__tag--retiro">{{ 'Retirar' | t }}</span> }
-                  @if (e.danado) { <span class="parte__tag parte__tag--dano">Dañado: {{ e.dano_detalle }}</span> }
+                  @if (e.danado) { <span class="parte__tag parte__tag--dano">{{ 'Dañado:' | t }} {{ e.dano_detalle }}</span> }
                 </li>
               }
             }

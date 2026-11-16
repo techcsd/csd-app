@@ -83,3 +83,5 @@ dist-store/
 
 # Graphify
 /graphify-out/
+scripts/i18n-sin-t.generated.md
+scripts/i18n-faltantes.generated.json

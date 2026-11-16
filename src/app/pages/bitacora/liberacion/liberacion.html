@@ -119,7 +119,7 @@
           </div>
           <div>
             <label class="field-label" for="eje">{{ 'Eje' | t }}</label>
-            <input id="eje" class="field" type="text" [ngModel]="eje()" (ngModelChange)="eje.set($event)" placeholder="A-1" />
+            <input id="eje" class="field" type="text" [ngModel]="eje()" (ngModelChange)="eje.set($event)" placeholder="{{ 'A-1' | t }}" />
           </div>
         </div>
 

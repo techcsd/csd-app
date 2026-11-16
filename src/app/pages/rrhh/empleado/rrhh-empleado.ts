@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -14,13 +14,14 @@ import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
 /** AH16 — ficha del empleado + asignaciones de items (AF33): registrar / devolver. */
 @Component({
   selector: 'app-rrhh-empleado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, FechaPipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './rrhh-empleado.html',
   styleUrl: './rrhh-empleado.scss',
 })

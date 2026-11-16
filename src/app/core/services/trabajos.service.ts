@@ -6,6 +6,7 @@ import { BorradorService } from './borrador.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { db } from '../db/app-db';
 
+import { I18nService } from '../i18n/i18n.service';
 /** CK14 — origen de un trabajo (misma enumeración que el contrato SGC). */
 export type TrabajoOrigen = 'apoyo' | 'requisicion' | 'manual';
 
@@ -139,6 +140,7 @@ const FLUJO: TrabajoEvento[] = ['en_camino', 'llegue', 'trabajando', 'termine'];
  */
 @Injectable({ providedIn: 'root' })
 export class TrabajosService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private borrador = inject(BorradorService);
@@ -444,7 +446,7 @@ export class TrabajosService {
    */
   async cancelar(input: { origen: TrabajoOrigen; origenId: string; motivo: string }): Promise<void> {
     if (input.origen !== 'apoyo') {
-      throw new Error('Solo se pueden cancelar los apoyos de transporte por ahora.');
+      throw new Error(this.i18n.t('Solo se pueden cancelar los apoyos de transporte por ahora.'));
     }
     const { error } = await this.supabase.client.rpc('apoyo_transporte_cambiar_estado', {
       p_id: input.origenId,

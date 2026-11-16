@@ -47,7 +47,7 @@
             <div class="tr-card">
               <div class="tr-card__top">
                 <span class="tr-card__de">{{ 'De:' | t }} <strong>{{ t.de_nombre || ('Otro chofer' | t) }}</strong></span>
-                <span class="tr-card__fecha">{{ t.ofrecida_en | date: 'dd/MM HH:mm' }}</span>
+                <span class="tr-card__fecha">{{ t.ofrecida_en | fecha: 'dd/MM HH:mm' }}</span>
               </div>
               <div class="tr-card__ruta">
                 <span>{{ t.conduce_bodega || ('Almacén' | t) }}</span>
@@ -56,7 +56,7 @@
               </div>
               <div class="tr-card__meta">
                 <span>{{ t.items_count }} {{ 'artículo(s)' | t }}</span>
-                @if (t.conduce_fecha) { <span>· {{ t.conduce_fecha | date: 'dd/MM/yyyy' }}</span> }
+                @if (t.conduce_fecha) { <span>· {{ t.conduce_fecha | fecha: 'dd/MM/yyyy' }}</span> }
               </div>
               @if (t.notas) { <p class="tr-card__notas">📝 {{ t.notas }}</p> }
               <div class="tr-card__actions">
@@ -88,7 +88,7 @@
                 <span class="tr-card__de">
                   {{ 'A:' | t }} <strong>{{ o.a_nombre || ('Otro chofer' | t) }}</strong>
                 </span>
-                <span class="tr-card__fecha">{{ o.ofrecida_en | date: 'dd/MM HH:mm' }}</span>
+                <span class="tr-card__fecha">{{ o.ofrecida_en | fecha: 'dd/MM HH:mm' }}</span>
               </div>
               <div class="tr-card__ruta">
                 <span>{{ o.conduce_bodega || ('Almacén' | t) }}</span>

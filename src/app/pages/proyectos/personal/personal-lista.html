@@ -120,7 +120,7 @@
               <!-- AV4 — semáforo de aseguramiento de un vistazo (verde/rojo/gris) -->
               <span class="pl-card__aseg" [title]="aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido'] | t">{{ aseguramientoIcono(p) }}</span>
               {{ p.nombre }} {{ p.apellido }}
-              @if (p.es_prueba) { <span class="pl-card__prueba">PRUEBA</span> }
+              @if (p.es_prueba) { <span class="pl-card__prueba">{{ 'PRUEBA' | t }}</span> }
               @if (p.estado === 'inactivo') { <span class="pl-card__inact">{{ 'Inactivo' | t }}</span> }
             </span>
             <span class="pl-card__meta">

@@ -5,6 +5,7 @@ import { BorradorService } from './borrador.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { db } from '../db/app-db';
 
+import { I18nService } from '../i18n/i18n.service';
 /** CK12 — tipo de apoyo de transporte (3 botones del formulario). */
 export type TipoApoyo = 'movimiento_interno' | 'retiro_material' | 'bote';
 
@@ -133,6 +134,7 @@ const CAT_LISTADO = 'apoyo_listado';
  */
 @Injectable({ providedIn: 'root' })
 export class ApoyoService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private borrador = inject(BorradorService);
@@ -387,7 +389,7 @@ export class ApoyoService {
       });
       if (error) throwSyncError(error);
       const solicitudId = data as string | null;
-      if (!solicitudId) throw new Error('No se recibió el id del apoyo creado.');
+      if (!solicitudId) throw new Error(this.i18n.t('No se recibió el id del apoyo creado.'));
 
       const clave = this.claveFotos(payload['id'] as string);
       const fotoIds = (payload['foto_client_ids'] as string[] | undefined) ?? [];

@@ -38,12 +38,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-13';
+const RELEASED_AT = '2026-11-16';
 
-const TITULO = 'Compa arrastrable + aprobar apoyo de transporte';
+const TITULO = 'Toda la app en English y Kreyòl';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Compa', d: 'La burbuja de Compa ahora se puede arrastrar a cualquier parte de la pantalla (queda guardada en tu teléfono) y se corre sola cuando tapaba el botón de enviar en Mensajes o la lista de una requisición.' },
-  { t: 'nuevo', m: 'Transporte', d: 'En un apoyo de transporte pendiente ahora hay un botón "Aprobar" que lleva directo a asignarle un chofer, sin tener que buscarlo en otra pantalla.' },
+  { t: 'nuevo', m: 'Idioma', d: 'Toda la app ahora está disponible en English y Kreyòl ayisyen, además de español: pantallas, botones, avisos, fechas y mensajes de error. Cámbialo en Perfil > Idioma. El Kreyòl aún está en revisión por un hablante nativo.' },
+  { t: 'mejora', m: 'Idioma', d: 'Las fechas y los meses se muestran en el idioma elegido, y el teléfono anuncia el idioma correcto a los lectores de pantalla.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

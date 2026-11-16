@@ -73,7 +73,7 @@
         @for (p of pedidos(); track p.id) {
           <div class="rec__pedido">
             <div class="rec__pedido-top">
-              <span class="rec__pedido-fecha">{{ p.created_at | date: 'dd/MM/yy' }}</span>
+              <span class="rec__pedido-fecha">{{ p.created_at | fecha: 'dd/MM/yy' }}</span>
               <span class="rec__pedido-estado" [appEstadoPulse]="p.estado" [style.background]="estadoMeta(p.estado).tint">{{ estadoMeta(p.estado).label | t }}</span>
             </div>
             @if (p.notas) { <p class="rec__pedido-notas">{{ p.notas }}</p> }

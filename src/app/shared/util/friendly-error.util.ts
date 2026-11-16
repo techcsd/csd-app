@@ -5,6 +5,14 @@
 // capa (ToastService, bandas de error, EmptyState). El detalle técnico se muestra SOLO
 // al desarrollador (esDesarrollador() = espejo de sgc.es_desarrollador()).
 
+// DP-09 — traductor registrado por I18nService (esta util es pura, sin DI). Los mensajes de
+// REGLAS están en español como claves de catálogo y se traducen al DEVOLVERLOS.
+let traductor: (es: string) => string = (s) => s;
+export function registrarTraductorErrores(fn: (es: string) => string): void {
+  traductor = fn;
+}
+const i18nErr = { t: (es: string) => traductor(es) };
+
 export interface FriendlyError {
   /** Mensaje apto para mostrar al usuario (español, sin jerga). */
   mensaje: string;
@@ -65,13 +73,13 @@ const TECNICO = /(permission denied|violates|constraint|jwt|recursion|relation |
  */
 export function humanizeError(error: unknown): FriendlyError {
   const raw = errorMessage(error).trim();
-  if (!raw) return { mensaje: 'Ocurrió un error inesperado.', technical: true, raw };
+  if (!raw) return { mensaje: i18nErr.t('Ocurrió un error inesperado.'), technical: true, raw };
 
   for (const r of REGLAS) {
-    if (r.re.test(raw)) return { mensaje: r.mensaje, technical: true, raw };
+    if (r.re.test(raw)) return { mensaje: i18nErr.t(r.mensaje), technical: true, raw };
   }
   if (TECNICO.test(raw)) {
-    return { mensaje: 'Ocurrió un error inesperado. Ya lo estamos revisando.', technical: true, raw };
+    return { mensaje: i18nErr.t('Ocurrió un error inesperado. Ya lo estamos revisando.'), technical: true, raw };
   }
   // Mensaje ya amable (lanzado a propósito por la app): pásalo tal cual.
   return { mensaje: raw, technical: false, raw };

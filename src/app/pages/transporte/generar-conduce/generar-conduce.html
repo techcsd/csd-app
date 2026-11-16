@@ -13,7 +13,7 @@
       <!-- BA/FASE 2 — despacho de una requisición: rótulo + aviso suave de duplicado. -->
       @if (esDespacho()) {
         <div class="gconduce__despacho">
-          <span class="gconduce__despacho-tag">CONDUCE (#REQ)</span>
+          <span class="gconduce__despacho-tag">{{ 'CONDUCE (#REQ)' | t }}</span>
           <span class="gconduce__despacho-txt">
             {{ 'Despacho de requisición · {n} renglón(es) precargados (editables).' | t: { n: despachoRenglones() } }}
           </span>

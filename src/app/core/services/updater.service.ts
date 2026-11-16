@@ -10,6 +10,7 @@ import { ToastService } from './toast.service';
 import { ErrorReportService } from './error-report.service';
 import { abrirUrlExterna } from '../utils/abrir-url.util';
 
+import { I18nService } from '../i18n/i18n.service';
 type Canal = 'play' | 'apk' | 'appstore' | 'pwa';
 
 /** Native bridge to ApkInstallerPlugin (android/.../ApkInstallerPlugin.java). */
@@ -36,6 +37,7 @@ export type EstadoActualizacion = 'idle' | 'descargando' | 'instalando' | 'permi
  */
 @Injectable({ providedIn: 'root' })
 export class UpdaterService {
+  private i18n = inject(I18nService);
   private version = inject(VersionService);
   private tiendas = inject(TiendasService);
   private toast = inject(ToastService);
@@ -75,7 +77,7 @@ export class UpdaterService {
    *  · apk → descarga e instala el APK (teléfonos sin Google Play). */
   async actualizar(): Promise<boolean> {
     if (!this.esNativo || this.canal === 'pwa') {
-      this.toast.show('Actualizando la app web…', 'info', 2000);
+      this.toast.show(this.i18n.t('Actualizando la app web…'), 'info', 2000);
       setTimeout(() => document.location.reload(), 800);
       return true;
     }
@@ -88,7 +90,7 @@ export class UpdaterService {
   private async actualizarApk(): Promise<boolean> {
     const url = this.version.apkUrl;
     if (!url) {
-      this.toast.error('Aún no hay un archivo de instalación disponible. Inténtalo más tarde.');
+      this.toast.error(this.i18n.t('Aún no hay un archivo de instalación disponible. Inténtalo más tarde.'));
       return false;
     }
     // Reutiliza el APK ya descargado (p. ej. tras ir a activar el permiso): no
@@ -105,7 +107,7 @@ export class UpdaterService {
       const info = await AppUpdate.getAppUpdateInfo();
       // 2 = UPDATE_AVAILABLE (Play Core AppUpdateAvailability).
       if (String(info.updateAvailability) !== '2') {
-        this.toast.show('Ya tienes la última versión.', 'info', 2500);
+        this.toast.show(this.i18n.t('Ya tienes la última versión.'), 'info', 2500);
         return true;
       }
       if (this.version.debeActualizar() && info.immediateUpdateAllowed) {
@@ -126,7 +128,7 @@ export class UpdaterService {
         await abrirUrlExterna(url);
         return true;
       }
-      this.toast.error('No se pudo abrir Google Play. Inténtalo más tarde.');
+      this.toast.error(this.i18n.t('No se pudo abrir Google Play. Inténtalo más tarde.'));
       return false;
     }
   }
@@ -136,7 +138,7 @@ export class UpdaterService {
   private async actualizarAppStore(): Promise<boolean> {
     const url = this.tiendas.appStoreUrl();
     if (!url) {
-      this.toast.error('Aún no está disponible en el App Store.');
+      this.toast.error(this.i18n.t('Aún no está disponible en el App Store.'));
       return false;
     }
     await abrirUrlExterna(url);
@@ -172,7 +174,7 @@ export class UpdaterService {
     } catch (e) {
       console.error('UpdaterService.descargar failed:', e);
       this.estado.set('error');
-      this.toast.error('No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.'));
       return false;
     } finally {
       await handle?.remove();
@@ -191,7 +193,7 @@ export class UpdaterService {
         this.estado.set('permiso');
         await this.armarReanudacion();
         this.toast.show(
-          'Activa "Instalar apps desconocidas" para CSD App. Al volver, la instalación sigue sola.',
+          this.i18n.t('Activa "Instalar apps desconocidas" para CSD App. Al volver, la instalación sigue sola.'),
           'info',
           6000,
         );
@@ -203,7 +205,7 @@ export class UpdaterService {
     } catch (e) {
       console.error('UpdaterService.instalar failed:', e);
       this.estado.set('error');
-      this.toast.error('No se pudo abrir el instalador. Inténtalo de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo abrir el instalador. Inténtalo de nuevo.'));
       return false;
     }
   }

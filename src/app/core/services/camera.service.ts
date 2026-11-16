@@ -12,6 +12,7 @@ import { BorradorService } from './borrador.service';
 import { TutorialModeService } from './tutorial-mode.service';
 import { comprimirImagen, perfilNativo, PerfilCompresion } from '../utils/comprimir-imagen.util';
 
+import { I18nService } from '../i18n/i18n.service';
 /**
  * BV5/BT5 — a dónde re-inyectar una foto que el usuario TOMÓ pero cuya Activity el
  * SO destruyó mientras la cámara estaba abierta (Android, low-mem / "No mantener
@@ -80,6 +81,7 @@ export interface CapturedFile {
  */
 @Injectable({ providedIn: 'root' })
 export class CameraService {
+  private i18n = inject(I18nService);
   private gate = inject(PermisoGateService);
   private errorReport = inject(ErrorReportService);
   private device = inject(DeviceInfoService);
@@ -141,7 +143,7 @@ export class CameraService {
       // hubiera cargado sus fotos (cierra la carrera que perdía la foto del recibo en
       // modo persona / equipos de poca memoria). También sirve si la pantalla sigue viva.
       this._restored.set({ clave: ctx.clave, slot: ctx.slot, at: Date.now() });
-      this.toast.show('Recuperamos la foto que tomaste. Abre la pantalla para terminar.', 'info', 6000);
+      this.toast.show(this.i18n.t('Recuperamos la foto que tomaste. Abre la pantalla para terminar.'), 'info', 6000);
     } catch (e) {
       void this.errorReport.report('camera', `appRestoredResult: ${(e as Error)?.message ?? e}`, {
         point: 'appRestoredResult',
@@ -299,7 +301,7 @@ export class CameraService {
     }
 
     if (withSettings && this.permissions.isNative) {
-      this.toast.withAction(text, { label: 'Abrir ajustes', run: () => void this.permissions.openAppSettings() });
+      this.toast.withAction(text, { label: this.i18n.t('Abrir ajustes'), run: () => void this.permissions.openAppSettings() });
     } else {
       this.toast.error(text);
     }

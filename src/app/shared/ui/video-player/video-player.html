@@ -73,7 +73,7 @@
         <span class="vpl__time">{{ tiempo() }}</span>
         <span class="vpl__spacer"></span>
         @if (tieneCC()) {
-          <button type="button" class="vpl__ctl vpl__ctl--text" [class.vpl__ctl--on]="ccOn()" (click)="toggleCC($event)" [attr.aria-label]="'Subtítulos' | t">CC</button>
+          <button type="button" class="vpl__ctl vpl__ctl--text" [class.vpl__ctl--on]="ccOn()" (click)="toggleCC($event)" [attr.aria-label]="'Subtítulos' | t">{{ 'CC' | t }}</button>
         }
         <button type="button" class="vpl__ctl vpl__ctl--text" (click)="ciclarVelocidad($event)" [attr.aria-label]="'Velocidad' | t">{{ rate() }}×</button>
         @if (capitulos().length) {

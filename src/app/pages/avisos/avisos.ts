@@ -17,6 +17,8 @@ import { ToastService } from '../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../core/util/fecha';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 /**
  * BK1 — lista de respaldo si `mis_notif_estado()` falla (sin red / RPC vieja). El
  * catálogo real vive ahora en `sgc.notif_tipo` (padre) y lo pinta la RPC; esta lista
@@ -47,11 +49,12 @@ const ALARMAS = new Set(['alarma-reporte-semanal', 'alarm-weekly-inspection']);
   selector: 'app-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective, BottomSheet, ToggleSwitch, ...MOTION_DIRECTIVES],
+  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective, BottomSheet, ToggleSwitch, ...MOTION_DIRECTIVES, TranslatePipe],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
 export class AvisosPage {
+  private i18n = inject(I18nService);
   private service = inject(NotificacionesService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -97,7 +100,7 @@ export class AvisosPage {
     try {
       this.avisos.set(await this.service.getMisNotificaciones());
     } catch {
-      this.toast.error('No se pudieron cargar los avisos.');
+      this.toast.error(this.i18n.t('No se pudieron cargar los avisos.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -145,7 +148,7 @@ export class AvisosPage {
       await this.service.eliminar(n.id, !n.leida);
     } catch {
       this.avisos.set(prev); // rollback
-      this.toast.error('No se pudo eliminar el aviso.');
+      this.toast.error(this.i18n.t('No se pudo eliminar el aviso.'));
     }
   }
 
@@ -162,10 +165,10 @@ export class AvisosPage {
     this.avisos.set([]);
     try {
       await this.service.eliminarTodas();
-      this.toast.success('Avisos eliminados.');
+      this.toast.success(this.i18n.t('Avisos eliminados.'));
     } catch {
       this.avisos.set(prev);
-      this.toast.error('No se pudieron eliminar.');
+      this.toast.error(this.i18n.t('No se pudieron eliminar.'));
     }
   }
 
@@ -173,9 +176,9 @@ export class AvisosPage {
     try {
       await this.service.marcarTodasLeidas();
       this.avisos.update((list) => list.map((x) => ({ ...x, leida: true })));
-      this.toast.success('Avisos marcados como leídos.');
+      this.toast.success(this.i18n.t('Avisos marcados como leídos.'));
     } catch {
-      this.toast.error('No se pudo actualizar.');
+      this.toast.error(this.i18n.t('No se pudo actualizar.'));
     }
   }
 
@@ -263,7 +266,7 @@ export class AvisosPage {
       this.estados.update((list) =>
         list.map((x) => (x.tipo === e.tipo ? { ...x, silenciado_por_mi: !silenciar } : x)),
       );
-      this.toast.error('No se pudo guardar la preferencia.');
+      this.toast.error(this.i18n.t('No se pudo guardar la preferencia.'));
     }
   }
 
@@ -277,7 +280,7 @@ export class AvisosPage {
       await this.service.setEmailRequisiciones(recibir);
     } catch {
       this.emailRequisiciones.set(prev);
-      this.toast.error('No se pudo guardar la preferencia.');
+      this.toast.error(this.i18n.t('No se pudo guardar la preferencia.'));
     } finally {
       this.emailRequisicionesBusy.set(false);
     }

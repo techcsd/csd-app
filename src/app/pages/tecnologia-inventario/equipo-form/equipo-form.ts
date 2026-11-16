@@ -19,6 +19,8 @@ import { TecTipo, TecEquipoEstado, TecEquipoCondicion, TecCostoOrigen, TecEquipo
 import { ToastService } from '../../../core/services/toast.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 interface FotoItem {
   key: string; // path (existente) o uuid (nueva)
   path?: string; // storage path (existente)
@@ -55,12 +57,12 @@ const COSTO_ORIGENES: [TecCostoOrigen, string][] = [
     CollapsibleSelect,
     ToggleSwitch,
     BigConfirm,
-    ...MOTION_DIRECTIVES,
-  ],
+    ...MOTION_DIRECTIVES, TranslatePipe],
   templateUrl: './equipo-form.html',
   styleUrl: './equipo-form.scss',
 })
 export class TecEquipoFormPage implements OnDestroy {
+  private i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private navGuard = inject(NavGuardService);
@@ -372,13 +374,13 @@ export class TecEquipoFormPage implements OnDestroy {
     switch (this.step()) {
       case 1:
         if (!this.nombre().trim()) {
-          this.toast.error('Escribe el nombre del equipo.');
+          this.toast.error(this.i18n.t('Escribe el nombre del equipo.'));
           return false;
         }
         return true;
       case 2:
         if (!this.tipoId()) {
-          this.toast.error('Elige el tipo de equipo.');
+          this.toast.error(this.i18n.t('Elige el tipo de equipo.'));
           return false;
         }
         return true;
@@ -443,11 +445,11 @@ export class TecEquipoFormPage implements OnDestroy {
   async guardar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.nombre().trim()) {
-      this.toast.error('Escribe el nombre del equipo.');
+      this.toast.error(this.i18n.t('Escribe el nombre del equipo.'));
       return;
     }
     if (!this.tipoId()) {
-      this.toast.error('Elige el tipo de equipo.');
+      this.toast.error(this.i18n.t('Elige el tipo de equipo.'));
       return;
     }
     this.submitting.set(true);

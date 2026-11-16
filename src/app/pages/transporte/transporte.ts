@@ -22,6 +22,7 @@ import { ModuleOrderService } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 import { MiAsignacion, PendientesTransporte, vehiculoIdentidad } from '../../core/models/transporte.model';
 
+import { I18nService } from '../../core/i18n/i18n.service';
 /** AI16 — clave namespaced del scope de submódulos de Transporte. */
 const SUBMODULE_PARENT = 'transporte';
 
@@ -102,6 +103,7 @@ const TILES: HubTile[] = [
   styleUrl: './transporte.scss',
 })
 export class TransportePage {
+  private i18n = inject(I18nService);
   private vehiculos = inject(VehiculosService);
   private reportes = inject(ReporteSemanalService);
   private sync = inject(SyncService);
@@ -299,9 +301,9 @@ export class TransportePage {
     this.editMode.set(false);
     try {
       await this.moduleOrder.setOrder(items);
-      this.toast.success('Orden guardado.');
+      this.toast.success(this.i18n.t('Orden guardado.'));
     } catch {
-      this.toast.error('No se pudo guardar el orden. Inténtalo de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo guardar el orden. Inténtalo de nuevo.'));
     }
   }
   cancelarOrden(): void {
@@ -561,9 +563,9 @@ export class TransportePage {
     try {
       await this.vehiculos.pedirUnidadAFlota();
       this.pedidoUnidadEnviado.set(true);
-      this.toast.success('Le avisamos a Flota que necesitas una unidad.');
+      this.toast.success(this.i18n.t('Le avisamos a Flota que necesitas una unidad.'));
     } catch {
-      this.toast.error('No pudimos avisarle a Flota. Coméntaselo directamente.');
+      this.toast.error(this.i18n.t('No pudimos avisarle a Flota. Coméntaselo directamente.'));
     } finally {
       this.pidiendoUnidad.set(false);
     }

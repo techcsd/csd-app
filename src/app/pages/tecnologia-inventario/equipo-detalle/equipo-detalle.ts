@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
-import { DecimalPipe, DatePipe, Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -18,7 +18,10 @@ import { TecEquipo, TecTipo, TecEquipoEstado, TecEquipoCondicion, TecKitEstado }
 import { tecTonoEstado, tecTonoCondicion } from '../../../shared/utils/tec-tono.util';
 import { ToastService } from '../../../core/services/toast.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 const COSTO_ORIGEN_LABEL: Record<string, string> = { compra: 'Compra', estimado: 'Estimado', donado: 'Donado' };
 
 /** AL2/DA — Detalle de un equipo tecnológico: ficha completa (DA1/DA5), kit (DA3), clave (DA6). */
@@ -28,7 +31,7 @@ const COSTO_ORIGEN_LABEL: Record<string, string> = { compra: 'Compra', estimado:
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     DecimalPipe,
-    DatePipe,
+    FechaPipe,
     FormsModule,
     Skeleton,
     EmptyState,
@@ -36,12 +39,12 @@ const COSTO_ORIGEN_LABEL: Record<string, string> = { compra: 'Compra', estimado:
     CollapsibleSelect,
     ConfirmDialog,
     VaultSecureDirective,
-    ...MOTION_DIRECTIVES,
-  ],
+    ...MOTION_DIRECTIVES, TranslatePipe],
   templateUrl: './equipo-detalle.html',
   styleUrl: './equipo-detalle.scss',
 })
 export class TecEquipoDetallePage implements OnDestroy {
+  private i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private tec = inject(TecnologiaService);
@@ -152,7 +155,7 @@ export class TecEquipoDetallePage implements OnDestroy {
         this.specsUrls.set(specsUrls);
       }
     } catch {
-      this.toast.error('No pudimos cargar el equipo.');
+      this.toast.error(this.i18n.t('No pudimos cargar el equipo.'));
     } finally {
       this.loading.set(false);
     }
@@ -173,7 +176,7 @@ export class TecEquipoDetallePage implements OnDestroy {
   async mostrarClave(): Promise<void> {
     if (!this.ctx.puedeVerClavesEquipos()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para ver la clave.');
+      this.toast.error(this.i18n.t('Necesitas conexión para ver la clave.'));
       return;
     }
     this.claveCargando.set(true);
@@ -218,12 +221,12 @@ export class TecEquipoDetallePage implements OnDestroy {
   async copiarClave(valor: string): Promise<void> {
     try {
       await navigator.clipboard.writeText(valor);
-      this.toast.success('Copiado — se borra del portapapeles en 30 s');
+      this.toast.success(this.i18n.t('Copiado — se borra del portapapeles en 30 s'));
       setTimeout(() => {
         navigator.clipboard.writeText('').catch(() => undefined);
       }, 30_000);
     } catch {
-      this.toast.error('No se pudo copiar.');
+      this.toast.error(this.i18n.t('No se pudo copiar.'));
     }
   }
 
@@ -238,7 +241,7 @@ export class TecEquipoDetallePage implements OnDestroy {
 
   abrirMoverKit(): void {
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para mover el kit.');
+      this.toast.error(this.i18n.t('Necesitas conexión para mover el kit.'));
       return;
     }
     const e = this.equipo();
@@ -254,7 +257,7 @@ export class TecEquipoDetallePage implements OnDestroy {
     if (!e) return;
     try {
       await this.tec.moverKit(e, { bodegaId: this.moverBodegaId() || null, ubicacion: this.moverUbicacion().trim() || null });
-      this.toast.success('Kit movido.');
+      this.toast.success(this.i18n.t('Kit movido.'));
       this.moviendoKit.set(false);
       await this.load();
     } catch (err) {
@@ -264,7 +267,7 @@ export class TecEquipoDetallePage implements OnDestroy {
 
   async togglePresente(c: TecEquipo): Promise<void> {
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para esto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para esto.'));
       return;
     }
     try {
@@ -277,7 +280,7 @@ export class TecEquipoDetallePage implements OnDestroy {
 
   pedirQuitarDelKit(c: TecEquipo): void {
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para esto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para esto.'));
       return;
     }
     this.confirmQuitar.set(c);
@@ -290,7 +293,7 @@ export class TecEquipoDetallePage implements OnDestroy {
     if (!c) return;
     try {
       await this.tec.moverPieza(c.id, { quitarDelKit: true });
-      this.toast.success('La pieza salió del kit.');
+      this.toast.success(this.i18n.t('La pieza salió del kit.'));
       this.confirmQuitar.set(null);
       await this.load();
     } catch (e) {

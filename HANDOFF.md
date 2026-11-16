@@ -1,5 +1,26 @@
 # HANDOFF — CSD App
 
+## 🟡 13-nov-2026 — Ronda DP (PROMPT 147: idioma al 100 % es/en/ht) — EN RAMA, PR a `dev` pendiente de merge
+
+**En dev / En prod:** **En dev:** nada publicado aún (rama `feature/dp-ronda-13nov-app`, PR a `dev`; sin bump de versión ni APK). **En prod:** nada (no se tocó `main`).
+`#32` (ronda DO) ya estaba en `dev`, así que la rama sale de `origin/dev` (no hizo falta apilar).
+
+**Estado al 13-nov (por fase):**
+- **F0** baseline: 264 pantallas HTML, 5.516 textos con `t()` / 308 sin (94,7 %), en 4.619 claves, ht 132; 14 `| date`, 8 `toLocale*`, 3 `Intl`. `alcance.json` tenía 3 pantallas. `mi_idioma_set` y `lang="es"` ya OK.
+- **F1** módulo Claude de la app: **sin defecto** (capturas 390 px: `claude` y `perfil/claude` ya tienen padding/tarjetas; no se tocó CSS). El tema oscuro **no se pudo comprobar**: la emulación `prefers-color-scheme` no cambia el tema de la app (capturas «dark» salen claras).
+- **F2** `<html lang>` vivo, log dev de claves sin traducir, escáner con `.ts`, `alcance.json` generado con TODAS las pantallas, pipe `fecha` + `localeActual()` (reutilizados de SGC), docs GLOSARIO/AVANCE/ALCANCE/REVISAR-HT/PARIDAD.
+- **F3** 264 textos HTML + ~170 literales `.ts` cableados con codemods + a mano (casos con entidades/plurales/parámetros a mano).
+- **F4** en +1.363 / ht +5.712 claves (reuso de SGC + 16 lotes de traducción por Claude). **El Kreyòl no está validado por un hablante**: revisar `docs/I18N-REVISAR-HT.md` (168 textos).
+- **F5** `I18N_UMBRAL` 100/100 derivado del número medido; `verify-i18n` falla por literales sin `t()`, claves faltantes en en/ht o `{param}` rotos; 250/250 pantallas `enforce:true`; `npm run i18n:smoke` (necesita Playwright vía `PLAYWRIGHT_PATH`) y `npm run i18n:paridad`.
+- **F6** build con todas las guardias ✔, `ng test` 66/66 ✔. **Medido por el escáner: English 100 % · Kreyòl 100 %** (8.388 textos, 288 pantallas). Capturas Playwright en dev (QA desarrollador / QA flota elevado), en+ht, 390 px: 0 claves sin traducir, `lang` correcto en home, transporte, conduces, combustible, perfil, claude, perfil/claude.
+
+**Límites honestos:** Bitácora/Parte devolvió 403 a ambos usuarios QA → no verificado visualmente; el modo oscuro no verificado; el escáner no ve mensajes con plantilla `${}` ni `aria-label`/`alt`/`title` (ver `docs/I18N-ALCANCE.md`); contenido servidor/PDF/Compa sigue en español por diseño.
+**Efecto colateral en dev:** el usuario QA desarrollador y QA flota elevado quedaron con idioma `en`/`ht` en `usuarios.idioma` (dev).
+
+**Pasos físicos de Xaviel:** (1) probar en `dev` cambiando a English y Kreyòl y recorrer las 10 pantallas más usadas, mandar capturas de español residual; (2) conseguir un hablante de Kreyòl para `docs/I18N-REVISAR-HT.md`; (3) OK para merge a `dev`, luego bump/APK dev; (4) revisar traducciones divergentes web↔app (`docs/I18N-PARIDAD.md`).
+
+---
+
 ## 🟢 15-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — v2.69.0 PUBLICADA EN PROD
 
 **Cierre de la ronda:** flujo dev → prod completo.

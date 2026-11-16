@@ -5,6 +5,7 @@ import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
 import { MiSolicitudCompra, SolicitudCompraCaptura, SolicitudCompraOdooEstado } from '../models/solicitud-compra.model';
 
+import { I18nService } from '../i18n/i18n.service';
 const CAT_MIS = 'mis_solicitudes_compra';
 
 /**
@@ -17,6 +18,7 @@ const CAT_MIS = 'mis_solicitudes_compra';
  */
 @Injectable({ providedIn: 'root' })
 export class SolicitudesCompraService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
@@ -44,7 +46,7 @@ export class SolicitudesCompraService {
     });
     // BH6-pattern — un fallo sin caché se propaga (estado de error), no un falso vacío.
     if (out.failed && !out.fromCache) {
-      throw new Error('No pudimos cargar tus solicitudes de compra. Revisa la conexión.');
+      throw new Error(this.i18n.t('No pudimos cargar tus solicitudes de compra. Revisa la conexión.'));
     }
     return out.data ?? [];
   }

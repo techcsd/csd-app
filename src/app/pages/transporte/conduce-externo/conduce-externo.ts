@@ -28,6 +28,7 @@ import { FormularioIaService } from '../../../core/services/formulario-ia.servic
 import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 import { emparejarExacto } from '../../../shared/utils/bitacora-ia.util';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
 /** Proveedor elegido: del catálogo (id) o texto libre «Otro» (sin registrar aún). */
 interface ProveedorElegido {
   id: string | null;
@@ -69,6 +70,7 @@ interface ConduceExternoBorrador {
   styleUrl: './conduce-externo.scss',
 })
 export class ConduceExternoPage {
+  private i18n = inject(I18nService);
   private conduces = inject(ConducesService);
   private inventario = inject(InventarioService);
   private net = inject(NetworkService);
@@ -295,7 +297,7 @@ export class ConduceExternoPage {
   agregar(a: ArticuloCat): void {
     const s = this.stockDe(a.id);
     if (s != null && s <= 0) {
-      this.toast.error(`No hay existencia de "${a.nombre}" en el almacén de origen.`);
+      this.toast.error(this.i18n.t('No hay existencia de "{n}" en el almacén de origen.', { n: a.nombre }));
       return;
     }
     this.cart.update((list) => {
@@ -410,7 +412,7 @@ export class ConduceExternoPage {
     const nombre = this.nombreOtro().trim();
     if (!nombre) return;
     if (!this.online) {
-      this.toast.error('Sin conexión: se usará el nombre como texto. Raykler lo registrará luego.');
+      this.toast.error(this.i18n.t('Sin conexión: se usará el nombre como texto. Raykler lo registrará luego.'));
       this.usarOtroTexto();
       return;
     }
@@ -424,7 +426,7 @@ export class ConduceExternoPage {
       void this.cargarProveedores();
     } catch {
       // Falla el alta → no trancar: usa el texto y sigue.
-      this.toast.error('No se pudo registrar el proveedor; se usará como texto.');
+      this.toast.error(this.i18n.t('No se pudo registrar el proveedor; se usará como texto.'));
       this.usarOtroTexto();
     } finally {
       this.creandoProv.set(false);
@@ -473,7 +475,7 @@ export class ConduceExternoPage {
   async leerConIa(): Promise<void> {
     const fotos = [this.placaFoto(), this.cargaFoto()].filter((f): f is CapturedPhoto => !!f);
     if (!fotos.length) {
-      this.toast.error('Toma al menos la foto de la placa.');
+      this.toast.error(this.i18n.t('Toma al menos la foto de la placa.'));
       return;
     }
     if (!(await this.iaGate.pedir())) return;
@@ -535,15 +537,15 @@ export class ConduceExternoPage {
 
   descartarBorrador(): void {
     // Confirmación simple (evita borrar por accidente lo capturado).
-    this.toast.withAction('¿Descartar el borrador sin enviar?', {
-      label: 'Descartar',
+    this.toast.withAction(this.i18n.t('¿Descartar el borrador sin enviar?'), {
+      label: this.i18n.t('Descartar'),
       run: () => {
         this.revoke(this.placaFoto());
         this.revoke(this.cargaFoto());
         void this.autosave.discard(this.clave);
         this.resetCampos();
         this.borradorPrevio.set(false);
-        this.toast.show('Borrador descartado.', 'info');
+        this.toast.show(this.i18n.t('Borrador descartado.'), 'info');
       },
     });
   }
@@ -580,7 +582,7 @@ export class ConduceExternoPage {
     const prov = this.proveedorSel();
     const placa = this.placaFoto();
     if (!prov || !placa) {
-      this.error.set('Indica quién transporta y toma la foto de la placa.');
+      this.error.set(this.i18n.t('Indica quién transporta y toma la foto de la placa.'));
       return;
     }
     this.guardando.set(true);
@@ -593,7 +595,7 @@ export class ConduceExternoPage {
       if (provId && !(await this.proveedorVigente(provId))) {
         provId = null;
         provTexto = prov.nombre;
-        this.toast.show('Ese proveedor ya no está en la lista; se envía por su nombre.', 'info', 4000);
+        this.toast.show(this.i18n.t('Ese proveedor ya no está en la lista; se envía por su nombre.'), 'info', 4000);
       }
       // BV6 — con materiales del inventario: renglones del catálogo + origen = bodega
       // nuestra (el servidor baja stock al emitir / crea entrada pendiente en destino).

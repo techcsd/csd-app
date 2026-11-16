@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { LocalStore } from './local-store.service';
 import { UserContextService } from './user-context.service';
 
+import { I18nService } from '../i18n/i18n.service';
 /**
  * "Entrar como" — un admin ve la app COMO otro usuario para reproducir sus
  * problemas de primera mano (paridad con la web, AZ10). Reutiliza los mismos
@@ -35,6 +36,7 @@ interface ImpEstado {
 
 @Injectable({ providedIn: 'root' })
 export class ImpersonationService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private store = inject(LocalStore);
   private ctx = inject(UserContextService);
@@ -81,13 +83,13 @@ export class ImpersonationService {
    * servidor (no eres admin, es admin, eres tú mismo, sin email…).
    */
   async entrarComo(targetId: string, targetNombre: string): Promise<{ ok: boolean; error?: string }> {
-    if (this.activo()) return { ok: false, error: 'Ya estás viendo como otro usuario. Sal primero.' };
+    if (this.activo()) return { ok: false, error: this.i18n.t('Ya estás viendo como otro usuario. Sal primero.') };
 
     // Sesión del admin actual (para poder restaurarla al salir).
     const { data: sess } = await this.supabase.client.auth.getSession();
     const admin = sess?.session;
     if (!admin?.access_token || !admin?.refresh_token) {
-      return { ok: false, error: 'No pude leer tu sesión.' };
+      return { ok: false, error: this.i18n.t('No pude leer tu sesión.') };
     }
     const adminId = admin.user?.id ?? '';
 
@@ -113,7 +115,7 @@ export class ImpersonationService {
       token_hash: res.token_hash,
       type: 'magiclink',
     });
-    if (otpErr) return { ok: false, error: 'No se pudo abrir la sesión del usuario.' };
+    if (otpErr) return { ok: false, error: this.i18n.t('No se pudo abrir la sesión del usuario.') };
 
     await this.store.set(this.KEY, JSON.stringify(estado));
     this._estado.set(estado);

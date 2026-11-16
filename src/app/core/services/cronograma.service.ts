@@ -6,6 +6,7 @@ import { db } from '../db/app-db';
 import { CronogramaAviso, CronogramaData, CronogramaTarea } from '../models/cronograma.model';
 import { ValidacionCampoError, exigirUuid } from '../util/validar';
 
+import { I18nService } from '../i18n/i18n.service';
 const BUCKET = 'sgc-cronograma';
 const CAT_PREFIX = 'cronograma_'; // + proyectoId
 
@@ -21,6 +22,7 @@ export type TareaAccionPendiente = 'iniciar' | 'completar';
  */
 @Injectable({ providedIn: 'root' })
 export class CronogramaService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
@@ -301,7 +303,7 @@ export class CronogramaService {
             'no_existe',
           );
         }
-        throw new Error('Esperando que la bitácora se sincronice…'); // transitorio → auto-retry
+        throw new Error(this.i18n.t('Esperando que la bitácora se sincronice…')); // transitorio → auto-retry
       }
       const { error } = await this.supabase.client.rpc('enlazar_bitacora_tarea', {
         p_tarea_id: payload['tarea_id'],
