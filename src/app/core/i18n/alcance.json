@@ -2,748 +2,748 @@
   "_doc": "DP-07d/DP-13 — TODAS las pantallas medidas por scripts/i18n-coverage.mjs están en alcance. enforce:true rompe el build (verify-i18n) si la pantalla tiene literales (HTML o .ts) sin t() o claves sin traducir en en/ht. GENERADO en cada corrida; solo se edita a mano el campo enforce (se activa por lote).",
   "pantallas": {
     "": {
-      "enforce": false
+      "enforce": true
     },
     "core/models": {
-      "enforce": false
+      "enforce": true
     },
     "core/practica": {
-      "enforce": false
+      "enforce": true
     },
     "core/services": {
-      "enforce": false
+      "enforce": true
     },
     "core/util": {
-      "enforce": false
+      "enforce": true
     },
     "pages/actualizar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/auditoria": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/catalogos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/conteos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/parametros": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/reportes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/roles": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/unidades": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/usuarios": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/vault": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/vault/vault-entrada": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/vault/vault-generador": {
-      "enforce": false
+      "enforce": true
     },
     "pages/admin/versiones": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/login": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/pin-acceso-change": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/pin-change": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/pin-setup": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/pin-unlock": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/reset": {
-      "enforce": false
+      "enforce": true
     },
     "pages/auth/set-password": {
-      "enforce": false
+      "enforce": true
     },
     "pages/avisos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/cl-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/cl-firmas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/dashboard": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/incidente": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/liberacion": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/mis-ordenes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/mis-partes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/orden-trabajo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/orden-trabajo-ficha": {
-      "enforce": false
+      "enforce": true
     },
     "pages/bitacora/parte": {
-      "enforce": false
+      "enforce": true
     },
     "pages/borrador": {
-      "enforce": false
+      "enforce": true
     },
     "pages/buscador": {
-      "enforce": false
+      "enforce": true
     },
     "pages/claude": {
-      "enforce": false
+      "enforce": true
     },
     "pages/compa": {
-      "enforce": false
+      "enforce": true
     },
     "pages/compa/compartida-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/compa/compartidas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/compras-proyecto": {
-      "enforce": false
+      "enforce": true
     },
     "pages/compras/solicitud-compra": {
-      "enforce": false
+      "enforce": true
     },
     "pages/demo/escenarios": {
-      "enforce": false
+      "enforce": true
     },
     "pages/documentos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/documentos/generar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/documentos/historial": {
-      "enforce": false
+      "enforce": true
     },
     "pages/documentos/plantillas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/en-proceso": {
-      "enforce": false
+      "enforce": true
     },
     "pages/forbidden": {
-      "enforce": false
+      "enforce": true
     },
     "pages/home": {
       "enforce": true
     },
     "pages/incentivos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/incentivos/participantes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/ingenieria": {
-      "enforce": false
+      "enforce": true
     },
     "pages/ingenieria/cartilla": {
-      "enforce": false
+      "enforce": true
     },
     "pages/ingenieria/pagos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/almacen-inventario": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/almacenes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/articulo-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/articulo-editar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/articulo-nuevo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/catalogo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/conteo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/conteos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/entrada": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/existencias": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/kardex": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/material-no-catalogado": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/recibir": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/retiro-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/retiro-nuevo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/retiros": {
-      "enforce": false
+      "enforce": true
     },
     "pages/inventario/salida": {
-      "enforce": false
+      "enforce": true
     },
     "pages/legal": {
-      "enforce": false
+      "enforce": true
     },
     "pages/legal/contratos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/legal/expedientes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/mensajes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/mensajes/grupo-info": {
-      "enforce": false
+      "enforce": true
     },
     "pages/mensajes/nuevo-grupo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/mensajes/thread": {
-      "enforce": false
+      "enforce": true
     },
     "pages/mi-rendimiento": {
-      "enforce": false
+      "enforce": true
     },
     "pages/notas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/notas/editor": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/avance": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/charla": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/checklists": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/incidente": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/informe": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/logistica": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/mi-proyecto": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/mis-nc": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/no-conformidad": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/plan-dia": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/recursos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/obra/subcontratistas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/pendientes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/pendientes/outbox-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/perfil": {
       "enforce": true
     },
     "pages/perfil/a-mi-cargo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/perfil/claude": {
-      "enforce": false
+      "enforce": true
     },
     "pages/perfil/mi-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/practica": {
-      "enforce": false
+      "enforce": true
     },
     "pages/proyectos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/proyectos/avisos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/proyectos/cronograma": {
-      "enforce": false
+      "enforce": true
     },
     "pages/proyectos/detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/proyectos/form": {
-      "enforce": false
+      "enforce": true
     },
     "pages/proyectos/personal": {
-      "enforce": false
+      "enforce": true
     },
     "pages/reportar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/reuniones/reunion-crear": {
-      "enforce": false
+      "enforce": true
     },
     "pages/reuniones/reunion-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/reuniones/reuniones-lista": {
-      "enforce": false
+      "enforce": true
     },
     "pages/rrhh/empleado": {
-      "enforce": false
+      "enforce": true
     },
     "pages/rrhh/empleados": {
-      "enforce": false
+      "enforce": true
     },
     "pages/solicitudes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/solicitudes/bandeja": {
-      "enforce": false
+      "enforce": true
     },
     "pages/solicitudes/detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/solicitudes/mis": {
-      "enforce": false
+      "enforce": true
     },
     "pages/solicitudes/pedir": {
-      "enforce": false
+      "enforce": true
     },
     "pages/soporte": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tareas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia-inventario": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia-inventario/equipo-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia-inventario/equipo-form": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/agentes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/compras-tec": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/cotizaciones": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/cotizaciones/cotizacion-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/cotizaciones/cotizacion-subir": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/dev-notes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/tecnologia/dev-notes/editor": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte": {
       "enforce": true
     },
     "pages/transporte/acta-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/apoyo-transporte": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/asignar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/asignarme": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/aviso-vehiculo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/avisos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/checklist": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/checklists-historial": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/combustible": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/combustible-log": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduce-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduce-externo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduce-transferencias": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces-historial": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces-hub": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces-pendientes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces-por-firmar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces-por-implementar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conduces/entrega": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/conductores": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/confirmaciones": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/cupo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/despachos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/devolver-material": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/echada-detalle": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/estado-chofer": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/ferreteria": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/generar-conduce": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/importar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mantenimiento": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mantenimiento-cierre": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mantenimientos-general": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mantenimientos-lista": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mi-actividad": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mi-recorrido": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mi-registro": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mis-actas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mis-choferes": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/mis-trabajos": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/perfil-conductor": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/perfil-vehiculo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/por-aprobar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/por-confirmar": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/preuso": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/reportar-multa": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/reportar-vehiculo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/reporte-semanal": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/rutas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/rutas-activas": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/seguimiento": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/solicitud-movimiento": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/trabajos-transporte": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/trayectoria": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/uso-vehiculo": {
-      "enforce": false
+      "enforce": true
     },
     "pages/transporte/vehiculos": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/aceptacion-politicas": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/alarma-host": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/bienvenida": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/compa-flotante": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/consentimiento-ia": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/consentimiento-ubicacion": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/demo-tabs": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/generar-acceso": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/gps-gate-banner": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/module-placeholder": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/novedades": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/onboarding": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/permisos-onboarding": {
-      "enforce": false
+      "enforce": true
     },
     "shared/components/tienda-aviso": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/articulo-picker": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/avatar-editor": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/ayudante-picker": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/celebracion": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/destino-selector": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/doc-slot": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/draft-banner": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/in-app-camera": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/km-input": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/language-onboarding": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/language-selector": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/leer-documento-vehiculo": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/location-picker": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/logo-reveal": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/lugar-picker": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/mant-adjuntos": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/molde-compositor": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/molde-esquema": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/molde-esquema-visor": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/momento": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/notif-health-band": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/pdf-viewer": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/personal-carnet": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/photo-slot": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/photo-viewer": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/pipes": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/selector-categorias": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/share-sheet": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/signature-pad": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/skeleton": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/step-bar": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/sticker-editor": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/taller-picker": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/vehiculo-card": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/vehiculo-picker": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/video-player": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/voice-notes": {
-      "enforce": false
+      "enforce": true
     },
     "shared/ui/voice-recorder": {
-      "enforce": false
+      "enforce": true
     },
     "shared/util": {
-      "enforce": false
+      "enforce": true
     }
   }
 }

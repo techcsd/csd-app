@@ -300,6 +300,14 @@ for (const f of filas) {
 }
 writeFileSync(join(ROOT, 'scripts', 'i18n-sin-t.generated.md'), det);
 
+// Claves usadas sin traducción por idioma (insumo de los lotes de traducción, DP-10).
+{
+  const usadas = new Set();
+  for (const s of screens.values()) s.conT.forEach((k) => usadas.add(k));
+  const faltantes = { usadas: usadas.size, en: [...usadas].filter((k) => !(k in catalogs.en)), ht: [...usadas].filter((k) => !(k in catalogs.ht)) };
+  writeFileSync(join(ROOT, 'scripts', 'i18n-faltantes.generated.json'), JSON.stringify(faltantes, null, 1));
+}
+
 // alcance.json: TODAS las pantallas (DP-07d), enforce preservado.
 const alcanceNuevo = {
   _doc: 'DP-07d/DP-13 — TODAS las pantallas medidas por scripts/i18n-coverage.mjs están en alcance. enforce:true rompe el build (verify-i18n) si la pantalla tiene literales (HTML o .ts) sin t() o claves sin traducir en en/ht. GENERADO en cada corrida; solo se edita a mano el campo enforce (se activa por lote).',

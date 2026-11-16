@@ -1,6 +1,6 @@
 {
-  "en": 84.6,
-  "ht": 2.4,
+  "en": 100,
+  "ht": 100,
   "literales": 7865,
   "conT": 7865,
   "sinT": 0,
@@ -9,10 +9,10 @@
     "": {
       "conT": 20,
       "sinT": 0,
-      "faltaEn": 16,
-      "faltaHt": 20,
-      "en": 20,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "core/buscador": {
       "conT": 0,
@@ -57,10 +57,10 @@
     "core/models": {
       "conT": 115,
       "sinT": 0,
-      "faltaEn": 64,
-      "faltaHt": 115,
-      "en": 44,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "core/motion": {
       "conT": 0,
@@ -73,18 +73,18 @@
     "core/practica": {
       "conT": 156,
       "sinT": 0,
-      "faltaEn": 118,
-      "faltaHt": 155,
-      "en": 24,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "core/services": {
       "conT": 151,
       "sinT": 0,
-      "faltaEn": 103,
-      "faltaHt": 150,
-      "en": 32,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "core/sync": {
       "conT": 0,
@@ -97,10 +97,10 @@
     "core/util": {
       "conT": 10,
       "sinT": 0,
-      "faltaEn": 6,
-      "faltaHt": 10,
-      "en": 40,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "core/utils": {
       "conT": 0,
@@ -113,818 +113,818 @@
     "pages/actualizar": {
       "conT": 28,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 25,
-      "en": 93,
-      "ht": 11
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/admin": {
       "conT": 13,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 13,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/auditoria": {
       "conT": 45,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 43,
-      "en": 93,
-      "ht": 4
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/admin/catalogos": {
       "conT": 9,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 9,
-      "en": 78,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/admin/conteos": {
       "conT": 4,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 4,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/parametros": {
       "conT": 9,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 9,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/reportes": {
       "conT": 8,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 8,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/roles": {
       "conT": 28,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 28,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/unidades": {
       "conT": 5,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 5,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/usuarios": {
       "conT": 73,
       "sinT": 0,
-      "faltaEn": 15,
-      "faltaHt": 72,
-      "en": 79,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/admin/vault": {
       "conT": 21,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 21,
-      "en": 86,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/admin/vault/vault-entrada": {
       "conT": 17,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 17,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/vault/vault-generador": {
       "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 11,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/admin/versiones": {
       "conT": 9,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 9,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/auth/login": {
       "conT": 28,
       "sinT": 0,
-      "faltaEn": 16,
-      "faltaHt": 28,
-      "en": 43,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/auth/pin-acceso-change": {
       "conT": 8,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 8,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/auth/pin-change": {
       "conT": 5,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 5,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/auth/pin-setup": {
       "conT": 2,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 2,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/auth/pin-unlock": {
       "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 15,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/auth/reset": {
       "conT": 8,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 8,
-      "en": 88,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/auth/set-password": {
       "conT": 10,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 10,
-      "en": 80,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/avisos": {
       "conT": 24,
       "sinT": 0,
-      "faltaEn": 18,
-      "faltaHt": 24,
-      "en": 25,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/bitacora": {
       "conT": 10,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 10,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/bitacora/cl-detalle": {
       "conT": 35,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 35,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/bitacora/cl-firmas": {
       "conT": 10,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 10,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/bitacora/dashboard": {
       "conT": 17,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 17,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/bitacora/detalle": {
       "conT": 74,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 73,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 1
+      "ht": 100
     },
     "pages/bitacora/incidente": {
       "conT": 84,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 83,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 1
+      "ht": 100
     },
     "pages/bitacora/liberacion": {
       "conT": 93,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 92,
-      "en": 99,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/bitacora/mis-ordenes": {
       "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 15,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/bitacora/mis-partes": {
       "conT": 35,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 35,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/bitacora/orden-trabajo": {
       "conT": 78,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 77,
-      "en": 99,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/bitacora/orden-trabajo-ficha": {
       "conT": 40,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 39,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/bitacora/parte": {
       "conT": 257,
       "sinT": 0,
-      "faltaEn": 4,
-      "faltaHt": 255,
-      "en": 98,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/borrador": {
       "conT": 20,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 20,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/buscador": {
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 7,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/claude": {
       "conT": 51,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 51,
-      "en": 94,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/compa": {
       "conT": 24,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 24,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/compa/compartida-detalle": {
       "conT": 8,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 8,
-      "en": 88,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/compa/compartidas": {
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 7,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/compras-proyecto": {
       "conT": 37,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 37,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/compras/solicitud-compra": {
       "conT": 38,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 37,
-      "en": 97,
-      "ht": 3
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/demo/escenarios": {
       "conT": 9,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 9,
-      "en": 89,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/documentos": {
       "conT": 6,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 6,
-      "en": 50,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/documentos/generar": {
       "conT": 20,
       "sinT": 0,
-      "faltaEn": 14,
-      "faltaHt": 19,
-      "en": 30,
-      "ht": 5
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/documentos/historial": {
       "conT": 9,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 9,
-      "en": 44,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/documentos/plantillas": {
       "conT": 9,
       "sinT": 0,
-      "faltaEn": 6,
-      "faltaHt": 9,
-      "en": 33,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/en-proceso": {
       "conT": 27,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 27,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/forbidden": {
       "conT": 1,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 1,
-      "en": 0,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/home": {
       "conT": 58,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 56,
-      "en": 95,
-      "ht": 3
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/incentivos": {
       "conT": 54,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 46,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 15
+      "ht": 100
     },
     "pages/incentivos/participantes": {
       "conT": 22,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 22,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/ingenieria": {
       "conT": 15,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 15,
-      "en": 93,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/ingenieria/cartilla": {
       "conT": 79,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 79,
-      "en": 96,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/ingenieria/pagos": {
       "conT": 77,
       "sinT": 0,
-      "faltaEn": 43,
-      "faltaHt": 76,
-      "en": 44,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/inventario": {
       "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 15,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/almacen-inventario": {
       "conT": 26,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 26,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/almacenes": {
       "conT": 37,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 36,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/inventario/articulo-detalle": {
       "conT": 26,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 26,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/articulo-editar": {
       "conT": 26,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 26,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/articulo-nuevo": {
       "conT": 34,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 34,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/catalogo": {
       "conT": 13,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 13,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/conteo": {
       "conT": 32,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 30,
-      "en": 84,
-      "ht": 6
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/inventario/conteos": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/entrada": {
       "conT": 41,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 41,
-      "en": 93,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/inventario/existencias": {
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 7,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/kardex": {
       "conT": 27,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 27,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/material-no-catalogado": {
       "conT": 42,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 36,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 14
+      "ht": 100
     },
     "pages/inventario/recibir": {
       "conT": 64,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 63,
-      "en": 97,
-      "ht": 2
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/inventario/retiro-detalle": {
       "conT": 24,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 24,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/retiro-nuevo": {
       "conT": 30,
       "sinT": 0,
-      "faltaEn": 17,
-      "faltaHt": 29,
-      "en": 43,
-      "ht": 3
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/inventario/retiros": {
       "conT": 6,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 6,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/inventario/salida": {
       "conT": 45,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 45,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/legal": {
       "conT": 5,
       "sinT": 0,
-      "faltaEn": 4,
-      "faltaHt": 5,
-      "en": 20,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/legal/contratos": {
       "conT": 38,
       "sinT": 0,
-      "faltaEn": 27,
-      "faltaHt": 38,
-      "en": 29,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/legal/expedientes": {
       "conT": 40,
       "sinT": 0,
-      "faltaEn": 24,
-      "faltaHt": 40,
-      "en": 40,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/mensajes": {
       "conT": 16,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 16,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/mensajes/grupo-info": {
       "conT": 36,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 35,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/mensajes/nuevo-grupo": {
       "conT": 16,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 15,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 6
+      "ht": 100
     },
     "pages/mensajes/thread": {
       "conT": 72,
       "sinT": 0,
-      "faltaEn": 4,
-      "faltaHt": 71,
-      "en": 94,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/mi-rendimiento": {
       "conT": 39,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 33,
-      "en": 87,
-      "ht": 15
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/notas": {
       "conT": 18,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 18,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/notas/editor": {
       "conT": 40,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 40,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra": {
       "conT": 29,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 29,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/avance": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/charla": {
       "conT": 25,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 23,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 8
+      "ht": 100
     },
     "pages/obra/checklists": {
       "conT": 25,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 24,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 4
+      "ht": 100
     },
     "pages/obra/incidente": {
       "conT": 29,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 28,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/obra/informe": {
       "conT": 32,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 31,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/obra/logistica": {
       "conT": 25,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 25,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/mi-proyecto": {
       "conT": 27,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 27,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/mis-nc": {
       "conT": 30,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 30,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/no-conformidad": {
       "conT": 27,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 26,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 4
+      "ht": 100
     },
     "pages/obra/plan-dia": {
       "conT": 42,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 42,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/recursos": {
       "conT": 26,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 26,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/obra/subcontratistas": {
       "conT": 29,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 29,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/pendientes": {
       "conT": 50,
       "sinT": 0,
-      "faltaEn": 17,
-      "faltaHt": 49,
-      "en": 66,
-      "ht": 2
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/pendientes/outbox-detalle": {
       "conT": 32,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 32,
-      "en": 97,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/perfil": {
       "conT": 113,
       "sinT": 0,
-      "faltaEn": 14,
-      "faltaHt": 112,
-      "en": 88,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/perfil/a-mi-cargo": {
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 7,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/perfil/claude": {
       "conT": 24,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 24,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/perfil/mi-detalle": {
       "conT": 20,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 20,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/practica": {
       "conT": 19,
@@ -938,697 +938,697 @@
       "conT": 20,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 20,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/proyectos/avisos": {
       "conT": 4,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 4,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/proyectos/cronograma": {
       "conT": 80,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 80,
-      "en": 99,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/proyectos/detalle": {
       "conT": 31,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 30,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/proyectos/form": {
       "conT": 71,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 70,
-      "en": 99,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/proyectos/personal": {
       "conT": 211,
       "sinT": 0,
-      "faltaEn": 77,
-      "faltaHt": 210,
-      "en": 64,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/reportar": {
       "conT": 13,
       "sinT": 0,
-      "faltaEn": 9,
-      "faltaHt": 13,
-      "en": 31,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/reuniones/reunion-crear": {
       "conT": 23,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 23,
-      "en": 87,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/reuniones/reunion-detalle": {
       "conT": 20,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 20,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/reuniones/reuniones-lista": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/rrhh/empleado": {
       "conT": 30,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 30,
-      "en": 93,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/rrhh/empleados": {
       "conT": 6,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 6,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/solicitudes": {
       "conT": 5,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 5,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/solicitudes/bandeja": {
       "conT": 27,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 27,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/solicitudes/detalle": {
       "conT": 118,
       "sinT": 0,
-      "faltaEn": 21,
-      "faltaHt": 117,
-      "en": 82,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/solicitudes/mis": {
       "conT": 27,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 27,
-      "en": 89,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/solicitudes/pedir": {
       "conT": 51,
       "sinT": 0,
-      "faltaEn": 11,
-      "faltaHt": 51,
-      "en": 78,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/soporte": {
       "conT": 23,
       "sinT": 0,
-      "faltaEn": 16,
-      "faltaHt": 19,
-      "en": 30,
-      "ht": 17
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tareas": {
       "conT": 72,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 72,
-      "en": 96,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia": {
       "conT": 27,
       "sinT": 0,
-      "faltaEn": 11,
-      "faltaHt": 21,
-      "en": 59,
-      "ht": 22
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia-inventario": {
       "conT": 6,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 6,
-      "en": 17,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia-inventario/equipo-detalle": {
       "conT": 69,
       "sinT": 0,
-      "faltaEn": 54,
-      "faltaHt": 68,
-      "en": 22,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia-inventario/equipo-form": {
       "conT": 92,
       "sinT": 0,
-      "faltaEn": 79,
-      "faltaHt": 90,
-      "en": 14,
-      "ht": 2
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia/agentes": {
       "conT": 26,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 26,
-      "en": 92,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia/compras-tec": {
       "conT": 32,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 32,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/tecnologia/cotizaciones": {
       "conT": 14,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 14,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/tecnologia/cotizaciones/cotizacion-detalle": {
       "conT": 14,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 14,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/tecnologia/cotizaciones/cotizacion-subir": {
       "conT": 26,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 26,
-      "en": 92,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia/dev-notes": {
       "conT": 12,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 12,
-      "en": 58,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/tecnologia/dev-notes/editor": {
       "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 15,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte": {
       "conT": 55,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 54,
-      "en": 91,
-      "ht": 2
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/acta-detalle": {
       "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 15,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/apoyo-transporte": {
       "conT": 75,
       "sinT": 0,
-      "faltaEn": 7,
-      "faltaHt": 75,
-      "en": 91,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/asignar": {
       "conT": 45,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 44,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/asignarme": {
       "conT": 42,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 42,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/aviso-vehiculo": {
       "conT": 42,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 42,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/avisos": {
       "conT": 20,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 20,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/checklist": {
       "conT": 82,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 80,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/checklists-historial": {
       "conT": 15,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 14,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 7
+      "ht": 100
     },
     "pages/transporte/combustible": {
       "conT": 185,
       "sinT": 0,
-      "faltaEn": 49,
-      "faltaHt": 183,
-      "en": 74,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/combustible-log": {
       "conT": 22,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 22,
-      "en": 86,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/conduce-detalle": {
       "conT": 105,
       "sinT": 0,
-      "faltaEn": 18,
-      "faltaHt": 101,
-      "en": 83,
-      "ht": 4
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/conduce-externo": {
       "conT": 104,
       "sinT": 0,
-      "faltaEn": 27,
-      "faltaHt": 101,
-      "en": 74,
-      "ht": 3
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/conduce-transferencias": {
       "conT": 53,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 52,
-      "en": 98,
-      "ht": 2
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/conduces": {
       "conT": 91,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 89,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/conduces-historial": {
       "conT": 42,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 42,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/conduces-hub": {
       "conT": 13,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 13,
-      "en": 77,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/conduces-pendientes": {
       "conT": 36,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 34,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 6
+      "ht": 100
     },
     "pages/transporte/conduces-por-firmar": {
       "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 11,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/conduces-por-implementar": {
       "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 11,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/conduces/entrega": {
       "conT": 46,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 45,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/conductores": {
       "conT": 56,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 56,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/confirmaciones": {
       "conT": 32,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 32,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/cupo": {
       "conT": 36,
       "sinT": 0,
-      "faltaEn": 28,
-      "faltaHt": 36,
-      "en": 22,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/despachos": {
       "conT": 31,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 30,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/transporte/devolver-material": {
       "conT": 51,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 50,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/echada-detalle": {
       "conT": 22,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 22,
-      "en": 91,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/estado-chofer": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/ferreteria": {
       "conT": 33,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 32,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/transporte/generar-conduce": {
       "conT": 131,
       "sinT": 0,
-      "faltaEn": 21,
-      "faltaHt": 130,
-      "en": 84,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/importar": {
       "conT": 44,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 44,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/mantenimiento": {
       "conT": 66,
       "sinT": 0,
-      "faltaEn": 16,
-      "faltaHt": 65,
-      "en": 76,
-      "ht": 2
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/mantenimiento-cierre": {
       "conT": 8,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 8,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/mantenimientos-general": {
       "conT": 20,
       "sinT": 0,
-      "faltaEn": 10,
-      "faltaHt": 19,
-      "en": 50,
-      "ht": 5
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/mantenimientos-lista": {
       "conT": 10,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 9,
-      "en": 80,
-      "ht": 10
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/mi-actividad": {
       "conT": 67,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 66,
-      "en": 97,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/mi-recorrido": {
       "conT": 15,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 15,
-      "en": 93,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/mi-registro": {
       "conT": 51,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 50,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/mis-actas": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/mis-choferes": {
       "conT": 13,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 13,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/mis-trabajos": {
       "conT": 15,
       "sinT": 0,
-      "faltaEn": 9,
-      "faltaHt": 15,
-      "en": 40,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/perfil-conductor": {
       "conT": 44,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 44,
-      "en": 98,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/perfil-vehiculo": {
       "conT": 42,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 42,
-      "en": 93,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/por-aprobar": {
       "conT": 33,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 33,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/por-confirmar": {
       "conT": 47,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 45,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 4
+      "ht": 100
     },
     "pages/transporte/preuso": {
       "conT": 96,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 94,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/reportar-multa": {
       "conT": 36,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 35,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/transporte/reportar-vehiculo": {
       "conT": 56,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 55,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 2
+      "ht": 100
     },
     "pages/transporte/reporte-semanal": {
       "conT": 67,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 65,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 3
+      "ht": 100
     },
     "pages/transporte/rutas": {
       "conT": 91,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 90,
-      "en": 95,
-      "ht": 1
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/rutas-activas": {
       "conT": 32,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 32,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/seguimiento": {
       "conT": 17,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 17,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/solicitud-movimiento": {
       "conT": 56,
       "sinT": 0,
-      "faltaEn": 8,
-      "faltaHt": 56,
-      "en": 86,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/trabajos-transporte": {
       "conT": 49,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 45,
-      "en": 98,
-      "ht": 8
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/trayectoria": {
       "conT": 5,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 5,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "pages/transporte/uso-vehiculo": {
       "conT": 49,
       "sinT": 0,
-      "faltaEn": 12,
-      "faltaHt": 49,
-      "en": 76,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "pages/transporte/vehiculos": {
       "conT": 75,
       "sinT": 0,
-      "faltaEn": 4,
-      "faltaHt": 75,
-      "en": 95,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared": {
       "conT": 0,
@@ -1641,18 +1641,18 @@
     "shared/components/aceptacion-politicas": {
       "conT": 9,
       "sinT": 0,
-      "faltaEn": 4,
-      "faltaHt": 9,
-      "en": 56,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/components/alarma-host": {
       "conT": 4,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 4,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/components/bienvenida": {
       "conT": 26,
@@ -1666,73 +1666,73 @@
       "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 10,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 9
+      "ht": 100
     },
     "shared/components/consentimiento-ia": {
       "conT": 10,
       "sinT": 0,
-      "faltaEn": 8,
-      "faltaHt": 9,
-      "en": 20,
-      "ht": 10
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/components/consentimiento-ubicacion": {
       "conT": 4,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 4,
-      "en": 25,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/components/demo-tabs": {
       "conT": 3,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 3,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/components/generar-acceso": {
       "conT": 16,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 14,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 13
+      "ht": 100
     },
     "shared/components/gps-gate-banner": {
       "conT": 4,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 4,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/components/module-placeholder": {
       "conT": 2,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 2,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/components/novedades": {
       "conT": 11,
       "sinT": 0,
-      "faltaEn": 9,
-      "faltaHt": 10,
-      "en": 18,
-      "ht": 9
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/components/onboarding": {
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 5,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 29
+      "ht": 100
     },
     "shared/components/permiso-host": {
       "conT": 0,
@@ -1746,9 +1746,9 @@
       "conT": 13,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 11,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 15
+      "ht": 100
     },
     "shared/components/sync-bar": {
       "conT": 0,
@@ -1761,10 +1761,10 @@
     "shared/components/tienda-aviso": {
       "conT": 3,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 3,
-      "en": 0,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/components/toast-host": {
       "conT": 0,
@@ -1810,25 +1810,25 @@
       "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 11,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/avatar-editor": {
       "conT": 6,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 6,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/ayudante-picker": {
       "conT": 6,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 6,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/big-button": {
       "conT": 0,
@@ -1857,10 +1857,10 @@
     "shared/ui/celebracion": {
       "conT": 9,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 9,
-      "en": 44,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/collapsible-select": {
       "conT": 0,
@@ -1890,25 +1890,25 @@
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 7,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/doc-slot": {
       "conT": 13,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 13,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/draft-banner": {
       "conT": 4,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 3,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 25
+      "ht": 100
     },
     "shared/ui/empty-state": {
       "conT": 0,
@@ -1946,41 +1946,41 @@
       "conT": 6,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 6,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/km-input": {
       "conT": 8,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 8,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/language-onboarding": {
       "conT": 3,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 3,
-      "en": 33,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/language-selector": {
       "conT": 2,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 2,
-      "en": 0,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/leer-documento-vehiculo": {
       "conT": 23,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 21,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 9
+      "ht": 100
     },
     "shared/ui/live-refresh": {
       "conT": 0,
@@ -1994,33 +1994,33 @@
       "conT": 17,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 17,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/logo-reveal": {
       "conT": 2,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 1,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 50
+      "ht": 100
     },
     "shared/ui/lugar-picker": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/mant-adjuntos": {
       "conT": 7,
       "sinT": 0,
-      "faltaEn": 5,
-      "faltaHt": 7,
-      "en": 29,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/markdown-view": {
       "conT": 0,
@@ -2034,17 +2034,17 @@
       "conT": 14,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 14,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/molde-esquema": {
       "conT": 4,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 4,
-      "en": 75,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/molde-esquema-visor": {
       "conT": 1,
@@ -2065,10 +2065,10 @@
     "shared/ui/notif-health-band": {
       "conT": 28,
       "sinT": 0,
-      "faltaEn": 18,
-      "faltaHt": 26,
-      "en": 36,
-      "ht": 7
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/option-button": {
       "conT": 0,
@@ -2081,34 +2081,34 @@
     "shared/ui/pdf-viewer": {
       "conT": 2,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 2,
-      "en": 50,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/personal-carnet": {
       "conT": 9,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 9,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/photo-slot": {
       "conT": 21,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 20,
-      "en": 86,
-      "ht": 5
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/photo-viewer": {
       "conT": 5,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 3,
-      "en": 60,
-      "ht": 40
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/pin-pad": {
       "conT": 0,
@@ -2121,10 +2121,10 @@
     "shared/ui/pipes": {
       "conT": 1,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 1,
-      "en": 0,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/qty-input": {
       "conT": 0,
@@ -2145,50 +2145,50 @@
     "shared/ui/selector-categorias": {
       "conT": 32,
       "sinT": 0,
-      "faltaEn": 3,
-      "faltaHt": 31,
-      "en": 91,
-      "ht": 3
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/share-sheet": {
       "conT": 7,
       "sinT": 0,
-      "faltaEn": 2,
-      "faltaHt": 7,
-      "en": 71,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/signature-pad": {
       "conT": 2,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 2,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/skeleton": {
       "conT": 1,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 1,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/step-bar": {
       "conT": 1,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 1,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/sticker-editor": {
       "conT": 7,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 7,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/sync-badge": {
       "conT": 0,
@@ -2202,9 +2202,9 @@
       "conT": 10,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 10,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/toggle-switch": {
       "conT": 0,
@@ -2234,33 +2234,33 @@
       "conT": 2,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 2,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/vehiculo-picker": {
       "conT": 12,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 12,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/video-player": {
       "conT": 8,
       "sinT": 0,
-      "faltaEn": 1,
-      "faltaHt": 1,
-      "en": 88,
-      "ht": 88
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/voice-notes": {
       "conT": 2,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 2,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/voice-player": {
       "conT": 0,
@@ -2274,9 +2274,9 @@
       "conT": 8,
       "sinT": 0,
       "faltaEn": 0,
-      "faltaHt": 8,
+      "faltaHt": 0,
       "en": 100,
-      "ht": 0
+      "ht": 100
     },
     "shared/ui/wizard-exit": {
       "conT": 0,
@@ -2297,10 +2297,10 @@
     "shared/util": {
       "conT": 12,
       "sinT": 0,
-      "faltaEn": 12,
-      "faltaHt": 12,
-      "en": 0,
-      "ht": 0
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/utils": {
       "conT": 0,
