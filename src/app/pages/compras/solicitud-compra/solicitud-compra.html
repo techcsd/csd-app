@@ -37,7 +37,7 @@
           </div>
           <div class="solc__item-row">
             <app-qty-input [value]="it.cantidad" (valueChange)="setCantidad(it.key, $event)" [ariaLabel]="'Cantidad' | t" />
-            <input class="field solc__item-unit" type="text" [ngModel]="it.unidad" (ngModelChange)="setUnidad(it.key, $event)" placeholder="UND" />
+            <input class="field solc__item-unit" type="text" [ngModel]="it.unidad" (ngModelChange)="setUnidad(it.key, $event)" placeholder="{{ 'UND' | t }}" />
           </div>
           <input class="field solc__item-prov" type="text" [ngModel]="it.proveedor" (ngModelChange)="setProveedor(it.key, $event)" [placeholder]="'Proveedor sugerido (opcional)' | t" />
         </div>

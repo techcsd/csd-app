@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -12,6 +12,7 @@ import { StockObraItem, PedidoObra } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
 const ESTADO_META: Record<string, { label: string; tint: string }> = {
   pendiente: { label: 'Pendiente', tint: '#ca8a04' },
@@ -32,7 +33,7 @@ interface PedidoLinea {
   selector: 'app-obra-recursos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, FechaPipe, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './recursos.html',
   styleUrl: './recursos.scss',
 })

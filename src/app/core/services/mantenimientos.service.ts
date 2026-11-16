@@ -4,6 +4,7 @@ import { throwSyncError, SyncService } from '../sync/sync.service';
 import { CatalogService } from '../sync/catalog.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 
+import { I18nService } from '../i18n/i18n.service';
 /**
  * X6-app / AG9 — tipos de visita/mantenimiento, EXACTAMENTE los que acepta el
  * servidor (`crear_mantenimiento_app`). Cualquier otro valor el RPC lo coerce a
@@ -164,6 +165,7 @@ export interface MantenimientoCaptura {
  */
 @Injectable({ providedIn: 'root' })
 export class MantenimientosService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private sync = inject(SyncService);
   private catalog = inject(CatalogService);
@@ -530,7 +532,7 @@ export class MantenimientosService {
   private registerAdjuntoHandler(): void {
     this.sync.register('mantenimiento_adjunto', async (payload, photoPaths) => {
       const path = photoPaths['archivo'];
-      if (!path) throw new Error('Falta el archivo del adjunto.');
+      if (!path) throw new Error(this.i18n.t('Falta el archivo del adjunto.'));
       const { error } = await this.supabase.client.from('mantenimiento_adjuntos').upsert(
         {
           id: payload['adjunto_id'],
@@ -550,7 +552,7 @@ export class MantenimientosService {
         // hay que REINTENTAR cuando el alta drene. throwSyncError marcaría 23503 como
         // 'referencia' (permanente) y perdería la factura → lo tratamos como transitorio.
         if ((error as { code?: string }).code === '23503') {
-          throw new Error('El mantenimiento aún no se ha sincronizado; reintento el adjunto.');
+          throw new Error(this.i18n.t('El mantenimiento aún no se ha sincronizado; reintento el adjunto.'));
         }
         throwSyncError(error);
       }

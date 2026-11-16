@@ -40,7 +40,7 @@
         [ngModel]="email()"
         (ngModelChange)="email.set($event)"
         name="email"
-        placeholder="tucorreo@constructorasd.com"
+        placeholder="{{ 'tucorreo@constructorasd.com' | t }}"
       />
 
       <label class="field-label" for="password">{{ 'Contraseña' | t }}</label>

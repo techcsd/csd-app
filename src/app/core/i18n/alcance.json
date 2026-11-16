@@ -1,8 +1,749 @@
 {
-  "_comment": "BT2 (regla 17) — pantallas que DEBEN estar 100% en inglés (verify-i18n falla si una regresa). Se amplía a medida que se cablea la app; el % global honesto lo lleva coverage.json y decide si 'en' se ofrece o va como beta.",
-  "pantallas": [
-    "pages/home",
-    "pages/transporte",
-    "pages/perfil"
-  ]
+  "_doc": "DP-07d/DP-13 — TODAS las pantallas medidas por scripts/i18n-coverage.mjs están en alcance. enforce:true rompe el build (verify-i18n) si la pantalla tiene literales (HTML o .ts) sin t() o claves sin traducir en en/ht. GENERADO en cada corrida; solo se edita a mano el campo enforce (se activa por lote).",
+  "pantallas": {
+    "": {
+      "enforce": false
+    },
+    "core/models": {
+      "enforce": false
+    },
+    "core/practica": {
+      "enforce": false
+    },
+    "core/services": {
+      "enforce": false
+    },
+    "core/util": {
+      "enforce": false
+    },
+    "pages/actualizar": {
+      "enforce": false
+    },
+    "pages/admin": {
+      "enforce": false
+    },
+    "pages/admin/auditoria": {
+      "enforce": false
+    },
+    "pages/admin/catalogos": {
+      "enforce": false
+    },
+    "pages/admin/conteos": {
+      "enforce": false
+    },
+    "pages/admin/parametros": {
+      "enforce": false
+    },
+    "pages/admin/reportes": {
+      "enforce": false
+    },
+    "pages/admin/roles": {
+      "enforce": false
+    },
+    "pages/admin/unidades": {
+      "enforce": false
+    },
+    "pages/admin/usuarios": {
+      "enforce": false
+    },
+    "pages/admin/vault": {
+      "enforce": false
+    },
+    "pages/admin/vault/vault-entrada": {
+      "enforce": false
+    },
+    "pages/admin/vault/vault-generador": {
+      "enforce": false
+    },
+    "pages/admin/versiones": {
+      "enforce": false
+    },
+    "pages/auth/login": {
+      "enforce": false
+    },
+    "pages/auth/pin-acceso-change": {
+      "enforce": false
+    },
+    "pages/auth/pin-change": {
+      "enforce": false
+    },
+    "pages/auth/pin-setup": {
+      "enforce": false
+    },
+    "pages/auth/pin-unlock": {
+      "enforce": false
+    },
+    "pages/auth/reset": {
+      "enforce": false
+    },
+    "pages/auth/set-password": {
+      "enforce": false
+    },
+    "pages/avisos": {
+      "enforce": false
+    },
+    "pages/bitacora": {
+      "enforce": false
+    },
+    "pages/bitacora/cl-detalle": {
+      "enforce": false
+    },
+    "pages/bitacora/cl-firmas": {
+      "enforce": false
+    },
+    "pages/bitacora/dashboard": {
+      "enforce": false
+    },
+    "pages/bitacora/detalle": {
+      "enforce": false
+    },
+    "pages/bitacora/incidente": {
+      "enforce": false
+    },
+    "pages/bitacora/liberacion": {
+      "enforce": false
+    },
+    "pages/bitacora/mis-ordenes": {
+      "enforce": false
+    },
+    "pages/bitacora/mis-partes": {
+      "enforce": false
+    },
+    "pages/bitacora/orden-trabajo": {
+      "enforce": false
+    },
+    "pages/bitacora/orden-trabajo-ficha": {
+      "enforce": false
+    },
+    "pages/bitacora/parte": {
+      "enforce": false
+    },
+    "pages/borrador": {
+      "enforce": false
+    },
+    "pages/buscador": {
+      "enforce": false
+    },
+    "pages/claude": {
+      "enforce": false
+    },
+    "pages/compa": {
+      "enforce": false
+    },
+    "pages/compa/compartida-detalle": {
+      "enforce": false
+    },
+    "pages/compa/compartidas": {
+      "enforce": false
+    },
+    "pages/compras-proyecto": {
+      "enforce": false
+    },
+    "pages/compras/solicitud-compra": {
+      "enforce": false
+    },
+    "pages/demo/escenarios": {
+      "enforce": false
+    },
+    "pages/documentos": {
+      "enforce": false
+    },
+    "pages/documentos/generar": {
+      "enforce": false
+    },
+    "pages/documentos/historial": {
+      "enforce": false
+    },
+    "pages/documentos/plantillas": {
+      "enforce": false
+    },
+    "pages/en-proceso": {
+      "enforce": false
+    },
+    "pages/forbidden": {
+      "enforce": false
+    },
+    "pages/home": {
+      "enforce": true
+    },
+    "pages/incentivos": {
+      "enforce": false
+    },
+    "pages/incentivos/participantes": {
+      "enforce": false
+    },
+    "pages/ingenieria": {
+      "enforce": false
+    },
+    "pages/ingenieria/cartilla": {
+      "enforce": false
+    },
+    "pages/ingenieria/pagos": {
+      "enforce": false
+    },
+    "pages/inventario": {
+      "enforce": false
+    },
+    "pages/inventario/almacen-inventario": {
+      "enforce": false
+    },
+    "pages/inventario/almacenes": {
+      "enforce": false
+    },
+    "pages/inventario/articulo-detalle": {
+      "enforce": false
+    },
+    "pages/inventario/articulo-editar": {
+      "enforce": false
+    },
+    "pages/inventario/articulo-nuevo": {
+      "enforce": false
+    },
+    "pages/inventario/catalogo": {
+      "enforce": false
+    },
+    "pages/inventario/conteo": {
+      "enforce": false
+    },
+    "pages/inventario/conteos": {
+      "enforce": false
+    },
+    "pages/inventario/entrada": {
+      "enforce": false
+    },
+    "pages/inventario/existencias": {
+      "enforce": false
+    },
+    "pages/inventario/kardex": {
+      "enforce": false
+    },
+    "pages/inventario/material-no-catalogado": {
+      "enforce": false
+    },
+    "pages/inventario/recibir": {
+      "enforce": false
+    },
+    "pages/inventario/retiro-detalle": {
+      "enforce": false
+    },
+    "pages/inventario/retiro-nuevo": {
+      "enforce": false
+    },
+    "pages/inventario/retiros": {
+      "enforce": false
+    },
+    "pages/inventario/salida": {
+      "enforce": false
+    },
+    "pages/legal": {
+      "enforce": false
+    },
+    "pages/legal/contratos": {
+      "enforce": false
+    },
+    "pages/legal/expedientes": {
+      "enforce": false
+    },
+    "pages/mensajes": {
+      "enforce": false
+    },
+    "pages/mensajes/grupo-info": {
+      "enforce": false
+    },
+    "pages/mensajes/nuevo-grupo": {
+      "enforce": false
+    },
+    "pages/mensajes/thread": {
+      "enforce": false
+    },
+    "pages/mi-rendimiento": {
+      "enforce": false
+    },
+    "pages/notas": {
+      "enforce": false
+    },
+    "pages/notas/editor": {
+      "enforce": false
+    },
+    "pages/obra": {
+      "enforce": false
+    },
+    "pages/obra/avance": {
+      "enforce": false
+    },
+    "pages/obra/charla": {
+      "enforce": false
+    },
+    "pages/obra/checklists": {
+      "enforce": false
+    },
+    "pages/obra/incidente": {
+      "enforce": false
+    },
+    "pages/obra/informe": {
+      "enforce": false
+    },
+    "pages/obra/logistica": {
+      "enforce": false
+    },
+    "pages/obra/mi-proyecto": {
+      "enforce": false
+    },
+    "pages/obra/mis-nc": {
+      "enforce": false
+    },
+    "pages/obra/no-conformidad": {
+      "enforce": false
+    },
+    "pages/obra/plan-dia": {
+      "enforce": false
+    },
+    "pages/obra/recursos": {
+      "enforce": false
+    },
+    "pages/obra/subcontratistas": {
+      "enforce": false
+    },
+    "pages/pendientes": {
+      "enforce": false
+    },
+    "pages/pendientes/outbox-detalle": {
+      "enforce": false
+    },
+    "pages/perfil": {
+      "enforce": true
+    },
+    "pages/perfil/a-mi-cargo": {
+      "enforce": false
+    },
+    "pages/perfil/claude": {
+      "enforce": false
+    },
+    "pages/perfil/mi-detalle": {
+      "enforce": false
+    },
+    "pages/practica": {
+      "enforce": false
+    },
+    "pages/proyectos": {
+      "enforce": false
+    },
+    "pages/proyectos/avisos": {
+      "enforce": false
+    },
+    "pages/proyectos/cronograma": {
+      "enforce": false
+    },
+    "pages/proyectos/detalle": {
+      "enforce": false
+    },
+    "pages/proyectos/form": {
+      "enforce": false
+    },
+    "pages/proyectos/personal": {
+      "enforce": false
+    },
+    "pages/reportar": {
+      "enforce": false
+    },
+    "pages/reuniones/reunion-crear": {
+      "enforce": false
+    },
+    "pages/reuniones/reunion-detalle": {
+      "enforce": false
+    },
+    "pages/reuniones/reuniones-lista": {
+      "enforce": false
+    },
+    "pages/rrhh/empleado": {
+      "enforce": false
+    },
+    "pages/rrhh/empleados": {
+      "enforce": false
+    },
+    "pages/solicitudes": {
+      "enforce": false
+    },
+    "pages/solicitudes/bandeja": {
+      "enforce": false
+    },
+    "pages/solicitudes/detalle": {
+      "enforce": false
+    },
+    "pages/solicitudes/mis": {
+      "enforce": false
+    },
+    "pages/solicitudes/pedir": {
+      "enforce": false
+    },
+    "pages/soporte": {
+      "enforce": false
+    },
+    "pages/tareas": {
+      "enforce": false
+    },
+    "pages/tecnologia": {
+      "enforce": false
+    },
+    "pages/tecnologia-inventario": {
+      "enforce": false
+    },
+    "pages/tecnologia-inventario/equipo-detalle": {
+      "enforce": false
+    },
+    "pages/tecnologia-inventario/equipo-form": {
+      "enforce": false
+    },
+    "pages/tecnologia/agentes": {
+      "enforce": false
+    },
+    "pages/tecnologia/compras-tec": {
+      "enforce": false
+    },
+    "pages/tecnologia/cotizaciones": {
+      "enforce": false
+    },
+    "pages/tecnologia/cotizaciones/cotizacion-detalle": {
+      "enforce": false
+    },
+    "pages/tecnologia/cotizaciones/cotizacion-subir": {
+      "enforce": false
+    },
+    "pages/tecnologia/dev-notes": {
+      "enforce": false
+    },
+    "pages/tecnologia/dev-notes/editor": {
+      "enforce": false
+    },
+    "pages/transporte": {
+      "enforce": true
+    },
+    "pages/transporte/acta-detalle": {
+      "enforce": false
+    },
+    "pages/transporte/apoyo-transporte": {
+      "enforce": false
+    },
+    "pages/transporte/asignar": {
+      "enforce": false
+    },
+    "pages/transporte/asignarme": {
+      "enforce": false
+    },
+    "pages/transporte/aviso-vehiculo": {
+      "enforce": false
+    },
+    "pages/transporte/avisos": {
+      "enforce": false
+    },
+    "pages/transporte/checklist": {
+      "enforce": false
+    },
+    "pages/transporte/checklists-historial": {
+      "enforce": false
+    },
+    "pages/transporte/combustible": {
+      "enforce": false
+    },
+    "pages/transporte/combustible-log": {
+      "enforce": false
+    },
+    "pages/transporte/conduce-detalle": {
+      "enforce": false
+    },
+    "pages/transporte/conduce-externo": {
+      "enforce": false
+    },
+    "pages/transporte/conduce-transferencias": {
+      "enforce": false
+    },
+    "pages/transporte/conduces": {
+      "enforce": false
+    },
+    "pages/transporte/conduces-historial": {
+      "enforce": false
+    },
+    "pages/transporte/conduces-hub": {
+      "enforce": false
+    },
+    "pages/transporte/conduces-pendientes": {
+      "enforce": false
+    },
+    "pages/transporte/conduces-por-firmar": {
+      "enforce": false
+    },
+    "pages/transporte/conduces-por-implementar": {
+      "enforce": false
+    },
+    "pages/transporte/conduces/entrega": {
+      "enforce": false
+    },
+    "pages/transporte/conductores": {
+      "enforce": false
+    },
+    "pages/transporte/confirmaciones": {
+      "enforce": false
+    },
+    "pages/transporte/cupo": {
+      "enforce": false
+    },
+    "pages/transporte/despachos": {
+      "enforce": false
+    },
+    "pages/transporte/devolver-material": {
+      "enforce": false
+    },
+    "pages/transporte/echada-detalle": {
+      "enforce": false
+    },
+    "pages/transporte/estado-chofer": {
+      "enforce": false
+    },
+    "pages/transporte/ferreteria": {
+      "enforce": false
+    },
+    "pages/transporte/generar-conduce": {
+      "enforce": false
+    },
+    "pages/transporte/importar": {
+      "enforce": false
+    },
+    "pages/transporte/mantenimiento": {
+      "enforce": false
+    },
+    "pages/transporte/mantenimiento-cierre": {
+      "enforce": false
+    },
+    "pages/transporte/mantenimientos-general": {
+      "enforce": false
+    },
+    "pages/transporte/mantenimientos-lista": {
+      "enforce": false
+    },
+    "pages/transporte/mi-actividad": {
+      "enforce": false
+    },
+    "pages/transporte/mi-recorrido": {
+      "enforce": false
+    },
+    "pages/transporte/mi-registro": {
+      "enforce": false
+    },
+    "pages/transporte/mis-actas": {
+      "enforce": false
+    },
+    "pages/transporte/mis-choferes": {
+      "enforce": false
+    },
+    "pages/transporte/mis-trabajos": {
+      "enforce": false
+    },
+    "pages/transporte/perfil-conductor": {
+      "enforce": false
+    },
+    "pages/transporte/perfil-vehiculo": {
+      "enforce": false
+    },
+    "pages/transporte/por-aprobar": {
+      "enforce": false
+    },
+    "pages/transporte/por-confirmar": {
+      "enforce": false
+    },
+    "pages/transporte/preuso": {
+      "enforce": false
+    },
+    "pages/transporte/reportar-multa": {
+      "enforce": false
+    },
+    "pages/transporte/reportar-vehiculo": {
+      "enforce": false
+    },
+    "pages/transporte/reporte-semanal": {
+      "enforce": false
+    },
+    "pages/transporte/rutas": {
+      "enforce": false
+    },
+    "pages/transporte/rutas-activas": {
+      "enforce": false
+    },
+    "pages/transporte/seguimiento": {
+      "enforce": false
+    },
+    "pages/transporte/solicitud-movimiento": {
+      "enforce": false
+    },
+    "pages/transporte/trabajos-transporte": {
+      "enforce": false
+    },
+    "pages/transporte/trayectoria": {
+      "enforce": false
+    },
+    "pages/transporte/uso-vehiculo": {
+      "enforce": false
+    },
+    "pages/transporte/vehiculos": {
+      "enforce": false
+    },
+    "shared/components/aceptacion-politicas": {
+      "enforce": false
+    },
+    "shared/components/alarma-host": {
+      "enforce": false
+    },
+    "shared/components/bienvenida": {
+      "enforce": false
+    },
+    "shared/components/compa-flotante": {
+      "enforce": false
+    },
+    "shared/components/consentimiento-ia": {
+      "enforce": false
+    },
+    "shared/components/consentimiento-ubicacion": {
+      "enforce": false
+    },
+    "shared/components/demo-tabs": {
+      "enforce": false
+    },
+    "shared/components/generar-acceso": {
+      "enforce": false
+    },
+    "shared/components/gps-gate-banner": {
+      "enforce": false
+    },
+    "shared/components/module-placeholder": {
+      "enforce": false
+    },
+    "shared/components/novedades": {
+      "enforce": false
+    },
+    "shared/components/onboarding": {
+      "enforce": false
+    },
+    "shared/components/permisos-onboarding": {
+      "enforce": false
+    },
+    "shared/components/tienda-aviso": {
+      "enforce": false
+    },
+    "shared/ui/articulo-picker": {
+      "enforce": false
+    },
+    "shared/ui/avatar-editor": {
+      "enforce": false
+    },
+    "shared/ui/ayudante-picker": {
+      "enforce": false
+    },
+    "shared/ui/celebracion": {
+      "enforce": false
+    },
+    "shared/ui/destino-selector": {
+      "enforce": false
+    },
+    "shared/ui/doc-slot": {
+      "enforce": false
+    },
+    "shared/ui/draft-banner": {
+      "enforce": false
+    },
+    "shared/ui/in-app-camera": {
+      "enforce": false
+    },
+    "shared/ui/km-input": {
+      "enforce": false
+    },
+    "shared/ui/language-onboarding": {
+      "enforce": false
+    },
+    "shared/ui/language-selector": {
+      "enforce": false
+    },
+    "shared/ui/leer-documento-vehiculo": {
+      "enforce": false
+    },
+    "shared/ui/location-picker": {
+      "enforce": false
+    },
+    "shared/ui/logo-reveal": {
+      "enforce": false
+    },
+    "shared/ui/lugar-picker": {
+      "enforce": false
+    },
+    "shared/ui/mant-adjuntos": {
+      "enforce": false
+    },
+    "shared/ui/molde-compositor": {
+      "enforce": false
+    },
+    "shared/ui/molde-esquema": {
+      "enforce": false
+    },
+    "shared/ui/molde-esquema-visor": {
+      "enforce": false
+    },
+    "shared/ui/momento": {
+      "enforce": false
+    },
+    "shared/ui/notif-health-band": {
+      "enforce": false
+    },
+    "shared/ui/pdf-viewer": {
+      "enforce": false
+    },
+    "shared/ui/personal-carnet": {
+      "enforce": false
+    },
+    "shared/ui/photo-slot": {
+      "enforce": false
+    },
+    "shared/ui/photo-viewer": {
+      "enforce": false
+    },
+    "shared/ui/pipes": {
+      "enforce": false
+    },
+    "shared/ui/selector-categorias": {
+      "enforce": false
+    },
+    "shared/ui/share-sheet": {
+      "enforce": false
+    },
+    "shared/ui/signature-pad": {
+      "enforce": false
+    },
+    "shared/ui/skeleton": {
+      "enforce": false
+    },
+    "shared/ui/step-bar": {
+      "enforce": false
+    },
+    "shared/ui/sticker-editor": {
+      "enforce": false
+    },
+    "shared/ui/taller-picker": {
+      "enforce": false
+    },
+    "shared/ui/vehiculo-card": {
+      "enforce": false
+    },
+    "shared/ui/vehiculo-picker": {
+      "enforce": false
+    },
+    "shared/ui/video-player": {
+      "enforce": false
+    },
+    "shared/ui/voice-notes": {
+      "enforce": false
+    },
+    "shared/ui/voice-recorder": {
+      "enforce": false
+    },
+    "shared/util": {
+      "enforce": false
+    }
+  }
 }

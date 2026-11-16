@@ -16,7 +16,7 @@
         [ngModel]="email()"
         (ngModelChange)="email.set($event)"
         name="email"
-        placeholder="tucorreo@constructorasd.com"
+        placeholder="{{ 'tucorreo@constructorasd.com' | t }}"
       />
       <button type="submit" class="btn-cta login__submit" [disabled]="loading()">
         {{ (loading() ? 'Enviando…' : 'Enviar enlace') | t }}

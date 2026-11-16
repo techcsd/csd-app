@@ -42,8 +42,8 @@
 
       <label class="field-label">{{ 'Moneda' | t }}</label>
       <div class="cotsub__moneda">
-        <button type="button" class="cotsub__chip" [class.cotsub__chip--on]="moneda() === 'DOP'" (click)="moneda.set('DOP')">DOP</button>
-        <button type="button" class="cotsub__chip" [class.cotsub__chip--on]="moneda() === 'USD'" (click)="moneda.set('USD')">USD</button>
+        <button type="button" class="cotsub__chip" [class.cotsub__chip--on]="moneda() === 'DOP'" (click)="moneda.set('DOP')">{{ 'DOP' | t }}</button>
+        <button type="button" class="cotsub__chip" [class.cotsub__chip--on]="moneda() === 'USD'" (click)="moneda.set('USD')">{{ 'USD' | t }}</button>
       </div>
 
       <div class="cotsub__montos">

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { LocalStore } from './local-store.service';
 
+import { I18nService } from '../i18n/i18n.service';
 const KEY_HASH = 'csd.pin.hash';
 const KEY_SALT = 'csd.pin.salt';
 const KEY_ATTEMPTS = 'csd.pin.attempts';
@@ -14,6 +15,7 @@ export const MAX_PIN_ATTEMPTS = 5;
  */
 @Injectable({ providedIn: 'root' })
 export class PinService {
+  private i18n = inject(I18nService);
   private store = inject(LocalStore);
 
   async isSet(): Promise<boolean> {
@@ -66,7 +68,7 @@ export class PinService {
   }
 
   private assertShape(pin: string): void {
-    if (!/^\d{4}$/.test(pin)) throw new Error('El PIN debe tener 4 números.');
+    if (!/^\d{4}$/.test(pin)) throw new Error(this.i18n.t('El PIN debe tener 4 números.'));
   }
 
   private async derive(pin: string, salt: Uint8Array): Promise<string> {

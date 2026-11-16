@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
@@ -16,6 +16,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
 type Tab = 'aceptar' | 'ofrecidas';
 
@@ -36,7 +37,7 @@ type Tab = 'aceptar' | 'ofrecidas';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    DatePipe,
+    FechaPipe,
     Skeleton,
     EmptyState,
     SyncBar,

@@ -18,6 +18,7 @@ import { formatFechaMedia } from '../../core/util/fecha';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 
+import { I18nService } from '../../core/i18n/i18n.service';
 type Tab = 'versiones' | 'dudas' | 'errores';
 
 // Z30 — mapa de icono corto → emoji para las guías visuales.
@@ -45,6 +46,7 @@ const GUIA_ICONO: Record<GuiaVisual['icono'], string> = {
   styleUrl: './tecnologia.scss',
 })
 export class TecnologiaPage {
+  private i18n = inject(I18nService);
   private version = inject(VersionService);
   private errores = inject(ErrorReportService);
   private network = inject(NetworkService);
@@ -158,12 +160,12 @@ export class TecnologiaPage {
    */
   abrirVideo(g: GuiaVisual): void {
     if (!this.network.online()) {
-      this.toast.show('Necesitas conexión para ver el video', 'info');
+      this.toast.show(this.i18n.t('Necesitas conexión para ver el video'), 'info');
       return;
     }
     const v = this.videoDe(g);
     if (!v) {
-      this.toast.show('Cargando video…', 'info');
+      this.toast.show(this.i18n.t('Cargando video…'), 'info');
       return;
     }
     this.videoPlayer.open({

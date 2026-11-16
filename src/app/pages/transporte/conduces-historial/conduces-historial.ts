@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DatePipe, DecimalPipe, Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
@@ -15,6 +15,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { esUuid } from '../../../core/util/validar';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
 type RolFiltro = '' | 'emisor' | 'chofer' | 'receptor';
 
@@ -38,7 +39,7 @@ const FASE_TINT: Record<string, string> = {
   selector: 'app-conduces-historial',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, FechaPipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduces-historial.html',
   styleUrl: './conduces-historial.scss',
 })

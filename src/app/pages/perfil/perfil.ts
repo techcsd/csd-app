@@ -350,11 +350,11 @@ export class PerfilPage {
       const result = await this.webauthn.setEnabled(next);
       this.faceIdOn.set(result);
       if (next && !result) {
-        this.toast.error('No se pudo activar Face ID. Inténtalo de nuevo.');
+        this.toast.error(this.i18n.t('No se pudo activar Face ID. Inténtalo de nuevo.'));
       } else if (result) {
-        this.toast.success('Desbloqueo con Face ID activado.');
+        this.toast.success(this.i18n.t('Desbloqueo con Face ID activado.'));
       } else {
-        this.toast.success('Face ID desactivado.');
+        this.toast.success(this.i18n.t('Face ID desactivado.'));
       }
     } finally {
       this.faceIdBusy.set(false);
@@ -369,7 +369,7 @@ export class PerfilPage {
   async toggleAgrupado(): Promise<void> {
     if (this.agrupadoBusy()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar esta preferencia.'));
       return;
     }
     this.agrupadoBusy.set(true);
@@ -388,7 +388,7 @@ export class PerfilPage {
   async toggleHoyOculto(): Promise<void> {
     if (this.hoyOcultoBusy()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar esta preferencia.'));
       return;
     }
     this.hoyOcultoBusy.set(true);
@@ -407,7 +407,7 @@ export class PerfilPage {
   async togglePulsoOculto(): Promise<void> {
     if (this.pulsoOcultoBusy()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar esta preferencia.'));
       return;
     }
     this.pulsoOcultoBusy.set(true);
@@ -429,7 +429,7 @@ export class PerfilPage {
   async toggleCompaFlotante(): Promise<void> {
     if (this.compaFlotanteBusy()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar esta preferencia.'));
       return;
     }
     this.compaFlotanteBusy.set(true);
@@ -462,11 +462,11 @@ export class PerfilPage {
       const result = await this.biometric.setEnabled(next);
       this.biometriaOn.set(result);
       if (next && !result) {
-        this.toast.error('No se pudo activar la biometría. Usa tu huella o rostro registrados.');
+        this.toast.error(this.i18n.t('No se pudo activar la biometría. Usa tu huella o rostro registrados.'));
       } else if (result) {
-        this.toast.success('Desbloqueo por huella / rostro activado.');
+        this.toast.success(this.i18n.t('Desbloqueo por huella / rostro activado.'));
       } else {
-        this.toast.success('Desbloqueo biométrico desactivado.');
+        this.toast.success(this.i18n.t('Desbloqueo biométrico desactivado.'));
       }
     } finally {
       this.biometriaBusy.set(false);
@@ -482,12 +482,12 @@ export class PerfilPage {
       // made this button lie on the APK). Only then fall back to the PWA SW.
       const online = await this.versionSvc.checkFresh();
       if (!online) {
-        this.toast.error('Sin señal. No pude verificar si hay una versión nueva.');
+        this.toast.error(this.i18n.t('Sin señal. No pude verificar si hay una versión nueva.'));
         return;
       }
       if (this.versionSvc.hayNueva()) {
         const pub = this.versionSvc.etiquetaVersion;
-        this.toast.show(`Hay una versión nueva (${pub}) disponible.`, 'info', 4000);
+        this.toast.show(this.i18n.t('Hay una versión nueva ({v}) disponible.', { v: pub }), 'info', 4000);
         void this.router.navigate(['/actualizar']);
         return;
       }
@@ -564,7 +564,7 @@ export class PerfilPage {
     try {
       await this.ctx.actualizarMiAvatar(blob);
       this.avatarFallo.set(false); // BT3 — nueva foto: reintenta mostrarla
-      this.toast.success('Foto de perfil actualizada.');
+      this.toast.success(this.i18n.t('Foto de perfil actualizada.'));
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar la foto.');
     } finally {
@@ -587,17 +587,17 @@ export class PerfilPage {
   async guardarPerfil(): Promise<void> {
     if (this.guardandoPerfil()) return;
     if (!this.nombreEdit().trim()) {
-      this.toast.error('El nombre no puede quedar vacío.');
+      this.toast.error(this.i18n.t('El nombre no puede quedar vacío.'));
       return;
     }
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para actualizar tu perfil.');
+      this.toast.error(this.i18n.t('Necesitas conexión para actualizar tu perfil.'));
       return;
     }
     this.guardandoPerfil.set(true);
     try {
       await this.ctx.actualizarMiPerfil(this.nombreEdit().trim(), this.telefonoEdit().trim());
-      this.toast.success('Perfil actualizado.');
+      this.toast.success(this.i18n.t('Perfil actualizado.'));
       this.editando.set(false);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar el perfil.');

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, DecimalPipe, Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
@@ -15,6 +15,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { NetworkService } from '../../core/services/network.service';
 import { CapturedPhoto } from '../../core/services/camera.service';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
+import { FechaPipe } from '../../core/i18n/fecha.pipe';
 
 type Tab = 'compras' | 'gastos';
 
@@ -27,7 +28,7 @@ type Tab = 'compras' | 'gastos';
   selector: 'app-compras-proyecto',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, CollapsibleSelect, SyncBar, PhotoSlot, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, FechaPipe, DecimalPipe, Skeleton, EmptyState, CollapsibleSelect, SyncBar, PhotoSlot, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './compras-proyecto.html',
   styleUrl: './compras-proyecto.scss',
 })

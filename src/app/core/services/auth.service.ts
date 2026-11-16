@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { ErrorReportService } from './error-report.service';
 import { environment } from '../../../environments/environment';
 
+import { I18nService } from '../i18n/i18n.service';
 export interface AuthResult {
   user: User | null;
   error: AuthError | null;
@@ -40,6 +41,7 @@ class AuthTimeoutError extends Error {
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private errorReport = inject(ErrorReportService);
 
@@ -103,8 +105,8 @@ export class AuthService {
         via: 'conductor', aborted,
       });
       return aborted
-        ? { ok: false, status: 0, networkError: true, error: 'No pudimos verificar tus datos. La conexión tardó demasiado. Revisa tu internet e intenta de nuevo.' }
-        : { ok: false, status: 0, networkError: true, error: 'No hay conexión. El acceso de conductor necesita internet.' };
+        ? { ok: false, status: 0, networkError: true, error: this.i18n.t('No pudimos verificar tus datos. La conexión tardó demasiado. Revisa tu internet e intenta de nuevo.') }
+        : { ok: false, status: 0, networkError: true, error: this.i18n.t('No hay conexión. El acceso de conductor necesita internet.') };
     } finally {
       clearTimeout(timeout);
     }
@@ -133,12 +135,12 @@ export class AuthService {
       );
       if (r.error) {
         void this.errorReport.report('login', 'conductor setSession error', { via: 'conductor', msg: r.error.message });
-        return { ok: false, status: 500, error: 'No pudimos verificar tus datos. Intenta de nuevo.' };
+        return { ok: false, status: 500, error: this.i18n.t('No pudimos verificar tus datos. Intenta de nuevo.') };
       }
       session = r.data.session;
     } catch {
       void this.errorReport.report('login', 'conductor setSession timeout', { via: 'conductor' });
-      return { ok: false, status: 0, networkError: true, error: 'No pudimos verificar tus datos. La conexión tardó demasiado. Intenta de nuevo.' };
+      return { ok: false, status: 0, networkError: true, error: this.i18n.t('No pudimos verificar tus datos. La conexión tardó demasiado. Intenta de nuevo.') };
     }
     return { ok: true, status: 200, userId: session?.user?.id };
   }

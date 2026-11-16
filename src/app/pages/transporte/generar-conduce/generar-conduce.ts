@@ -604,7 +604,7 @@ export class GenerarConducePage implements OnDestroy {
     const op = await this.sync.getOp(opId);
     if (!op || op.tipo_op !== 'conduce_simple') {
       this.hydrated = true;
-      this.toast.error('No se pudo abrir ese conduce para corregir.');
+      this.toast.error(this.i18n.t('No se pudo abrir ese conduce para corregir.'));
       return;
     }
     const p = op.payload as Record<string, unknown>;
@@ -654,7 +654,7 @@ export class GenerarConducePage implements OnDestroy {
     this.continuarBorrador();
     const idx = this.pasos().findIndex((x) => x.key === 'materiales');
     if (idx >= 0) this.paso.set(idx);
-    this.toast.show('Corrige las cantidades y vuelve a enviar el conduce.', 'info', 6000);
+    this.toast.show(this.i18n.t('Corrige las cantidades y vuelve a enviar el conduce.'), 'info', 6000);
   }
 
   private async loadExistencias(bodegaId: string): Promise<void> {
@@ -862,7 +862,7 @@ export class GenerarConducePage implements OnDestroy {
     if (this.origenTipo() === 'almacen') {
       const s = this.stockDe(a.id);
       if (s != null && s <= 0) {
-        this.toast.error(`No hay existencia de "${a.nombre}" en el almacén de origen.`);
+        this.toast.error(this.i18n.t('No hay existencia de "{n}" en el almacén de origen.', { n: a.nombre }));
         return;
       }
     }
@@ -895,8 +895,8 @@ export class GenerarConducePage implements OnDestroy {
    */
   quitarRenglon(articuloId: string): void {
     if (this.esDespacho()) {
-      this.toast.withAction('¿Quitar este renglón del despacho? Con 0 queda pendiente.', {
-        label: 'Quitar',
+      this.toast.withAction(this.i18n.t('¿Quitar este renglón del despacho? Con 0 queda pendiente.'), {
+        label: this.i18n.t('Quitar'),
         run: () => this.quitar(articuloId),
       });
       return;
@@ -926,7 +926,7 @@ export class GenerarConducePage implements OnDestroy {
   agregarItemLibre(): void {
     const nombre = this.libreNombre().trim();
     if (!nombre) {
-      this.toast.error('Escribe el nombre del material.');
+      this.toast.error(this.i18n.t('Escribe el nombre del material.'));
       return;
     }
     const cantidad = Math.max(1, Number(this.libreCantidad()) || 1);
@@ -978,7 +978,7 @@ export class GenerarConducePage implements OnDestroy {
       if (sessionStorage.getItem(key)) return false;
       sessionStorage.setItem(key, '1');
     } catch { /* sessionStorage no disponible */ }
-    this.toast.show('Primero registra el uso de este vehículo.', 'info');
+    this.toast.show(this.i18n.t('Primero registra el uso de este vehículo.'), 'info');
     // QA-7 — persiste la foto de recepción + AMBAS firmas en borrador_fotos para no
     // perderlas en el desvío a "Uso de vehículo" (el texto ya lo guarda el autosave AE9).
     const foto = this.fotoRecepcion();
@@ -1018,15 +1018,15 @@ export class GenerarConducePage implements OnDestroy {
   /** AF31 — origen ferretería: compra → ENTRADA (reúsa el flujo de ferretería). */
   private async submitFerreteria(): Promise<void> {
     if (!this.ferreteriaId()) {
-      this.toast.error('Elige la ferretería.');
+      this.toast.error(this.i18n.t('Elige la ferretería.'));
       return;
     }
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén donde entra la compra.');
+      this.toast.error(this.i18n.t('Elige el almacén donde entra la compra.'));
       return;
     }
     if (!this.fotoRecibo()) {
-      this.toast.error('Toma la foto del recibo.');
+      this.toast.error(this.i18n.t('Toma la foto del recibo.'));
       return;
     }
     if (!(await this.tracking.exigirGps('crear_conduce'))) return;
@@ -1053,43 +1053,43 @@ export class GenerarConducePage implements OnDestroy {
   /** Almacén (salida) → conduce (+ ruta al emitir). */
   private async submitConduce(): Promise<void> {
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén de origen.');
+      this.toast.error(this.i18n.t('Elige el almacén de origen.'));
       return;
     }
     // Destino: obra, almacén central (AL10) o suplidor (devolución de alquiler).
     if (this.destinoTipo() === 'obra' && !this.obraId()) {
-      this.toast.error('Elige la obra destino.');
+      this.toast.error(this.i18n.t('Elige la obra destino.'));
       return;
     }
     if (this.destinoTipo() === 'almacen' && !this.almacenId()) {
-      this.toast.error('Elige el almacén destino.');
+      this.toast.error(this.i18n.t('Elige el almacén destino.'));
       return;
     }
     if (this.destinoTipo() === 'suplidor' && !this.suplidorNombre().trim()) {
-      this.toast.error('Escribe el suplidor al que devuelves.');
+      this.toast.error(this.i18n.t('Escribe el suplidor al que devuelves.'));
       return;
     }
     if (this.faltaItems()) {
-      this.toast.error('Agrega al menos un material.');
+      this.toast.error(this.i18n.t('Agrega al menos un material.'));
       return;
     }
     // AO3 — cerrojo duro: nunca emitir sacando más de lo disponible (defensa en
     // profundidad; el paso ya lo bloquea y el server rechaza con AM1, pero así ni se crea
     // el conduce que luego moriría en el outbox por "Stock insuficiente").
     if (this.hayExceso()) {
-      this.toast.error('Estás sacando más de lo disponible en algún material. Ajusta las cantidades.');
+      this.toast.error(this.i18n.t('Estás sacando más de lo disponible en algún material. Ajusta las cantidades.'));
       return;
     }
     if (!this.fotoRecepcion()) {
-      this.toast.error('Toma la foto de recepción (el material que cargas).');
+      this.toast.error(this.i18n.t('Toma la foto de recepción (el material que cargas).'));
       return;
     }
     if (!this.despachanteOk()) {
-      this.toast.error('Elige (o escribe) quién despacha el material.');
+      this.toast.error(this.i18n.t('Elige (o escribe) quién despacha el material.'));
       return;
     }
     if (!this.firmaChofer()) {
-      this.toast.error('Falta tu firma (chofer).');
+      this.toast.error(this.i18n.t('Falta tu firma (chofer).'));
       return;
     }
     // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).

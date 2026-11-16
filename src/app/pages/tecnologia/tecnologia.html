@@ -2,16 +2,16 @@
   <header class="tec__header">
     <button type="button" class="tec__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="tec__icon">🛠️</span>
-    <h1 class="tec__title">Sistema</h1>
+    <h1 class="tec__title">{{ 'Sistema' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <!-- Versión instalada -->
     <div class="tec__version">
-      <span class="tec__version-label">Versión instalada</span>
+      <span class="tec__version-label">{{ 'Versión instalada' | t }}</span>
       <span class="tec__version-num">{{ instalada }}</span>
       @if (hayNueva() && publicada()) {
-        <span class="tec__version-new">Hay una nueva: {{ publicada() }}</span>
+        <span class="tec__version-new">{{ 'Hay una nueva:' | t }} {{ publicada() }}</span>
       }
     </div>
 
@@ -21,8 +21,8 @@
       <button type="button" class="tec__devnotes" appTapScale (click)="abrirDevNotes()">
         <span class="tec__devnotes-icon">🧑‍💻</span>
         <span class="tec__devnotes-txt">
-          <span class="tec__devnotes-title">Dev notes</span>
-          <span class="tec__devnotes-sub">Notas técnicas en Markdown (lectura)</span>
+          <span class="tec__devnotes-title">{{ 'Dev notes' | t }}</span>
+          <span class="tec__devnotes-sub">{{ 'Notas técnicas en Markdown (lectura)' | t }}</span>
         </span>
         <span class="tec__devnotes-caret">›</span>
       </button>
@@ -74,14 +74,14 @@
          roles de Tecnología (Z26/Z30). -->
     <div class="tec__tabs">
       <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'versiones'" (click)="setTab('versiones')">
-        Historial de versiones
+        {{ 'Historial de versiones' | t }}
       </button>
       <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'dudas'" (click)="setTab('dudas')">
-        Dudas
+        {{ 'Dudas' | t }}
       </button>
       @if (esTecnologia()) {
         <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'errores'" (click)="setTab('errores')">
-          Reportes de errores
+          {{ 'Reportes de errores' | t }}
         </button>
       }
     </div>
@@ -114,7 +114,7 @@
       }
     } @else if (tab() === 'dudas') {
       <!-- Z30 — Dudas + guías (mismo contenido que la web, desde sgc.ayuda_contenido) -->
-      <input class="field tec__search" type="search" [ngModel]="dudasQuery()" (ngModelChange)="dudasQuery.set($event)" placeholder="Buscar en Dudas…" aria-label="Buscar en Dudas" />
+      <input class="field tec__search" type="search" [ngModel]="dudasQuery()" (ngModelChange)="dudasQuery.set($event)" placeholder="{{ 'Buscar en Dudas…' | t }}" aria-label="Buscar en Dudas" />
       @if (loadingDudas()) {
         <app-skeleton [rows]="6" />
       } @else if (!hayDudas()) {
@@ -173,7 +173,7 @@
         }
 
         @if (guiasVisibles().length) {
-          <h2 class="tec__dudas-h">Guías paso a paso</h2>
+          <h2 class="tec__dudas-h">{{ 'Guías paso a paso' | t }}</h2>
           @for (g of guiasVisibles(); track g.id) {
             <div class="tec__guia">
               <div class="tec__guia-top">
@@ -195,7 +195,7 @@
           }
         }
         @if (categoriasFiltradas().length) {
-          <h2 class="tec__dudas-h">Preguntas frecuentes</h2>
+          <h2 class="tec__dudas-h">{{ 'Preguntas frecuentes' | t }}</h2>
           @for (c of categoriasFiltradas(); track c.id) {
             <div class="tec__cat">
               <span class="tec__cat-title">{{ c.titulo }}</span>
@@ -236,7 +236,7 @@
             </button>
             @if (abierto(r.id)) {
               <div class="tec__err-body">
-                @if (ruta(r)) { <p class="tec__err-ruta">Ruta: {{ ruta(r) }}</p> }
+                @if (ruta(r)) { <p class="tec__err-ruta">{{ 'Ruta:' | t }} {{ ruta(r) }}</p> }
                 <pre class="tec__err-ctx">{{ r.context | json }}</pre>
               </div>
             }

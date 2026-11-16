@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SyncService } from '../../../core/sync/sync.service';
 import {
@@ -14,6 +14,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { MantAdjuntos } from '../../../shared/ui/mant-adjuntos/mant-adjuntos';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
 /**
  * AG9 — hub de mantenimientos de un vehículo desde la app: ver pendientes/en curso
@@ -23,7 +24,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
   selector: 'app-mantenimientos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Skeleton, EmptyState, MantAdjuntos, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FechaPipe, DecimalPipe, Skeleton, EmptyState, MantAdjuntos, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mantenimientos-lista.html',
   styleUrl: './mantenimientos-lista.scss',
 })

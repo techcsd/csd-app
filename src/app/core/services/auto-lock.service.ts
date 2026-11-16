@@ -6,6 +6,7 @@ import { UserContextService } from './user-context.service';
 import { ToastService } from './toast.service';
 import { AutosaveService } from './autosave.service';
 
+import { I18nService } from '../i18n/i18n.service';
 // Re-lock after this long in the background. Short enough to protect a phone
 // left on a table; long enough that taking a photo (which backgrounds the
 // WebView briefly) doesn't kick the user back to the PIN mid-capture.
@@ -18,6 +19,7 @@ const LOCK_AFTER_MS = 45_000;
  */
 @Injectable({ providedIn: 'root' })
 export class AutoLockService {
+  private i18n = inject(I18nService);
   private session = inject(SessionService);
   private pin = inject(PinService);
   private ctx = inject(UserContextService);
@@ -50,7 +52,7 @@ export class AutoLockService {
     // A user deactivated in SGC while away is logged out on return (PERM-02).
     if ((await this.ctx.checkActivo()) === false) {
       await this.session.logout();
-      this.toast.error('Tu usuario fue desactivado. Habla con administración.');
+      this.toast.error(this.i18n.t('Tu usuario fue desactivado. Habla con administración.'));
       await this.router.navigate(['/auth/login']);
       return;
     }

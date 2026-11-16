@@ -8,6 +8,7 @@ import { SyncService } from '../sync/sync.service';
 import { ErrorReportService } from './error-report.service';
 import { environment } from '../../../environments/environment';
 
+import { I18nService } from '../i18n/i18n.service';
 // BU1 — el version.json vive en el bucket app-releases del proyecto del ENTORNO
 // (dev tiene su propio historial/APK). Se deriva de environment.supabaseUrl; nunca
 // se hardcodea el ref de prod. Una app dev jamás mira el version.json de prod.
@@ -33,6 +34,7 @@ const VERSION_URL = `${environment.supabaseUrl}/storage/v1/object/public/app-rel
  */
 @Injectable({ providedIn: 'root' })
 export class UpdateService {
+  private i18n = inject(I18nService);
   private swUpdate = inject(SwUpdate);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
@@ -160,7 +162,7 @@ export class UpdateService {
     this.pendingReload = false;
     this.finishReloadWatcher();
     sessionStorage.setItem(UpdateService.RELOAD_GUARD_KEY, String(Date.now()));
-    this.toast.show('Actualizando a la última versión…', 'info', 1500);
+    this.toast.show(this.i18n.t('Actualizando a la última versión…'), 'info', 1500);
     setTimeout(() => document.location.reload(), 800);
   }
 
@@ -217,7 +219,7 @@ export class UpdateService {
       /* best-effort */
     }
     this.necesitaReparar.set(false);
-    this.toast.show('Reparando la app…', 'info', 1500);
+    this.toast.show(this.i18n.t('Reparando la app…'), 'info', 1500);
     setTimeout(() => document.location.reload(), 800);
   }
 
@@ -267,17 +269,17 @@ export class UpdateService {
   /** Manual "Buscar actualización" from Perfil / pantalla /actualizar en PWA. */
   async check(): Promise<void> {
     if (!this.swUpdate.isEnabled) {
-      this.toast.success('Ya tienes la última versión.');
+      this.toast.success(this.i18n.t('Ya tienes la última versión.'));
       return;
     }
     // CO1 — si el SW ya quedó marcado como degradado, no hay nada que "buscar":
     // decirlo tal cual y dejar que el usuario repare.
     if (this.necesitaReparar()) {
-      this.toast.error('La app no pudo actualizarse sola. Toca "Reparar la app".');
+      this.toast.error(this.i18n.t('La app no pudo actualizarse sola. Toca "Reparar la app".'));
       return;
     }
     const found = await this.swUpdate.checkForUpdate();
-    if (!found) this.toast.success('Ya tienes la última versión.');
+    if (!found) this.toast.success(this.i18n.t('Ya tienes la última versión.'));
     // If found, the VERSION_READY handler above takes over (activa + recarga seguro).
   }
 }

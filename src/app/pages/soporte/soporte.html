@@ -1,7 +1,7 @@
 <div class="screen adm-sub">
   <header class="adm-sub__header">
     <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="adm-sub__title">Soporte y ayuda</h1>
+    <h1 class="adm-sub__title">{{ 'Soporte y ayuda' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -25,17 +25,15 @@
 
     <!-- CK10 — guía para teléfonos que "matan" apps (no llegan las notificaciones). -->
     <section id="guia-notificaciones" class="faq soporte__guia">
-      <p class="faq__q">Si no te llegan las notificaciones</p>
+      <p class="faq__q">{{ 'Si no te llegan las notificaciones' | t }}</p>
       <p class="faq__a">
-        Algunos teléfonos (Xiaomi, Redmi, Huawei, Honor, Oppo, Vivo, Realme, Tecno,
-        Infinix, itel y parecidos) apagan las apps para ahorrar batería y por eso no
-        suenan los avisos. Para que la app pueda avisarte siempre, haz estos tres pasos:
+        {{ 'Algunos teléfonos (Xiaomi, Redmi, Huawei, Honor, Oppo, Vivo, Realme, Tecno, Infinix, itel y parecidos) apagan las apps para ahorrar batería y por eso no suenan los avisos. Para que la app pueda avisarte siempre, haz estos tres pasos:' | t }}
       </p>
       <ol class="soporte__pasos">
-        <li>Permite el <b>inicio automático</b> de CSD App (Autoarranque / Inicio automático).</li>
-        <li>Quita la <b>restricción de batería</b>: deja la app en <b>Sin restricciones</b> (que no se optimice).</li>
-        <li>En la pantalla de <b>Recientes</b>, mantén presionada la app y tócale el <b>candado</b> para fijarla (que no se cierre sola).</li>
-        <li>Revisa que las notificaciones de CSD App estén <b>encendidas y con sonido</b>.</li>
+        <li>{{ 'Permite el' | t }} <b>{{ 'inicio automático' | t }}</b> {{ 'de CSD App (Autoarranque / Inicio automático).' | t }}</li>
+        <li>{{ 'Quita la' | t }} <b>{{ 'restricción de batería' | t }}</b>{{ ': deja la app en' | t }} <b>{{ 'Sin restricciones' | t }}</b> {{ '(que no se optimice).' | t }}</li>
+        <li>{{ 'En la pantalla de' | t }} <b>{{ 'Recientes' | t }}</b>{{ ', mantén presionada la app y tócale el' | t }} <b>{{ 'candado' | t }}</b> {{ 'para fijarla (que no se cierre sola).' | t }}</li>
+        <li>{{ 'Revisa que las notificaciones de CSD App estén' | t }} <b>{{ 'encendidas y con sonido' | t }}</b>.</li>
       </ol>
     </section>
 
@@ -48,7 +46,7 @@
     </button>
 
     <button type="button" class="btn-cta soporte__report" appTapScale (click)="reportar()">
-      🛟 Reportar un problema
+      🛟 {{ 'Reportar un problema' | t }}
     </button>
   </div>
 </div>

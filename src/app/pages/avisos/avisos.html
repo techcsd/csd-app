@@ -2,9 +2,9 @@
   <header class="avisos__header">
     <button type="button" class="avisos__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="avisos__icon">🔔</span>
-    <h1 class="avisos__title">Avisos</h1>
+    <h1 class="avisos__title">{{ 'Avisos' | t }}</h1>
     @if (hayNoLeidos) {
-      <button type="button" class="avisos__todas" (click)="marcarTodas()">Marcar leídos</button>
+      <button type="button" class="avisos__todas" (click)="marcarTodas()">{{ 'Marcar leídos' | t }}</button>
     }
     <!-- AT23 — preferencias: silenciar categorías informativas -->
     <button type="button" class="avisos__refresh" (click)="abrirPrefs()" aria-label="Preferencias de avisos">⚙️</button>
@@ -17,7 +17,7 @@
     } @else {
       @if (avisos().length) {
         <button type="button" class="avisos__borrar-todas" (click)="pedirBorrarTodas()">
-          🗑️ Borrar todas
+          🗑️ {{ 'Borrar todas' | t }}
         </button>
       }
       <div appStagger style="display:contents">
@@ -71,7 +71,7 @@
     <div class="avisos-prefs">
       <!-- BQ2 — tras destinatarios_notificacion (web 1.130.0) el silencio también
            aplica al correo; el texto ya no dice "solo en la app". -->
-      <p class="avisos-prefs__intro">Elige qué avisos quieres recibir. Los que apagues dejan de llegarte por todas las vías: aquí, como notificación y por correo. Algunos, por ser críticos o de Administración, siguen llegando.</p>
+      <p class="avisos-prefs__intro">{{ 'Elige qué avisos quieres recibir. Los que apagues dejan de llegarte por todas las vías: aquí, como notificación y por correo. Algunos, por ser críticos o de Administración, siguen llegando.' | t }}</p>
       @for (e of estadosVisibles(); track e.tipo) {
         @if (editable(e)) {
           <app-toggle-switch [checked]="recibe(e)" [label]="e.etiqueta" (checkedChange)="onTogglePref(e, $event)" />
@@ -86,7 +86,7 @@
         }
       }
       <!-- DH8 — "Requisiciones por correo": solo el canal correo (bandeja/push no cambian). -->
-      <p class="avisos-prefs__intro">Correo de requisiciones: avisos de solicitudes de compra/movimiento a tu correo. Apagarlo no afecta lo que ves aquí ni las notificaciones del teléfono.</p>
+      <p class="avisos-prefs__intro">{{ 'Correo de requisiciones: avisos de solicitudes de compra/movimiento a tu correo. Apagarlo no afecta lo que ves aquí ni las notificaciones del teléfono.' | t }}</p>
       <app-toggle-switch
         [checked]="emailRequisiciones()"
         label="Requisiciones por correo"

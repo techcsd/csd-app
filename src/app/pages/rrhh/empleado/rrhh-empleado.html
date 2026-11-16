@@ -18,7 +18,7 @@
           @if (e.telefono) { <p>📞 {{ e.telefono }}</p> }
           @if (e.email) { <p>✉️ {{ e.email }}</p> }
           @if (e.tipo_contrato) { <p>📄 {{ e.tipo_contrato }}</p> }
-          @if (e.fecha_ingreso) { <p>📅 {{ 'Ingreso:' | t }} {{ e.fecha_ingreso | date: 'dd/MM/yyyy' }}</p> }
+          @if (e.fecha_ingreso) { <p>📅 {{ 'Ingreso:' | t }} {{ e.fecha_ingreso | fecha: 'dd/MM/yyyy' }}</p> }
         </div>
       </div>
 

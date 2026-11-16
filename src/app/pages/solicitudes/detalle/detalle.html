@@ -100,7 +100,7 @@
       </dl>
 
       @if (r.cancelada_motivo) {
-        <div class="reqd__aviso reqd__aviso--danger">🚫 Cancelada: {{ r.cancelada_motivo }}</div>
+        <div class="reqd__aviso reqd__aviso--danger">🚫 {{ 'Cancelada:' | t }} {{ r.cancelada_motivo }}</div>
       }
 
       <!-- BF6 — motivo del rechazo: visible para corregir y reenviar -->
@@ -115,7 +115,7 @@
       @if (hayDespachos() && avanceResumen(); as res) {
         <div class="reqd__avance">
           <h3 class="reqd__sec">{{ 'Avance de despacho' | t }}</h3>
-          <p class="reqd__avance-sub">{{ res.despachados }} de {{ res.total }} renglones despachados</p>
+          <p class="reqd__avance-sub">{{ '{d} de {t} renglones despachados' | t: { d: res.despachados, t: res.total } }}</p>
           <ul class="reqd__avance-list" appStagger>
             @for (a of avance(); track a.descripcion) {
               <li class="reqd__avance-row" [class.reqd__avance-row--done]="a.pendiente <= 0">
@@ -128,7 +128,7 @@
                 </span>
                 <span class="reqd__avance-cant">
                   {{ a.despachado }} / {{ a.solicitado }} {{ a.unidad || '' }}
-                  @if (a.pendiente > 0) { <em class="reqd__avance-pend">faltan {{ a.pendiente }}</em> }
+                  @if (a.pendiente > 0) { <em class="reqd__avance-pend">{{ 'faltan {n}' | t: { n: a.pendiente } }}</em> }
                   @else { <span class="reqd__avance-ok">✓</span> }
                 </span>
               </li>
@@ -161,14 +161,14 @@
         </div>
       }
 
-      <h3 class="reqd__sec">Artículos ({{ r.items.length }})</h3>
+      <h3 class="reqd__sec">{{ 'Artículos ({n})' | t: { n: r.items.length } }}</h3>
       <ul class="reqd__items" appStagger>
         @for (it of r.items; track it.id) {
           <li class="reqd__item">
             <span class="reqd__item-cant">{{ it.cantidad }} {{ it.unidad || '' }}</span>
             <span class="reqd__item-desc">
               {{ it.descripcion }}
-              @if (it.talla) { <span class="reqd__item-talla">Talla {{ it.talla }}</span> }
+              @if (it.talla) { <span class="reqd__item-talla">{{ 'Talla' | t }} {{ it.talla }}</span> }
               @if (it.codigo) { <span class="reqd__item-code">{{ it.codigo }}</span> }
               @if (!it.articulo_id) { <span class="reqd__item-nc">{{ 'no catalogado' | t }}</span> }
             </span>
@@ -193,7 +193,7 @@
             <li class="reqd__hist-row">
               <span class="reqd__hist-ico">✏️</span>
               <div class="reqd__hist-txt">
-                <span>Editada por {{ e.editado_por_nombre ?? '—' }} · {{ fmtFecha(e.editado_at) }}</span>
+                <span>{{ 'Editada por' | t }} {{ e.editado_por_nombre ?? '—' }} · {{ fmtFecha(e.editado_at) }}</span>
                 <!-- BF6 — diff legible (el aprobador ve qué cambió) -->
                 @for (c of resumenCambios(e); track c) {
                   <span class="reqd__hist-diff">{{ c }}</span>
@@ -213,14 +213,14 @@
             </button>
           }
           @if (puedeAprobarORechazar()) {
-            <button type="button" class="btn-cta reqd__aprobar" appTapScale (click)="abrirAprobar()">✓ Aprobar</button>
-            <button type="button" class="btn-ghost reqd__rechazar" appTapScale (click)="abrirRechazar()">✕ Rechazar</button>
+            <button type="button" class="btn-cta reqd__aprobar" appTapScale (click)="abrirAprobar()">{{ '✓ Aprobar' | t }}</button>
+            <button type="button" class="btn-ghost reqd__rechazar" appTapScale (click)="abrirRechazar()">{{ '✕ Rechazar' | t }}</button>
           }
           @if (puedeConduceExterno()) {
             <button type="button" class="btn-ghost reqd__ce" appTapScale (click)="abrirConduceExterno()">🚛 {{ 'Conduce externo' | t }}</button><!-- tropes-allow: emoji en botón = estilo local del bloque de acciones (🚫/✏️/✓) -->
           }
           @if (puedeCancelar()) {
-            <button type="button" class="btn-ghost reqd__cancelar" appTapScale (click)="abrirCancelar()">🚫 Cancelar requisición</button>
+            <button type="button" class="btn-ghost reqd__cancelar" appTapScale (click)="abrirCancelar()">{{ '🚫 Cancelar requisición' | t }}</button>
           }
         </div>
       }
@@ -273,9 +273,9 @@
                 <li class="reqd__stock-row">
                   <span class="reqd__stock-name">{{ it.descripcion }}</span>
                   <span class="reqd__stock-cant">
-                    Pide {{ it.cantidad }}
+                    {{ 'Pide' | t }} {{ it.cantidad }}
                     @if (it.articulo_id) {
-                      · <b [class.reqd__stock-falta]="(stockDe(it) ?? 0) < it.cantidad">{{ stockDe(it) }} en stock</b>
+                      · <b [class.reqd__stock-falta]="(stockDe(it) ?? 0) < it.cantidad">{{ stockDe(it) }} {{ 'en stock' | t }}</b>
                     } @else { · <em>{{ 'no catalogado' | t }}</em> }
                   </span>
                 </li>
@@ -336,7 +336,7 @@
           @for (it of editItems(); track it.id) {
             <div class="reqd__edit-item">
               <span class="reqd__edit-name">
-                {{ it.descripcion }}@if (it.talla) { <small>· Talla {{ it.talla }}</small> }
+                {{ it.descripcion }}@if (it.talla) { <small>· {{ 'Talla' | t }} {{ it.talla }}</small> }
                 @if (esCustomEdit(it)) { <span class="reqd__item-nc">{{ 'no catalogado' | t }}</span> }
               </span>
               <div class="reqd__edit-row">

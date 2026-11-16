@@ -1,252 +1,259 @@
-# I18N-COVERAGE — cobertura por pantalla (BT2, regla 17)
+# I18N-COVERAGE — cobertura por pantalla (BT2/DP-07)
 
-Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
-se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
+Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
+Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **Inglés (en): 88%** del alcance · **Kreyòl (ht): 3%**
-- Alcance definido: sí (3 pantallas)
+- **English: 84.6%** · **Kreyòl: 2.4%** (7865 textos medidos en 288 pantallas)
+- Textos con t(): 7865 · sin t(): 0
+- Pantallas `enforce:true`: 3 de 288
 
-| Pantalla | con t() | sin t() | en % | ht % | alcance |
-|---|---:|---:|---:|---:|:--:|
-|  | 2 | 21 | 0% | 0% |  |
-| pages/actualizar | 28 | 0 | 93% | 11% |  |
-| pages/admin | 13 | 0 | 100% | 0% |  |
-| pages/admin/auditoria | 37 | 0 | 100% | 5% |  |
-| pages/admin/catalogos | 5 | 0 | 100% | 0% |  |
-| pages/admin/conteos | 4 | 0 | 100% | 0% |  |
-| pages/admin/parametros | 6 | 0 | 100% | 0% |  |
-| pages/admin/reportes | 5 | 0 | 100% | 0% |  |
-| pages/admin/roles | 20 | 0 | 100% | 0% |  |
-| pages/admin/unidades | 4 | 0 | 100% | 0% |  |
-| pages/admin/usuarios | 40 | 0 | 85% | 3% |  |
-| pages/admin/vault | 18 | 0 | 100% | 0% |  |
-| pages/admin/vault/vault-entrada | 12 | 0 | 100% | 0% |  |
-| pages/admin/vault/vault-generador | 9 | 1 | 90% | 0% |  |
-| pages/admin/versiones | 8 | 1 | 89% | 0% |  |
-| pages/auth/login | 12 | 1 | 77% | 0% |  |
-| pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |
-| pages/auth/pin-change | 1 | 0 | 100% | 0% |  |
-| pages/auth/pin-unlock | 10 | 0 | 100% | 0% |  |
-| pages/auth/reset | 5 | 1 | 83% | 0% |  |
-| pages/auth/set-password | 4 | 0 | 100% | 0% |  |
-| pages/avisos | 0 | 5 | 0% | 0% |  |
-| pages/bitacora | 10 | 0 | 100% | 0% |  |
-| pages/bitacora/cl-detalle | 30 | 0 | 100% | 0% |  |
-| pages/bitacora/cl-firmas | 10 | 0 | 100% | 0% |  |
-| pages/bitacora/dashboard | 15 | 1 | 94% | 0% |  |
-| pages/bitacora/detalle | 66 | 0 | 100% | 2% |  |
-| pages/bitacora/incidente | 66 | 0 | 100% | 2% |  |
-| pages/bitacora/liberacion | 82 | 1 | 99% | 1% |  |
-| pages/bitacora/mis-ordenes | 12 | 0 | 100% | 0% |  |
-| pages/bitacora/mis-partes | 30 | 0 | 100% | 0% |  |
-| pages/bitacora/orden-trabajo | 60 | 1 | 98% | 2% |  |
-| pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 3% |  |
-| pages/bitacora/parte | 205 | 4 | 98% | 0% |  |
-| pages/borrador | 13 | 0 | 100% | 0% |  |
-| pages/buscador | 7 | 0 | 100% | 0% |  |
-| pages/claude | 39 | 0 | 95% | 0% |  |
-| pages/compa | 22 | 0 | 100% | 0% |  |
-| pages/compa/compartida-detalle | 5 | 0 | 100% | 0% |  |
-| pages/compa/compartidas | 6 | 0 | 100% | 0% |  |
-| pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
-| pages/compras/solicitud-compra | 32 | 1 | 97% | 3% |  |
-| pages/demo/escenarios | 8 | 0 | 100% | 0% |  |
-| pages/documentos | 6 | 0 | 50% | 0% |  |
-| pages/documentos/generar | 15 | 0 | 33% | 7% |  |
-| pages/documentos/historial | 7 | 0 | 43% | 0% |  |
-| pages/documentos/plantillas | 6 | 0 | 50% | 0% |  |
-| pages/en-proceso | 22 | 0 | 100% | 0% |  |
-| pages/forbidden | 0 | 1 | 0% | 0% |  |
-| pages/home | 29 | 0 | 100% | 7% | ✅ |
-| pages/incentivos | 40 | 1 | 98% | 17% |  |
-| pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
-| pages/ingenieria | 3 | 0 | 100% | 0% |  |
-| pages/ingenieria/cartilla | 63 | 0 | 97% | 0% |  |
-| pages/ingenieria/pagos | 61 | 0 | 44% | 2% |  |
-| pages/inventario | 15 | 0 | 100% | 0% |  |
-| pages/inventario/almacen-inventario | 23 | 0 | 100% | 0% |  |
-| pages/inventario/almacenes | 30 | 0 | 100% | 3% |  |
-| pages/inventario/articulo-detalle | 20 | 0 | 100% | 0% |  |
-| pages/inventario/articulo-editar | 19 | 0 | 100% | 0% |  |
-| pages/inventario/articulo-nuevo | 27 | 0 | 100% | 0% |  |
-| pages/inventario/catalogo | 12 | 0 | 100% | 0% |  |
-| pages/inventario/conteo | 29 | 0 | 83% | 7% |  |
-| pages/inventario/conteos | 10 | 0 | 100% | 0% |  |
-| pages/inventario/entrada | 33 | 0 | 100% | 0% |  |
-| pages/inventario/existencias | 6 | 0 | 100% | 0% |  |
-| pages/inventario/kardex | 24 | 0 | 100% | 0% |  |
-| pages/inventario/material-no-catalogado | 33 | 0 | 100% | 18% |  |
-| pages/inventario/recibir | 56 | 0 | 98% | 2% |  |
-| pages/inventario/retiro-detalle | 20 | 0 | 100% | 0% |  |
-| pages/inventario/retiro-nuevo | 4 | 19 | 17% | 4% |  |
-| pages/inventario/retiros | 6 | 0 | 100% | 0% |  |
-| pages/inventario/salida | 34 | 0 | 100% | 0% |  |
-| pages/legal | 5 | 0 | 20% | 0% |  |
-| pages/legal/contratos | 30 | 0 | 37% | 0% |  |
-| pages/legal/expedientes | 31 | 0 | 39% | 0% |  |
-| pages/mensajes | 10 | 0 | 100% | 0% |  |
-| pages/mensajes/grupo-info | 24 | 0 | 100% | 4% |  |
-| pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 7% |  |
-| pages/mensajes/thread | 42 | 0 | 100% | 2% |  |
-| pages/mi-rendimiento | 29 | 0 | 100% | 14% |  |
-| pages/notas | 18 | 0 | 100% | 0% |  |
-| pages/notas/editor | 26 | 0 | 100% | 0% |  |
-| pages/obra | 20 | 0 | 100% | 0% |  |
-| pages/obra/avance | 9 | 0 | 100% | 0% |  |
-| pages/obra/charla | 24 | 0 | 100% | 8% |  |
-| pages/obra/checklists | 24 | 0 | 100% | 4% |  |
-| pages/obra/incidente | 25 | 0 | 100% | 4% |  |
-| pages/obra/informe | 26 | 0 | 100% | 4% |  |
-| pages/obra/logistica | 18 | 0 | 100% | 0% |  |
-| pages/obra/mi-proyecto | 27 | 0 | 100% | 0% |  |
-| pages/obra/mis-nc | 24 | 0 | 100% | 0% |  |
-| pages/obra/no-conformidad | 26 | 0 | 100% | 4% |  |
-| pages/obra/plan-dia | 33 | 0 | 100% | 0% |  |
-| pages/obra/recursos | 17 | 0 | 100% | 0% |  |
-| pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
-| pages/pendientes | 25 | 0 | 100% | 4% |  |
-| pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 76 | 0 | 100% | 1% | ✅ |
-| pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
-| pages/perfil/claude | 19 | 0 | 100% | 0% |  |
-| pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
-| pages/practica | 18 | 0 | 100% | 100% |  |
-| pages/proyectos | 19 | 0 | 100% | 0% |  |
-| pages/proyectos/avisos | 4 | 0 | 100% | 0% |  |
-| pages/proyectos/cronograma | 64 | 1 | 98% | 0% |  |
-| pages/proyectos/detalle | 31 | 0 | 100% | 3% |  |
-| pages/proyectos/form | 48 | 1 | 98% | 2% |  |
-| pages/proyectos/personal | 141 | 1 | 67% | 1% |  |
-| pages/reportar | 0 | 8 | 0% | 0% |  |
-| pages/reuniones/reunion-crear | 16 | 0 | 100% | 0% |  |
-| pages/reuniones/reunion-detalle | 13 | 0 | 100% | 0% |  |
-| pages/reuniones/reuniones-lista | 8 | 0 | 100% | 0% |  |
-| pages/rrhh/empleado | 23 | 0 | 100% | 0% |  |
-| pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
-| pages/solicitudes | 5 | 0 | 100% | 0% |  |
-| pages/solicitudes/bandeja | 20 | 0 | 100% | 0% |  |
-| pages/solicitudes/detalle | 74 | 12 | 76% | 1% |  |
-| pages/solicitudes/mis | 18 | 0 | 89% | 0% |  |
-| pages/solicitudes/pedir | 33 | 0 | 70% | 0% |  |
-| pages/soporte | 4 | 20 | 17% | 17% |  |
-| pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 15 | 12 | 52% | 22% |  |
-| pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
-| pages/tecnologia-inventario/equipo-detalle | 0 | 59 | 0% | 0% |  |
-| pages/tecnologia-inventario/equipo-form | 0 | 91 | 0% | 0% |  |
-| pages/tecnologia/agentes | 21 | 1 | 86% | 0% |  |
-| pages/tecnologia/compras-tec | 29 | 0 | 100% | 0% |  |
-| pages/tecnologia/cotizaciones | 14 | 0 | 100% | 0% |  |
-| pages/tecnologia/cotizaciones/cotizacion-detalle | 14 | 0 | 100% | 0% |  |
-| pages/tecnologia/cotizaciones/cotizacion-subir | 21 | 2 | 91% | 0% |  |
-| pages/tecnologia/dev-notes | 0 | 7 | 0% | 0% |  |
-| pages/tecnologia/dev-notes/editor | 8 | 0 | 100% | 0% |  |
-| pages/transporte | 29 | 0 | 100% | 3% | ✅ |
-| pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
-| pages/transporte/apoyo-transporte | 53 | 0 | 91% | 0% |  |
-| pages/transporte/asignar | 35 | 0 | 100% | 3% |  |
-| pages/transporte/asignarme | 36 | 0 | 100% | 0% |  |
-| pages/transporte/aviso-vehiculo | 38 | 0 | 100% | 0% |  |
-| pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
-| pages/transporte/checklist | 64 | 1 | 98% | 3% |  |
-| pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 155 | 2 | 75% | 1% |  |
-| pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 80 | 1 | 83% | 5% |  |
-| pages/transporte/conduce-externo | 84 | 1 | 82% | 4% |  |
-| pages/transporte/conduce-transferencias | 46 | 0 | 98% | 2% |  |
-| pages/transporte/conduces | 71 | 0 | 100% | 3% |  |
-| pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
-| pages/transporte/conduces-hub | 3 | 0 | 100% | 0% |  |
-| pages/transporte/conduces-pendientes | 26 | 0 | 100% | 8% |  |
-| pages/transporte/conduces-por-firmar | 10 | 0 | 100% | 0% |  |
-| pages/transporte/conduces-por-implementar | 10 | 0 | 100% | 0% |  |
-| pages/transporte/conduces/entrega | 33 | 0 | 100% | 3% |  |
-| pages/transporte/conductores | 44 | 0 | 100% | 0% |  |
-| pages/transporte/confirmaciones | 28 | 0 | 100% | 0% |  |
-| pages/transporte/cupo | 25 | 0 | 28% | 0% |  |
-| pages/transporte/despachos | 24 | 0 | 100% | 4% |  |
-| pages/transporte/devolver-material | 44 | 0 | 100% | 2% |  |
-| pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
-| pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
-| pages/transporte/ferreteria | 30 | 0 | 100% | 3% |  |
-| pages/transporte/generar-conduce | 104 | 1 | 97% | 1% |  |
-| pages/transporte/importar | 34 | 0 | 100% | 0% |  |
-| pages/transporte/mantenimiento | 45 | 1 | 91% | 2% |  |
-| pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
-| pages/transporte/mantenimientos-general | 20 | 0 | 50% | 5% |  |
-| pages/transporte/mantenimientos-lista | 10 | 0 | 80% | 10% |  |
-| pages/transporte/mi-actividad | 54 | 0 | 100% | 0% |  |
-| pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
-| pages/transporte/mi-registro | 40 | 0 | 100% | 0% |  |
-| pages/transporte/mis-actas | 8 | 0 | 100% | 0% |  |
-| pages/transporte/mis-choferes | 10 | 0 | 100% | 0% |  |
-| pages/transporte/mis-trabajos | 14 | 0 | 43% | 0% |  |
-| pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
-| pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
-| pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
-| pages/transporte/por-confirmar | 38 | 0 | 100% | 5% |  |
-| pages/transporte/preuso | 73 | 0 | 100% | 3% |  |
-| pages/transporte/reportar-multa | 33 | 0 | 100% | 3% |  |
-| pages/transporte/reportar-vehiculo | 53 | 1 | 98% | 2% |  |
-| pages/transporte/reporte-semanal | 52 | 0 | 100% | 4% |  |
-| pages/transporte/rutas | 63 | 0 | 100% | 2% |  |
-| pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
-| pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
-| pages/transporte/solicitud-movimiento | 33 | 0 | 76% | 0% |  |
-| pages/transporte/trabajos-transporte | 35 | 0 | 97% | 9% |  |
-| pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
-| pages/transporte/uso-vehiculo | 31 | 0 | 74% | 0% |  |
-| pages/transporte/vehiculos | 64 | 2 | 97% | 0% |  |
-| shared/components/aceptacion-politicas | 9 | 0 | 56% | 0% |  |
-| shared/components/alarma-host | 4 | 0 | 100% | 0% |  |
-| shared/components/bienvenida | 26 | 0 | 100% | 100% |  |
-| shared/components/compa-flotante | 11 | 0 | 100% | 9% |  |
-| shared/components/consentimiento-ia | 8 | 2 | 20% | 10% |  |
-| shared/components/consentimiento-ubicacion | 4 | 0 | 25% | 0% |  |
-| shared/components/demo-tabs | 3 | 0 | 100% | 0% |  |
-| shared/components/generar-acceso | 11 | 0 | 100% | 18% |  |
-| shared/components/gps-gate-banner | 2 | 0 | 100% | 0% |  |
-| shared/components/module-placeholder | 2 | 0 | 100% | 0% |  |
-| shared/components/novedades | 11 | 0 | 18% | 9% |  |
-| shared/components/onboarding | 7 | 0 | 100% | 29% |  |
-| shared/components/permisos-onboarding | 13 | 0 | 100% | 15% |  |
-| shared/components/tienda-aviso | 3 | 0 | 0% | 0% |  |
-| shared/ui/articulo-picker | 10 | 0 | 100% | 0% |  |
-| shared/ui/avatar-editor | 6 | 0 | 100% | 0% |  |
-| shared/ui/ayudante-picker | 6 | 0 | 100% | 0% |  |
-| shared/ui/celebracion | 7 | 1 | 50% | 0% |  |
-| shared/ui/destino-selector | 6 | 0 | 100% | 0% |  |
-| shared/ui/doc-slot | 13 | 0 | 100% | 0% |  |
-| shared/ui/draft-banner | 4 | 0 | 100% | 25% |  |
-| shared/ui/in-app-camera | 3 | 0 | 100% | 0% |  |
-| shared/ui/km-input | 8 | 0 | 100% | 0% |  |
-| shared/ui/language-onboarding | 1 | 2 | 33% | 0% |  |
-| shared/ui/language-selector | 0 | 2 | 0% | 0% |  |
-| shared/ui/leer-documento-vehiculo | 12 | 0 | 100% | 17% |  |
-| shared/ui/location-picker | 8 | 0 | 100% | 0% |  |
-| shared/ui/logo-reveal | 2 | 1 | 67% | 33% |  |
-| shared/ui/lugar-picker | 9 | 0 | 100% | 0% |  |
-| shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
-| shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
-| shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
-| shared/ui/molde-esquema-visor | 1 | 0 | 100% | 100% |  |
-| shared/ui/momento | 1 | 0 | 100% | 100% |  |
-| shared/ui/notif-health-band | 22 | 3 | 36% | 8% |  |
-| shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
-| shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
-| shared/ui/photo-slot | 19 | 1 | 90% | 5% |  |
-| shared/ui/photo-viewer | 5 | 0 | 60% | 40% |  |
-| shared/ui/select-list | 0 | 1 | 0% | 0% |  |
-| shared/ui/selector-categorias | 28 | 1 | 97% | 3% |  |
-| shared/ui/share-sheet | 3 | 2 | 60% | 0% |  |
-| shared/ui/signature-pad | 2 | 0 | 100% | 0% |  |
-| shared/ui/skeleton | 1 | 0 | 100% | 0% |  |
-| shared/ui/step-bar | 1 | 0 | 100% | 0% |  |
-| shared/ui/sticker-editor | 7 | 0 | 100% | 0% |  |
-| shared/ui/taller-picker | 8 | 0 | 100% | 0% |  |
-| shared/ui/vehiculo-card | 2 | 0 | 100% | 0% |  |
-| shared/ui/vehiculo-picker | 12 | 0 | 100% | 0% |  |
-| shared/ui/video-player | 7 | 0 | 100% | 100% |  |
-| shared/ui/voice-notes | 2 | 0 | 100% | 0% |  |
-| shared/ui/voice-recorder | 3 | 0 | 100% | 0% |  |
+| Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
+|---|---:|---:|---:|---:|---:|---:|:--:|
+| (raíz) | 20 | 0 | 16 | 20 | 20% | 0% |  |
+| core/models | 115 | 0 | 64 | 115 | 44% | 0% |  |
+| core/practica | 156 | 0 | 118 | 155 | 24% | 1% |  |
+| core/services | 151 | 0 | 103 | 150 | 32% | 1% |  |
+| core/util | 10 | 0 | 6 | 10 | 40% | 0% |  |
+| pages/actualizar | 28 | 0 | 2 | 25 | 93% | 11% |  |
+| pages/admin | 13 | 0 | 0 | 13 | 100% | 0% |  |
+| pages/admin/auditoria | 45 | 0 | 3 | 43 | 93% | 4% |  |
+| pages/admin/catalogos | 9 | 0 | 2 | 9 | 78% | 0% |  |
+| pages/admin/conteos | 4 | 0 | 0 | 4 | 100% | 0% |  |
+| pages/admin/parametros | 9 | 0 | 0 | 9 | 100% | 0% |  |
+| pages/admin/reportes | 8 | 0 | 0 | 8 | 100% | 0% |  |
+| pages/admin/roles | 28 | 0 | 0 | 28 | 100% | 0% |  |
+| pages/admin/unidades | 5 | 0 | 0 | 5 | 100% | 0% |  |
+| pages/admin/usuarios | 73 | 0 | 15 | 72 | 79% | 1% |  |
+| pages/admin/vault | 21 | 0 | 3 | 21 | 86% | 0% |  |
+| pages/admin/vault/vault-entrada | 17 | 0 | 0 | 17 | 100% | 0% |  |
+| pages/admin/vault/vault-generador | 11 | 0 | 0 | 11 | 100% | 0% |  |
+| pages/admin/versiones | 9 | 0 | 0 | 9 | 100% | 0% |  |
+| pages/auth/login | 28 | 0 | 16 | 28 | 43% | 0% |  |
+| pages/auth/pin-acceso-change | 8 | 0 | 0 | 8 | 100% | 0% |  |
+| pages/auth/pin-change | 5 | 0 | 0 | 5 | 100% | 0% |  |
+| pages/auth/pin-setup | 2 | 0 | 0 | 2 | 100% | 0% |  |
+| pages/auth/pin-unlock | 15 | 0 | 0 | 15 | 100% | 0% |  |
+| pages/auth/reset | 8 | 0 | 1 | 8 | 88% | 0% |  |
+| pages/auth/set-password | 10 | 0 | 2 | 10 | 80% | 0% |  |
+| pages/avisos | 24 | 0 | 18 | 24 | 25% | 0% |  |
+| pages/bitacora | 10 | 0 | 0 | 10 | 100% | 0% |  |
+| pages/bitacora/cl-detalle | 35 | 0 | 0 | 35 | 100% | 0% |  |
+| pages/bitacora/cl-firmas | 10 | 0 | 0 | 10 | 100% | 0% |  |
+| pages/bitacora/dashboard | 17 | 0 | 0 | 17 | 100% | 0% |  |
+| pages/bitacora/detalle | 74 | 0 | 0 | 73 | 100% | 1% |  |
+| pages/bitacora/incidente | 84 | 0 | 0 | 83 | 100% | 1% |  |
+| pages/bitacora/liberacion | 93 | 0 | 1 | 92 | 99% | 1% |  |
+| pages/bitacora/mis-ordenes | 15 | 0 | 0 | 15 | 100% | 0% |  |
+| pages/bitacora/mis-partes | 35 | 0 | 0 | 35 | 100% | 0% |  |
+| pages/bitacora/orden-trabajo | 78 | 0 | 1 | 77 | 99% | 1% |  |
+| pages/bitacora/orden-trabajo-ficha | 40 | 0 | 0 | 39 | 100% | 3% |  |
+| pages/bitacora/parte | 257 | 0 | 4 | 255 | 98% | 1% |  |
+| pages/borrador | 20 | 0 | 0 | 20 | 100% | 0% |  |
+| pages/buscador | 7 | 0 | 0 | 7 | 100% | 0% |  |
+| pages/claude | 51 | 0 | 3 | 51 | 94% | 0% |  |
+| pages/compa | 24 | 0 | 0 | 24 | 100% | 0% |  |
+| pages/compa/compartida-detalle | 8 | 0 | 1 | 8 | 88% | 0% |  |
+| pages/compa/compartidas | 7 | 0 | 0 | 7 | 100% | 0% |  |
+| pages/compras-proyecto | 37 | 0 | 0 | 37 | 100% | 0% |  |
+| pages/compras/solicitud-compra | 38 | 0 | 1 | 37 | 97% | 3% |  |
+| pages/demo/escenarios | 9 | 0 | 1 | 9 | 89% | 0% |  |
+| pages/documentos | 6 | 0 | 3 | 6 | 50% | 0% |  |
+| pages/documentos/generar | 20 | 0 | 14 | 19 | 30% | 5% |  |
+| pages/documentos/historial | 9 | 0 | 5 | 9 | 44% | 0% |  |
+| pages/documentos/plantillas | 9 | 0 | 6 | 9 | 33% | 0% |  |
+| pages/en-proceso | 27 | 0 | 0 | 27 | 100% | 0% |  |
+| pages/forbidden | 1 | 0 | 1 | 1 | 0% | 0% |  |
+| pages/home | 58 | 0 | 3 | 56 | 95% | 3% | ✅ |
+| pages/incentivos | 54 | 0 | 0 | 46 | 100% | 15% |  |
+| pages/incentivos/participantes | 22 | 0 | 0 | 22 | 100% | 0% |  |
+| pages/ingenieria | 15 | 0 | 1 | 15 | 93% | 0% |  |
+| pages/ingenieria/cartilla | 79 | 0 | 3 | 79 | 96% | 0% |  |
+| pages/ingenieria/pagos | 77 | 0 | 43 | 76 | 44% | 1% |  |
+| pages/inventario | 15 | 0 | 0 | 15 | 100% | 0% |  |
+| pages/inventario/almacen-inventario | 26 | 0 | 0 | 26 | 100% | 0% |  |
+| pages/inventario/almacenes | 37 | 0 | 0 | 36 | 100% | 3% |  |
+| pages/inventario/articulo-detalle | 26 | 0 | 0 | 26 | 100% | 0% |  |
+| pages/inventario/articulo-editar | 26 | 0 | 0 | 26 | 100% | 0% |  |
+| pages/inventario/articulo-nuevo | 34 | 0 | 0 | 34 | 100% | 0% |  |
+| pages/inventario/catalogo | 13 | 0 | 0 | 13 | 100% | 0% |  |
+| pages/inventario/conteo | 32 | 0 | 5 | 30 | 84% | 6% |  |
+| pages/inventario/conteos | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| pages/inventario/entrada | 41 | 0 | 3 | 41 | 93% | 0% |  |
+| pages/inventario/existencias | 7 | 0 | 0 | 7 | 100% | 0% |  |
+| pages/inventario/kardex | 27 | 0 | 0 | 27 | 100% | 0% |  |
+| pages/inventario/material-no-catalogado | 42 | 0 | 0 | 36 | 100% | 14% |  |
+| pages/inventario/recibir | 64 | 0 | 2 | 63 | 97% | 2% |  |
+| pages/inventario/retiro-detalle | 24 | 0 | 0 | 24 | 100% | 0% |  |
+| pages/inventario/retiro-nuevo | 30 | 0 | 17 | 29 | 43% | 3% |  |
+| pages/inventario/retiros | 6 | 0 | 0 | 6 | 100% | 0% |  |
+| pages/inventario/salida | 45 | 0 | 0 | 45 | 100% | 0% |  |
+| pages/legal | 5 | 0 | 4 | 5 | 20% | 0% |  |
+| pages/legal/contratos | 38 | 0 | 27 | 38 | 29% | 0% |  |
+| pages/legal/expedientes | 40 | 0 | 24 | 40 | 40% | 0% |  |
+| pages/mensajes | 16 | 0 | 0 | 16 | 100% | 0% |  |
+| pages/mensajes/grupo-info | 36 | 0 | 0 | 35 | 100% | 3% |  |
+| pages/mensajes/nuevo-grupo | 16 | 0 | 0 | 15 | 100% | 6% |  |
+| pages/mensajes/thread | 72 | 0 | 4 | 71 | 94% | 1% |  |
+| pages/mi-rendimiento | 39 | 0 | 5 | 33 | 87% | 15% |  |
+| pages/notas | 18 | 0 | 0 | 18 | 100% | 0% |  |
+| pages/notas/editor | 40 | 0 | 0 | 40 | 100% | 0% |  |
+| pages/obra | 29 | 0 | 0 | 29 | 100% | 0% |  |
+| pages/obra/avance | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| pages/obra/charla | 25 | 0 | 0 | 23 | 100% | 8% |  |
+| pages/obra/checklists | 25 | 0 | 0 | 24 | 100% | 4% |  |
+| pages/obra/incidente | 29 | 0 | 0 | 28 | 100% | 3% |  |
+| pages/obra/informe | 32 | 0 | 0 | 31 | 100% | 3% |  |
+| pages/obra/logistica | 25 | 0 | 0 | 25 | 100% | 0% |  |
+| pages/obra/mi-proyecto | 27 | 0 | 0 | 27 | 100% | 0% |  |
+| pages/obra/mis-nc | 30 | 0 | 0 | 30 | 100% | 0% |  |
+| pages/obra/no-conformidad | 27 | 0 | 0 | 26 | 100% | 4% |  |
+| pages/obra/plan-dia | 42 | 0 | 0 | 42 | 100% | 0% |  |
+| pages/obra/recursos | 26 | 0 | 0 | 26 | 100% | 0% |  |
+| pages/obra/subcontratistas | 29 | 0 | 0 | 29 | 100% | 0% |  |
+| pages/pendientes | 50 | 0 | 17 | 49 | 66% | 2% |  |
+| pages/pendientes/outbox-detalle | 32 | 0 | 1 | 32 | 97% | 0% |  |
+| pages/perfil | 113 | 0 | 14 | 112 | 88% | 1% | ✅ |
+| pages/perfil/a-mi-cargo | 7 | 0 | 0 | 7 | 100% | 0% |  |
+| pages/perfil/claude | 24 | 0 | 0 | 24 | 100% | 0% |  |
+| pages/perfil/mi-detalle | 20 | 0 | 0 | 20 | 100% | 0% |  |
+| pages/practica | 19 | 0 | 0 | 0 | 100% | 100% |  |
+| pages/proyectos | 20 | 0 | 0 | 20 | 100% | 0% |  |
+| pages/proyectos/avisos | 4 | 0 | 0 | 4 | 100% | 0% |  |
+| pages/proyectos/cronograma | 80 | 0 | 1 | 80 | 99% | 0% |  |
+| pages/proyectos/detalle | 31 | 0 | 0 | 30 | 100% | 3% |  |
+| pages/proyectos/form | 71 | 0 | 1 | 70 | 99% | 1% |  |
+| pages/proyectos/personal | 211 | 0 | 77 | 210 | 64% | 0% |  |
+| pages/reportar | 13 | 0 | 9 | 13 | 31% | 0% |  |
+| pages/reuniones/reunion-crear | 23 | 0 | 3 | 23 | 87% | 0% |  |
+| pages/reuniones/reunion-detalle | 20 | 0 | 0 | 20 | 100% | 0% |  |
+| pages/reuniones/reuniones-lista | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| pages/rrhh/empleado | 30 | 0 | 2 | 30 | 93% | 0% |  |
+| pages/rrhh/empleados | 6 | 0 | 0 | 6 | 100% | 0% |  |
+| pages/solicitudes | 5 | 0 | 0 | 5 | 100% | 0% |  |
+| pages/solicitudes/bandeja | 27 | 0 | 0 | 27 | 100% | 0% |  |
+| pages/solicitudes/detalle | 118 | 0 | 21 | 117 | 82% | 1% |  |
+| pages/solicitudes/mis | 27 | 0 | 3 | 27 | 89% | 0% |  |
+| pages/solicitudes/pedir | 51 | 0 | 11 | 51 | 78% | 0% |  |
+| pages/soporte | 23 | 0 | 16 | 19 | 30% | 17% |  |
+| pages/tareas | 72 | 0 | 3 | 72 | 96% | 0% |  |
+| pages/tecnologia | 27 | 0 | 11 | 21 | 59% | 22% |  |
+| pages/tecnologia-inventario | 6 | 0 | 5 | 6 | 17% | 0% |  |
+| pages/tecnologia-inventario/equipo-detalle | 69 | 0 | 54 | 68 | 22% | 1% |  |
+| pages/tecnologia-inventario/equipo-form | 92 | 0 | 79 | 90 | 14% | 2% |  |
+| pages/tecnologia/agentes | 26 | 0 | 2 | 26 | 92% | 0% |  |
+| pages/tecnologia/compras-tec | 32 | 0 | 0 | 32 | 100% | 0% |  |
+| pages/tecnologia/cotizaciones | 14 | 0 | 0 | 14 | 100% | 0% |  |
+| pages/tecnologia/cotizaciones/cotizacion-detalle | 14 | 0 | 0 | 14 | 100% | 0% |  |
+| pages/tecnologia/cotizaciones/cotizacion-subir | 26 | 0 | 2 | 26 | 92% | 0% |  |
+| pages/tecnologia/dev-notes | 12 | 0 | 5 | 12 | 58% | 0% |  |
+| pages/tecnologia/dev-notes/editor | 15 | 0 | 0 | 15 | 100% | 0% |  |
+| pages/transporte | 55 | 0 | 5 | 54 | 91% | 2% | ✅ |
+| pages/transporte/acta-detalle | 15 | 0 | 0 | 15 | 100% | 0% |  |
+| pages/transporte/apoyo-transporte | 75 | 0 | 7 | 75 | 91% | 0% |  |
+| pages/transporte/asignar | 45 | 0 | 0 | 44 | 100% | 2% |  |
+| pages/transporte/asignarme | 42 | 0 | 0 | 42 | 100% | 0% |  |
+| pages/transporte/aviso-vehiculo | 42 | 0 | 0 | 42 | 100% | 0% |  |
+| pages/transporte/avisos | 20 | 0 | 0 | 20 | 100% | 0% |  |
+| pages/transporte/checklist | 82 | 0 | 0 | 80 | 100% | 2% |  |
+| pages/transporte/checklists-historial | 15 | 0 | 0 | 14 | 100% | 7% |  |
+| pages/transporte/combustible | 185 | 0 | 49 | 183 | 74% | 1% |  |
+| pages/transporte/combustible-log | 22 | 0 | 3 | 22 | 86% | 0% |  |
+| pages/transporte/conduce-detalle | 105 | 0 | 18 | 101 | 83% | 4% |  |
+| pages/transporte/conduce-externo | 104 | 0 | 27 | 101 | 74% | 3% |  |
+| pages/transporte/conduce-transferencias | 53 | 0 | 1 | 52 | 98% | 2% |  |
+| pages/transporte/conduces | 91 | 0 | 0 | 89 | 100% | 2% |  |
+| pages/transporte/conduces-historial | 42 | 0 | 0 | 42 | 100% | 0% |  |
+| pages/transporte/conduces-hub | 13 | 0 | 3 | 13 | 77% | 0% |  |
+| pages/transporte/conduces-pendientes | 36 | 0 | 0 | 34 | 100% | 6% |  |
+| pages/transporte/conduces-por-firmar | 11 | 0 | 0 | 11 | 100% | 0% |  |
+| pages/transporte/conduces-por-implementar | 11 | 0 | 0 | 11 | 100% | 0% |  |
+| pages/transporte/conduces/entrega | 46 | 0 | 0 | 45 | 100% | 2% |  |
+| pages/transporte/conductores | 56 | 0 | 0 | 56 | 100% | 0% |  |
+| pages/transporte/confirmaciones | 32 | 0 | 0 | 32 | 100% | 0% |  |
+| pages/transporte/cupo | 36 | 0 | 28 | 36 | 22% | 0% |  |
+| pages/transporte/despachos | 31 | 0 | 0 | 30 | 100% | 3% |  |
+| pages/transporte/devolver-material | 51 | 0 | 0 | 50 | 100% | 2% |  |
+| pages/transporte/echada-detalle | 22 | 0 | 2 | 22 | 91% | 0% |  |
+| pages/transporte/estado-chofer | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| pages/transporte/ferreteria | 33 | 0 | 0 | 32 | 100% | 3% |  |
+| pages/transporte/generar-conduce | 131 | 0 | 21 | 130 | 84% | 1% |  |
+| pages/transporte/importar | 44 | 0 | 0 | 44 | 100% | 0% |  |
+| pages/transporte/mantenimiento | 66 | 0 | 16 | 65 | 76% | 2% |  |
+| pages/transporte/mantenimiento-cierre | 8 | 0 | 0 | 8 | 100% | 0% |  |
+| pages/transporte/mantenimientos-general | 20 | 0 | 10 | 19 | 50% | 5% |  |
+| pages/transporte/mantenimientos-lista | 10 | 0 | 2 | 9 | 80% | 10% |  |
+| pages/transporte/mi-actividad | 67 | 0 | 2 | 66 | 97% | 1% |  |
+| pages/transporte/mi-recorrido | 15 | 0 | 1 | 15 | 93% | 0% |  |
+| pages/transporte/mi-registro | 51 | 0 | 0 | 50 | 100% | 2% |  |
+| pages/transporte/mis-actas | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| pages/transporte/mis-choferes | 13 | 0 | 0 | 13 | 100% | 0% |  |
+| pages/transporte/mis-trabajos | 15 | 0 | 9 | 15 | 40% | 0% |  |
+| pages/transporte/perfil-conductor | 44 | 0 | 1 | 44 | 98% | 0% |  |
+| pages/transporte/perfil-vehiculo | 42 | 0 | 3 | 42 | 93% | 0% |  |
+| pages/transporte/por-aprobar | 33 | 0 | 0 | 33 | 100% | 0% |  |
+| pages/transporte/por-confirmar | 47 | 0 | 0 | 45 | 100% | 4% |  |
+| pages/transporte/preuso | 96 | 0 | 0 | 94 | 100% | 2% |  |
+| pages/transporte/reportar-multa | 36 | 0 | 0 | 35 | 100% | 3% |  |
+| pages/transporte/reportar-vehiculo | 56 | 0 | 0 | 55 | 100% | 2% |  |
+| pages/transporte/reporte-semanal | 67 | 0 | 0 | 65 | 100% | 3% |  |
+| pages/transporte/rutas | 91 | 0 | 5 | 90 | 95% | 1% |  |
+| pages/transporte/rutas-activas | 32 | 0 | 0 | 32 | 100% | 0% |  |
+| pages/transporte/seguimiento | 17 | 0 | 0 | 17 | 100% | 0% |  |
+| pages/transporte/solicitud-movimiento | 56 | 0 | 8 | 56 | 86% | 0% |  |
+| pages/transporte/trabajos-transporte | 49 | 0 | 1 | 45 | 98% | 8% |  |
+| pages/transporte/trayectoria | 5 | 0 | 0 | 5 | 100% | 0% |  |
+| pages/transporte/uso-vehiculo | 49 | 0 | 12 | 49 | 76% | 0% |  |
+| pages/transporte/vehiculos | 75 | 0 | 4 | 75 | 95% | 0% |  |
+| shared/components/aceptacion-politicas | 9 | 0 | 4 | 9 | 56% | 0% |  |
+| shared/components/alarma-host | 4 | 0 | 0 | 4 | 100% | 0% |  |
+| shared/components/bienvenida | 26 | 0 | 0 | 0 | 100% | 100% |  |
+| shared/components/compa-flotante | 11 | 0 | 0 | 10 | 100% | 9% |  |
+| shared/components/consentimiento-ia | 10 | 0 | 8 | 9 | 20% | 10% |  |
+| shared/components/consentimiento-ubicacion | 4 | 0 | 3 | 4 | 25% | 0% |  |
+| shared/components/demo-tabs | 3 | 0 | 0 | 3 | 100% | 0% |  |
+| shared/components/generar-acceso | 16 | 0 | 0 | 14 | 100% | 13% |  |
+| shared/components/gps-gate-banner | 4 | 0 | 0 | 4 | 100% | 0% |  |
+| shared/components/module-placeholder | 2 | 0 | 0 | 2 | 100% | 0% |  |
+| shared/components/novedades | 11 | 0 | 9 | 10 | 18% | 9% |  |
+| shared/components/onboarding | 7 | 0 | 0 | 5 | 100% | 29% |  |
+| shared/components/permisos-onboarding | 13 | 0 | 0 | 11 | 100% | 15% |  |
+| shared/components/tienda-aviso | 3 | 0 | 3 | 3 | 0% | 0% |  |
+| shared/ui/articulo-picker | 11 | 0 | 0 | 11 | 100% | 0% |  |
+| shared/ui/avatar-editor | 6 | 0 | 0 | 6 | 100% | 0% |  |
+| shared/ui/ayudante-picker | 6 | 0 | 0 | 6 | 100% | 0% |  |
+| shared/ui/celebracion | 9 | 0 | 5 | 9 | 44% | 0% |  |
+| shared/ui/destino-selector | 7 | 0 | 0 | 7 | 100% | 0% |  |
+| shared/ui/doc-slot | 13 | 0 | 0 | 13 | 100% | 0% |  |
+| shared/ui/draft-banner | 4 | 0 | 0 | 3 | 100% | 25% |  |
+| shared/ui/in-app-camera | 6 | 0 | 0 | 6 | 100% | 0% |  |
+| shared/ui/km-input | 8 | 0 | 0 | 8 | 100% | 0% |  |
+| shared/ui/language-onboarding | 3 | 0 | 2 | 3 | 33% | 0% |  |
+| shared/ui/language-selector | 2 | 0 | 2 | 2 | 0% | 0% |  |
+| shared/ui/leer-documento-vehiculo | 23 | 0 | 0 | 21 | 100% | 9% |  |
+| shared/ui/location-picker | 17 | 0 | 0 | 17 | 100% | 0% |  |
+| shared/ui/logo-reveal | 2 | 0 | 0 | 1 | 100% | 50% |  |
+| shared/ui/lugar-picker | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| shared/ui/mant-adjuntos | 7 | 0 | 5 | 7 | 29% | 0% |  |
+| shared/ui/molde-compositor | 14 | 0 | 0 | 14 | 100% | 0% |  |
+| shared/ui/molde-esquema | 4 | 0 | 1 | 4 | 75% | 0% |  |
+| shared/ui/molde-esquema-visor | 1 | 0 | 0 | 0 | 100% | 100% |  |
+| shared/ui/momento | 2 | 0 | 0 | 0 | 100% | 100% |  |
+| shared/ui/notif-health-band | 28 | 0 | 18 | 26 | 36% | 7% |  |
+| shared/ui/pdf-viewer | 2 | 0 | 1 | 2 | 50% | 0% |  |
+| shared/ui/personal-carnet | 9 | 0 | 0 | 9 | 100% | 0% |  |
+| shared/ui/photo-slot | 21 | 0 | 3 | 20 | 86% | 5% |  |
+| shared/ui/photo-viewer | 5 | 0 | 2 | 3 | 60% | 40% |  |
+| shared/ui/pipes | 1 | 0 | 1 | 1 | 0% | 0% |  |
+| shared/ui/selector-categorias | 32 | 0 | 3 | 31 | 91% | 3% |  |
+| shared/ui/share-sheet | 7 | 0 | 2 | 7 | 71% | 0% |  |
+| shared/ui/signature-pad | 2 | 0 | 0 | 2 | 100% | 0% |  |
+| shared/ui/skeleton | 1 | 0 | 0 | 1 | 100% | 0% |  |
+| shared/ui/step-bar | 1 | 0 | 0 | 1 | 100% | 0% |  |
+| shared/ui/sticker-editor | 7 | 0 | 0 | 7 | 100% | 0% |  |
+| shared/ui/taller-picker | 10 | 0 | 0 | 10 | 100% | 0% |  |
+| shared/ui/vehiculo-card | 2 | 0 | 0 | 2 | 100% | 0% |  |
+| shared/ui/vehiculo-picker | 12 | 0 | 0 | 12 | 100% | 0% |  |
+| shared/ui/video-player | 8 | 0 | 1 | 1 | 88% | 88% |  |
+| shared/ui/voice-notes | 2 | 0 | 0 | 2 | 100% | 0% |  |
+| shared/ui/voice-recorder | 8 | 0 | 0 | 8 | 100% | 0% |  |
+| shared/util | 12 | 0 | 12 | 12 | 0% | 0% |  |

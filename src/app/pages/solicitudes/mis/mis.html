@@ -78,7 +78,7 @@
             <div class="sol-card__orden">
               <span class="sol-card__orden-ico">🧾</span>
               <span class="sol-card__orden-txt">
-                {{ 'Orden' | t }} {{ oc.numero }} · {{ ordenEstadoLabel(oc.orden_estado) }}@if (oc.proveedor) { · {{ oc.proveedor }} }
+                {{ 'Orden' | t }} {{ oc.numero }} · {{ ordenEstadoLabel(oc.orden_estado) | t }}@if (oc.proveedor) { · {{ oc.proveedor }} }
               </span>
             </div>
           }

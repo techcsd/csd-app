@@ -14,6 +14,7 @@ import {
   PersonalObra,
 } from '../models/personal-obra.model';
 
+import { I18nService } from '../i18n/i18n.service';
 const BUCKET = 'personal-obra';
 
 /** Todas las fotos de evidencia que maneja el registro (slots del outbox). */
@@ -122,6 +123,7 @@ export interface RegistroCaptura {
  */
 @Injectable({ providedIn: 'root' })
 export class PersonalObraService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private ctx = inject(UserContextService);
   private catalog = inject(CatalogService);
@@ -315,7 +317,7 @@ export class PersonalObraService {
           if (parsed?.error) return { ok: false, error: parsed.error, error_code: parsed.error_code };
         } catch { /* ignore */ }
       }
-      return { ok: false, error: 'No se pudo leer el documento. Llena los campos a mano.' };
+      return { ok: false, error: this.i18n.t('No se pudo leer el documento. Llena los campos a mano.') };
     }
     return data as { ok: boolean; lectura?: LecturaDocumentoPersonal; modelo?: string };
   }
@@ -336,7 +338,7 @@ export class PersonalObraService {
     });
     if (error) {
       if ((error as { code?: string }).code === '22023') {
-        throw new Error('El levantamiento de hoy ya está cerrado.');
+        throw new Error(this.i18n.t('El levantamiento de hoy ya está cerrado.'));
       }
       throw new Error(error.message);
     }

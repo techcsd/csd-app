@@ -53,7 +53,7 @@
         <label class="field-label">{{ 'Nombre visible' | t }}</label>
         <input class="field" type="text" [ngModel]="nombreEdit()" (ngModelChange)="nombreEdit.set($event)" [placeholder]="'Tu nombre' | t" />
         <label class="field-label">{{ 'Teléfono' | t }}</label>
-        <input class="field" type="tel" inputmode="tel" [ngModel]="telefonoEdit()" (ngModelChange)="telefonoEdit.set($event)" placeholder="Ej: 809-555-1234" />
+        <input class="field" type="tel" inputmode="tel" [ngModel]="telefonoEdit()" (ngModelChange)="telefonoEdit.set($event)" placeholder="{{ 'Ej: 809-555-1234' | t }}" />
         <div class="perfil__miperfil-acciones">
           <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="cancelarEdicion()">{{ 'Cancelar' | t }}</button>
           <button type="button" class="btn-cta perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="guardarPerfil()">

@@ -17,6 +17,7 @@ import { ConsentService } from './consent.service';
 import { db, PosicionBuffer } from '../db/app-db';
 import { throwSyncError, PermanentSyncError, SyncService } from '../sync/sync.service';
 
+import { I18nService } from '../i18n/i18n.service';
 const LEGACY_BUFFER_KEY = 'tracking_buffer'; // AU7 — buffer viejo en LocalStore (se migra a Dexie)
 const FLUSH_MS = 45_000; // AF27 — lote cada ~45 s en ruta activa
 const MAX_BUFFER = 12; // fuerza flush al llegar a este tamaño
@@ -53,6 +54,7 @@ const COMPARTE_CACHE_KEY = 'tracking_comparte';
  */
 @Injectable({ providedIn: 'root' })
 export class TrackingService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private permissions = inject(PermissionsService);
   private store = inject(LocalStore);
@@ -236,7 +238,7 @@ export class TrackingService {
         : 'Enciende la ubicación (GPS) del teléfono para continuar.';
     this.toast.withAction(
       msg,
-      { label: 'Abrir ajustes', run: () => void this.permissions.openAppSettings() },
+      { label: this.i18n.t('Abrir ajustes'), run: () => void this.permissions.openAppSettings() },
       'error',
       9000,
     );
@@ -443,8 +445,8 @@ export class TrackingService {
 
     // Diálogo nativo real (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) tras el toast.
     this.toast.withAction(
-      'Para que tu ubicación se reporte con la pantalla apagada, permite que la app funcione sin restricción de batería.',
-      { label: 'Permitir', run: () => void this.permissions.requestIgnoreBattery() },
+      this.i18n.t('Para que tu ubicación se reporte con la pantalla apagada, permite que la app funcione sin restricción de batería.'),
+      { label: this.i18n.t('Permitir'), run: () => void this.permissions.requestIgnoreBattery() },
       'info',
       12000,
     );

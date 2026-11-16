@@ -24,6 +24,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
 interface GrupoResumen {
   categoria: string;
   lineas: CartLinea[];
@@ -49,6 +50,7 @@ interface EntradaDraft {
   styleUrl: '../salida/salida.scss',
 })
 export class EntradaPage implements OnDestroy {
+  private i18n = inject(I18nService);
   private inventario = inject(InventarioService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
@@ -272,32 +274,32 @@ export class EntradaPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén.');
+      this.toast.error(this.i18n.t('Elige el almacén.'));
       return;
     }
     const items = this.cart().filter((l) => l.cantidad > 0);
     if (!items.length) {
-      this.toast.error('Agrega al menos un material.');
+      this.toast.error(this.i18n.t('Agrega al menos un material.'));
       return;
     }
     // U25 — si el motivo es "Otro", el detalle es obligatorio y es lo que se envía.
     if (this.motivo() === 'Otro' && !this.motivoOtro().trim()) {
-      this.toast.error('Especifica de dónde viene el material.');
+      this.toast.error(this.i18n.t('Especifica de dónde viene el material.'));
       return;
     }
     // P12 — devolución de obra: la obra de origen es obligatoria.
     if (this.esDevolucion() && !this.obraOrigenId()) {
-      this.toast.error('Elige la obra de la que viene el material.');
+      this.toast.error(this.i18n.t('Elige la obra de la que viene el material.'));
       return;
     }
     // Z19b — evidencia obligatoria en la entrada normal (no en devolución de obra).
     if (this.faltaFoto()) {
-      this.toast.error('Agrega una foto de evidencia antes de confirmar.');
+      this.toast.error(this.i18n.t('Agrega una foto de evidencia antes de confirmar.'));
       return;
     }
     // AF10 — firma de quien recibe obligatoria en la entrada normal.
     if (this.faltaFirma() || (!this.esDevolucion() && !this.firmaBlob())) {
-      this.toast.error('Falta la firma de quien recibe.');
+      this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
       return;
     }
     this.submitting.set(true);
@@ -371,7 +373,7 @@ export class EntradaPage implements OnDestroy {
 
   compartir(): void {
     if (!this.cart().length) {
-      this.toast.error('No hay material para compartir.');
+      this.toast.error(this.i18n.t('No hay material para compartir.'));
       return;
     }
     this.shareOpen.set(true);

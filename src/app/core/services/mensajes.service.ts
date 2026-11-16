@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { SyncService, throwSyncError } from '../sync/sync.service';
 import { environment } from '../../../environments/environment';
 
+import { I18nService } from '../i18n/i18n.service';
 /** AN6/AQ9 — bucket de mensajería (avatares de grupo + adjuntos). La RLS exige
  *  que la carpeta [1] del path sea la conversación (es_participante). */
 const AVATAR_BUCKET = 'sgc-mensajes';
@@ -116,6 +117,7 @@ export interface GrupoInfo {
  */
 @Injectable({ providedIn: 'root' })
 export class MensajesService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private sync = inject(SyncService);
   private registered = false;
@@ -166,7 +168,7 @@ export class MensajesService {
     contenido?: string | null,
   ): Promise<void> {
     if (file.blob.size > MAX_ADJUNTO_BYTES) {
-      throw new Error('El archivo supera el límite de 25 MB.');
+      throw new Error(this.i18n.t('El archivo supera el límite de 25 MB.'));
     }
     const id = crypto.randomUUID();
     const ext = this.extDe(file.nombre, file.mime);
@@ -234,7 +236,7 @@ export class MensajesService {
    * pasa el path + duración a `enviar_nota_voz`. Offline-safe e idempotente por client_id.
    */
   async enviarNotaVoz(conversacionId: string, blob: Blob, duracionSeg: number, mime = 'audio/webm'): Promise<void> {
-    if (blob.size > MAX_ADJUNTO_BYTES) throw new Error('La nota de voz supera el límite de 25 MB.');
+    if (blob.size > MAX_ADJUNTO_BYTES) throw new Error(this.i18n.t('La nota de voz supera el límite de 25 MB.'));
     const id = crypto.randomUUID();
     // AW13 — mime BASE (sin ';codecs=…'): el allowlist del bucket lo valida exacto.
     const baseMime = (mime || 'audio/webm').split(';')[0].trim();

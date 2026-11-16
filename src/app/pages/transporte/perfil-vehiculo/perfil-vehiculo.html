@@ -35,7 +35,7 @@
     <!-- V1/V2 — identificadores del vehículo -->
     @if (vin() || numeroMatricula() || numeroSeguro() || aseguradora()) {
       <ul class="pveh__ids">
-        @if (vin()) { <li><span>VIN</span><b>{{ vin() }}</b></li> }
+        @if (vin()) { <li><span>{{ 'VIN' | t }}</span><b>{{ vin() }}</b></li> }
         @if (numeroMatricula()) { <li><span>{{ 'N.º matrícula' | t }}</span><b>{{ numeroMatricula() }}</b></li> }
         @if (numeroSeguro()) { <li><span>{{ 'N.º seguro' | t }}</span><b>{{ numeroSeguro() }}</b></li> }
         @if (aseguradora()) { <li><span>{{ 'Aseguradora' | t }}</span><b>{{ aseguradora() }}</b></li> }

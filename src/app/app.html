@@ -3,10 +3,9 @@
   <div class="no-project">
     <div class="no-project__card">
       <span class="no-project__icon">🧩</span>
-      <h1 class="no-project__title">Sin proyecto configurado</h1>
+      <h1 class="no-project__title">{{ 'Sin proyecto configurado' | t }}</h1>
       <p class="no-project__msg">
-        Corre <code>npm run env:dev</code> para apuntar el <code>ng serve</code> al
-        entorno de desarrollo (nunca a producción por defecto — regla 18).
+        {{ 'Corre' | t }} <code>npm run env:dev</code> {{ 'para apuntar el' | t }} <code>ng serve</code> {{ 'al entorno de desarrollo (nunca a producción por defecto — regla 18).' | t }}
       </p>
     </div>
   </div>
@@ -16,7 +15,7 @@
   @if (esDev) {
     <!-- CP5 — dev ES el staging (docs/STAGING.md del padre); ya no es solo "DEV". -->
     <div class="dev-ribbon" role="status" aria-label="Entorno de desarrollo">
-      Staging (dev) · {{ refCorto }}
+      {{ 'Staging (dev) ·' | t }} {{ refCorto }}
     </div>
   }
 
@@ -74,19 +73,18 @@
   <div class="version-gate">
     <div class="version-gate__card">
       <span class="version-gate__icon">⬆️</span>
-      <h1 class="version-gate__title">Actualiza la app</h1>
+      <h1 class="version-gate__title">{{ 'Actualiza la app' | t }}</h1>
       <p class="version-gate__msg">
-        Esta versión ({{ version.local }}) ya no está disponible. Descarga la versión
-        {{ version.info()?.version_minima }} o superior para seguir trabajando.
+        {{ 'Esta versión ({v}) ya no está disponible. Descarga la versión {min} o superior para seguir trabajando.' | t: { v: version.local, min: version.info()?.version_minima ?? '' } }}
       </p>
       @if (updater.estado() === 'descargando') {
         <div class="version-gate__progress">
           <div class="version-gate__progress-bar" [style.width.%]="updater.progreso()"></div>
         </div>
-        <p class="version-gate__progress-txt">Descargando… {{ updater.progreso() }}%</p>
+        <p class="version-gate__progress-txt">{{ 'Descargando…' | t }} {{ updater.progreso() }}%</p>
       } @else if (updater.estado() === 'permiso') {
         <p class="version-gate__msg">
-          Activa "Instalar apps desconocidas" para CSD App y vuelve a tocar Actualizar.
+          {{ 'Activa "Instalar apps desconocidas" para CSD App y vuelve a tocar Actualizar.' | t }}
         </p>
       }
       @if (version.apkUrl) {
@@ -96,15 +94,15 @@
           [disabled]="updater.estado() === 'descargando' || updater.estado() === 'instalando'"
           (click)="actualizarAhora()"
         >
-          {{ updater.estado() === 'descargando' ? 'Descargando…' : (updater.esNativo ? 'Actualizar ahora' : 'Descargar actualización') }}
+          {{ (updater.estado() === 'descargando' ? 'Descargando…' : (updater.esNativo ? 'Actualizar ahora' : 'Descargar actualización')) | t }}
         </button>
       } @else {
         <p class="version-gate__msg">
-          Descarga la nueva versión desde la página <b>CSD App</b> del sistema, o contacta a Tecnología.
+          {{ 'Descarga la nueva versión desde la página' | t }} <b>CSD App</b> {{ 'del sistema, o contacta a Tecnología.' | t }}
         </p>
       }
       <!-- APP-002: escape siempre disponible para no atascar al usuario -->
-      <button type="button" class="version-gate__escape" (click)="cerrarSesionGate()">Cerrar sesión</button>
+      <button type="button" class="version-gate__escape" (click)="cerrarSesionGate()">{{ 'Cerrar sesión' | t }}</button>
     </div>
   </div>
 } @else {
@@ -113,7 +111,7 @@
     <button type="button" class="version-banner" (click)="irActualizar()">
       <span class="version-banner__icon">⬆️</span>
       <span class="version-banner__txt">
-        Nueva versión {{ version.info()?.version_publicada }} disponible — toca para actualizar
+        {{ 'Nueva versión {v} disponible — toca para actualizar' | t: { v: version.info()?.version_publicada ?? '' } }}
       </span>
       <span class="version-banner__chev">›</span>
     </button>
@@ -122,7 +120,7 @@
     <!-- AY7: sesión de usuario de PRUEBA. Se comporta como su rol; esto solo avisa. -->
     <div class="test-user-banner" role="status">
       <span class="test-user-banner__icon">🧪</span>
-      <span class="test-user-banner__txt">USUARIO DE PRUEBA — esta sesión es solo para pruebas</span>
+      <span class="test-user-banner__txt">{{ 'USUARIO DE PRUEBA — esta sesión es solo para pruebas' | t }}</span>
     </div>
   }
   @if (imp.activo() && !enAuth()) {
@@ -130,9 +128,9 @@
     <div class="imp-banner" role="status">
       <span class="imp-banner__icon">👁️</span>
       <span class="imp-banner__txt">
-        Estás viendo como <b>{{ imp.targetNombre() }}</b>@if (ctx.esPrueba()) { <span class="imp-banner__prueba">🧪 prueba</span> }
+        {{ 'Estás viendo como' | t }} <b>{{ imp.targetNombre() }}</b>@if (ctx.esPrueba()) { <span class="imp-banner__prueba">{{ '🧪 prueba' | t }}</span> }
       </span>
-      <button type="button" class="imp-banner__salir" (click)="salirImpersonacion()">Salir</button>
+      <button type="button" class="imp-banner__salir" (click)="salirImpersonacion()">{{ 'Salir' | t }}</button>
     </div>
   }
   @if (!enAuth()) {

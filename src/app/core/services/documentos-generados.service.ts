@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { DocumentoGenerado } from '../models/documento-generado.model';
 
+import { I18nService } from '../i18n/i18n.service';
 /**
  * CO12/CO13 — Historial de documentos generados. Sin RPC de creación/listado del
  * padre: insert/select directos bajo la RLS de `documentos_generados` (acota por
@@ -10,6 +11,7 @@ import { DocumentoGenerado } from '../models/documento-generado.model';
  */
 @Injectable({ providedIn: 'root' })
 export class DocumentosGeneradosService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
 
   async historial(): Promise<DocumentoGenerado[]> {
@@ -44,7 +46,7 @@ export class DocumentosGeneradosService {
   }): Promise<string> {
     const { data: userData } = await this.supabase.client.auth.getUser();
     const uid = userData.user?.id;
-    if (!uid) throw new Error('No autenticado.');
+    if (!uid) throw new Error(this.i18n.t('No autenticado.'));
     const { data, error } = await this.supabase.client
       .from('documentos_generados')
       .insert({

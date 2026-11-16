@@ -20,8 +20,8 @@
                 <button type="button" class="prac__mis" appTapScale (click)="iniciar(m)" [attr.data-testid]="'practica-mision-' + m.id">
                   <span class="prac__mis-n">{{ i + 1 }}</span>
                   <span class="prac__mis-txt">
-                    <span class="prac__mis-titulo">{{ m.titulo }}</span>
-                    <span class="prac__mis-sub">{{ m.sub }}</span>
+                    <span class="prac__mis-titulo">{{ m.titulo | t }}</span>
+                    <span class="prac__mis-sub">{{ m.sub | t }}</span>
                   </span>
                   <span class="prac__mis-cta">{{ 'Empezar' | t }}</span>
                 </button>
@@ -45,11 +45,11 @@
           </div>
 
           <div class="prac__obj-wrap">
-            <div class="prac__mis-label">{{ m.titulo | uppercase }}</div>
+            <div class="prac__mis-label">{{ m.titulo | t | uppercase }}</div>
             <div class="prac__objs">
               @for (o of m.objetivos; track o.id) {
                 <span class="prac__obj" [class.prac__obj--ok]="objetivoHecho(o.id)">
-                  {{ objetivoHecho(o.id) ? '✓' : '○' }} {{ o.label }}
+                  {{ objetivoHecho(o.id) ? '✓' : '○' }} {{ o.label | t }}
                 </span>
               }
             </div>
@@ -58,7 +58,7 @@
           <div class="prac__campos">
             @for (p of camposPasos(); track p.id) {
               @if (p.tipo === 'valor' && p.campo) {
-                <label class="prac__field-lbl">{{ p.campo.label }}
+                <label class="prac__field-lbl">{{ p.campo.label | t }}
                   <div
                     class="prac__field"
                     [class.prac__field--on]="pasoActual()?.id === p.id"
@@ -67,16 +67,16 @@
                   >{{ valorDe(p.campo.objetivo) || '—' }}</div>
                 </label>
                 @if (mostrandoError && pasoActual()?.id === p.id && p.campo.trampa) {
-                  <div class="prac__error">{{ p.campo.trampa.mensaje }}</div>
+                  <div class="prac__error">{{ p.campo.trampa.mensaje | t }}</div>
                 }
               } @else if (p.tipo === 'foto' && p.foto) {
                 <div class="prac__slot" [class.prac__slot--ok]="fotoHecha(p.foto.objetivo)" [class.prac__slot--on]="pasoActual()?.id === p.id">
-                  {{ fotoHecha(p.foto.objetivo) ? ('✓ ' + p.foto.label) : p.foto.label }}
+                  {{ fotoHecha(p.foto.objetivo) ? ('✓ ' + (p.foto.label | t)) : (p.foto.label | t) }}
                 </div>
               } @else if (p.tipo === 'accion' && p.accion) {
                 <div class="prac__accion" [class.prac__accion--ok]="objetivoHecho(p.accion.objetivo)" [class.prac__accion--on]="pasoActual()?.id === p.id">
                   <span class="prac__accion-mark">{{ objetivoHecho(p.accion.objetivo) ? '✓' : '○' }}</span>
-                  <span>{{ p.accion.label }}</span>
+                  <span>{{ p.accion.label | t }}</span>
                 </div>
               }
             }
@@ -84,7 +84,7 @@
 
           <div class="prac__run-footer">
             <button type="button" class="prac__cta" appTapScale (click)="avanzar()" data-testid="practica-avanzar">
-              {{ (pasoActual()?.cta || 'Guardar') }}
+              {{ (pasoActual()?.cta || 'Guardar') | t }}
             </button>
             <button type="button" class="prac__salir" (click)="salir()">{{ 'Salir de la práctica' | t }}</button>
           </div>
@@ -129,7 +129,7 @@
             @for (l of r.lineas; track $index) {
               <div class="prac__linea" [class.prac__linea--ok]="l.ok" [class.prac__linea--no]="!l.ok">
                 <b>{{ l.ok ? '✓' : '✗' }}</b>
-                <span>{{ l.label }} ({{ l.puntos > 0 ? '+' : '' }}{{ l.puntos }})</span>
+                <span>{{ l.label | t }} ({{ l.puntos > 0 ? '+' : '' }}{{ l.puntos }})</span>
               </div>
             }
           </div>

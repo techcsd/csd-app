@@ -1,6 +1,6 @@
 <div class="lang-ob" role="dialog" aria-modal="true">
   <div class="lang-ob__card">
-    <h1 class="lang-ob__title">Idioma · Language · Lang</h1>
+    <h1 class="lang-ob__title">{{ 'Idioma · Language · Lang' | t }}</h1>
     <p class="lang-ob__hint">{{ 'Elige el idioma de la app.' | t }}</p>
 
     <div class="lang-ob__opciones">
@@ -13,7 +13,7 @@
         >
           <span class="lang-ob__flag" aria-hidden="true">{{ op.bandera }}</span>
           <span class="lang-ob__nombre">{{ op.nativo }}</span>
-          @if (op.beta) { <span class="lang-ob__beta">beta · {{ op.pct }}%</span> }
+          @if (op.beta) { <span class="lang-ob__beta">{{ 'beta ·' | t }} {{ op.pct }}%</span> }
           @if (seleccion() === op.code) {
             <span class="lang-ob__check" aria-hidden="true">✓</span>
           }

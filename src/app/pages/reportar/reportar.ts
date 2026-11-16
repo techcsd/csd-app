@@ -11,6 +11,8 @@ import { ToastService } from '../../core/services/toast.service';
 import { GuardedWizard } from '../../shared/guarded-wizard';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 /**
  * Reportar problema/mejora: any authenticated pilot user (driver/engineer) sends
  * feedback from the phone. Works offline via the outbox — queued and sent by
@@ -20,11 +22,12 @@ import { MOTION_DIRECTIVES } from '../../shared/motion';
   selector: 'app-reportar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm, ConfirmDialog, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, OptionButton, BigConfirm, ConfirmDialog, ...MOTION_DIRECTIVES, TranslatePipe],
   templateUrl: './reportar.html',
   styleUrl: './reportar.scss',
 })
 export class ReportarPage extends GuardedWizard {
+  private i18n = inject(I18nService);
   private reportes = inject(ReportesService);
   private camera = inject(CameraService);
   private network = inject(NetworkService);
@@ -70,11 +73,11 @@ export class ReportarPage extends GuardedWizard {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.asunto().trim()) {
-      this.toast.error('Escribe un título corto.');
+      this.toast.error(this.i18n.t('Escribe un título corto.'));
       return;
     }
     if (!this.descripcion().trim()) {
-      this.toast.error('Cuéntanos qué pasó.');
+      this.toast.error(this.i18n.t('Cuéntanos qué pasó.'));
       return;
     }
     this.submitting.set(true);

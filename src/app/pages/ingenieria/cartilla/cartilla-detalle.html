@@ -19,7 +19,7 @@
         <div><span>{{ 'Obra' | t }}</span><b>{{ c.proyecto || '—' }}</b></div>
         <div><span>{{ 'Fecha' | t }}</span><b>{{ fmtFecha(c.fecha) }}</b></div>
         @if (c.ingeniero) { <div><span>{{ 'Ingeniero' | t }}</span><b>{{ c.ingeniero }}</b></div> }
-        <div><span>{{ 'Peso total' | t }}</span><b><span [appCountUp]="c.peso_total_kg ?? 0" [decimales]="1"></span> kg</b></div>
+        <div><span>{{ 'Peso total' | t }}</span><b><span [appCountUp]="c.peso_total_kg ?? 0" [decimales]="1"></span> {{ 'kg' | t }}</b></div>
       </div>
 
       @if (c.estado === 'observada' && c.observacion) {

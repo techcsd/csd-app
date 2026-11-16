@@ -7,6 +7,7 @@ import {
   LeerCotizacionResultado,
 } from '../models/cotizacion.model';
 
+import { I18nService } from '../i18n/i18n.service';
 const BUCKET = 'compras-cotizaciones';
 
 /**
@@ -20,6 +21,7 @@ const BUCKET = 'compras-cotizaciones';
  */
 @Injectable({ providedIn: 'root' })
 export class CotizacionesService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
 
   async listar(): Promise<CotizacionRow[]> {
@@ -154,11 +156,11 @@ export class CotizacionesService {
             /* cae al mensaje genérico */
           }
         }
-        return { ok: false, error: 'No se pudo leer la cotización.' };
+        return { ok: false, error: this.i18n.t('No se pudo leer la cotización.') };
       }
       return data as LeerCotizacionResultado;
     } catch {
-      return { ok: false, error: 'No se pudo leer la cotización.' };
+      return { ok: false, error: this.i18n.t('No se pudo leer la cotización.') };
     }
   }
 
