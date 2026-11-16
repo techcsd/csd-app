@@ -21,23 +21,31 @@
 
 ---
 
-## 🟡 12-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — EN DEV, pendiente prueba de Xaviel
+## 🟢 15-nov-2026 — Ronda DO (PROMPT 145: Compa arrastrable + auto-posición, apoyo de transporte, demos) — v2.69.0 PUBLICADA EN PROD
 
-**Estado al 12-nov:** **PR #32 mergeado a `dev`** (merge commit `226fbdb`) +
-bump de versión `2.69.0` (commit `1468799`, directo a `dev` — se olvidó en el
-commit del PR, corregido justo después) + changelog curado en
-`scripts/release-apk.mjs` actualizado para esta ronda. **APK dev v2.69.0
-construido, firmado y publicado** en el bucket de dev
-(`npm run apk -- --env dev` + `npm run apk:publish -- --env dev`, ambos OK) y
-registrado en `app_versiones` de dev (Y1). Alcance: solo DO1/DO1b/DO2/DO5
-(Compa + apoyo de transporte + demos). RRHH/organigrama/reclutamiento/módulo
-Claude (DO3/DO4/DO4b/DO6/DO7) son del `PROMPT 144` (SGC web) — no tocados aquí.
+**Cierre de la ronda:** flujo dev → prod completo.
+- `dev`: PR #32 mergeado (`226fbdb`) + bump de versión `2.69.0` (`1468799`) +
+  changelog curado en `scripts/release-apk.mjs` + QA de Xaviel en dispositivo
+  real registrada en `qa/release-2.69.0.md` (`1488030`, CP5/CL4). APK dev
+  v2.69.0 construido/firmado/publicado, registrado en `app_versiones` de dev.
+- `release-check.mjs --version 2.69.0`: **4/4 checks en PASS.**
+- `main`: PR #33 (`dev → main`) mergeado por Xaviel (`2e51e7c`, 2026-11-15).
+- `prod`: **APK v2.69.0 construido, firmado, y publicado al bucket de prod**
+  (`npm run apk -- --env prod --yes` + `npm run apk:publish -- --env prod --yes`,
+  ambos con confirmación explícita de Xaviel) y registrado en `app_versiones`
+  de prod (Y1).
 
-**Pendiente de Xaviel ahora:** actualizar la app a v2.69.0 en un teléfono real
-(entorno dev) y probar ahí mismo — el riesgo #1 del CONTEXTO pedía probar
-Mensajes, Requisición y ≥2 pantallas más antes de dar F1/F2 por cerrado, y este
-entorno no tiene browser/dispositivo para hacerlo (ver detalle en F1/F2 abajo).
-Con el OK: PR `dev → main` + build/publish a prod (regla 18/CP5).
+Alcance: solo DO1/DO1b/DO2/DO5 (Compa + apoyo de transporte + demos).
+RRHH/organigrama/reclutamiento/módulo Claude (DO3/DO4/DO4b/DO6/DO7) son del
+`PROMPT 144` (SGC web) — no tocados aquí.
+
+**Gotcha de worktree nuevo para build de APK:** además de `.env.local` +
+`node_modules` (junction), un worktree nuevo necesita copiarse a mano
+`android/keystore.properties` (gitignored, pero el `.keystore` real vive FUERA
+del repo así que es solo copiar el `.properties`) y `android/app/google-services.json`
+(gitignored; sin él, un build de prod **crashea en cualquier teléfono** al
+abrir — Firebase no inicializa). Ninguno de los dos estaba documentado en el
+flujo de worktree de CQ6 antes de esta ronda.
 
 **F1 — Compa arrastrable (DO1/DO-01):** `compa-flotante.ts/html/scss` — arrastre
 real por `pointerdown/pointermove/pointerup` (sin CDK, para no pelear con el
@@ -109,30 +117,30 @@ republicar (`npm run apk:publish -- --env prod` / redeploy PWA), no código.
 
 ### Riesgos aplicados / decisiones
 - Compa es un componente global montado una sola vez en `app.html` — el riesgo
-  #1 del CONTEXTO pide probar explícitamente Mensajes, Requisición y ≥2
-  pantallas más antes de reportar hecho; **eso sigue pendiente** (ver arriba).
+  #1 del CONTEXTO pedía probar explícitamente Mensajes, Requisición y ≥2
+  pantallas más antes de reportar hecho. **Xaviel confirmó la prueba en su
+  teléfono** (`qa/release-2.69.0.md`), aunque sin el detalle pantalla por
+  pantalla por escrito — si algo de esto falla en campo, revisar primero
+  `compa-flotante.ts`/`wizard-footer.ts` (ver F1/F2 arriba).
 - `apoyo-detalle.ts` reutiliza 100% el permiso/RPC de `trabajos-transporte.ts`
   (ningún `if (rol===...)` nuevo) — evita que diverjan los roles permitidos
   entre las dos pantallas (riesgo #2 del CONTEXTO).
 
 ### En dev / En prod
-- **En dev:** `main` de `dev` ya en `1468799` (PR #32 mergeado + bump).
-  **APK dev v2.69.0 construido, firmado y publicado** al bucket de dev y
-  registrado en `app_versiones` (dev). PWA dev (`app-dev.`) se construye sola
-  en el próximo deploy de Vercel sobre `dev`.
-- **En prod:** sin cambios (2.68.0 sigue siendo lo publicado; esta ronda no
-  necesita ningún SQL nuevo — reutiliza RPCs ya vigentes en prod).
+- **En dev:** v2.69.0 construida/firmada/publicada, registrada en `app_versiones`.
+- **En prod:** **v2.69.0 PUBLICADA** (`npm run apk:publish -- --env prod` OK,
+  registrada en `app_versiones` de prod). Build/publish confirmados por Xaviel
+  explícitamente en el chat de esta sesión (dos confirmaciones separadas: una
+  para el merge `dev → main`, otra para el build+publish de prod — regla de
+  "confirmar en cada gate que toca prod").
 
-### Próximo paso (siguiente sesión)
-1. **Xaviel prueba v2.69.0 en dev** (actualización in-app desde 2.68.0 en un
-   teléfono real) — cubre a la vez el riesgo #1 del CONTEXTO (Mensajes,
-   Requisición, y ≥2 pantallas más con `wizard-footer`, ej. Combustible y
-   Checklist) y la "Aprobar" de apoyo de transporte. Anotar resultado en
-   `qa/release-2.69.0.md` (CP5/CL4).
-2. Con el OK: PR `dev → main` → merge → `npm run apk -- --env prod` +
-   `npm run apk:publish -- --env prod` (pasa porque ya salió en dev).
-3. Pendiente físico de Xaviel: confirmar versión del APK/PWA distribuida (F4,
-   tabla arriba) — paso de tienda/dispositivo, no de código.
+### Cerrado — nada pendiente de código para esta ronda
+1. ~~Xaviel prueba v2.69.0 en dev~~ — hecho.
+2. ~~PR `dev → main` → merge → build/publish prod~~ — hecho (PR #33, `2e51e7c`).
+3. Pendiente físico de Xaviel: confirmar versión del APK/PWA distribuida en la
+   tienda/canal real (F4, tabla arriba) — esto es independiente de la
+   publicación de 2.69.0 de hoy (pregunta sobre si una build MÁS VIEJA, con
+   solo 9 misiones de demo, sigue siendo lo que la gente tiene instalado).
 
 ## 🟢 11-nov-2026 (tarde) — Ronda DN (PROMPT 143, higiene de ramas + «siempre al día») — sin cambios de producto
 
