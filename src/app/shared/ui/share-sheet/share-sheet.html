@@ -3,7 +3,7 @@
     <button type="button" class="share-opt" [disabled]="!!busy()" (click)="pick('pdf')">
       <span class="share-opt__icon">📄</span>
       <span class="share-opt__text">
-        <b>PDF</b>
+        <b>{{ 'PDF' | t }}</b>
         <small>{{ 'Documento para leer o imprimir' | t }}</small>
       </span>
       @if (busy() === 'pdf') { <span class="share-opt__spin">…</span> }
@@ -12,7 +12,7 @@
     <button type="button" class="share-opt" [disabled]="!!busy()" (click)="pick('excel')">
       <span class="share-opt__icon">📊</span>
       <span class="share-opt__text">
-        <b>Excel</b>
+        <b>{{ 'Excel' | t }}</b>
         <small>{{ 'Hoja de cálculo (.xlsx)' | t }}</small>
       </span>
       @if (busy() === 'excel') { <span class="share-opt__spin">…</span> }

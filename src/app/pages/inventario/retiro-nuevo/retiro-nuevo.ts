@@ -25,6 +25,7 @@ import { combinarUnidades } from '../../../core/util/unidades';
 import { RetiroItemCaptura, RetiroMotivoDano, RETIRO_MOTIVO_LABEL } from '../../../core/models/retiro.model';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
 const MOTIVOS: { value: RetiroMotivoDano; icon: string }[] = [
   { value: 'danado_obra', icon: '🏗️' },
   { value: 'defecto_fabrica', icon: '🏭' },
@@ -47,6 +48,7 @@ const MOTIVOS: { value: RetiroMotivoDano; icon: string }[] = [
   styleUrl: './retiro-nuevo.scss',
 })
 export class RetiroNuevoPage implements OnDestroy {
+  private i18n = inject(I18nService);
   private retiros = inject(RetirosService);
   private inventario = inject(InventarioService);
   private camera = inject(CameraService);
@@ -186,8 +188,8 @@ export class RetiroNuevoPage implements OnDestroy {
     this.borradorPrevio.set(false);
   }
   descartarBorrador(): void {
-    this.toast.withAction('¿Descartar el borrador sin enviar?', {
-      label: 'Descartar',
+    this.toast.withAction(this.i18n.t('¿Descartar el borrador sin enviar?'), {
+      label: this.i18n.t('Descartar'),
       run: () => {
         for (const f of this.fotos()) URL.revokeObjectURL(f.previewUrl);
         void this.autosave.discard(this.claveBorrador);
@@ -314,23 +316,23 @@ export class RetiroNuevoPage implements OnDestroy {
   async enviar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.proyectoId()) {
-      this.toast.error('Elige la obra.');
+      this.toast.error(this.i18n.t('Elige la obra.'));
       return;
     }
     if (!this.items().length) {
-      this.toast.error('Agrega al menos un artículo dañado.');
+      this.toast.error(this.i18n.t('Agrega al menos un artículo dañado.'));
       return;
     }
     if (!this.motivo()) {
-      this.toast.error('Elige el motivo del daño.');
+      this.toast.error(this.i18n.t('Elige el motivo del daño.'));
       return;
     }
     if (this.motivo() === 'otro' && !this.motivoDetalle().trim()) {
-      this.toast.error('Describe el motivo del daño.');
+      this.toast.error(this.i18n.t('Describe el motivo del daño.'));
       return;
     }
     if (!this.fotos().length) {
-      this.toast.error('Toma al menos una foto del material dañado.');
+      this.toast.error(this.i18n.t('Toma al menos una foto del material dañado.'));
       return;
     }
     this.submitting.set(true);

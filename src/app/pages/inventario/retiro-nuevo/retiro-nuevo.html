@@ -2,22 +2,22 @@
   <header class="retiro__header">
     <button type="button" class="retiro__back" (click)="salir()" aria-label="Atrás">←</button>
     <span class="retiro__icon">🚮</span>
-    <h1 class="retiro__title">Retirar material dañado</h1>
+    <h1 class="retiro__title">{{ 'Retirar material dañado' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (done()) {
       <div class="retiro__done" appFadeIn>
         <span class="retiro__done-icon">✅</span>
-        <h2 class="retiro__done-title">Solicitud guardada</h2>
+        <h2 class="retiro__done-title">{{ 'Solicitud guardada' | t }}</h2>
         <p class="retiro__done-msg">
           @if (online()) {
-            Se está enviando. Almacén la revisará y aprobará el retiro.
+            {{ 'Se está enviando. Almacén la revisará y aprobará el retiro.' | t }}
           } @else {
-            Se enviará sola cuando vuelva la señal. Puedes seguir trabajando.
+            {{ 'Se enviará sola cuando vuelva la señal. Puedes seguir trabajando.' | t }}
           }
         </p>
-        <button type="button" class="retiro__cta" appTapScale (click)="irAMisRetiros()">Ver mis retiros</button>
+        <button type="button" class="retiro__cta" appTapScale (click)="irAMisRetiros()">{{ 'Ver mis retiros' | t }}</button>
       </div>
     } @else if (loadingCat()) {
       <app-skeleton [rows]="5" />
@@ -38,7 +38,7 @@
       }
       <!-- Obra -->
       <section class="retiro__sec">
-        <label class="retiro__label">Obra</label>
+        <label class="retiro__label">{{ 'Obra' | t }}</label>
         @if (proyectos().length) {
           <app-collapsible-select
             label="Obra"
@@ -50,13 +50,13 @@
             (picked)="proyectoId.set($event)"
           />
         } @else {
-          <p class="retiro__muted">No hay obras disponibles.</p>
+          <p class="retiro__muted">{{ 'No hay obras disponibles.' | t }}</p>
         }
       </section>
 
       <!-- Artículos -->
       <section class="retiro__sec">
-        <label class="retiro__label">¿Qué material se dañó?</label>
+        <label class="retiro__label">{{ '¿Qué material se dañó?' | t }}</label>
         <app-articulo-picker
           [articulos]="articulos()"
           [categorias]="categorias()"
@@ -68,8 +68,8 @@
         <!-- No catalogado: descripción libre -->
         <div class="retiro__libre">
           <input class="field" type="text" [ngModel]="descripcionLibre()" (ngModelChange)="descripcionLibre.set($event)"
-            placeholder="…o escribe una descripción" (keyup.enter)="addDescripcion()" />
-          <button type="button" class="retiro__add-libre" [disabled]="!descripcionLibre().trim()" (click)="addDescripcion()">Agregar</button>
+            placeholder="{{ '…o escribe una descripción' | t }}" (keyup.enter)="addDescripcion()" />
+          <button type="button" class="retiro__add-libre" [disabled]="!descripcionLibre().trim()" (click)="addDescripcion()">{{ 'Agregar' | t }}</button>
         </div>
 
         @if (items().length) {
@@ -91,13 +91,13 @@
             }
           </ul>
         } @else {
-          <p class="retiro__muted">Toca un artículo del buscador o escribe una descripción.</p>
+          <p class="retiro__muted">{{ 'Toca un artículo del buscador o escribe una descripción.' | t }}</p>
         }
       </section>
 
       <!-- Motivo del daño -->
       <section class="retiro__sec">
-        <label class="retiro__label">Motivo del daño</label>
+        <label class="retiro__label">{{ 'Motivo del daño' | t }}</label>
         <div class="retiro__motivos" appStagger>
           @for (m of motivos; track m.value) {
             <app-option-button appTapScale [icon]="m.icon" [label]="motivoLabel[m.value]" [selected]="motivo() === m.value" (pressed)="pickMotivo(m.value)" />
@@ -105,14 +105,14 @@
         </div>
         @if (motivo() === 'otro') {
           <input class="field" type="text" [ngModel]="motivoDetalle()" (ngModelChange)="motivoDetalle.set($event)"
-            placeholder="Describe qué pasó" maxlength="200" />
+            placeholder="{{ 'Describe qué pasó' | t }}" maxlength="200" />
         }
       </section>
 
       <!-- Fotos obligatorias -->
       <section class="retiro__sec">
-        <label class="retiro__label">Fotos del material dañado <span class="retiro__req">(obligatorio)</span></label>
-        <p class="retiro__hint">La foto es la evidencia del retiro. Toma al menos una.</p>
+        <label class="retiro__label">{{ 'Fotos del material dañado' | t }} <span class="retiro__req">{{ '(obligatorio)' | t }}</span></label>
+        <p class="retiro__hint">{{ 'La foto es la evidencia del retiro. Toma al menos una.' | t }}</p>
         <div class="retiro__fotos" appStagger>
           @for (f of fotos(); track f.previewUrl) {
             <div class="retiro__foto">
@@ -122,15 +122,15 @@
           }
         </div>
         <div class="retiro__foto-btns">
-          <button type="button" class="retiro__foto-btn" [disabled]="capturing()" (click)="addFoto()">📷 Tomar foto</button>
-          <button type="button" class="retiro__foto-btn retiro__foto-btn--ghost" [disabled]="capturing()" (click)="addFromGallery()">🖼️ Galería</button>
+          <button type="button" class="retiro__foto-btn" [disabled]="capturing()" (click)="addFoto()">{{ '📷 Tomar foto' | t }}</button>
+          <button type="button" class="retiro__foto-btn retiro__foto-btn--ghost" [disabled]="capturing()" (click)="addFromGallery()">{{ '🖼️ Galería' | t }}</button>
         </div>
       </section>
 
       <!-- Notas -->
       <section class="retiro__sec">
-        <label class="retiro__label">Notas (opcional)</label>
-        <textarea class="field retiro__notas" [ngModel]="notas()" (ngModelChange)="notas.set($event)" rows="2" placeholder="Algo más que agregar"></textarea>
+        <label class="retiro__label">{{ 'Notas (opcional)' | t }}</label>
+        <textarea class="field retiro__notas" [ngModel]="notas()" (ngModelChange)="notas.set($event)" rows="2" placeholder="{{ 'Algo más que agregar' | t }}"></textarea>
       </section>
 
       <button type="button" class="retiro__cta" appTapScale [disabled]="!puedeEnviar() || submitting()" (click)="enviar()">

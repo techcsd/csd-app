@@ -7,13 +7,14 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { DatePipe } from '@angular/common';
+
 import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { EntradaProgramada } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { FechaPipe } from '../../../core/i18n/fecha.pipe';
 
 const MAX_FOTOS = 2;
 const TIPOS: { key: string; label: string }[] = [
@@ -28,7 +29,7 @@ const TIPOS: { key: string; label: string }[] = [
   selector: 'app-obra-logistica',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, PhotoSlot, OptionButton, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, FechaPipe, PhotoSlot, OptionButton, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './logistica.html',
   styleUrl: './logistica.scss',
 })

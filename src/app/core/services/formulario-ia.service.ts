@@ -10,6 +10,7 @@ import {
   PropuestaUsoVehiculoIA,
 } from '../models/formulario-ia.model';
 
+import { I18nService } from '../i18n/i18n.service';
 /**
  * DF1-B..E (PROMPT 129) — cliente de la edge genérica `leer-formulario` (SGC,
  * ya desplegada en el Supabase de dev). Un formulario por método, el mismo
@@ -17,6 +18,7 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class FormularioIaService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
 
   async leerConduceExterno(input: { fotos: CapturedPhoto[]; proyectoId?: string | null }): Promise<PropuestaConduceIA> {
@@ -87,7 +89,7 @@ export class FormularioIaService {
           /* ignore */
         }
       }
-      return { ok: false, error: 'No se pudo leer el formulario. Llénalo a mano.' };
+      return { ok: false, error: this.i18n.t('No se pudo leer el formulario. Llénalo a mano.') };
     }
     return data;
   }

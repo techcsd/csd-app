@@ -27,5 +27,17 @@
   "Kreyòl",
   "Español",
   "English",
-  "Kreyòl ayisyen"
+  "Kreyòl ayisyen",
+  "npm run env:dev",
+  "ng serve",
+  "bits",
+  "USD",
+  "/gal",
+  "km/gal",
+  "CSD APP",
+  "CONSTRUCTORA SD",
+  "· rec.",
+  "🖥️ Web",
+  "Web",
+  "max debe estar entre 1 y 256"
 ]

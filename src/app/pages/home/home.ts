@@ -847,9 +847,9 @@ export class HomePage implements OnDestroy {
     this.editMode.set(false);
     try {
       await this.moduleOrder.setOrder(items);
-      this.toast.success('Módulos guardados.');
+      this.toast.success(this.i18n.t('Módulos guardados.'));
     } catch {
-      this.toast.error('No se pudo guardar. Inténtalo de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo guardar. Inténtalo de nuevo.'));
     }
   }
   cancelarOrden(): void {

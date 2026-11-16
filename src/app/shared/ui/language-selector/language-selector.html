@@ -10,9 +10,9 @@
     >
       <span class="lang__nombre">{{ idioma.nativo }}</span>
       @if (idioma.deshabilitado) {
-        <span class="lang__tag">próximamente</span>
+        <span class="lang__tag">{{ 'próximamente' | t }}</span>
       } @else if (idioma.beta) {
-        <span class="lang__tag lang__tag--beta">beta · cubre {{ idioma.pct }}%</span>
+        <span class="lang__tag lang__tag--beta">{{ 'beta · cubre' | t }} {{ idioma.pct }}%</span>
       }
       @if (actual() === idioma.code) { <span class="lang__check">✓</span> }
     </button>

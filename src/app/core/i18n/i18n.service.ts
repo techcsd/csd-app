@@ -1,6 +1,8 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
 import { SupabaseService } from '../services/supabase.service';
+import { environment } from '../../../environments/environment';
+import { registrarTraductorErrores } from '../../shared/util/friendly-error.util';
 
 /** BR7 — idiomas soportados. `es` es el idioma base (las CLAVES de traducción SON
  *  el texto en español, así que `es` nunca necesita catálogo y funciona 100%
@@ -17,7 +19,9 @@ export const IDIOMAS: { code: Idioma; nativo: string }[] = [
 /** BT2 (regla 17) — un idioma se ofrece "de verdad" cuando cubre su alcance. Debajo
  *  del umbral se marca **beta** (con el % real); muy debajo se deja "próximamente"
  *  (deshabilitado). `es` siempre está al 100% (es el idioma base). */
-const UMBRAL_OFRECIDO = { en: 95, ht: 90 } as const;
+//DP-12: ambos idiomas se ofrecen al 100% MEDIDO por el escáner (nunca se pone ok a mano).
+export const I18N_UMBRAL = { en: 100, ht: 100 } as const;
+const UMBRAL_OFRECIDO = I18N_UMBRAL;
 /** ht deshabilitado ("próximamente") hasta este %. en nunca se deshabilita: cae a
  *  español clave a clave, así que se ofrece como beta con expectativa honesta. */
 const UMBRAL_HABILITADO = { en: 0, ht: 90 } as const;
@@ -64,6 +68,9 @@ export class I18nService {
 
   private cargando = new Set<Idioma>();
 
+  //DP-07b: una sola advertencia por clave+idioma sin traducir (solo dev).
+  private clavesSinTraducirAvisadas = new Set<string>();
+
   /** BT2 — cobertura real por idioma (generada por `scripts/i18n-coverage.mjs`). */
   private _cobertura = signal<{ en: number; ht: number }>({ en: 0, ht: 0 });
   cobertura = this._cobertura.asReadonly();
@@ -77,6 +84,7 @@ export class I18nService {
   }
 
   constructor() {
+    registrarTraductorErrores((es) => this.t(es));
     void this.init();
   }
 
@@ -130,6 +138,7 @@ export class I18nService {
     lang = this.degradarSiHaceFalta(lang);
     if (lang !== 'es') await this.cargarCatalogo(lang).catch(() => {});
     this._idioma.set(lang);
+    this.aplicarLangHtml(lang);
   }
 
   /**
@@ -144,6 +153,16 @@ export class I18nService {
       return 'es';
     }
     return lang;
+  }
+
+  /** DP-07a — `document.documentElement.lang` sigue al idioma activo (lectores de
+   *  pantalla, corrector ortográfico y traductor del navegador). */
+  private aplicarLangHtml(lang: Idioma): void {
+    try {
+      document.documentElement.lang = lang;
+    } catch {
+      /* entorno sin document */
+    }
   }
 
   private esValido(l: string): l is Idioma {
@@ -183,7 +202,15 @@ export class I18nService {
     if (lang !== 'es') {
       const dict = this.catalogos()[lang];
       const tr = dict?.[esText];
-      if (tr) out = tr;
+      if (tr) {
+        out = tr;
+      } else if (!environment.production) {
+        const marca = `${lang}:${esText}`;
+        if (!this.clavesSinTraducirAvisadas.has(marca)) {
+          this.clavesSinTraducirAvisadas.add(marca);
+          console.warn(`[i18n] sin traducción (${lang}): "${esText}"`);
+        }
+      }
     }
     if (params) {
       for (const [k, v] of Object.entries(params)) {
@@ -203,6 +230,7 @@ export class I18nService {
     }
     if (lang !== 'es' && !this.catalogos()[lang]) await this.cargarCatalogo(lang);
     this._idioma.set(lang);
+    this.aplicarLangHtml(lang);
     try {
       await Preferences.set({ key: PREF_KEY, value: lang });
     } catch {
@@ -231,6 +259,7 @@ export class I18nService {
     }
     if (lang !== 'es' && !this.catalogos()[lang]) await this.cargarCatalogo(lang);
     this._idioma.set(lang);
+    this.aplicarLangHtml(lang);
     try {
       await Preferences.set({ key: PREF_KEY, value: lang });
     } catch {

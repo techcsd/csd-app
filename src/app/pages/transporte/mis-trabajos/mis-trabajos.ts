@@ -12,6 +12,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { formatFecha } from '../../../core/util/fecha';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
 /** CK14 — etiqueta del tipo de trabajo (escaneable). */
 const TIPO_LABEL: Record<string, string> = {
   movimiento_interno: 'Movimiento interno',
@@ -68,6 +69,7 @@ const ESTADO_LABEL: Record<string, string> = {
   styleUrl: './mis-trabajos.scss',
 })
 export class MisTrabajosPage {
+  private i18n = inject(I18nService);
   private trabajosSvc = inject(TrabajosService);
   private toast = inject(ToastService);
   private location = inject(Location);
@@ -210,7 +212,7 @@ export class MisTrabajosPage {
     if (!t) return;
     const texto = this.problemaTexto().trim();
     if (!texto) {
-      this.toast.error('Escribe qué pasó.');
+      this.toast.error(this.i18n.t('Escribe qué pasó.'));
       return;
     }
     await this.enviar(t, 'problema', texto);

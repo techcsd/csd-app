@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { UserContextService } from './user-context.service';
 import { Parada } from '../../shared/ui/trayectoria-map/trayectoria-map';
 
+import { I18nService } from '../i18n/i18n.service';
 /** AU5/AU7 — recorrido diario consolidado (recorrido_diario_de). */
 export interface RecorridoDia {
   usuario_id: string;
@@ -35,6 +36,7 @@ export interface RutaTrayecto {
  */
 @Injectable({ providedIn: 'root' })
 export class RecorridoService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private ctx = inject(UserContextService);
 
@@ -56,7 +58,7 @@ export class RecorridoService {
   /** AU7 — recorrido diario del usuario actual (o de otro, si es flota-elevado). */
   async recorridoDia(fecha: string, usuarioId?: string): Promise<RecorridoDia> {
     const uid = usuarioId ?? this.ctx.profile()?.id;
-    if (!uid) throw new Error('Sin usuario.');
+    if (!uid) throw new Error(this.i18n.t('Sin usuario.'));
     const { data, error } = await this.supabase.client.rpc('recorrido_diario_de', {
       p_usuario_id: uid,
       p_fecha: fecha,

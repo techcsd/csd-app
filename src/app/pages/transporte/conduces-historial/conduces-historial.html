@@ -83,7 +83,7 @@
       @for (c of lista(); track c.id) {
         <div class="conduce-card" appTapScale (click)="toggle(c.id)">
           <div class="conduce-card__top">
-            <span class="conduce-card__fecha">{{ c.fecha | date: 'dd/MM/yyyy' }}</span>
+            <span class="conduce-card__fecha">{{ c.fecha | fecha: 'dd/MM/yyyy' }}</span>
             <span class="conduce-card__fase" [appEstadoPulse]="c.fase" [style.background]="faseTint(c.fase)">
               {{ faseLabel(c.fase) }}
             </span>
@@ -128,7 +128,7 @@
               }
               @if (c.confirmado && c.recibido_en) {
                 <p class="conduce-det__linea conduce-det__ok">
-                  ✅ {{ 'Confirmado' | t }} {{ c.recibido_en | date: 'dd/MM/yyyy HH:mm' }}
+                  ✅ {{ 'Confirmado' | t }} {{ c.recibido_en | fecha: 'dd/MM/yyyy HH:mm' }}
                 </p>
               } @else if (c.fase === 'pendiente_firma') {
                 <!-- CM4 — solo cuando el servidor marca la fase 'pendiente_firma' (post-entrega) -->

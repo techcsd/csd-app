@@ -251,7 +251,7 @@
         <div class="selcat__otro-row">
           <div>
             <label class="field-label">{{ 'Unidad' | t }}</label>
-            <input class="field" type="text" [ngModel]="otroUnidad()" (ngModelChange)="otroUnidad.set($event)" placeholder="UND" />
+            <input class="field" type="text" [ngModel]="otroUnidad()" (ngModelChange)="otroUnidad.set($event)" placeholder="{{ 'UND' | t }}" />
           </div>
           <div>
             <label class="field-label">{{ 'Cantidad' | t }}</label>

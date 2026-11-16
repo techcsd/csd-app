@@ -79,7 +79,7 @@
           <div class="ot__col">
             <label class="field-label">{{ 'Unidad' | t }}</label>
             <input class="field" type="text" list="ot-unidades"
-              [ngModel]="unidad()" (ngModelChange)="unidad.set($event)" placeholder="m², ud, ml…" />
+              [ngModel]="unidad()" (ngModelChange)="unidad.set($event)" placeholder="{{ 'm², ud, ml…' | t }}" />
             <datalist id="ot-unidades">
               @for (u of unidades(); track u) { <option [value]="u"></option> }
             </datalist>

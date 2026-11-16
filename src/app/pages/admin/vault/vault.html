@@ -50,7 +50,7 @@
         <button type="button" class="vault__chip" [class.vault__chip--on]="filtroTipo() === 'all'" (click)="filtroTipo.set('all')">{{ 'Todas' | t }}</button>
         <button type="button" class="vault__chip" [class.vault__chip--on]="filtroTipo() === 'cuenta'" (click)="filtroTipo.set('cuenta')">{{ 'Cuentas' | t }}</button>
         <button type="button" class="vault__chip" [class.vault__chip--on]="filtroTipo() === 'api'" (click)="filtroTipo.set('api')">{{ 'Llaves API' | t }}</button>
-        <button type="button" class="vault__chip" [class.vault__chip--on]="filtroTipo() === '2fa'" (click)="filtroTipo.set('2fa')">2FA</button>
+        <button type="button" class="vault__chip" [class.vault__chip--on]="filtroTipo() === '2fa'" (click)="filtroTipo.set('2fa')">{{ '2FA' | t }}</button>
         <button type="button" class="vault__chip" [class.vault__chip--on]="filtroTipo() === 'nota'" (click)="filtroTipo.set('nota')">{{ 'Notas' | t }}</button>
         <button type="button" class="vault__chip" [class.vault__chip--on]="soloPorRotar()" (click)="soloPorRotar.set(!soloPorRotar())">{{ 'Por rotar' | t }}</button>
       </div>

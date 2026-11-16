@@ -189,7 +189,7 @@ export class App {
         this.toast.withAction(
           `El “Android System WebView” de tu equipo (v${major}) está desactualizado y la app puede verse mal. Actualízalo desde Play Store.`,
           {
-            label: 'Actualizar',
+            label: this.i18n.t('Actualizar'),
             run: () =>
               void AppLauncher.openUrl({
                 url: 'market://details?id=com.google.android.webview',

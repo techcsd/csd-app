@@ -13,6 +13,8 @@ import { tecTonoEstado } from '../../shared/utils/tec-tono.util';
 import { ToastService } from '../../core/services/toast.service';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 /**
  * AL2/DA — Inventario tecnológico (listado). Buscador + filtros (tipo,
  * situación, condición), portada por equipo, chip de situación + alerta de
@@ -23,11 +25,12 @@ import { MOTION_DIRECTIVES } from '../../shared/motion';
   selector: 'app-tecnologia-inventario',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, EstadoChip, Img, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, EstadoChip, Img, ...MOTION_DIRECTIVES, TranslatePipe],
   templateUrl: './tecnologia-inventario.html',
   styleUrl: './tecnologia-inventario.scss',
 })
 export class TecnologiaInventarioPage {
+  private i18n = inject(I18nService);
   private tec = inject(TecnologiaService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -113,7 +116,7 @@ export class TecnologiaInventarioPage {
         }
       }
     } catch {
-      this.toast.error('No pudimos cargar el inventario tecnológico.');
+      this.toast.error(this.i18n.t('No pudimos cargar el inventario tecnológico.'));
     } finally {
       this.loading.set(false);
     }

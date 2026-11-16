@@ -18,7 +18,7 @@
       <div class="pres__resumen" appStagger>
         @for (r of resumen(); track r.id) {
           <div class="pres__chip">
-            <span class="pres__chip-tit">{{ r.titulo }}</span>
+            <span class="pres__chip-tit">{{ r.titulo | t }}</span>
             <span class="pres__chip-nota">{{ r.mejor }}</span>
           </div>
         }
@@ -30,7 +30,7 @@
         @for (i of intentos(); track i.id) {
           <li class="pres__row">
             <div class="pres__row-main">
-              <span class="pres__row-tit">{{ tituloMision(i.mision_id) }}</span>
+              <span class="pres__row-tit">{{ tituloMision(i.mision_id) | t }}</span>
               <span class="pres__row-fecha">{{ fmtFecha(i.created_at) }}</span>
             </div>
             <span class="pres__row-stars">{{ estrellasTexto(i.estrellas) }}</span>

@@ -6,6 +6,7 @@ import { db } from '../db/app-db';
 import { Proyecto } from '../models/bitacora.model';
 import { MiOrdenCompra, RequisicionAvanceItem, RequisicionBandeja, RequisicionCobertura, RequisicionDetalle, RequisicionEdicion, RequisicionEditar, Solicitud, Urgencia } from '../models/inventario.model';
 
+import { I18nService } from '../i18n/i18n.service';
 /** AS7 — filtros de la bandeja de requisiciones. */
 export interface RequisicionFiltros {
   estado?: string | null;
@@ -46,6 +47,7 @@ export interface SolicitudCaptura {
  */
 @Injectable({ providedIn: 'root' })
 export class SolicitudesService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
@@ -387,7 +389,7 @@ export class SolicitudesService {
     const { error } = await this.supabase.client.rpc('desvincular_cobertura', { p_id: coberturaId });
     if (error) {
       if (/function .* does not exist|not find the function|PGRST202/i.test(error.message || '')) {
-        throw new Error('Desvincular la cobertura aún no está disponible.');
+        throw new Error(this.i18n.t('Desvincular la cobertura aún no está disponible.'));
       }
       throw new Error(error.message);
     }

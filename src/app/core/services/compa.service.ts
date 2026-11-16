@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { I18nService } from '../i18n/i18n.service';
 import { CompaArchivo, CompaCompartida, CompaMensajeCompartido, CompaRespuesta, Propuesta } from '../models/compa.model';
 
 /** CP2 — usuario para el picker de "¿Con quién?" (mismo contrato que buscar_usuarios en otros servicios). */
@@ -33,6 +34,7 @@ export type TranscripcionResultado =
 @Injectable({ providedIn: 'root' })
 export class CompaService {
   private supabase = inject(SupabaseService);
+  private i18n = inject(I18nService);
 
   /**
    * Envía un mensaje al asistente y devuelve el turno de respuesta. En error de
@@ -244,7 +246,7 @@ export class CompaService {
   /** Mensaje amable en español según el status (429/503/401) o el body de la edge. */
   private mensajeAmable(status: number | null, bodyError?: string): string {
     if (status === 429) {
-      return 'Vas muy rápido 😅. Espera un momento e intenta de nuevo (máximo 60 mensajes por hora).';
+      return this.i18n.t('Vas muy rápido 😅. Espera un momento e intenta de nuevo (máximo 60 mensajes por hora).');
     }
     if (status === 503) {
       // 503 = ANTHROPIC_API_KEY sin configurar: la edge manda el mensaje de
@@ -252,9 +254,9 @@ export class CompaService {
       return (bodyError && bodyError.trim()) || 'Compa aún no está configurado. Avísale a Tecnología.';
     }
     if (status === 401) {
-      return 'Tu sesión expiró. Vuelve a entrar para seguir usando a Compa.';
+      return this.i18n.t('Tu sesión expiró. Vuelve a entrar para seguir usando a Compa.');
     }
     if (bodyError && bodyError.trim()) return bodyError.trim();
-    return 'No pude conectar con Compa. Revisa tu internet e intenta de nuevo.';
+    return this.i18n.t('No pude conectar con Compa. Revisa tu internet e intenta de nuevo.');
   }
 }

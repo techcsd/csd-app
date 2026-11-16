@@ -21,7 +21,7 @@
   <div class="notif-pasos">
     <p class="notif-pasos__sub">{{ 'El permiso ya se negó una vez; tu iPhone no deja volver a preguntarlo.' | t }}</p>
     <div class="notif-pasos__item"><span class="notif-pasos__n">1</span><span>{{ 'Abre' | t }} <b>{{ 'Ajustes' | t }}</b> {{ 'del iPhone.' | t }}</span></div>
-    <div class="notif-pasos__item"><span class="notif-pasos__n">2</span><span>{{ 'Entra en' | t }} <b>Notificaciones › CSD App</b>.</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">2</span><span>{{ 'Entra en' | t }} <b>{{ 'Notificaciones › CSD App' | t }}</b>.</span></div>
     <div class="notif-pasos__item"><span class="notif-pasos__n">3</span><span>{{ 'Activa' | t }} <b>{{ 'Permitir notificaciones' | t }}</b> {{ 'y' | t }} <b>{{ 'Sonidos' | t }}</b>. {{ 'Vuelve aquí.' | t }}</span></div>
     <button type="button" class="btn-cta" [disabled]="activando()" (click)="comprobar()">
       {{ (activando() ? 'Comprobando…' : 'Ya lo activé, comprobar') | t }}
@@ -37,8 +37,8 @@
     <p class="notif-pasos__sub">
       {{ 'Para recibir avisos en tu iPhone, primero agrega CSD App a tu pantalla de inicio:' | t }}
     </p>
-    <div class="notif-pasos__item"><span class="notif-pasos__n">1</span><span>{{ 'Toca el botón' | t }} <b>Compartir</b> {{ 'de Safari.' | t }}</span></div>
-    <div class="notif-pasos__item"><span class="notif-pasos__n">2</span><span>{{ 'Elige' | t }} <b>Añadir a inicio</b>.</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">1</span><span>{{ 'Toca el botón' | t }} <b>{{ 'Compartir' | t }}</b> {{ 'de Safari.' | t }}</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">2</span><span>{{ 'Elige' | t }} <b>{{ 'Añadir a inicio' | t }}</b>.</span></div>
     <div class="notif-pasos__item"><span class="notif-pasos__n">3</span><span>{{ 'Abre CSD App desde el ícono nuevo y vuelve a tocar Activar.' | t }}</span></div>
     <button type="button" class="btn-ghost" (click)="cerrarHojas()">{{ 'Entendido' | t }}</button>
   </div>

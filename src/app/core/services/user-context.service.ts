@@ -59,7 +59,7 @@ export class UserContextService {
    */
   async actualizarMiPerfil(nombre: string, telefono: string): Promise<void> {
     const id = this._profile()?.id;
-    if (!id) throw new Error('Sesión no cargada.');
+    if (!id) throw new Error(this.i18n.t('Sesión no cargada.'));
     const { error } = await this.supabase.client.rpc('mi_perfil_actualizar', {
       p_nombre: nombre,
       p_telefono: telefono,
@@ -130,7 +130,7 @@ export class UserContextService {
    */
   async actualizarMiAvatar(blob: Blob): Promise<void> {
     const id = this._profile()?.id;
-    if (!id) throw new Error('Sesión no cargada.');
+    if (!id) throw new Error(this.i18n.t('Sesión no cargada.'));
     const path = `${id}/avatar-${crypto.randomUUID()}.jpg`;
     const { error: upErr } = await this.supabase.client.storage
       .from(AVATARS_BUCKET)

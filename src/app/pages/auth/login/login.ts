@@ -11,6 +11,7 @@ import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
 import { PoliticasService, DocLegal } from '../../../core/services/politicas.service';
 import { environment } from '../../../../environments/environment';
 
+import { I18nService } from '../../../core/i18n/i18n.service';
 type Modo = 'correo' | 'conductor';
 
 /** First-time / re-login. Online-only flow (User Flow §2). Dos vías: correo +
@@ -26,6 +27,7 @@ type Modo = 'correo' | 'conductor';
   styleUrl: './login.scss',
 })
 export class LoginPage {
+  private i18n = inject(I18nService);
   private auth = inject(AuthService);
   private session = inject(SessionService);
   private ctx = inject(UserContextService);
@@ -73,7 +75,7 @@ export class LoginPage {
   async submit(): Promise<void> {
     if (this.loading()) return;
     if (!this.email() || !this.password()) {
-      this.toast.error('Escribe tu correo y contraseña.');
+      this.toast.error(this.i18n.t('Escribe tu correo y contraseña.'));
       return;
     }
     this.loading.set(true);
@@ -81,8 +83,8 @@ export class LoginPage {
       const { user, error, timedOut } = await this.auth.signIn(this.email(), this.password());
       if (timedOut) {
         this.toast.withAction(
-          'No pudimos verificar tus datos. La conexión tardó demasiado. Intenta de nuevo.',
-          { label: 'Reintentar', run: () => void this.submit() },
+          this.i18n.t('No pudimos verificar tus datos. La conexión tardó demasiado. Intenta de nuevo.'),
+          { label: this.i18n.t('Reintentar'), run: () => void this.submit() },
         );
         return;
       }
@@ -90,15 +92,15 @@ export class LoginPage {
         // CC2 — el candado de dev (dev_token_hook) niega el token con un 403 y un
         // mensaje claro; propágalo tal cual en vez del genérico de credenciales.
         if (error && this.esGateDev(error)) {
-          this.toast.error('Este entorno es solo para el equipo de Tecnología.');
+          this.toast.error(this.i18n.t('Este entorno es solo para el equipo de Tecnología.'));
         } else {
-          this.toast.error('Correo o contraseña incorrectos.');
+          this.toast.error(this.i18n.t('Correo o contraseña incorrectos.'));
         }
         return;
       }
       await this.afterAuth(user.id);
     } catch {
-      this.toast.error('No se pudo iniciar sesión. Revisa tu conexión.');
+      this.toast.error(this.i18n.t('No se pudo iniciar sesión. Revisa tu conexión.'));
     } finally {
       this.loading.set(false);
     }
@@ -110,14 +112,14 @@ export class LoginPage {
     const cedula = soloDigitosCedula(this.cedula());
     const pin = this.pin().trim();
     if (!cedula) {
-      this.toast.error('Escribe tu cédula.');
+      this.toast.error(this.i18n.t('Escribe tu cédula.'));
       return;
     }
     // BH4 — el PIN de acceso por cédula es de EXACTAMENTE 6 dígitos (así lo crea el
     // alta en `acceso-cedula`). Validar aquí con mensaje claro; antes aceptaba ≥4 y el
     // servidor lo rechazaba sin explicar por qué.
     if (!/^\d{6}$/.test(pin)) {
-      this.toast.error('El PIN es de 6 dígitos.');
+      this.toast.error(this.i18n.t('El PIN es de 6 dígitos.'));
       return;
     }
     this.loading.set(true);
@@ -128,12 +130,12 @@ export class LoginPage {
           const mins = Math.max(1, Math.ceil((r.retryInSeconds ?? 900) / 60));
           this.toast.error(r.error ?? `Demasiados intentos. Espera ~${mins} min e intenta de nuevo.`);
         } else if (r.status === 401) {
-          this.toast.error('Cédula o PIN incorrectos.');
+          this.toast.error(this.i18n.t('Cédula o PIN incorrectos.'));
         } else if (r.networkError) {
           // Red/timeout: nunca dejamos el spinner colgado — mensaje claro + reintento.
           this.toast.withAction(
             r.error ?? 'No pudimos verificar tus datos. Intenta de nuevo.',
-            { label: 'Reintentar', run: () => void this.submitConductor() },
+            { label: this.i18n.t('Reintentar'), run: () => void this.submitConductor() },
           );
         } else {
           this.toast.error(r.error ?? 'No pudimos verificar tus datos. Intenta de nuevo.');
@@ -141,12 +143,12 @@ export class LoginPage {
         return;
       }
       if (!r.userId) {
-        this.toast.error('No pudimos verificar tus datos. Intenta de nuevo.');
+        this.toast.error(this.i18n.t('No pudimos verificar tus datos. Intenta de nuevo.'));
         return;
       }
       await this.afterAuth(r.userId);
     } catch {
-      this.toast.error('No se pudo iniciar sesión. Revisa tu conexión.');
+      this.toast.error(this.i18n.t('No se pudo iniciar sesión. Revisa tu conexión.'));
     } finally {
       this.loading.set(false);
     }
@@ -158,7 +160,7 @@ export class LoginPage {
     const profile = this.ctx.profile();
     if (profile && profile.activo === false) {
       await this.session.logout();
-      this.toast.error('Tu usuario está desactivado. Habla con administración.');
+      this.toast.error(this.i18n.t('Tu usuario está desactivado. Habla con administración.'));
       return;
     }
     // AS8 — un usuario SIN módulos ya NO se bloquea: entra y ve solo los módulos
@@ -167,7 +169,7 @@ export class LoginPage {
     // administración" pasa a ser informativo (no bloqueante).
     if (this.ctx.modulos().length === 0) {
       this.toast.show(
-        'Tu usuario aún no tiene módulos asignados. Puedes usar Notas, Tareas y Mensajes; pide acceso a administración para el resto.',
+        this.i18n.t('Tu usuario aún no tiene módulos asignados. Puedes usar Notas, Tareas y Mensajes; pide acceso a administración para el resto.'),
         'info',
         7000,
       );
@@ -201,14 +203,14 @@ export class LoginPage {
     if (this.enviandoEnlace()) return;
     const email = this.email().trim();
     if (!email) {
-      this.toast.error('Escribe tu correo primero.');
+      this.toast.error(this.i18n.t('Escribe tu correo primero.'));
       return;
     }
     this.enviandoEnlace.set(true);
     try {
       const { error } = await this.auth.enviarEnlaceMagico(email);
       if (error) {
-        this.toast.error('No pudimos enviar el enlace. Verifica el correo o usa tu contraseña.');
+        this.toast.error(this.i18n.t('No pudimos enviar el enlace. Verifica el correo o usa tu contraseña.'));
         return;
       }
       this.toast.show(
@@ -217,7 +219,7 @@ export class LoginPage {
         7000,
       );
     } catch {
-      this.toast.error('No pudimos enviar el enlace. Revisa tu conexión.');
+      this.toast.error(this.i18n.t('No pudimos enviar el enlace. Revisa tu conexión.'));
     } finally {
       this.enviandoEnlace.set(false);
     }

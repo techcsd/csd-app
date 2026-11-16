@@ -26,7 +26,7 @@
             <div class="log__entrada">
               <div class="log__entrada-top">
                 <span class="log__entrada-num">📦 {{ e.numero || 'OC' }}</span>
-                <span class="log__entrada-fecha">{{ e.fecha_programada | date: 'dd/MM/yy' }}</span>
+                <span class="log__entrada-fecha">{{ e.fecha_programada | fecha: 'dd/MM/yy' }}</span>
               </div>
               <div class="log__entrada-meta">
                 @if (e.proveedor) { <span>{{ e.proveedor }}</span> }

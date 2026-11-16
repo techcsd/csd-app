@@ -64,11 +64,11 @@
           </div>
 
           @if (item.estado === 'error') {
-            <p class="ob-row__error">{{ mensajeError(item) }}</p>
+            <p class="ob-row__error">{{ mensajeError(item) | t }}</p>
 
             <!-- W1 — detalle legible derivado del error crudo (si se reconoce) -->
             @if (detalleLegible(item); as det) {
-              <p class="ob-row__detalle-legible">🔎 {{ det }}</p>
+              <p class="ob-row__detalle-legible">🔎 {{ det | t }}</p>
             }
 
             <!-- BM1 (9ª regla) + BS2 — el código técnico crudo (SQLSTATE) es SOLO para
@@ -130,10 +130,10 @@
               }
             </div>
           } @else {
-            <p class="ob-row__waiting">{{ esperandoTexto(item) }}</p>
+            <p class="ob-row__waiting">{{ esperandoTexto(item) | t }}</p>
             @if (item.error_msg) {
               <!-- P5 — aunque siga reintentando, mostramos el motivo del último fallo -->
-              <p class="ob-row__error ob-row__error--soft">{{ 'Último aviso:' | t }} {{ mensajeError(item) }}</p>
+              <p class="ob-row__error ob-row__error--soft">{{ 'Último aviso:' | t }} {{ mensajeError(item) | t }}</p>
             }
             <!-- BI2 — un pending/syncing atascado también se puede reintentar a mano -->
             @if (puedeForzarEnvio(item) || esViejo(item)) {

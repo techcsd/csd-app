@@ -49,7 +49,7 @@
               <div class="cp-card">
                 <div class="cp-card__top">
                   <span class="cp-card__tipo">{{ tipoIcon(c.tipo) }} {{ tipoLabel(c.tipo) }}</span>
-                  <span class="cp-card__fecha">{{ c.fecha ? (c.fecha | date: 'dd/MM/yyyy') : '—' }}</span>
+                  <span class="cp-card__fecha">{{ c.fecha ? (c.fecha | fecha: 'dd/MM/yyyy') : '—' }}</span>
                 </div>
                 <div class="cp-card__prov">{{ c.proveedor || ('Sin proveedor' | t) }}</div>
                 <div class="cp-card__meta">
@@ -111,7 +111,7 @@
               <div class="cp-card">
                 <div class="cp-card__top">
                   <span class="cp-card__tipo">🧾 {{ categoriaLabel(g.categoria_clave) }}</span>
-                  <span class="cp-card__fecha">{{ g.fecha ? (g.fecha | date: 'dd/MM/yyyy') : '—' }}</span>
+                  <span class="cp-card__fecha">{{ g.fecha ? (g.fecha | fecha: 'dd/MM/yyyy') : '—' }}</span>
                 </div>
                 <div class="cp-card__prov">{{ g.concepto }}</div>
                 <div class="cp-card__meta">

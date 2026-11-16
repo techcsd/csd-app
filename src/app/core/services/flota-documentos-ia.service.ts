@@ -8,6 +8,7 @@ import {
   ResultadoAplicarDocumento,
 } from '../models/documento-flota.model';
 
+import { I18nService } from '../i18n/i18n.service';
 /** A5 — respuesta de la edge `leer-documento-flota` (mismo contrato que `LecturaRecibo`/CF4). */
 export interface LecturaDocumentoResp {
   ok: boolean;
@@ -26,6 +27,7 @@ export interface LecturaDocumentoResp {
  */
 @Injectable({ providedIn: 'root' })
 export class FlotaDocumentosIaService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private ctx = inject(UserContextService);
 
@@ -44,9 +46,9 @@ export class FlotaDocumentosIaService {
           /* body no-JSON */
         }
       }
-      return { ok: false, error: 'No se pudo leer el documento.' };
+      return { ok: false, error: this.i18n.t('No se pudo leer el documento.') };
     }
-    return (data as LecturaDocumentoResp) ?? { ok: false, error: 'No se pudo leer el documento.' };
+    return (data as LecturaDocumentoResp) ?? { ok: false, error: this.i18n.t('No se pudo leer el documento.') };
   }
 
   /** Empareja las páginas leídas contra la flota (placa/VIN); barato, siempre se llama. */

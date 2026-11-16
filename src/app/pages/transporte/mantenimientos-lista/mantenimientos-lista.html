@@ -39,7 +39,7 @@
               <p class="mant-card__desc">{{ m.descripcion }}</p>
             }
             <div class="mant-card__meta">
-              <span>📅 {{ m.fecha | date: 'dd/MM/yyyy' }}</span>
+              <span>📅 {{ m.fecha | fecha: 'dd/MM/yyyy' }}</span>
               @if (m.kilometraje != null) {
                 <span>🕑 {{ m.kilometraje | number: '1.0-0' }} km</span>
               }
@@ -77,7 +77,7 @@
               <p class="mant-card__desc">{{ m.descripcion }}</p>
             }
             <div class="mant-card__meta">
-              <span>📅 {{ m.fecha | date: 'dd/MM/yyyy' }}</span>
+              <span>📅 {{ m.fecha | fecha: 'dd/MM/yyyy' }}</span>
               @if (m.kilometraje != null) {
                 <span>🕑 {{ m.kilometraje | number: '1.0-0' }} km</span>
               }

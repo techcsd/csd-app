@@ -9,6 +9,7 @@ import { Conduce, RutaHoy } from '../models/transporte.model';
 import { Proyecto } from '../models/bitacora.model';
 import { ItemLibre } from '../models/inventario.model';
 
+import { I18nService } from '../i18n/i18n.service';
 const CATALOG_CONDUCES = 'mis_conduces';
 const CATALOG_EXTERNOS = 'mis_conduces_externos'; // CC5 — lista de conduces externos
 const CATALOG_RUTAS = 'mis_rutas';
@@ -764,6 +765,7 @@ export interface DestinoTransporte {
  */
 @Injectable({ providedIn: 'root' })
 export class ConducesService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
@@ -2264,7 +2266,7 @@ export class ConducesService {
     });
     if (error) {
       if (/function .* does not exist|not find the function|PGRST202/i.test(error.message || '')) {
-        throw new Error('Asignar chofer desde la lista aún no está disponible. Actualiza o inténtalo desde el detalle.');
+        throw new Error(this.i18n.t('Asignar chofer desde la lista aún no está disponible. Actualiza o inténtalo desde el detalle.'));
       }
       throwSyncError(error);
     }

@@ -38,7 +38,7 @@
             <div class="ech__kv"><span class="ech__k">{{ 'Monto' | t }}</span><span class="ech__v">RD$ {{ e.monto | number: '1.0-2' }}</span></div>
           }
           @if (e.precio_por_galon != null) {
-            <div class="ech__kv"><span class="ech__k">RD$/gal</span><span class="ech__v">{{ e.precio_por_galon | number: '1.0-2' }}</span></div>
+            <div class="ech__kv"><span class="ech__k">{{ 'RD$/gal' | t }}</span><span class="ech__v">{{ e.precio_por_galon | number: '1.0-2' }}</span></div>
           }
           @if (e.rendimiento_km_gal != null) {
             <div class="ech__kv"><span class="ech__k">{{ 'Rendimiento' | t }}</span><span class="ech__v">{{ e.rendimiento_km_gal | number: '1.0-1' }} km/gal</span></div>

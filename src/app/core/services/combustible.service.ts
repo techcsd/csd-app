@@ -20,6 +20,7 @@ import {
 } from '../models/combustible.model';
 import { db, OutboxOp } from '../db/app-db';
 
+import { I18nService } from '../i18n/i18n.service';
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
 const CATALOG_DETALLE = 'echada_detalle'; // BZ1 — read-through del detalle, + `:${id}`
 
@@ -73,6 +74,7 @@ export interface ValidacionKm {
  */
 @Injectable({ providedIn: 'root' })
 export class CombustibleService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
@@ -104,7 +106,7 @@ export class CombustibleService {
           if (parsed?.error) return { ok: false, error: parsed.error };
         } catch { /* ignore */ }
       }
-      return { ok: false, error: 'No se pudo leer el recibo.' };
+      return { ok: false, error: this.i18n.t('No se pudo leer el recibo.') };
     }
     return data as { ok: boolean; lectura?: LecturaRecibo; confianza?: Record<string, number>; modelo?: string };
   }

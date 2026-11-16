@@ -10,6 +10,7 @@ import {
 } from '../models/tarea.model';
 import { fechaLocalISO } from '../util/fecha';
 
+import { I18nService } from '../i18n/i18n.service';
 const CATALOG_TAREAS = 'mis_tareas';
 const BUCKET = 'inventario';
 
@@ -53,6 +54,7 @@ export interface UsuarioAsignable {
  */
 @Injectable({ providedIn: 'root' })
 export class TareasService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
@@ -76,7 +78,7 @@ export class TareasService {
     // tareas" (el bug de la tarea de Wagner: vacío y fallo se veían idénticos). Si hay
     // caché, se degrada mostrándola (offline-first).
     if (out.failed && !out.fromCache) {
-      throw new Error('No pudimos cargar tus tareas. Revisa tu conexión e inténtalo de nuevo.');
+      throw new Error(this.i18n.t('No pudimos cargar tus tareas. Revisa tu conexión e inténtalo de nuevo.'));
     }
     return out.data ?? [];
   }
@@ -133,7 +135,7 @@ export class TareasService {
   async crear(input: CrearTareaInput): Promise<void> {
     const { data: userData } = await this.supabase.client.auth.getUser();
     const uid = userData.user?.id;
-    if (!uid) throw new Error('No autenticado');
+    if (!uid) throw new Error(this.i18n.t('No autenticado'));
     const { error } = await this.supabase.client.from('tareas').insert({
       titulo: input.titulo,
       descripcion: input.descripcion,

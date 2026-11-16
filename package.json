@@ -13,6 +13,8 @@
     "build:prod": "node scripts/build-env.mjs --env prod",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "i18n:smoke": "node scripts/i18n-smoke.mjs",
+    "i18n:paridad": "node scripts/i18n-paridad.mjs",
     "apk": "node scripts/build-apk.mjs",
     "apk:publish": "node scripts/release-apk.mjs",
     "aab": "node scripts/aab.mjs",

@@ -2,7 +2,7 @@
   <header class="tecinv__header">
     <button type="button" class="tecinv__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="tecinv__icon">💻</span>
-    <h1 class="tecinv__title">Inventario tecnológico</h1>
+    <h1 class="tecinv__title">{{ 'Inventario tecnológico' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,7 +11,7 @@
       type="search"
       [ngModel]="busqueda()"
       (ngModelChange)="busqueda.set($event)"
-      placeholder="Buscar por nombre, código, serie…"
+      placeholder="{{ 'Buscar por nombre, código, serie…' | t }}"
       aria-label="Buscar equipo"
     />
     <div class="tecinv__filtros">

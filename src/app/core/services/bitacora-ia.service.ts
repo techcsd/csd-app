@@ -4,6 +4,7 @@ import { CapturedPhoto } from './camera.service';
 import { PropuestaBitacoraIA } from '../models/bitacora-ia.model';
 import { blobABase64 } from '../../shared/utils/base64.util';
 
+import { I18nService } from '../i18n/i18n.service';
 /**
  * DF1-A (PROMPT 129) — cliente de la edge `bitacora-ia` (SGC, ya desplegada en
  * el Supabase de dev por la ronda paralela PROMPT 128). Fotos + nota de voz →
@@ -21,6 +22,7 @@ import { blobABase64 } from '../../shared/utils/base64.util';
  */
 @Injectable({ providedIn: 'root' })
 export class BitacoraIaService {
+  private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
 
   async entenderParte(input: {
@@ -49,7 +51,7 @@ export class BitacoraIaService {
           /* ignore */
         }
       }
-      return { ok: false, error: 'No se pudo entender el parte. Llénalo a mano.' };
+      return { ok: false, error: this.i18n.t('No se pudo entender el parte. Llénalo a mano.') };
     }
     return data as PropuestaBitacoraIA;
   }

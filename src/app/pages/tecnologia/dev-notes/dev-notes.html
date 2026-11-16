@@ -2,17 +2,17 @@
   <header class="dnotes__header">
     <button type="button" class="dnotes__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="dnotes__icon">🧑‍💻</span>
-    <h1 class="dnotes__title">Dev notes</h1>
+    <h1 class="dnotes__title">{{ 'Dev notes' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <!-- Tabs -->
     <div class="dnotes__tabs">
       <button type="button" class="dnotes__tab" [class.dnotes__tab--on]="tab() === 'mias'" (click)="setTab('mias')">
-        Mis notas
+        {{ 'Mis notas' | t }}
       </button>
       <button type="button" class="dnotes__tab" [class.dnotes__tab--on]="tab() === 'compartidas'" (click)="setTab('compartidas')">
-        Compartidas conmigo
+        {{ 'Compartidas conmigo' | t }}
       </button>
     </div>
 
@@ -24,7 +24,7 @@
       autocomplete="off"
       [ngModel]="busqueda()"
       (ngModelChange)="busqueda.set($event)"
-      placeholder="🔎 Buscar en tus notas técnicas"
+      placeholder="{{ '🔎 Buscar en tus notas técnicas' | t }}"
       aria-label="Buscar en Dev notes"
     />
 
@@ -106,17 +106,17 @@
           <p class="dnotes__reader-hint">📁 {{ ruta }}</p><!-- tropes-allow: 📁 = icono de carpeta/grupo (CS2) -->
         }
         @if (n.enviada_a_ronda_at) {
-          <p class="dnotes__reader-hint">📋 Enviada a ronda · {{ fechaHora(n.enviada_a_ronda_at) }}</p><!-- tropes-allow: 📋 = mismo icono de "Mandar a ronda" del pie -->
+          <p class="dnotes__reader-hint">📋 {{ 'Enviada a ronda ·' | t }} {{ fechaHora(n.enviada_a_ronda_at) }}</p><!-- tropes-allow: 📋 = mismo icono de "Mandar a ronda" del pie -->
         }
         <app-markdown-view [source]="n.contenido" [resolverImagen]="resolverImagen" />
       </div>
       <footer class="dnotes__reader-foot">
         @if (n.es_mia) {
-          <button type="button" class="btn-ghost dnotes__reader-mini" (click)="mandarARonda(n)">📋 Mandar a ronda</button><!-- tropes-allow: 📋 = icono de "Mandar a ronda" (acción nueva de CQ2) -->
+          <button type="button" class="btn-ghost dnotes__reader-mini" (click)="mandarARonda(n)">{{ '📋 Mandar a ronda' | t }}</button><!-- tropes-allow: 📋 = icono de "Mandar a ronda" (acción nueva de CQ2) -->
         }
         <button type="button" class="btn-cta" (click)="editar(n)">{{ n.permiso === 'editar' ? 'Editar' : 'Ver' }}</button>
       </footer>
-      <button type="button" class="dnotes__reader-web" (click)="abrirEnWeb(n)">Abrir en la web</button>
+      <button type="button" class="dnotes__reader-web" (click)="abrirEnWeb(n)">{{ 'Abrir en la web' | t }}</button>
     </div>
   }
 </div>

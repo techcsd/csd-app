@@ -53,7 +53,7 @@
         <label class="field-label">{{ 'Nombre visible' | t }}</label>
         <input class="field" type="text" [ngModel]="nombreEdit()" (ngModelChange)="nombreEdit.set($event)" [placeholder]="'Tu nombre' | t" />
         <label class="field-label">{{ 'Teléfono' | t }}</label>
-        <input class="field" type="tel" inputmode="tel" [ngModel]="telefonoEdit()" (ngModelChange)="telefonoEdit.set($event)" placeholder="Ej: 809-555-1234" />
+        <input class="field" type="tel" inputmode="tel" [ngModel]="telefonoEdit()" (ngModelChange)="telefonoEdit.set($event)" placeholder="{{ 'Ej: 809-555-1234' | t }}" />
         <div class="perfil__miperfil-acciones">
           <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="cancelarEdicion()">{{ 'Cancelar' | t }}</button>
           <button type="button" class="btn-cta perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="guardarPerfil()">
@@ -152,7 +152,7 @@
     <div class="perfil__seccion perfil__lang">
       <span class="perfil__seccion-label">{{ 'Idioma' | t }}</span>
       <app-language-selector />
-      <p class="perfil__seccion-note">{{ 'Los avisos y mensajes del sistema pueden llegar en español.' | t }}</p>
+      <p class="perfil__seccion-note">{{ 'Siguen en español: catálogos, nombres de obra y proveedor, mensajes de negocio del servidor, notificaciones, PDF y respuestas de Compa.' | t }}</p>
     </div>
 
     <!-- CK10 — Notificaciones: salud (permiso + canal) + prueba de entrega. -->

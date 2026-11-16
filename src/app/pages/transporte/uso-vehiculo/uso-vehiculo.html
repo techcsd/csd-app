@@ -61,7 +61,7 @@
           <p class="usov__hint">{{ 'O llénalo a mano' | t }}</p>
 
           <label class="field-label usov__mt" for="km">{{ (esTelehandler() ? 'Horas actuales (horómetro)' : 'Kilometraje actual') | t }}</label>
-          <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="Ej. 125400" />
+          <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="{{ 'Ej. 125400' | t }}" />
           @if (confianzaMedida() === 'alta') {
             <app-estado-chip [label]="'Confianza alta' | t" tono="success" />
           } @else if (confianzaMedida() === 'dudosa') {

@@ -10,6 +10,7 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { fechaCorta } from '../../../core/i18n/locale.util';
 
 interface DiaChip {
   fecha: string; // YYYY-MM-DD
@@ -62,7 +63,7 @@ export class MiRecorridoPage {
       const d = new Date(base);
       d.setDate(base.getDate() - i);
       const fecha = this.toISODate(d);
-      const label = i === 0 ? 'Hoy' : i === 1 ? 'Ayer' : d.toLocaleDateString('es-DO', { weekday: 'short', day: 'numeric' });
+      const label = i === 0 ? this.i18n.t('Hoy') : i === 1 ? this.i18n.t('Ayer') : fechaCorta(d, this.i18n.idioma(), { weekday: true });
       out.push({ fecha, label });
     }
     return out;
