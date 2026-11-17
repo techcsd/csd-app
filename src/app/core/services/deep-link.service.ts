@@ -60,8 +60,11 @@ export class DeepLinkService {
     } catch {
       return null;
     }
-    const path = `${u.pathname}${u.search}`;
-    if (/^\/conduce-qr\/[^/]+$/.test(u.pathname)) return path;
+    // Esquema propio (<scheme>://conduce-qr/<token>): el primer segmento llega como host.
+    const esEsquemaPropio = u.protocol !== 'http:' && u.protocol !== 'https:';
+    const pathname = esEsquemaPropio ? `/${u.host}${u.pathname}`.replace(/\/+$/, '') : u.pathname;
+    const path = `${pathname}${u.search}`;
+    if (/^\/conduce-qr\/[^/]+$/.test(pathname)) return path;
     const dest = notifAppRoute({ tipo: 'info', ruta: path, referencia_id: null, referencia_tipo: null });
     return dest && dest !== '/home' ? dest : null;
   }

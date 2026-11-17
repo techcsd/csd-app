@@ -6,7 +6,7 @@
 
 Detalle por ítem en `docs/ODOO-INTEGRACION-AVANCE-APP.md`. Hecho: DS-48 (recepción envía cantidades por línea — confirmada la hipótesis de Miranda: `por-confirmar.ts` y `entrega.ts` mandaban `p_items` solo con «Faltó algo»), DS-49 (ruta QR `/conduce-qr/:token`), DS-50 (chip de estado contable), DS-24 (motivo ≥10), DS-52 (enlaces sobreviven a login/PIN + `appUrlOpen`). **No hecho:** asistente GPS (sin contrato en SGC), `mi_arranque()`/instrumentación, escáner QR nativo + App Links, selectores aprobados (SGC no los filtra).
 Depende de SGC dev: `ds9` (NULL = enviado), `conduce-qr` (flag `conduce_qr_activo` apagado por defecto), `ds10` (`odoo_sync_estado`), `ds24` (motivo ≥10) — todos ya en `origin/dev` de SGC.
-**Pasos físicos de Xaviel:** probar en teléfono (recepción completa no debe quedar `entregado_incompleto`; QR con flag encendido), publicar APK dev, registrar `qa/release-2.71.0.md`.
+**Probado en teléfono (Claude, 17-nov):** QR→PIN→recepción, «Sí, todo» y «Faltó algo» contra dev — OK; ver `docs/ODOO-INTEGRACION-AVANCE-APP.md` (incluye pedido a SGC: `odoo_sync_estado` en `conduce_detalle_app`, `emitir` para confirmador designado). **Pendiente Xaviel:** registrar `qa/release-2.71.0.md` (actualización in-app desde 2.70.0) y OK para prod.
 
 ---
 

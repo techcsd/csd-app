@@ -21,5 +21,12 @@ La app **nunca habla con Odoo**: todo pasa por RPC/edges de SGC. Contratos consu
 3. Escáner de QR dentro de la app (plugin ML Kit → nuevo permiso/dato: actualizar `docs/TIENDAS-DATOS.md`, CI13) y App Links (`assetlinks.json` en el dominio) para que el QR de la web abra la app nativa; hoy el QR codifica el origen de la web SGC.
 4. Selectores de artículo aprobados cuando SGC lo exponga.
 
-## Pruebas
-`npm run build` ✔ (guardas i18n en 100 % es/en/ht). Prueba contra backend dev y en teléfono = paso físico de Xaviel.
+## Pruebas en teléfono real (17-nov, APK dev 2.71.0, SM-A205U Android 10, backend dev)
+- **QR → recepción: OK.** Token emitido por la edge `conduce-qr` → enlace con esquema propio (`<scheme>://conduce-qr/<token>`, intent-filter nuevo) → app bloqueada → PIN → retomó el enlace → abrió la recepción de esa salida. Con la app ya abierta, `appUrlOpen` navega directo (también a `conduce-detalle`).
+- **DS-48 OK:** «Sí, todo» (4+10 uds) → `estado=entregado`, `cantidad_recibida` 4 y 10 (antes NULL). «Faltó algo» sin bajar cantidad → bloqueado con aviso; con 6/10 → `entregado_incompleto`, 6.
+- **DS-24 / chip contable: NO probados en vivo.** Reject: el QA no tiene el módulo de compras (la pantalla responde «No tienes acceso», que es el gate correcto). Chip: la lectura directa de `salidas_inventario` devuelve vacío por RLS para el QA → **pedido a SGC** (abajo).
+
+## Pedido a SGC
+1. **Exponer `odoo_sync_estado` en `conduce_detalle_app`** (o RPC `conduce_estado_sync(p_salida_id)`, solo roles de gestión). La app ya lo lee de ahí si viene; si no, cae a un select directo que la RLS bloquea.
+2. **`conduce-qr` `emitir`** devuelve `sin_acceso` a un confirmador designado (`firma_pendiente_usuario_id`) que no ve la salida por RLS: validar con `es_confirmador_de_conduce()` además de la RLS.
+3. QR de la web: hoy codifica el origen de la web SGC; para abrir la app nativa hace falta App Links (assetlinks) o que el QR use el esquema de la app.

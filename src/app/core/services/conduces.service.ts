@@ -609,6 +609,8 @@ export interface ConduceDetalle {
   /** CK4 — "Entregar a": receptor DESIGNADO (aún sin confirmar) = firma_pendiente.
    *  El servidor (conduce_detalle_app) lo devuelve; null = "Sin asignar". */
   firma_pendiente_nombre?: string | null;
+  /** DS-50 — estado de registro contable, si SGC lo incluye en `conduce_detalle_app` (opcional). */
+  odoo_sync_estado?: string | null;
   recibido_en: string | null;
   recepcion_foto_path: string | null;
   recepcion_foto_url?: string | null;

@@ -397,7 +397,8 @@ export class ConduceDetallePage {
       this.detalle.set(d);
       this.syncEstado.set(null);
       if (this.userCtx.esFlotaElevado() || this.userCtx.esTecnologia()) {
-        void this.conduces.estadoSyncConduce(this.salidaId).then((e) => this.syncEstado.set(e));
+        if (d.odoo_sync_estado) this.syncEstado.set(d.odoo_sync_estado);
+        else void this.conduces.estadoSyncConduce(this.salidaId).then((e) => this.syncEstado.set(e));
       }
       // CK4 — si el server ya refleja el receptor designado, suelta el optimista
       // (fuente única = server); offline aún en null → se conserva lo elegido.
