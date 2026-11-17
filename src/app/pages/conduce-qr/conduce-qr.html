@@ -1,0 +1,9 @@
+<!-- QR del conduce -->
+<section class="conduce-qr">
+  @if (!error()) {
+    <p class="conduce-qr__msg">{{ 'Abriendo el conduce…' | t }}</p>
+  } @else {
+    <p class="conduce-qr__msg conduce-qr__msg--error">{{ error() }}</p>
+    <a class="btn-cta" routerLink="/transporte/por-confirmar">{{ 'Ir a Entregas por recibir' | t }}</a>
+  }
+</section>

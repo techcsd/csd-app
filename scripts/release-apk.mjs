@@ -38,12 +38,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-16';
+const RELEASED_AT = '2026-11-17';
 
-const TITULO = 'Toda la app en English y Kreyòl';
+const TITULO = 'Recibir con cantidades y abrir conduces por QR';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Idioma', d: 'Toda la app ahora está disponible en English y Kreyòl ayisyen, además de español: pantallas, botones, avisos, fechas y mensajes de error. Cámbialo en Perfil > Idioma. El Kreyòl aún está en revisión por un hablante nativo.' },
-  { t: 'mejora', m: 'Idioma', d: 'Las fechas y los meses se muestran en el idioma elegido, y el teléfono anuncia el idioma correcto a los lectores de pantalla.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Al confirmar una entrega completa ahora se registra la cantidad recibida de cada material; antes quedaba en blanco y la entrega aparecía como incompleta sin serlo.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Abre la recepción de un conduce desde su código QR; si no has iniciado sesión, te lleva a entrar y luego vuelve al conduce.' },
+  { t: 'mejora', m: 'Compras', d: 'Para rechazar una requisición ahora es obligatorio escribir el motivo (mínimo 10 caracteres).' },
+  { t: 'mejora', m: 'Conduces', d: 'Los roles de gestión ven si el conduce ya quedó registrado en el sistema contable.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

@@ -145,6 +145,9 @@
     "pages/compras/solicitud-compra": {
       "enforce": true
     },
+    "pages/conduce-qr": {
+      "enforce": false
+    },
     "pages/demo/escenarios": {
       "enforce": true
     },
@@ -612,6 +615,9 @@
     },
     "shared/components/generar-acceso": {
       "enforce": true
+    },
+    "shared/components/gps-asistente": {
+      "enforce": false
     },
     "shared/components/gps-gate-banner": {
       "enforce": true

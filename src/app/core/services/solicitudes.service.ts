@@ -347,7 +347,7 @@ export class SolicitudesService {
   }
 
   /** AS7 — rechaza una requisición con una nota (RPC `rechazar_solicitud_material`). Online. */
-  async rechazarRequisicion(id: string, nota: string | null): Promise<void> {
+  async rechazarRequisicion(id: string, nota: string): Promise<void> {
     const { error } = await this.supabase.client.rpc('rechazar_solicitud_material', {
       p_solicitud_id: id,
       p_notas: nota,

@@ -456,6 +456,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/compa/compartida-detalle/compartida-detalle').then((m) => m.CompaCompartidaDetallePage),
   },
   {
+    // DS-49 (#58/#74) — destino del QR del conduce: valida el token y abre la recepción de esa
+    // salida. Sin moduleGuard (como por-confirmar): quién puede recibir lo decide el servidor.
+    path: 'conduce-qr/:token',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/conduce-qr/conduce-qr').then((m) => m.ConduceQrPage),
+  },
+  {
     // AJ8 — bandeja del RECEPTOR: entregas que debe confirmar en SU teléfono.
     // Sin moduleGuard: el receptor puede ser inventario/obra sin módulo flota; el
     // RPC solo devuelve entregas donde el usuario actual es receptor autorizado.

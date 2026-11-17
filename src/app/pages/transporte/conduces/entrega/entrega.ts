@@ -239,10 +239,14 @@ export class ConduceEntregaPage {
       this.toast.error(this.i18n.t('Dijiste que faltó material: baja la cantidad de al menos un artículo.'));
       return;
     }
-    const items =
-      this.llegoTodo() === false
-        ? c.items.map((it) => ({ detalle_id: it.detalle_id, cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad }))
-        : null;
+    // DS-48 / ADR 14 — siempre se envían las cantidades por línea (lo que llegó = lo enviado
+    // cuando "llegó todo"), para no dejar `cantidad_recibida` NULL (falso "incompleto").
+    const items = c.items.length
+      ? c.items.map((it) => ({
+          detalle_id: it.detalle_id,
+          cantidad_recibida: this.llegoTodo() === true ? it.cantidad : this.cantidades()[it.detalle_id] ?? it.cantidad,
+        }))
+      : null;
     this.submitting.set(true);
     try {
       await this.service.conduceMarcarEntregado(c.id, this.foto()!.blob, items, this.notas().trim() || null);

@@ -8,6 +8,7 @@ import type { BackgroundGeolocationPlugin } from '@capacitor-community/backgroun
 const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 import { SupabaseService } from './supabase.service';
 import { PermissionsService } from './permissions.service';
+import { GpsAsistenteService } from './gps-asistente.service';
 import { LocalStore } from './local-store.service';
 import { NetworkService } from './network.service';
 import { ToastService } from './toast.service';
@@ -57,6 +58,7 @@ export class TrackingService {
   private i18n = inject(I18nService);
   private supabase = inject(SupabaseService);
   private permissions = inject(PermissionsService);
+  private gpsAsistente = inject(GpsAsistenteService);
   private store = inject(LocalStore);
   private net = inject(NetworkService);
   private toast = inject(ToastService);
@@ -232,17 +234,14 @@ export class TrackingService {
   async exigirGps(accion: string): Promise<boolean> {
     if (await this.revisarGps()) return true;
     void this.logEvento('operando_sin_gps', accion);
-    const msg =
-      this.gpsMotivo() === 'permiso'
-        ? 'Activa el permiso de ubicación para continuar. La empresa necesita saber dónde estás durante el trabajo.'
-        : 'Enciende la ubicación (GPS) del teléfono para continuar.';
-    this.toast.withAction(
-      msg,
-      { label: this.i18n.t('Abrir ajustes'), run: () => void this.permissions.openAppSettings() },
-      'error',
-      9000,
-    );
-    return false;
+    // DS-51 — asistente guiado (permiso vs ubicación apagada) en vez de un aviso suelto.
+    // Devuelve true si el chofer lo activó y la acción puede continuar en el mismo toque.
+    return this.gpsAsistente.mostrar(this.gpsMotivo() === 'permiso' ? 'permiso' : 'apagado');
+  }
+
+  /** DS-51 — el chofer decidió no activar el GPS: se guarda por qué (tipo existente + detalle, sin datos personales). */
+  registrarRechazoAsistente(clave: string, motivo: string): void {
+    void this.logEvento('operando_sin_gps', `asistente_rechazado:${clave}:${motivo}`);
   }
 
   private async logEvento(
