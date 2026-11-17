@@ -609,6 +609,8 @@ export interface ConduceDetalle {
   /** CK4 — "Entregar a": receptor DESIGNADO (aún sin confirmar) = firma_pendiente.
    *  El servidor (conduce_detalle_app) lo devuelve; null = "Sin asignar". */
   firma_pendiente_nombre?: string | null;
+  /** DS-50 — estado de registro contable, si SGC lo incluye en `conduce_detalle_app` (opcional). */
+  odoo_sync_estado?: string | null;
   recibido_en: string | null;
   recepcion_foto_path: string | null;
   recepcion_foto_url?: string | null;
@@ -2213,6 +2215,49 @@ export class ConducesService {
       fotos,
       resumen: { tipo: 'conduce_confirmar', salida_id: input.salidaId },
     });
+  }
+
+  /**
+   * DS-49 — resuelve el token del QR del conduce (edge `conduce-qr` de SGC, acción `resolver`)
+   * a la salida. Solo comprueba firma y vencimiento; los permisos de recepción los decide el
+   * servidor. Lanza un código corto: `qr_desactivado` | `sin_red` | `qr_invalido`.
+   */
+  async resolverQrConduce(token: string): Promise<{ salidaId: string; estado: string }> {
+    const { data, error } = await this.supabase.client.functions.invoke('conduce-qr', {
+      body: { accion: 'resolver', token },
+    });
+    if (error) {
+      // AU16 — en !=2xx `error.context` es la Response de la edge: el motivo viaja en su JSON.
+      let motivo = '';
+      try {
+        const ctx = (error as { context?: Response }).context;
+        const j = ctx ? ((await ctx.clone().json()) as { error?: string }) : null;
+        motivo = j?.error ?? '';
+      } catch {
+        // sin cuerpo legible
+      }
+      if (motivo === 'qr_desactivado') throw new Error('qr_desactivado');
+      if (!motivo && /fetch|network|failed to send/i.test(error.message)) throw new Error('sin_red');
+      throw new Error('qr_invalido');
+    }
+    const r = data as { salidaId?: string; estado?: string } | null;
+    if (!r?.salidaId) throw new Error('qr_invalido');
+    return { salidaId: r.salidaId, estado: r.estado ?? '' };
+  }
+
+  /**
+   * DS-50 — estado de sincronización contable de un conduce (`pendiente|sincronizado|incierto|error`),
+   * solo lectura y best-effort: null si el rol no puede leerlo o la columna aún no existe en ese
+   * entorno. La UI lo traduce a lenguaje de obra (sin jerga de integración).
+   */
+  async estadoSyncConduce(salidaId: string): Promise<string | null> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('conduce_estado_sync', { p_salida_id: salidaId });
+      if (error || typeof data !== 'string') return null;
+      return data || null;
+    } catch {
+      return null;
+    }
   }
 
   // ─── AH5 — Transferencia de responsabilidad de conduces entre choferes ──────

@@ -49,6 +49,7 @@
 
         <div class="doc__estado">
           <span class="doc__chip" [appEstadoPulse]="faseLabel()" [class.doc__chip--inc]="incompleto()">{{ faseLabel() }}</span>
+          @if (syncLabel()) { <span class="doc__chip" [class.doc__chip--inc]="syncEstado() === 'incierto' || syncEstado() === 'error'">{{ syncLabel() }}</span> }
           @if (d.es_prueba) { <span class="doc__chip doc__chip--test">{{ 'PRUEBA' | t }}</span> }
         </div>
 

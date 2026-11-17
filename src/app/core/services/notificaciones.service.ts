@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { ArranqueService } from './arranque.service';
 import { Preferences } from '@capacitor/preferences';
 import { SupabaseService } from './supabase.service';
 import { NotifSoundService } from './notif-sound.service';
@@ -64,6 +65,7 @@ export interface Notificacion {
 @Injectable({ providedIn: 'root' })
 export class NotificacionesService {
   private supabase = inject(SupabaseService);
+  private arranque = inject(ArranqueService); // DS-45 — lectura de arranque compartida
   private sound = inject(NotifSoundService);
 
   private _noLeidas = signal(0);
@@ -133,7 +135,7 @@ export class NotificacionesService {
   async misNotifSilenciables(): Promise<Set<string>> {
     const out = new Set<string>();
     try {
-      const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+      const { data, error } = await this.arranque.preferencias();
       if (error) return out;
       const notif = (data as { notif?: { tipo: string; silenciable?: boolean }[] } | null)?.notif;
       if (!Array.isArray(notif)) return out;
@@ -228,7 +230,7 @@ export class NotificacionesService {
    */
   async emailRequisicionesActivo(): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+      const { data, error } = await this.arranque.preferencias();
       if (error || !data) return true;
       const v = (data as { notif_email_requisiciones?: unknown }).notif_email_requisiciones;
       return typeof v === 'boolean' ? v : true;

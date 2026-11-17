@@ -37,6 +37,8 @@ import { AutoLockService } from './core/services/auto-lock.service';
 import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
 import { NavGuardService } from './core/services/nav-guard.service';
+import { DeepLinkService } from './core/services/deep-link.service';
+import { GpsAsistente } from './shared/components/gps-asistente/gps-asistente';
 import { ActivityPingService } from './core/services/activity-ping.service';
 import { PlatformReportService } from './core/services/platform-report.service';
 import { PushService } from './core/services/push.service';
@@ -59,7 +61,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, CompaFlotante, TranslatePipe],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, CompaFlotante, GpsAsistente, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -75,6 +77,7 @@ export class App {
   version = inject(VersionService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private deepLink = inject(DeepLinkService);
   private session = inject(SessionService);
   private activityPing = inject(ActivityPingService);
   private platformReport = inject(PlatformReportService);
@@ -151,6 +154,12 @@ export class App {
     // AL6 — re-evaluar al volver a primer plano (por si completó la inspección o
     // se le asignó un vehículo). Best-effort, nativo.
     if (Capacitor.isNativePlatform()) {
+      // DS-49/DS-52 — enlace abierto desde fuera (QR del conduce, aviso web): pasa por el gate
+      // de navegación y, si falta sesión/PIN, los guards lo recuerdan y se retoma al entrar.
+      void CapApp.addListener('appUrlOpen', ({ url }) => {
+        const dest = this.deepLink.rutaDesdeUrl(url);
+        if (dest) this.navGuard.requestNav(() => void this.router.navigateByUrl(dest).catch(() => {}));
+      });
       this.camera.init(); // BV5/BT5 — recupera la foto si el SO recreó la Activity con la cámara abierta
       void CapApp.addListener('resume', () => {
         void this.syncAlarmaNativa();

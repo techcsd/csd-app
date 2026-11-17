@@ -24,6 +24,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- DS-49 — enlaces con el esquema propio de la app (ej. <scheme>://conduce-qr/<token>):
+                 Capacitor los entrega como appUrlOpen. Sin permisos nuevos. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/custom_url_scheme" />
+            </intent-filter>
         </activity>
 
         <!-- AQ1 — FCM usa este canal de ALTA importancia por defecto para las push

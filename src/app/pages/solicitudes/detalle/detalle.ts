@@ -346,9 +346,14 @@ export class RequisicionDetallePage {
       this.toast.error(this.i18n.t('Necesitas conexión para rechazar.'));
       return;
     }
+    // DS-24 — motivo obligatorio (mismo mínimo que el RPC: 10 caracteres sin espacios sobrantes).
+    if (this.rechazoNota().trim().length < 10) {
+      this.toast.error(this.i18n.t('Escribe el motivo del rechazo (mínimo 10 caracteres).'));
+      return;
+    }
     this.procesando.set(true);
     try {
-      await this.service.rechazarRequisicion(r.id, this.rechazoNota().trim() || null);
+      await this.service.rechazarRequisicion(r.id, this.rechazoNota().trim());
       this.toast.success(this.i18n.t('Requisición rechazada.'));
       this.modo.set('none');
       await this.refrescar();

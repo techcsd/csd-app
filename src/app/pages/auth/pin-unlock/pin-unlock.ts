@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DeepLinkService } from '../../../core/services/deep-link.service';
 import { Router } from '@angular/router';
 import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -35,12 +36,15 @@ export class PinUnlockPage {
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
   private logoReveal = inject(LogoRevealService);
+  private deepLink = inject(DeepLinkService);
 
   /** CM2 — velo del logo (una vez por arranque) y navega al home sin esperar. */
   private async entrarAlHome(): Promise<void> {
     this.session.markUnlocked();
     this.logoReveal.disparar();
-    await this.router.navigate(['/home']);
+    // DS-52 — si un enlace (QR / push) llegó con la app bloqueada, se retoma tras el PIN.
+    const destino = this.deepLink.consumir();
+    await this.router.navigateByUrl(destino ?? '/home');
   }
 
   value = signal('');

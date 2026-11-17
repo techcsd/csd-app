@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { ArranqueService } from './arranque.service';
 import { SupabaseService } from './supabase.service';
 
 /**
@@ -14,6 +15,7 @@ import { SupabaseService } from './supabase.service';
 @Injectable({ providedIn: 'root' })
 export class CompaFlotanteService {
   private supabase = inject(SupabaseService);
+  private arranque = inject(ArranqueService); // DS-45 — lectura de arranque compartida
 
   /** true por defecto (mismo default que el servidor) hasta que se confirme lo contrario. */
   activo = signal(true);
@@ -43,7 +45,7 @@ export class CompaFlotanteService {
   /** Best-effort: si la RPC aún no existe en el entorno, se queda en el default (true). */
   async sincronizar(): Promise<void> {
     try {
-      const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+      const { data, error } = await this.arranque.preferencias();
       if (error || !data) return;
       const v = (data as { compa_flotante?: unknown }).compa_flotante;
       if (typeof v === 'boolean') this.activo.set(v);

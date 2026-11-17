@@ -1,4 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { ArranqueService } from './arranque.service';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Preferences } from '@capacitor/preferences';
@@ -65,6 +66,7 @@ export interface Saludo {
 @Injectable({ providedIn: 'root' })
 export class BienvenidaService {
   private supabase = inject(SupabaseService);
+  private arranque = inject(ArranqueService); // DS-45 — lectura de arranque compartida
   private store = inject(LocalStore);
   private ctx = inject(UserContextService);
   private permissions = inject(PermissionsService);
@@ -379,7 +381,7 @@ export class BienvenidaService {
   /** Lee el flag de servidor por capacidad (best-effort). false si no existe/offline. */
   private async vistoEnServidor(): Promise<boolean> {
     try {
-      const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+      const { data, error } = await this.arranque.preferencias();
       if (error || !data) return false;
       const prefs = data as Record<string, unknown>;
       return prefs[SERVER_KEY] === true || prefs[SERVER_KEY] === '1';
