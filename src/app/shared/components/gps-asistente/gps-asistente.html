@@ -1,0 +1,49 @@
+<!-- Asistente de GPS -->
+<app-bottom-sheet [open]="asistente.abierto()" [titulo]="titulo()" (closed)="ahoraNo()">
+  <div class="gpsa">
+    <svg class="gpsa__icon" viewBox="0 0 64 64" width="72" height="72" aria-hidden="true">
+      <path d="M32 6c-10 0-18 8-18 18 0 13 18 34 18 34s18-21 18-34C50 14 42 6 32 6z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+      <circle cx="32" cy="24" r="7" fill="none" stroke="currentColor" stroke-width="4" />
+    </svg>
+
+    @if (!eligiendoMotivo()) {
+      <p class="gpsa__lead">{{ 'La empresa necesita saber dónde estás durante el trabajo. Te toma 10 segundos.' | t }}</p>
+
+      @if (asistente.motivo() === 'permiso') {
+        <ol class="gpsa__steps">
+          <li>{{ 'Toca «Abrir ajustes».' | t }}</li>
+          <li>{{ 'Entra a «Permisos» y luego a «Ubicación».' | t }}</li>
+          <li>{{ 'Elige «Permitir siempre» o «Permitir solo mientras uso la app».' | t }}</li>
+          <li>{{ 'Vuelve aquí y toca «Ya lo activé».' | t }}</li>
+        </ol>
+      } @else {
+        <ol class="gpsa__steps">
+          <li>{{ 'Baja la barra de arriba de tu teléfono con el dedo.' | t }}</li>
+          <li>{{ 'Toca el botón «Ubicación» para encenderlo (debe quedar de color).' | t }}</li>
+          <li>{{ 'Vuelve aquí y toca «Ya lo activé».' | t }}</li>
+        </ol>
+      }
+
+      @if (sigueApagado()) {
+        <p class="gpsa__warn">{{ 'Todavía no detectamos la ubicación. Revisa los pasos e intenta de nuevo.' | t }}</p>
+      }
+
+      <div class="gpsa__actions">
+        @if (asistente.motivo() === 'permiso') {
+          <button type="button" class="btn-cta" (click)="abrirAjustes()">{{ 'Abrir ajustes' | t }}</button>
+        }
+        <button type="button" class="btn-cta" [disabled]="comprobando()" (click)="yaLoActive()">
+          {{ comprobando() ? ('Comprobando…' | t) : ('Ya lo activé' | t) }}
+        </button>
+        <button type="button" class="btn-ghost" (click)="ahoraNo()">{{ 'Ahora no' | t }}</button>
+      </div>
+    } @else {
+      <p class="gpsa__lead">{{ '¿Por qué no quieres activarla ahora?' | t }}</p>
+      <div class="gpsa__actions">
+        <button type="button" class="btn-ghost" (click)="elegirMotivo('no_quiero_compartir')">{{ 'No quiero compartir mi ubicación' | t }}</button>
+        <button type="button" class="btn-ghost" (click)="elegirMotivo('no_se_como')">{{ 'No sé cómo hacerlo' | t }}</button>
+        <button type="button" class="btn-ghost" (click)="elegirMotivo('ahora_no')">{{ 'Prefiero hacerlo después' | t }}</button>
+      </div>
+    }
+  </div>
+</app-bottom-sheet>

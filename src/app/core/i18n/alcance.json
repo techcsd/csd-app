@@ -616,6 +616,9 @@
     "shared/components/generar-acceso": {
       "enforce": true
     },
+    "shared/components/gps-asistente": {
+      "enforce": false
+    },
     "shared/components/gps-gate-banner": {
       "enforce": true
     },

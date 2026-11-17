@@ -3,9 +3,9 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8399 textos medidos en 289 pantallas)
-- Textos con t(): 8399 · sin t(): 0
-- Pantallas `enforce:true`: 250 de 289
+- **English: 100%** · **Kreyòl: 100%** (8416 textos medidos en 290 pantallas)
+- Textos con t(): 8416 · sin t(): 0
+- Pantallas `enforce:true`: 250 de 290
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
@@ -214,6 +214,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/components/consentimiento-ubicacion | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/demo-tabs | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/generar-acceso | 16 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/components/gps-asistente | 17 | 0 | 0 | 0 | 100% | 100% |  |
 | shared/components/gps-gate-banner | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/module-placeholder | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/novedades | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |

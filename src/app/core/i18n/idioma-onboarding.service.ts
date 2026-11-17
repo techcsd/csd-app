@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { ArranqueService } from '../services/arranque.service';
 import { Preferences } from '@capacitor/preferences';
 import { SupabaseService } from '../services/supabase.service';
 import { I18nService, Idioma } from './i18n.service';
@@ -27,6 +28,7 @@ const FLAG_SELLO_PENDIENTE = 'idioma_sello_pendiente';
 @Injectable({ providedIn: 'root' })
 export class IdiomaOnboardingService {
   private supabase = inject(SupabaseService);
+  private arranque = inject(ArranqueService); // DS-45 — lectura de arranque compartida
   private i18n = inject(I18nService);
 
   private _mostrar = signal(false);
@@ -66,7 +68,7 @@ export class IdiomaOnboardingService {
 
       // 2) Servidor (capacidad): ¿ya selló idioma_elegido_at? Si sí, adopta y calla.
       try {
-        const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+        const { data, error } = await this.arranque.preferencias();
         if (!error && data) {
           const prefs = data as { idioma?: string; idioma_elegido_at?: string | null };
           if (prefs.idioma_elegido_at) {

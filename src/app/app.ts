@@ -38,6 +38,7 @@ import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
 import { NavGuardService } from './core/services/nav-guard.service';
 import { DeepLinkService } from './core/services/deep-link.service';
+import { GpsAsistente } from './shared/components/gps-asistente/gps-asistente';
 import { ActivityPingService } from './core/services/activity-ping.service';
 import { PlatformReportService } from './core/services/platform-report.service';
 import { PushService } from './core/services/push.service';
@@ -60,7 +61,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, CompaFlotante, TranslatePipe],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, CompaFlotante, GpsAsistente, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
