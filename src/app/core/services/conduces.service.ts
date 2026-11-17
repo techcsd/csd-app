@@ -2252,13 +2252,9 @@ export class ConducesService {
    */
   async estadoSyncConduce(salidaId: string): Promise<string | null> {
     try {
-      const { data, error } = await this.supabase.client
-        .from('salidas_inventario')
-        .select('odoo_sync_estado')
-        .eq('id', salidaId)
-        .maybeSingle();
-      if (error || !data) return null;
-      return ((data as { odoo_sync_estado?: string | null }).odoo_sync_estado ?? null) || null;
+      const { data, error } = await this.supabase.client.rpc('conduce_estado_sync', { p_salida_id: salidaId });
+      if (error || typeof data !== 'string') return null;
+      return data || null;
     } catch {
       return null;
     }
