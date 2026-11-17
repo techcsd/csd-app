@@ -30,3 +30,8 @@ La app **nunca habla con Odoo**: todo pasa por RPC/edges de SGC. Contratos consu
 1. ~~**Exponer `odoo_sync_estado` en `conduce_detalle_app`**~~ **Resuelto** con el RPC `conduce_estado_sync` (SGC `dt`, ya en prod):  (o RPC `conduce_estado_sync(p_salida_id)`, solo roles de gestión). La app ya lo lee de ahí si viene; si no, cae a un select directo que la RLS bloquea.
 2. **`conduce-qr` `emitir`** devuelve `sin_acceso` a un confirmador designado (`firma_pendiente_usuario_id`) que no ve la salida por RLS: validar con `es_confirmador_de_conduce()` además de la RLS.
 3. QR de la web: hoy codifica el origen de la web SGC; para abrir la app nativa hace falta App Links (assetlinks) o que el QR use el esquema de la app.
+
+## Asistente de GPS — prueba en teléfono (17-nov, noche)
+- **Probado:** el asistente abre al «Generar conduce» sin fix; las instrucciones se pueden seguir (se encendió «Ubicación» desde la barra); «Ya lo activé» comprueba y, con la ubicación encendida pero sin señal (bajo techo, proveedor de red desactivado), muestra el mensaje nuevo «sin señal» (PR #43).
+- **No probado:** el camino feliz (gate abre y el conduce se crea) — nunca hubo fix GPS en el lugar de prueba. Mañana: repetir cerca de una ventana o al aire libre; después, «Ahora no» → motivo (verifica `gps_eventos.detalle = asistente_rechazado:…`).
+- Nota de UX: con el GPS sin fix la comprobación tarda ~30 s (5 s rápida + 12 s precisa + reintentos) antes de avisar.
