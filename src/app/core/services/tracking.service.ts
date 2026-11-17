@@ -71,6 +71,8 @@ export class TrackingService {
   gpsBloqueado = signal(false);
   /** 'permiso' | 'apagado' | '' — para el mensaje del banner. */
   gpsMotivo = signal<'permiso' | 'apagado' | ''>('');
+  /** DS-51 — razón de la última comprobación fallida (`timeout` = ubicación encendida pero sin fix/señal). */
+  gpsUltimaRazon = signal<string>('');
   rastreando = signal(false);
   /** AG11 — epoch ms del último fix capturado (para el watchdog / indicador). */
   ultimoFix = signal<number | null>(null);
@@ -208,6 +210,7 @@ export class TrackingService {
   async revisarGps(): Promise<boolean> {
     const estabaBloqueado = this.gpsBloqueado();
     const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 12000 });
+    this.gpsUltimaRazon.set(r.ok ? '' : r.reason);
     if (r.ok) {
       if (estabaBloqueado) {
         this.gpsBloqueado.set(false);
