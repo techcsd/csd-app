@@ -1,10 +1,10 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 8388,
-  "conT": 8388,
+  "literales": 8399,
+  "conT": 8399,
   "sinT": 0,
-  "pantallas": 288,
+  "pantallas": 289,
   "byScreen": {
     "": {
       "conT": 20,
@@ -440,6 +440,14 @@
     },
     "pages/compras/solicitud-compra": {
       "conT": 41,
+      "sinT": 0,
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "pages/conduce-qr": {
+      "conT": 5,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1047,7 +1055,7 @@
       "ht": 100
     },
     "pages/solicitudes/detalle": {
-      "conT": 118,
+      "conT": 119,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1263,7 +1271,7 @@
       "ht": 100
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 105,
+      "conT": 108,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1527,7 +1535,7 @@
       "ht": 100
     },
     "pages/transporte/por-confirmar": {
-      "conT": 47,
+      "conT": 49,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

@@ -5842,5 +5842,16 @@
   "Permite tu ubicación": "Pèmèt lokalizasyon ou",
   "La usamos para registrar dónde recibes un vehículo o de dónde sale una ruta. Puedes cambiarlo luego en los ajustes del teléfono.": "N ap itilize l pou anrejistre kote w resevwa yon veyikil oswa kote yon wout kòmanse. Ou ka chanje l pita nan paramèt telefòn ou.",
   "¡Listo!": "Fini!",
-  "Eso es todo. Puedes volver a ver esta guía desde “Soporte y ayuda”.": "Se tout. Ou ka wè gid sa a ankò nan “Sipò ak èd”."
+  "Eso es todo. Puedes volver a ver esta guía desde “Soporte y ayuda”.": "Se tout. Ou ka wè gid sa a ankò nan “Sipò ak èd”.",
+  "Motivo (mínimo 10 caracteres)": "Rezon (omwen 10 karaktè)",
+  "Escribe el motivo del rechazo (mínimo 10 caracteres).": "Ekri rezon refi a (omwen 10 karaktè).",
+  "El QR del conduce aún no está disponible. Abre el conduce desde tu bandeja.": "Kòd QR bòdwo a poko disponib. Louvri bòdwo a nan bwat resepsyon ou.",
+  "Necesitas conexión para abrir este QR.": "Ou bezwen koneksyon pou louvri QR sa a.",
+  "Este QR no es válido o ya venció. Pide al almacén que te comparta el conduce de nuevo.": "QR sa a pa valid oswa li ekspire. Mande depo a pataje bòdwo a ankò.",
+  "Abriendo el conduce…": "Ap louvri bòdwo a…",
+  "Ir a Entregas por recibir": "Ale nan Livrezon pou resevwa",
+  "Esta entrega no está en tu bandeja; te mostramos el conduce.": "Livrezon sa a pa nan bwat resepsyon ou; n ap montre w bòdwo a.",
+  "Registrado en el sistema contable": "Anrejistre nan sistèm kontab la",
+  "Pendiente de registrar": "Ap tann pou anrejistre",
+  "Hay que revisar": "Bezwen revizyon"
 }

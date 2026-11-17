@@ -3,9 +3,9 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8388 textos medidos en 288 pantallas)
-- Textos con t(): 8388 · sin t(): 0
-- Pantallas `enforce:true`: 250 de 288
+- **English: 100%** · **Kreyòl: 100%** (8399 textos medidos en 289 pantallas)
+- Textos con t(): 8399 · sin t(): 0
+- Pantallas `enforce:true`: 250 de 289
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
@@ -57,6 +57,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/compa/compartidas | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/compras-proyecto | 37 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/compras/solicitud-compra | 41 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/conduce-qr | 5 | 0 | 0 | 0 | 100% | 100% |  |
 | pages/demo/escenarios | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/generar | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -132,7 +133,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/rrhh/empleados | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/bandeja | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/solicitudes/detalle | 118 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/solicitudes/detalle | 119 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/mis | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/pedir | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/soporte | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -159,7 +160,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/checklists-historial | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible | 185 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible-log | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conduce-detalle | 105 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conduce-detalle | 108 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-externo | 104 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-transferencias | 53 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces | 97 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -192,7 +193,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/perfil-conductor | 45 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/perfil-vehiculo | 44 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/por-aprobar | 33 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/por-confirmar | 47 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/por-confirmar | 49 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/preuso | 96 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/reportar-multa | 36 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/reportar-vehiculo | 56 | 0 | 0 | 0 | 100% | 100% | ✅ |

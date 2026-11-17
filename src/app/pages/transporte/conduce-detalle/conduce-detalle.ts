@@ -187,6 +187,22 @@ export class ConduceDetallePage {
   /** ¿Rol elevado? Habilita "Buscar otra persona" fuera de la obra (→ forzar). */
   esElevado = computed(() => this.userCtx.esFlotaElevado());
 
+  /** DS-50 — estado de registro contable (solo roles de gestión), en lenguaje de obra: sin jerga. */
+  syncEstado = signal<string | null>(null);
+  syncLabel = computed(() => {
+    switch (this.syncEstado()) {
+      case 'sincronizado':
+        return this.i18n.t('Registrado en el sistema contable');
+      case 'pendiente':
+        return this.i18n.t('Pendiente de registrar');
+      case 'incierto':
+      case 'error':
+        return this.i18n.t('Hay que revisar');
+      default:
+        return '';
+    }
+  });
+
   receptorSheet = signal(false);
   cargandoReceptores = signal(false);
   asignandoReceptor = signal(false);
@@ -379,6 +395,10 @@ export class ConduceDetallePage {
     try {
       const d = await this.conduces.conduceDetalleApp(this.salidaId);
       this.detalle.set(d);
+      this.syncEstado.set(null);
+      if (this.userCtx.esFlotaElevado() || this.userCtx.esTecnologia()) {
+        void this.conduces.estadoSyncConduce(this.salidaId).then((e) => this.syncEstado.set(e));
+      }
       // CK4 — si el server ya refleja el receptor designado, suelta el optimista
       // (fuente única = server); offline aún en null → se conserva lo elegido.
       if (d.firma_pendiente_nombre) this.receptorOptimista.set(null);

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DeepLinkService } from '../../../core/services/deep-link.service';
 import { Router } from '@angular/router';
 import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { PinService } from '../../../core/services/pin.service';
@@ -20,6 +21,7 @@ export class PinSetupPage {
   private pin = inject(PinService);
   private session = inject(SessionService);
   private router = inject(Router);
+  private deepLink = inject(DeepLinkService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
 
@@ -42,7 +44,7 @@ export class PinSetupPage {
     try {
       await this.pin.setPin(entered);
       this.session.markUnlocked();
-      await this.router.navigate(['/home']);
+      await this.router.navigateByUrl(this.deepLink.consumir() ?? '/home');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el PIN.'));
       this.reset();

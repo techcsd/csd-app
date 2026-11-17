@@ -1,5 +1,15 @@
 # HANDOFF — CSD App
 
+## 🟡 17-nov-2026 — Ronda DS app (PROMPT 149: paridad Odoo/Miranda) — v2.71.0 EN CÓDIGO, PR a dev
+
+**En dev / En prod:** **En dev:** nada aún (PR a `dev` pendiente de merge; APK dev sin construir). **En prod:** 2.70.0, sin cambios.
+
+Detalle por ítem en `docs/ODOO-INTEGRACION-AVANCE-APP.md`. Hecho: DS-48 (recepción envía cantidades por línea — confirmada la hipótesis de Miranda: `por-confirmar.ts` y `entrega.ts` mandaban `p_items` solo con «Faltó algo»), DS-49 (ruta QR `/conduce-qr/:token`), DS-50 (chip de estado contable), DS-24 (motivo ≥10), DS-52 (enlaces sobreviven a login/PIN + `appUrlOpen`). **No hecho:** asistente GPS (sin contrato en SGC), `mi_arranque()`/instrumentación, escáner QR nativo + App Links, selectores aprobados (SGC no los filtra).
+Depende de SGC dev: `ds9` (NULL = enviado), `conduce-qr` (flag `conduce_qr_activo` apagado por defecto), `ds10` (`odoo_sync_estado`), `ds24` (motivo ≥10) — todos ya en `origin/dev` de SGC.
+**Pasos físicos de Xaviel:** probar en teléfono (recepción completa no debe quedar `entregado_incompleto`; QR con flag encendido), publicar APK dev, registrar `qa/release-2.71.0.md`.
+
+---
+
 ## 🟢 16-nov-2026 — Ronda DP (PROMPT 147: idioma al 100 % es/en/ht) — v2.70.0 PUBLICADA EN PROD
 
 **En dev / En prod:** **En dev:** 2.70.0 (APK + registro + publicada). **En prod:** 2.70.0 publicada (PR #35 → dev, #36 bump, #37 dev→main; APK en bucket prod; `minima` sin cambios; data-fix `scripts/data-fixes/2026-11-16-dp-publicar-2.70.0.mjs`). **Sin prueba in-app en teléfono real** (OK explícito de Xaviel en el chat, ver `qa/release-2.70.0.md`). El Kreyòl sigue sin validar por un hablante.

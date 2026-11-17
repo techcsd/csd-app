@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -49,6 +49,9 @@ export class PorConfirmarPage {
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  // DS-49 — id de salida a abrir directo (viene del QR del conduce).
+  private abrirPendiente: string | null = this.route.snapshot.queryParamMap.get('abrir');
   private i18n = inject(I18nService);
   private motion = inject(MotionService);
 
@@ -99,6 +102,7 @@ export class PorConfirmarPage {
       const fusionadas = fusionarEntregasPorRecibir(confirmar, firmar);
       this.entregas.set(fusionadas);
       void this.enriquecerFases(fusionadas); // CM4 — resuelve la fase de las que no la traen
+      this.abrirDesdeQr(fusionadas);
     } catch {
       this.toast.error(this.i18n.t('No pudimos cargar las entregas por recibir.'));
     } finally {
@@ -148,6 +152,22 @@ export class PorConfirmarPage {
    */
   enCamino(e: EntregaPorRecibir): boolean {
     return !!e.fase && !PorConfirmarPage.FASES_ENTREGADAS.has(e.fase);
+  }
+
+  /**
+   * DS-49 — el QR del conduce abre la recepción de ESA salida. Si no está en mi bandeja (no soy
+   * el receptor) se muestra el conduce en solo lectura; el servidor sigue decidiendo quién cierra.
+   */
+  private abrirDesdeQr(filas: EntregaPorRecibir[]): void {
+    const id = this.abrirPendiente;
+    if (!id) return;
+    this.abrirPendiente = null;
+    if (filas.some((f) => f.salidaId === id)) {
+      this.abrir(id);
+    } else {
+      this.toast.error(this.i18n.t('Esta entrega no está en tu bandeja; te mostramos el conduce.'));
+      void this.router.navigate(['/transporte/conduce-detalle', id]);
+    }
   }
 
   /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
@@ -253,14 +273,21 @@ export class PorConfirmarPage {
           this.toast.error(this.i18n.t('Dinos si llegó todo el material.'));
           return;
         }
-        // QA-13 — si faltó algo y tenemos el detalle, registra cantidades por item.
-        const items =
-          this.llegoTodo() === false && this.itemsActuales().length
-            ? this.itemsActuales().map((it) => ({
-                detalle_id: it.detalle_id,
-                cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
-              }))
-            : null;
+        // DS-48 / ADR 14 — SIEMPRE se envía `p_items` con la cantidad recibida por línea
+        // (precargada = enviada). Antes solo iba con "Faltó algo" y una recepción completa
+        // dejaba `cantidad_recibida` NULL → contaba como faltante (442/458 líneas, issues
+        // #58/#111). "Sí, todo" fuerza recibida = enviada aunque se hubiera tocado el campo.
+        const items = this.itemsActuales().length
+          ? this.itemsActuales().map((it) => ({
+              detalle_id: it.detalle_id,
+              cantidad_recibida:
+                this.llegoTodo() === true ? it.cantidad : this.cantidades()[it.detalle_id] ?? it.cantidad,
+            }))
+          : null;
+        if (this.llegoTodo() === false && items && !items.some((x, i) => x.cantidad_recibida < this.itemsActuales()[i].cantidad)) {
+          this.toast.error(this.i18n.t('Dijiste que faltó material: baja la cantidad de al menos un artículo.'));
+          return;
+        }
         await this.conduces.conduceConfirmarReceptor({
           salidaId: e.salidaId,
           foto: foto?.blob ?? null,

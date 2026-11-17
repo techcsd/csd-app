@@ -1397,3 +1397,8 @@ empezara — nada quedó detrás de bandera por falta de backend.
   sin contraparte web.** Son fixes de cliente (firma RPC/clasificación/GPS/
   tracking/vercel.json/realtime); el triaje server-side (`dm6`) ya marcó estas
   firmas `en_revision` a la espera de este round — sin divergencia de datos.
+
+## Ronda DS (17-nov-2026) — solo en un lado
+- **Escáner de QR del conduce:** solo web/SGC emite el QR; la app lo consume por enlace (`/conduce-qr/:token`), sin escáner propio (requeriría plugin nativo + declarar permiso, CI13).
+- **Estado contable del conduce:** la app lo muestra solo a roles de gestión y en lenguaje de obra; la web conserva el detalle técnico y «Reintentar».
+- **Asistente de GPS:** solo app (el GPS es del teléfono); pendiente de contrato SGC.

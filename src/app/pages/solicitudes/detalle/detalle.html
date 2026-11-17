@@ -299,11 +299,11 @@
       @if (modo() === 'rechazar') {
         <div class="reqd__panel">
           <h3 class="reqd__sec">{{ 'Rechazar requisición' | t }}</h3>
-          <label class="field-label">{{ 'Motivo (opcional)' | t }}</label>
+          <label class="field-label">{{ 'Motivo (mínimo 10 caracteres)' | t }}</label>
           <textarea class="field reqd__nota" [ngModel]="rechazoNota()" (ngModelChange)="rechazoNota.set($event)" rows="3" maxlength="240" [placeholder]="'Por qué se rechaza' | t"></textarea>
           @if (!online) { <p class="reqd__off">{{ 'Necesitas conexión para rechazar.' | t }}</p> }
           <div class="reqd__acciones reqd__mt">
-            <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online" (click)="confirmarRechazar()">{{ procesando() ? 'Rechazando…' : 'Confirmar rechazo' }}</button>
+            <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online || rechazoNota().trim().length < 10" (click)="confirmarRechazar()">{{ procesando() ? 'Rechazando…' : 'Confirmar rechazo' }}</button>
             <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">{{ 'Cancelar' | t }}</button>
           </div>
         </div>
