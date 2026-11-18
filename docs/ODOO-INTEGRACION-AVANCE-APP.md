@@ -33,5 +33,6 @@ La app **nunca habla con Odoo**: todo pasa por RPC/edges de SGC. Contratos consu
 
 ## Asistente de GPS — prueba en teléfono (17-nov, noche)
 - **Probado:** el asistente abre al «Generar conduce» sin fix; las instrucciones se pueden seguir (se encendió «Ubicación» desde la barra); «Ya lo activé» comprueba y, con la ubicación encendida pero sin señal (bajo techo, proveedor de red desactivado), muestra el mensaje nuevo «sin señal» (PR #43).
-- **No probado:** el camino feliz (gate abre y el conduce se crea) — nunca hubo fix GPS en el lugar de prueba. Mañana: repetir cerca de una ventana o al aire libre; después, «Ahora no» → motivo (verifica `gps_eventos.detalle = asistente_rechazado:…`).
+- **Probado el 18-nov:** «Ahora no» → «No sé cómo hacerlo» cierra el asistente sin crear el conduce y registra `operando_sin_gps` con `detalle = asistente_rechazado:no_se_como:apagado` en `gps_eventos` (dev).
+- **No probado:** el camino feliz (gate abre y el conduce se crea) — sigue sin haber fix GPS en el lugar de prueba (18-nov, otra vez bajo techo; Android 10 no permite ubicaciones simuladas por adb). Pendiente: repetir con el teléfono cerca de una ventana o al aire libre.
 - Nota de UX: con el GPS sin fix la comprobación tarda ~30 s (5 s rápida + 12 s precisa + reintentos) antes de avisar.
