@@ -1,8 +1,8 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 8416,
-  "conT": 8416,
+  "literales": 8417,
+  "conT": 8417,
   "sinT": 0,
   "pantallas": 290,
   "byScreen": {
@@ -1711,7 +1711,7 @@
       "ht": 100
     },
     "shared/components/gps-asistente": {
-      "conT": 17,
+      "conT": 18,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

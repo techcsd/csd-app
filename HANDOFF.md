@@ -1,8 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 17-nov-2026 — Ronda DS app (PROMPT 149: paridad Odoo/Miranda) — v2.71.0 EN CÓDIGO, PR a dev
+## 🟢 17-nov-2026 — Ronda DS app (PROMPT 149: paridad Odoo/Miranda) — v2.71.0 PUBLICADA EN PROD
 
-**En dev / En prod:** **En dev:** nada aún (PR a `dev` pendiente de merge; APK dev sin construir). **En prod:** 2.70.0, sin cambios.
+**En dev / En prod:** **En dev:** 2.71.0 (APK + registro + publicada). **En prod:** 2.71.0 publicada (PR #40 → dev, #41 dev→main; APK en bucket prod; data-fix `2026-11-17-ds-publicar-2.71.0.mjs`; `minima` sigue false). SGC ya tenía `conduce_estado_sync` y `conduce-qr` v13 en prod. Límites en `qa/release-2.71.0.md` (instalador in-app no ejercitado; rechazo con motivo y asistente GPS sin probar en pantalla).
 
 Detalle por ítem en `docs/ODOO-INTEGRACION-AVANCE-APP.md`. Hecho: DS-48 (recepción envía cantidades por línea — confirmada la hipótesis de Miranda: `por-confirmar.ts` y `entrega.ts` mandaban `p_items` solo con «Faltó algo»), DS-49 (ruta QR `/conduce-qr/:token`), DS-50 (chip de estado contable), DS-24 (motivo ≥10), DS-52 (enlaces sobreviven a login/PIN + `appUrlOpen`). **No hecho:** asistente GPS (sin contrato en SGC), `mi_arranque()`/instrumentación, escáner QR nativo + App Links, selectores aprobados (SGC no los filtra).
 Depende de SGC dev: `ds9` (NULL = enviado), `conduce-qr` (flag `conduce_qr_activo` apagado por defecto), `ds10` (`odoo_sync_estado`), `ds24` (motivo ≥10) — todos ya en `origin/dev` de SGC.
