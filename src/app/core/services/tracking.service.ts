@@ -71,6 +71,8 @@ export class TrackingService {
   gpsBloqueado = signal(false);
   /** 'permiso' | 'apagado' | '' — para el mensaje del banner. */
   gpsMotivo = signal<'permiso' | 'apagado' | ''>('');
+  /** DS-51 — razón de la última comprobación fallida (`timeout` = ubicación encendida pero sin fix/señal). */
+  gpsUltimaRazon = signal<string>('');
   rastreando = signal(false);
   /** AG11 — epoch ms del último fix capturado (para el watchdog / indicador). */
   ultimoFix = signal<number | null>(null);
@@ -208,6 +210,7 @@ export class TrackingService {
   async revisarGps(): Promise<boolean> {
     const estabaBloqueado = this.gpsBloqueado();
     const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 12000 });
+    this.gpsUltimaRazon.set(r.ok ? '' : r.reason);
     if (r.ok) {
       if (estabaBloqueado) {
         this.gpsBloqueado.set(false);
@@ -215,6 +218,15 @@ export class TrackingService {
         void this.logEvento('gps_reactivado');
       }
       return true;
+    }
+    // Permiso concedido y ubicación encendida pero sin posición (bajo techo, sin red/satélites): NO es
+    // un bloqueo — no se pinta el banner ni se registra «apagado». exigirGps deja pasar y lo registra.
+    if (r.reason === 'timeout') {
+      if (estabaBloqueado) {
+        this.gpsBloqueado.set(false);
+        this.gpsMotivo.set('');
+      }
+      return false;
     }
     // Bloqueado: distinguir permiso vs GPS del sistema apagado.
     const motivo = r.reason === 'denied' || r.reason === 'denied-permanent' ? 'permiso' : 'apagado';
@@ -233,6 +245,11 @@ export class TrackingService {
    */
   async exigirGps(accion: string): Promise<boolean> {
     if (await this.revisarGps()) return true;
+    // Sin señal (permiso y ubicación OK pero sin posición): no se bloquea al chofer, solo se deja constancia.
+    if (this.gpsUltimaRazon() === 'timeout') {
+      void this.logEvento('operando_sin_gps', `${accion}:sin_senal`);
+      return true;
+    }
     void this.logEvento('operando_sin_gps', accion);
     // DS-51 — asistente guiado (permiso vs ubicación apagada) en vez de un aviso suelto.
     // Devuelve true si el chofer lo activó y la acción puede continuar en el mismo toque.

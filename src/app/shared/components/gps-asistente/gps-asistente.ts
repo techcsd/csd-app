@@ -40,7 +40,8 @@ export class GpsAsistente {
     this.sigueApagado.set(false);
     try {
       const ok = await this.tracking.revisarGps();
-      if (ok) this.cerrar(true);
+      // Encendida pero sin señal tampoco bloquea: la acción sigue y queda registrada como «sin_senal».
+      if (ok || this.tracking.gpsUltimaRazon() === 'timeout') this.cerrar(true);
       else this.sigueApagado.set(true);
     } finally {
       this.comprobando.set(false);
