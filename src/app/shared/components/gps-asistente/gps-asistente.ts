@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import { BottomSheet } from '../../ui/bottom-sheet/bottom-sheet';
 import { GpsAsistenteService } from '../../../core/services/gps-asistente.service';
@@ -26,8 +26,6 @@ export class GpsAsistente {
   private permissions = inject(PermissionsService);
   private i18n = inject(I18nService);
 
-  /** Ubicación encendida pero sin fix (suele pasar bajo techo): otro consejo que «enciéndela». */
-  sinSenal = computed(() => this.sigueApagado() && this.tracking.gpsUltimaRazon() === 'timeout');
   comprobando = signal(false);
   sigueApagado = signal(false);
   eligiendoMotivo = signal(false);
@@ -42,7 +40,8 @@ export class GpsAsistente {
     this.sigueApagado.set(false);
     try {
       const ok = await this.tracking.revisarGps();
-      if (ok) this.cerrar(true);
+      // Encendida pero sin señal tampoco bloquea: la acción sigue y queda registrada como «sin_senal».
+      if (ok || this.tracking.gpsUltimaRazon() === 'timeout') this.cerrar(true);
       else this.sigueApagado.set(true);
     } finally {
       this.comprobando.set(false);
