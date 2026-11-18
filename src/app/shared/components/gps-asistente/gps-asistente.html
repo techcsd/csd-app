@@ -24,9 +24,7 @@
         </ol>
       }
 
-      @if (sinSenal()) {
-        <p class="gpsa__warn">{{ 'Tu ubicación está encendida pero el teléfono no encuentra señal. Sal al aire libre o acércate a una ventana, espera unos segundos y toca «Ya lo activé» otra vez.' | t }}</p>
-      } @else if (sigueApagado()) {
+      @if (sigueApagado()) {
         <p class="gpsa__warn">{{ 'Todavía no detectamos la ubicación. Revisa los pasos e intenta de nuevo.' | t }}</p>
       }
 

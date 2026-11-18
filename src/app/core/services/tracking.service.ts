@@ -219,6 +219,15 @@ export class TrackingService {
       }
       return true;
     }
+    // Permiso concedido y ubicación encendida pero sin posición (bajo techo, sin red/satélites): NO es
+    // un bloqueo — no se pinta el banner ni se registra «apagado». exigirGps deja pasar y lo registra.
+    if (r.reason === 'timeout') {
+      if (estabaBloqueado) {
+        this.gpsBloqueado.set(false);
+        this.gpsMotivo.set('');
+      }
+      return false;
+    }
     // Bloqueado: distinguir permiso vs GPS del sistema apagado.
     const motivo = r.reason === 'denied' || r.reason === 'denied-permanent' ? 'permiso' : 'apagado';
     this.gpsBloqueado.set(true);
@@ -236,6 +245,11 @@ export class TrackingService {
    */
   async exigirGps(accion: string): Promise<boolean> {
     if (await this.revisarGps()) return true;
+    // Sin señal (permiso y ubicación OK pero sin posición): no se bloquea al chofer, solo se deja constancia.
+    if (this.gpsUltimaRazon() === 'timeout') {
+      void this.logEvento('operando_sin_gps', `${accion}:sin_senal`);
+      return true;
+    }
     void this.logEvento('operando_sin_gps', accion);
     // DS-51 — asistente guiado (permiso vs ubicación apagada) en vez de un aviso suelto.
     // Devuelve true si el chofer lo activó y la acción puede continuar en el mismo toque.
