@@ -1,8 +1,8 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 8417,
-  "conT": 8417,
+  "literales": 8429,
+  "conT": 8429,
   "sinT": 0,
   "pantallas": 290,
   "byScreen": {
@@ -615,7 +615,7 @@
       "ht": 100
     },
     "pages/inventario/conteo": {
-      "conT": 32,
+      "conT": 37,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1055,7 +1055,7 @@
       "ht": 100
     },
     "pages/solicitudes/detalle": {
-      "conT": 119,
+      "conT": 126,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1527,7 +1527,7 @@
       "ht": 100
     },
     "pages/transporte/por-aprobar": {
-      "conT": 33,
+      "conT": 34,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1711,7 +1711,7 @@
       "ht": 100
     },
     "shared/components/gps-asistente": {
-      "conT": 18,
+      "conT": 17,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

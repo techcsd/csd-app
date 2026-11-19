@@ -5869,5 +5869,21 @@
   "No quiero compartir mi ubicación": "Mwen pa vle pataje pozisyon mwen",
   "No sé cómo hacerlo": "Mwen pa konnen kijan pou m fè sa",
   "Prefiero hacerlo después": "Mwen prefere fè sa pita",
-  "Tu ubicación está encendida pero el teléfono no encuentra señal. Sal al aire libre o acércate a una ventana, espera unos segundos y toca «Ya lo activé» otra vez.": "Pozisyon ou limen men telefòn nan pa jwenn siyal. Soti deyò oswa pwoche bò yon fenèt, tann kèk segonn epi peze “Mwen limen li” ankò."
+  "Tu ubicación está encendida pero el teléfono no encuentra señal. Sal al aire libre o acércate a una ventana, espera unos segundos y toca «Ya lo activé» otra vez.": "Pozisyon ou limen men telefòn nan pa jwenn siyal. Soti deyò oswa pwoche bò yon fenèt, tann kèk segonn epi peze “Mwen limen li” ankò.",
+  "No se pudo enviar el conteo": "Nou pa t ka voye konte a",
+  "Enviando conteo…": "N ap voye konte a…",
+  "Pendiente de sincronizar": "Ap tann senkronizasyon",
+  "Un momento, confirmando con el servidor.": "Yon ti moman, n ap konfime ak sèvè a.",
+  "Tu conteo está guardado en el teléfono y se enviará solo cuando haya señal. El stock aún no cambió.": "Konte w la anrejistre nan telefòn lan epi l ap voye pou kont li le gen siyal. Stòk la poko chanje.",
+  "No pudimos enviar el conteo todavía. Revisa tu conexión e intenta de nuevo.": "Nou poko ka voye konte a. Tcheke koneksyon w epi eseye ankò.",
+  "Hay un conteo que no se ha podido enviar. El stock no cambia hasta que se envíe. Revisa Pendientes de envío.": "Gen yon konte ki pa t ka voye. Stòk la pa chanje jiskaske l voye. Gade Sa k ap tann voye yo.",
+  "Sin existencia aquí": "Pa gen stòk isit la",
+  "Cambiar artículo": "Chanje atik",
+  "Necesitas conexión para cambiar el artículo.": "Ou bezwen koneksyon pou chanje atik la.",
+  "Artículo cambiado. La compra ya avanzó: avisa a Compras del cambio.": "Atik la chanje. Acha a deja avanse: di Acha a sou chanjman an.",
+  "Artículo cambiado.": "Atik la chanje.",
+  "Ese ya es el artículo del renglón.": "Sa deja se atik liy lan.",
+  "Tu rol no puede cambiar artículos de una requisición.": "Wòl ou pa ka chanje atik nan yon rekizisyon.",
+  "Renglón: {d}. Elige el artículo correcto del catálogo.": "Liy: {d}. Chwazi bon atik la nan katalòg la.",
+  "No se pudo cargar la foto": "Foto a pa t ka chaje"
 }

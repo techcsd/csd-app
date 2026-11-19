@@ -78,6 +78,13 @@
             </div>
           }
 
+          @if (fotosFallidas(e) > 0) {
+            <div class="pa__motivo" role="alert">
+              {{ 'No se pudo cargar la foto' | t }}
+              <button type="button" class="btn-ghost" (click)="reintentar()">{{ 'Reintentar' | t }}</button>
+            </div>
+          }
+
           <!-- Regla 15 — las tres salidas -->
           <div class="pa__acciones">
             <button type="button" class="btn-cta pa__ok" (click)="aprobar(e)">✅ {{ 'Aprobar' | t }}</button>

@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, NavigationError, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { Capacitor } from '@capacitor/core';
 import { ToastService } from './toast.service';
@@ -113,6 +113,16 @@ export class UpdateService {
       // recarga diferida: ya no hay formulario activo → es un buen momento seguro.
       this.router.events.subscribe((e) => {
         if (e instanceof NavigationEnd && this.pendingReload) this.tryReload();
+        // DT5 — el bundle abierto pide un chunk que el deploy nuevo ya borró: el servidor
+        // responde 404 (text/html) y el navegador reporta "'text/html' is not a valid
+        // JavaScript MIME type" / "Failed to fetch dynamically imported module". Reparar
+        // (SW + cachés, nunca IndexedDB) y recargar en vez de dejar la pantalla muerta.
+        if (e instanceof NavigationError) {
+          const msg = String((e.error as { message?: string } | null)?.message ?? e.error ?? '');
+          if (/dynamically imported module|not a valid JavaScript MIME type|Loading chunk/i.test(msg)) {
+            void this.autoRepair('chunk_perdido');
+          }
+        }
       });
     }
 

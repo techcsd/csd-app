@@ -6,6 +6,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
@@ -15,7 +16,9 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
+  ArticuloCat,
   Bodega,
+  CategoriaInv,
   RequisicionAvanceItem,
   RequisicionCobertura,
   RequisicionDetalle,
@@ -50,7 +53,7 @@ interface EditItem {
   selector: 'app-requisicion-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, ArticuloPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -109,6 +112,67 @@ export class RequisicionDetallePage {
   /** CO4 — permiso explícito para aprobar/rechazar su propia requisición (Raykler). */
   puedeAutoaprobarSig = signal(false);
   confirmarQuitar = signal<string | null>(null);
+
+  // DT3 — cambiar el artículo de un renglón ya aprobado (picker con TODO el catálogo).
+  cambiandoItem = signal<RequisicionDetalleItem | null>(null);
+  articulosCat = signal<ArticuloCat[]>([]);
+  categoriasCat = signal<CategoriaInv[]>([]);
+  /** Renglones con algo ya despachado (no se pueden cambiar). */
+  private despachadoPorItem = computed(() => {
+    const m: Record<string, number> = {};
+    for (const a of this.avance()) if (a.item_id) m[a.item_id] = a.despachado ?? 0;
+    return m;
+  });
+  /** DT3 — ¿se puede cambiar el artículo de este renglón? Gestor + sin despacho + req. viva. */
+  puedeCambiarArticulo(it: RequisicionDetalleItem): boolean {
+    const r = this.req();
+    if (!r || !(this.puedeGestionarSig() || this.puedeGestionar())) return false;
+    if (['pendiente', 'rechazada', 'cerrada', 'cancelada'].includes(r.estado)) return false; // pendiente: se edita/aprueba normal
+    const d = this.despachadoPorItem()[it.id];
+    return d === undefined ? this.avance().length === 0 : d <= 0;
+  }
+  abrirCambiarArticulo(it: RequisicionDetalleItem): void {
+    this.cambiandoItem.set(it);
+    if (!this.articulosCat().length) {
+      this.inventario.getArticulos().then((a) => this.articulosCat.set(a)).catch(() => {});
+      this.inventario.getCategorias().then((c) => this.categoriasCat.set(c)).catch(() => {});
+    }
+  }
+  cerrarCambiarArticulo(): void {
+    this.cambiandoItem.set(null);
+  }
+  async elegirArticuloNuevo(a: ArticuloCat): Promise<void> {
+    const it = this.cambiandoItem();
+    const r = this.req();
+    if (!it || !r || this.procesando()) return;
+    if (!this.net.online()) {
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar el artículo.'));
+      return;
+    }
+    this.procesando.set(true);
+    try {
+      const res = await this.service.reemplazarArticuloRenglon(it.id, a.id, null, r.id);
+      this.toast.success(
+        res.cambiado
+          ? res.compraYaAvanzo
+            ? this.i18n.t('Artículo cambiado. La compra ya avanzó: avisa a Compras del cambio.')
+            : this.i18n.t('Artículo cambiado.')
+          : this.i18n.t('Ese ya es el artículo del renglón.'),
+      );
+      this.cambiandoItem.set(null);
+      await this.refrescar();
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : '';
+      // Mensajes del RPC ya vienen en español y accionables; si es de permisos/técnico, se traduce.
+      this.toast.error(
+        /permission|42501|row-level|policy/i.test(raw) || !raw
+          ? this.i18n.t('Tu rol no puede cambiar artículos de una requisición.')
+          : raw,
+      );
+    } finally {
+      this.procesando.set(false);
+    }
+  }
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   proyectoOptions = computed(() => this.proyectos().map((p) => ({ id: p.id, label: p.nombre })));
