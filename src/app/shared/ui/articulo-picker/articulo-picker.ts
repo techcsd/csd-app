@@ -92,9 +92,9 @@ export class ArticuloPicker {
 
   private disponibles = computed(() => {
     const ex = new Set(this.exclude());
-    // AP3 — con mapa de stock presente, los artículos en 0 se OCULTAN del selector
-    // (antes solo se deshabilitaban). Sin mapa (conteo/pedir/ferretería) no se filtra.
-    return this.articulos().filter((a) => !ex.has(a.id) && !this.sinStock(a));
+    // DT2a — los artículos en 0 NO se ocultan: se muestran deshabilitados ("Sin existencia aquí")
+    // para que se vea que existen en el catálogo (AP3 los ocultaba y parecían no existir).
+    return this.articulos().filter((a) => !ex.has(a.id));
   });
 
   /** Categories to show as chips: destacadas first, then by orden. */

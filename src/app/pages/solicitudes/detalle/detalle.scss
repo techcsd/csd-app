@@ -601,3 +601,47 @@
   border-radius: 10px;
   padding: 2px 8px;
 }
+
+// DT3 — cambiar artículo de un renglón
+.reqd__item-cambiar {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.reqd__picker {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  padding: 14px 16px;
+  overflow-y: auto;
+}
+.reqd__picker-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reqd__picker-close {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: var(--color-text-primary);
+}
+.reqd__picker-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.reqd__picker-hint {
+  margin: 6px 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
