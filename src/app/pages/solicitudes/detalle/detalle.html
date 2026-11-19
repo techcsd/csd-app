@@ -172,6 +172,9 @@
               @if (it.codigo) { <span class="reqd__item-code">{{ it.codigo }}</span> }
               @if (!it.articulo_id) { <span class="reqd__item-nc">{{ 'no catalogado' | t }}</span> }
             </span>
+            @if (puedeCambiarArticulo(it)) {
+              <button type="button" class="reqd__item-cambiar" (click)="abrirCambiarArticulo(it)">{{ 'Cambiar artículo' | t }}</button>
+            }
           </li>
         }
       </ul>
@@ -394,3 +397,15 @@
     (cancelled)="cancelarQuitar()"
   />
 </div>
+
+<!-- DT3 — cambiar el artículo de un renglón (catálogo completo) -->
+@if (cambiandoItem(); as ci) {
+  <div class="reqd__picker">
+    <header class="reqd__picker-head">
+      <button type="button" class="reqd__picker-close" (click)="cerrarCambiarArticulo()" [attr.aria-label]="'Cerrar' | t">✕</button>
+      <h2 class="reqd__picker-title">{{ 'Cambiar artículo' | t }}</h2>
+    </header>
+    <p class="reqd__picker-hint">{{ 'Renglón: {d}. Elige el artículo correcto del catálogo.' | t: { d: ci.descripcion } }}</p>
+    <app-articulo-picker [articulos]="articulosCat()" [categorias]="categoriasCat()" (picked)="elegirArticuloNuevo($event)" />
+  </div>
+}

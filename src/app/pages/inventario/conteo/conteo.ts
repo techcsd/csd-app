@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
@@ -13,6 +13,9 @@ import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ArticuloCat, Bodega, CategoriaInv, Existencia } from '../../../core/models/inventario.model';
+import { SyncService } from '../../../core/sync/sync.service';
+import { db } from '../../../core/db/app-db';
+import { outboxCategoria, MENSAJE_SISTEMA } from '../../../core/util/outbox-categoria';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
@@ -54,6 +57,57 @@ export class ConteoPage {
   private location = inject(Location);
   private route = inject(ActivatedRoute);
   private motion = inject(MotionService);
+  private sync = inject(SyncService);
+
+  /** DT1 — id de la op del outbox del conteo recién guardado y su estado REAL de envío. */
+  private opId = signal<string | null>(null);
+  envio = signal<'enviando' | 'pendiente' | 'error' | 'ok'>('enviando');
+  envioMotivo = signal('');
+  /** DT1 — aviso persistente: hay un conteo atascado (en error o pendiente > 2 min). */
+  conteoAtascado = signal(false);
+
+  private initEnvio(): void {
+    // Sigue el outbox: cada cambio re-evalúa el estado del conteo (nunca "guardado" sin confirmar).
+    effect(() => {
+      this.sync.changed();
+      void this.refrescarEnvio();
+    });
+  }
+
+  private async refrescarEnvio(): Promise<void> {
+    const rows = (await db.outbox.where('tipo_op').equals('inv_conteo').toArray()).filter((o) => o.estado !== 'done');
+    this.conteoAtascado.set(rows.some((o) => o.estado === 'error' || Date.now() - o.created_local > 120_000));
+    const id = this.opId();
+    if (!id) return;
+    const op = rows.find((o) => o.id === id);
+    if (!op) {
+      // La op salió del outbox = el servidor confirmó el conteo.
+      if (this.envio() !== 'ok') {
+        this.envio.set('ok');
+        this.motion.momento('aprobado'); // CL2 F4 — sello solo cuando el servidor confirmó
+        if (this.bodegaId()) void this.onBodega(this.bodegaId()); // refresca existencias en pantalla
+      }
+      return;
+    }
+    if (op.estado === 'error') {
+      const cat = outboxCategoria(op);
+      this.envio.set('error');
+      this.envioMotivo.set(
+        cat === 'sistema'
+          ? MENSAJE_SISTEMA
+          : cat === 'dato' && op.error_msg
+            ? op.error_msg
+            : 'No pudimos enviar el conteo todavía. Revisa tu conexión e intenta de nuevo.',
+      );
+    } else {
+      this.envio.set(op.estado === 'syncing' ? 'enviando' : 'pendiente');
+    }
+  }
+
+  reintentarEnvio(): void {
+    const id = this.opId();
+    if (id) void this.sync.retry(id);
+  }
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
@@ -194,6 +248,7 @@ export class ConteoPage {
   }
 
   constructor() {
+    this.initEnvio();
     void this.init();
   }
 
@@ -276,13 +331,15 @@ export class ConteoPage {
     if (this.submitting()) return;
     this.submitting.set(true);
     try {
-      await this.inventario.enqueueConteo({
+      const id = await this.inventario.enqueueConteo({
         bodegaId: this.bodegaId(),
         motivo: this.motivo().trim() || null,
         items,
       });
+      this.opId.set(id);
+      this.envio.set(this.online ? 'enviando' : 'pendiente');
       this.done.set(true);
-      this.motion.momento('aprobado'); // CL2 F4 — sello del conteo guardado (también offline)
+      void this.refrescarEnvio();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {

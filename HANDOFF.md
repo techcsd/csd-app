@@ -1,5 +1,13 @@
 # HANDOFF — CSD App
 
+## 🟢 18-nov-2026 — Hotfix DS — v2.71.1 PUBLICADA EN PROD (GPS sin señal ya no bloquea el conduce)
+
+**En dev / En prod:** **En dev:** 2.71.1 (APK + registro + publicada). **En prod:** 2.71.1 publicada (PR #44 fix, #45 bump → dev, #46 dev→main; APK en bucket prod; data-fix `2026-11-18-ds-publicar-2.71.1.mjs`; `minima` sigue false).
+**Qué:** con permiso y ubicación activos pero sin fix (bajo techo), `exigirGps` deja crear el conduce y registra `operando_sin_gps` con `<accion>:sin_senal`; solo bloquea con permiso negado o ubicación apagada. Causa de la prueba fallida: el teléfono QA no tiene proveedor de red de ubicación (`network provider: enabled=false`), no era la app.
+**Probado en teléfono:** conduce creado sin señal + evento `crear_conduce:sin_senal` en `gps_eventos`; «Ahora no» → motivo registra `asistente_rechazado:…`. **Sin probar:** asistente con permiso negado, GPS con señal real, botón del instalador in-app (ver `qa/release-2.71.1.md`). El teléfono QA tuvo toques/WebView inestables; reiniciar la app lo arregló.
+
+---
+
 ## 🟢 17-nov-2026 — Ronda DS app (PROMPT 149: paridad Odoo/Miranda) — v2.71.0 PUBLICADA EN PROD
 
 **En dev / En prod:** **En dev:** 2.71.0 (APK + registro + publicada). **En prod:** 2.71.0 publicada (PR #40 → dev, #41 dev→main; APK en bucket prod; data-fix `2026-11-17-ds-publicar-2.71.0.mjs`; `minima` sigue false). SGC ya tenía `conduce_estado_sync` y `conduce-qr` v13 en prod. Límites en `qa/release-2.71.0.md` (instalador in-app no ejercitado; rechazo con motivo y asistente GPS sin probar en pantalla).

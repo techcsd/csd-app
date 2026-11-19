@@ -129,6 +129,15 @@ export class PorAprobarPage {
     return out;
   }
 
+  /** DT4 — fotos que existen en el servidor pero cuya URL firmada no se pudo generar. */
+  fotosFallidas(e: EchadaPorAprobar): number {
+    return (
+      (e.foto_recibo_path && !e.fotoReciboUrl ? 1 : 0) +
+      (e.foto_tablero_path && !e.fotoTableroUrl ? 1 : 0) +
+      (e.foto_bomba_path && !e.fotoBombaUrl ? 1 : 0)
+    );
+  }
+
   /** CE14 — abre/cierra el visor de foto a pantalla completa. */
   verFoto(url: string): void {
     this.viendo.set(url);

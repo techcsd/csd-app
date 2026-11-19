@@ -1,9 +1,12 @@
 @if (done()) {
+  <!-- DT1 — nunca "guardado" hasta que el servidor confirme: enviando / pendiente / falló -->
   <app-big-confirm
-    [title]="online ? ('Conteo guardado' | t) : ('Guardado' | t)"
-    [note]="online ? ('El stock se ajustó a lo contado.' | t) : ('Sin señal. Se enviará solo.' | t)"
-    [tone]="online ? 'done' : 'pending'"
+    [title]="envio() === 'ok' ? ('Conteo guardado' | t) : envio() === 'error' ? ('No se pudo enviar el conteo' | t) : envio() === 'enviando' ? ('Enviando conteo…' | t) : ('Pendiente de sincronizar' | t)"
+    [note]="envio() === 'ok' ? ('El stock se ajustó a lo contado.' | t) : envio() === 'error' ? (envioMotivo() | t) : envio() === 'enviando' ? ('Un momento, confirmando con el servidor.' | t) : ('Tu conteo está guardado en el teléfono y se enviará solo cuando haya señal. El stock aún no cambió.' | t)"
+    [tone]="envio() === 'ok' ? 'done' : 'pending'"
     [buttonLabel]="'Listo' | t"
+    [secondaryLabel]="envio() === 'error' ? ('Reintentar' | t) : ''"
+    (secondary)="reintentarEnvio()"
     (dismissed)="finish()"
   />
 } @else {
@@ -15,6 +18,9 @@
     </header>
 
     <div class="screen__body">
+      @if (conteoAtascado()) {
+        <p class="conteo__hint" role="alert">{{ 'Hay un conteo que no se ha podido enviar. El stock no cambia hasta que se envíe. Revisa Pendientes de envío.' | t }}</p>
+      }
       <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="onBodega($event)" />
 
       @if (bodegaId()) {

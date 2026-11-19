@@ -1262,7 +1262,7 @@ export class InventarioService {
     return (data as unknown as ConteoHistorial[]) ?? [];
   }
 
-  async enqueueConteo(input: ConteoCaptura): Promise<void> {
+  async enqueueConteo(input: ConteoCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     await this.sync.enqueue({
@@ -1272,6 +1272,7 @@ export class InventarioService {
       payload: { id, bodega_id: input.bodegaId, motivo: input.motivo, items: input.items },
       resumen: { tipo: 'conteo', capturado_en, items: input.items.length },
     });
+    return id; // DT1 — la pantalla sigue el estado real de esta op hasta que el servidor confirme
   }
 
   private fotoOf(id: string, foto: Blob | null, firma?: Blob | null) {

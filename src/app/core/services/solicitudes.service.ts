@@ -302,6 +302,24 @@ export class SolicitudesService {
     return { reenviada: !!res.reenviada, version: res.version ?? null };
   }
 
+  /** DT3 — cambia el artículo de un renglón ya aprobado (solo si no tiene despacho). Online. */
+  async reemplazarArticuloRenglon(
+    itemId: string,
+    articuloId: string,
+    motivo: string | null,
+    requisicionId: string,
+  ): Promise<{ cambiado: boolean; compraYaAvanzo: boolean }> {
+    const { data, error } = await this.supabase.client.rpc('reemplazar_articulo_renglon_requisicion', {
+      p_item_id: itemId,
+      p_articulo_id: articuloId,
+      p_motivo: motivo,
+    });
+    if (error) throw new Error(error.message);
+    await this.invalidarCache(requisicionId);
+    const res = (data ?? {}) as { cambiado?: boolean; compra_ya_avanzo?: boolean };
+    return { cambiado: !!res.cambiado, compraYaAvanzo: !!res.compra_ya_avanzo };
+  }
+
   /** BA6 — cancela una requisición con motivo obligatorio (rol con permiso). Online. */
   async cancelar(id: string, motivo: string): Promise<void> {
     const { error } = await this.supabase.client.rpc('requisicion_cancelar', {

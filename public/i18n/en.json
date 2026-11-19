@@ -6007,5 +6007,21 @@
   "No quiero compartir mi ubicación": "I don’t want to share my location",
   "No sé cómo hacerlo": "I don’t know how to do it",
   "Prefiero hacerlo después": "I prefer to do it later",
-  "Tu ubicación está encendida pero el teléfono no encuentra señal. Sal al aire libre o acércate a una ventana, espera unos segundos y toca «Ya lo activé» otra vez.": "Your location is on but the phone cannot find a signal. Go outside or move near a window, wait a few seconds and tap “I turned it on” again."
+  "Tu ubicación está encendida pero el teléfono no encuentra señal. Sal al aire libre o acércate a una ventana, espera unos segundos y toca «Ya lo activé» otra vez.": "Your location is on but the phone cannot find a signal. Go outside or move near a window, wait a few seconds and tap “I turned it on” again.",
+  "No se pudo enviar el conteo": "The count could not be sent",
+  "Enviando conteo…": "Sending count…",
+  "Pendiente de sincronizar": "Pending sync",
+  "Un momento, confirmando con el servidor.": "One moment, confirming with the server.",
+  "Tu conteo está guardado en el teléfono y se enviará solo cuando haya señal. El stock aún no cambió.": "Your count is saved on the phone and will be sent automatically once there is signal. Stock has not changed yet.",
+  "No pudimos enviar el conteo todavía. Revisa tu conexión e intenta de nuevo.": "We could not send the count yet. Check your connection and try again.",
+  "Hay un conteo que no se ha podido enviar. El stock no cambia hasta que se envíe. Revisa Pendientes de envío.": "A count could not be sent. Stock does not change until it is sent. Check Pending items.",
+  "Sin existencia aquí": "No stock here",
+  "Cambiar artículo": "Change item",
+  "Necesitas conexión para cambiar el artículo.": "You need a connection to change the item.",
+  "Artículo cambiado. La compra ya avanzó: avisa a Compras del cambio.": "Item changed. The purchase already moved on: let Purchasing know.",
+  "Artículo cambiado.": "Item changed.",
+  "Ese ya es el artículo del renglón.": "That is already the line's item.",
+  "Tu rol no puede cambiar artículos de una requisición.": "Your role cannot change items on a requisition.",
+  "Renglón: {d}. Elige el artículo correcto del catálogo.": "Line: {d}. Pick the right item from the catalog.",
+  "No se pudo cargar la foto": "The photo could not be loaded"
 }

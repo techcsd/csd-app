@@ -3,8 +3,8 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8417 textos medidos en 290 pantallas)
-- Textos con t(): 8417 · sin t(): 0
+- **English: 100%** · **Kreyòl: 100%** (8429 textos medidos en 290 pantallas)
+- Textos con t(): 8429 · sin t(): 0
 - Pantallas `enforce:true`: 250 de 290
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
@@ -78,7 +78,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/inventario/articulo-editar | 26 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/articulo-nuevo | 34 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/catalogo | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/inventario/conteo | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/inventario/conteo | 37 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/conteos | 12 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/entrada | 41 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/inventario/existencias | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -133,7 +133,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/rrhh/empleados | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/bandeja | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/solicitudes/detalle | 119 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/solicitudes/detalle | 126 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/mis | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/pedir | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/soporte | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -192,7 +192,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/mis-trabajos | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/perfil-conductor | 45 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/perfil-vehiculo | 44 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/por-aprobar | 33 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/por-aprobar | 34 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/por-confirmar | 49 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/preuso | 96 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/reportar-multa | 36 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -214,7 +214,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/components/consentimiento-ubicacion | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/demo-tabs | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/generar-acceso | 16 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| shared/components/gps-asistente | 18 | 0 | 0 | 0 | 100% | 100% |  |
+| shared/components/gps-asistente | 17 | 0 | 0 | 0 | 100% | 100% |  |
 | shared/components/gps-gate-banner | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/module-placeholder | 2 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/components/novedades | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |

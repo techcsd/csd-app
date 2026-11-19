@@ -21,7 +21,7 @@
             }
           </span>
           <span class="picker__meta">
-            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin stock' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
+            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin existencia aquí' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
           </span>
           <span class="picker__add">+</span>
         </button>
@@ -42,7 +42,7 @@
             @if (a.codigo) { <span class="picker__code">{{ a.codigo }}</span> }
           </span>
           <span class="picker__meta">
-            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin stock' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
+            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin existencia aquí' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
           </span>
           <span class="picker__add">+</span>
         </button>
@@ -78,7 +78,7 @@
             @if (a.codigo) { <span class="picker__code">{{ a.codigo }}</span> }
           </span>
           <span class="picker__meta">
-            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin stock' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
+            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin existencia aquí' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
           </span>
           <span class="picker__add">+</span>
         </button>
