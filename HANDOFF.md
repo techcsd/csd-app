@@ -1,5 +1,9 @@
 # HANDOFF — CSD App
 
+## 🟢 20-nov-2026 (noche) — v2.71.5 PUBLICADA EN PROD (mensaje de conexión al buscar actualización)
+
+**En dev / En prod:** **En dev:** 2.71.5 (PR #66 código, #67 bump, #68 QA; APK dev + registro + publicada). **En prod:** 2.71.5 publicada (PR #69 dev→main, APK en bucket prod, data-fix `2026-11-20-dt-publicar-2.71.5.mjs`, `minima=false`, PWA por Vercel). OK explícito de Xaviel («release 2.71.5 now, I give my ok»). Cambio único: Perfil › Buscar actualización distingue «Sin señal» (sin red) de «No pude conectar con el servidor… Prueba con Wi-Fi u otra red» (red sí, servidor no; visto en un Samsung con datos móviles, ERR_QUIC_PROTOCOL_ERROR). Probado en teléfono (ver `qa/release-2.71.5.md`). **NO probado antes de prod:** actualización in-app 2.71.4→2.71.5 (el APK dev del Samsung pide un PIN que Claude no conoce); queda para probar en el APK prod. **Pendiente Xaviel:** teléfono REAL de Raykler (`/pendientes`, actualizar por Wi-Fi).
+
 ## 🟢 20-nov-2026 — DT-conteo T1 (PROMPT-153) — v2.71.4 PUBLICADA EN PROD (aplicar como Conteo físico en almacenes Odoo)
 
 **En dev / En prod:** **En dev:** 2.71.4 (APK + registro + publicada, PR #60). **En prod:** 2.71.4 publicada (PR #61 dev→main, APK en bucket prod, data-fix `2026-11-20-dt-publicar-2.71.4.mjs`, `minima=false`, PWA por Vercel). OK explícito de Xaviel («1. Ok, 2. Ok, 3. Ok --yes»); prueba parcial en teléfono (`qa/release-2.71.4.md`); la actualización in-app NO se probó.
