@@ -23,7 +23,7 @@ if (!U || !ANON || !SR) { console.error('✗ faltan SUPABASE_*_PROD en .env.loca
 
 const qa = fs.readFileSync(path.join(dir, 'QA-USERS.local'), 'utf8');
 const seccion = qa.slice(qa.indexOf('Entorno PROD'));
-const pw = (seccion.match(/Contraseña[^`\n]*`([^`]+)`/) || [])[1];
+const pw = (seccion.match(/Contraseña compartida[^:\n]*:\s*(\S+)/) || [])[1];
 if (!pw) { console.error('✗ no encontré la contraseña QA de prod en QA-USERS.local'); process.exit(1); }
 
 const sr = { apikey: SR, Authorization: 'Bearer ' + SR, 'Accept-Profile': 'sgc' };
