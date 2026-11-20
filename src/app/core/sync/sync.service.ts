@@ -215,6 +215,13 @@ export class SyncService {
   /** CC7 — hay ≥1 envío en error cuya evidencia (payload+fotos) ya subió al bucket
    *  privado → Tecnología puede verlo. La barra lo usa para decir "ya lo está revisando". */
   revisionTecnologia = signal(false);
+  /** DT6 — hay envíos pendientes con señal cuyo turno de reintento venció hace rato
+   *  (drain colgado / cola trabada). La barra global deja de decir "se enviará solo". */
+  sinDrenar = signal(false);
+  private static readonly DRENAJE_VENCIDO_MS = 3 * TICK_MS;
+  /** DT6 — tope para refrescar el token antes de drenar: sin esto, un refresh que
+   *  nunca resuelve (señal mala/captive portal) dejaba `draining=true` y NADA se enviaba. */
+  private static readonly REFRESH_SESION_MS = 15_000;
 
   constructor() {
     // AA1 — limpieza one-shot: purga cualquier op silenciosa (error_report)
@@ -236,7 +243,32 @@ export class SyncService {
       if (this.network.online()) void this.drain();
     });
     // Safety-net ticker for backoff retries while the app is open.
-    setInterval(() => void this.drain(), TICK_MS);
+    setInterval(() => {
+      void this.drain();
+      void this.revisarDrenajeVencido(); // DT6 — corre aunque drain() esté colgado
+    }, TICK_MS);
+  }
+
+  /**
+   * DT6 — ¿hay envíos que YA debieron intentarse (su `proximo_intento` venció hace
+   * > 3 ticks) y siguen `pending` con señal? Eso solo pasa si el drain no está
+   * corriendo (colgado) o la cola quedó trabada: el estado "pendiente, se enviará
+   * solo" sería mentira. Se evalúa en el ticker (no depende de que drain() termine).
+   */
+  private async revisarDrenajeVencido(): Promise<void> {
+    try {
+      if (!this.network.online()) {
+        this.sinDrenar.set(false);
+        return;
+      }
+      const limite = Date.now() - SyncService.DRENAJE_VENCIDO_MS;
+      const rows = await db.outbox.where('estado').equals('pending').toArray();
+      this.sinDrenar.set(
+        rows.some((o) => !SyncService.isSilent(o.tipo_op) && (o.proximo_intento || o.created_local) < limite),
+      );
+    } catch {
+      /* best-effort */
+    }
   }
 
   /** AA1 — borra las ops silenciosas que quedaron encoladas por builds viejos. */
@@ -702,7 +734,8 @@ export class SyncService {
     this.syncing.set(true);
     try {
       // BN1c — token fresco antes de subir nada (evita el rechazo RLS por JWT vencido).
-      await this.ensureFreshSession();
+      // DT6 — acotado: si el refresh se cuelga, seguimos (el error real se maneja abajo).
+      await this.withTimeout(this.ensureFreshSession(), SyncService.REFRESH_SESION_MS, 'renovar sesión').catch(() => undefined);
       // FIFO by capture order.
       const ops = await db.outbox.orderBy('created_local').toArray();
       const now = Date.now();
@@ -717,6 +750,7 @@ export class SyncService {
       this.draining = false;
       this.syncing.set(false);
       await this.refreshCounts();
+      void this.revisarDrenajeVencido();
     }
   }
 

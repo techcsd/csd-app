@@ -27,12 +27,15 @@ export class SyncBar {
   errors = this.sync.errorCount;
   errorTipos = this.sync.errorTipos;
   syncing = this.sync.syncing;
+  sinDrenar = this.sync.sinDrenar;
   revisionTecnologia = this.sync.revisionTecnologia;
 
-  state = computed<'offline' | 'syncing' | 'pending' | 'error' | 'clear'>(() => {
+  state = computed<'offline' | 'syncing' | 'pending' | 'stale' | 'error' | 'clear'>(() => {
     if (this.errors() > 0) return 'error';
     if (!this.online()) return 'offline';
     if (this.syncing()) return 'syncing';
+    // DT6 — pendientes cuyo turno de reintento venció hace rato: no decir "se enviará solo".
+    if (this.pending() > 0 && this.sinDrenar()) return 'stale';
     if (this.pending() > 0) return 'pending';
     return 'clear';
   });
@@ -68,6 +71,8 @@ export class SyncBar {
           : t('Sin señal · todo guardado');
       case 'syncing':
         return t('Enviando…');
+      case 'stale':
+        return t('{n} sin enviar hace rato · toca para revisar', { n: this.pending() });
       case 'pending':
         return t('{n} pendientes de enviar', { n: this.pending() });
       default:
@@ -78,6 +83,7 @@ export class SyncBar {
   icon = computed(() => {
     switch (this.state()) {
       case 'error':
+      case 'stale':
         return '⚠️';
       case 'offline':
         return '📴';

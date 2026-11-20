@@ -1,5 +1,14 @@
 # HANDOFF — CSD App
 
+## 🟡 20-nov-2026 — Ronda DT-conteo (PROMPT-151) — v2.71.3 EN PR → dev (nada en prod)
+
+**En dev / En prod:** **En dev:** código en la rama `feature/dt-conteo` (PR a `dev`); **APK dev 2.71.3 NO construido ni registrado** (falta `npm run apk -- --env dev` + `apk:publish`, a pedido de Xaviel). **En prod:** sigue 2.71.2; no se tocó main ni prod.
+**Qué:** T1 **bloqueado** (la app no conoce `fuente_odoo`; TODO en `conteo.ts` + contrato pedido a SGC en `docs/DT-conteo-diagnostico.md`). T2 diagnóstico + 3 defectos corregidos: refresh de sesión del drain sin tope (podía congelar toda la cola — **supuesto**, no confirmado en el teléfono de Raykler), barra global sin estado «atascado» (nuevo `stale`), `inv_*` contados bajo Transporte en vez de Inventario. Test nuevo `update.service.spec.ts` (la auto-reparación de chunk nunca toca IndexedDB/outbox). T3 checklist sin probar: `qa/release-2.71.2-prueba-telefono.md`.
+**Pendiente Xaviel:** (1) revisar `/pendientes` en el teléfono de Raykler; (2) pasar el checklist; (3) decidir con SGC el contrato de T1 / `registrar_conteo_app`↔Odoo; (4) OK para APK dev 2.71.3 y luego prod. Registro `qa/release-2.71.3.md` aún no existe.
+Detalle: `docs/DT-conteo-diagnostico.md`.
+
+---
+
 ## 🟢 18-nov-2026 — Hotfix DS — v2.71.1 PUBLICADA EN PROD (GPS sin señal ya no bloquea el conduce)
 
 **En dev / En prod:** **En dev:** 2.71.1 (APK + registro + publicada). **En prod:** 2.71.1 publicada (PR #44 fix, #45 bump → dev, #46 dev→main; APK en bucket prod; data-fix `2026-11-18-ds-publicar-2.71.1.mjs`; `minima` sigue false).
