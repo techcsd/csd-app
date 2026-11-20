@@ -1,8 +1,8 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 8429,
-  "conT": 8429,
+  "literales": 8437,
+  "conT": 8437,
   "sinT": 0,
   "pantallas": 290,
   "byScreen": {
@@ -615,7 +615,7 @@
       "ht": 100
     },
     "pages/inventario/conteo": {
-      "conT": 37,
+      "conT": 45,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

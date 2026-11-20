@@ -1,8 +1,8 @@
 @if (done()) {
   <!-- DT1 — nunca "guardado" hasta que el servidor confirme: enviando / pendiente / falló -->
   <app-big-confirm
-    [title]="envio() === 'ok' ? ('Conteo guardado' | t) : envio() === 'error' ? ('No se pudo enviar el conteo' | t) : envio() === 'enviando' ? ('Enviando conteo…' | t) : ('Pendiente de sincronizar' | t)"
-    [note]="envio() === 'ok' ? ('El stock se ajustó a lo contado.' | t) : envio() === 'error' ? (envioMotivo() | t) : envio() === 'enviando' ? ('Un momento, confirmando con el servidor.' | t) : ('Tu conteo está guardado en el teléfono y se enviará solo cuando haya señal. El stock aún no cambió.' | t)"
+    [title]="fisico() ? ('Ajuste aplicado' | t) : envio() === 'ok' ? ('Conteo guardado' | t) : envio() === 'error' ? ('No se pudo enviar el conteo' | t) : envio() === 'enviando' ? ('Enviando conteo…' | t) : ('Pendiente de sincronizar' | t)"
+    [note]="fisico() ? ('El stock se ajustó a lo contado y quedó registrado como Conteo físico.' | t) : envio() === 'ok' ? ('El stock se ajustó a lo contado.' | t) : envio() === 'error' ? (envioMotivo() | t) : envio() === 'enviando' ? ('Un momento, confirmando con el servidor.' | t) : ('Tu conteo está guardado en el teléfono y se enviará solo cuando haya señal. El stock aún no cambió.' | t)"
     [tone]="envio() === 'ok' ? 'done' : 'pending'"
     [buttonLabel]="'Listo' | t"
     [secondaryLabel]="envio() === 'error' ? ('Reintentar' | t) : ''"
@@ -24,6 +24,10 @@
       <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="onBodega($event)" />
 
       @if (bodegaId()) {
+        <!-- DT-T1 — Odoo manda el stock en este almacén: solo informa, no bloquea Guardar -->
+        @if (avisoOdoo()) {
+          <p class="conteo__hint conteo__hint--odoo" role="note">{{ 'En este almacén Odoo manda el stock. Para que tu ajuste quede, la app lo aplica como Conteo físico: te pide confirmar, un motivo, y necesitas señal.' | t }}</p>
+        }
         <p class="conteo__hint">{{ 'Escribe la cantidad que contaste. Solo se ajusta lo que cambie.' | t }}</p>
         @if (loading()) {
           <app-skeleton [rows]="5" />
@@ -99,10 +103,21 @@
 
     <footer class="conteo__nav">
       <button type="button" class="btn-cta" appTapScale [disabled]="submitting() || !puedeGuardar()" (click)="submit()">
-        {{ submitting() ? ('Guardando…' | t) : (hayCambios() ? ('Guardar conteo' | t) : ('Guardar (sin diferencias)' | t)) }}
+        {{ submitting() ? ((avisoOdoo() ? 'Aplicando…' : 'Guardando…') | t) : avisoOdoo() ? ('Aplicar como conteo físico' | t) : (hayCambios() ? ('Guardar conteo' | t) : ('Guardar (sin diferencias)' | t)) }}
       </button>
     </footer>
   </div>
+
+  <!-- DT-T1b — confirmar el ajuste que queda (Conteo físico) -->
+  <app-confirm-dialog
+    [open]="confirmarFisico()"
+    [title]="'Aplicar como conteo físico' | t"
+    [message]="'Se ajustará el stock de este almacén a lo que contaste y quedará registrado en el SGC. Artículos a ajustar: {n}. Desde la app no se puede deshacer.' | t: { n: cambiosCount() }"
+    [confirmLabel]="'Sí, aplicar' | t"
+    [cancelLabel]="'Cancelar' | t"
+    (confirmed)="confirmarAplicarFisico()"
+    (cancelled)="cancelarFisico()"
+  />
 
   <app-confirm-dialog
     [open]="confirmarConforme()"

@@ -3,7 +3,24 @@
 Alcance: solo la app (csd-app). Lectura del código en `origin/dev` @ `7767295` (2.71.2). **No se probó en teléfono.**
 Leyenda: **Confirmado** = visto en el código; **Supuesto** = hipótesis sin evidencia de runtime.
 
-## T1 — Aviso «Odoo manda el stock» (BLOQUEADO en SGC)
+## T1 — Aviso «Odoo manda el stock» (RESUELTO en 2.71.4, 20-nov-2026)
+
+**Resuelto:** SGC (PR #225) dejó `sgc.bodegas_fuente_stock()` → `table(bodega_id uuid, fuente_odoo boolean)` en dev y prod (prod: 29 almacenes, 16 con Odoo; dev: 28 y 0). Decisión de Xaviel: **Odoo manda el stock (opción A)**; `registrar_conteo_app` no cambia ni publica a Odoo.
+- `InventarioService.getBodegasFuenteOdoo()` llama el RPC (cacheado offline) y devuelve `{ bodega_id: true }` solo de los `true`. **Nunca lanza**: `false`/null/undefined, fila rara, error de red/RPC, offline sin caché o `PGRST202` ⇒ `{}` = «desconocido» = sin aviso (con `PGRST202` se ignora hasta una caché vieja).
+- `ConteoPage` lo pide en segundo plano al abrir (no bloquea) y `avisoOdoo` = almacén elegido con `true` ⇒ nota persistente sobre la lista; **no bloquea Guardar** y no toca `enqueueConteo`/payload.
+- Tests: `inventario-fuente-odoo.spec.ts` (9). Probado en teléfono contra dev solo con el aviso forzado (dev no tiene almacenes Odoo); con datos reales de prod está **sin probar**.
+
+### T1b — el ajuste que queda se hace en la app (pedido de Xaviel, 20-nov-2026)
+En vez de mandar a la web, en almacenes con Odoo el botón de Conteo pasa a **«Aplicar como conteo físico»**: confirmación (con n.º de artículos) + motivo (por defecto «Conteo físico desde la app») y corre los RPC de la web **abrir → guardar → cerrar → aplicar** (`InventarioService.aplicarConteoFisico`).
+- **Confirmado en el SGC (SQL BL4, solo lectura):** los 4 pasos usan el MISMO gate que el conteo de la app (`puede_operar_conteo()` = admin o `inventario.conteos` operar); NO hay aprobador aparte (`aplicar` solo exige motivo y guarda `aprobado_por = auth.uid()`). `abrir` reanuda el borrador, `guardar` lo reemplaza, `cerrar`/`aplicar` están protegidos por estado ⇒ reintentable (la app tolera «ya cerrado/ya aplicado»).
+- **Probado en teléfono contra dev (con el modo Odoo forzado, dev no tiene almacenes Odoo):** fila `conteos_inventario` en `aplicado`, ítem 0→3, `stock_por_bodega` = 3.
+- **Online-only** (no usa el outbox; sin señal avisa). Almacenes sin Odoo: flujo anterior intacto.
+- **Persistencia frente a Odoo — PROBADO en prod (20-nov, OK de Xaviel):** `scripts/diagnosticos/2026-11-20-dt-t1b-persistencia-odoo.mjs`. Como `qa_guarda_almacen`, en el almacén Odoo «TORRE BOLIVAR - LOSA de PARQUEO» (sin stock) se aplicó +1 de un artículo por Conteo físico y se vigiló `stock_por_bodega` cada minuto durante 12 min (más de 2 ciclos del poll de ~5 min): **se mantuvo en 1 todo el tiempo, Odoo NO lo revirtió**. El script lo revirtió a 0 (dos conteos físicos con motivo «PRUEBA DT-T1b…» en el historial de prod, stock final 0).
+- **Lo que NO prueba:** que Odoo reciba el ajuste (el SQL de `aplicar` solo rebasa la apertura en SGC; no vi que publique a Odoo). Si Odoo sigue con otro saldo, la diferencia SGC↔Odoo la ve la conciliación; pregunta abierta para SGC.
+- **Conteo «contado» sin aplicar (señal cortada entre cerrar y aplicar):** la app ahora lo reanuda sola SI sus ítems son idénticos a los que el usuario está aplicando (solo falta aplicar); si difieren o no lo ve, dice que lo termine en la web (no hay RPC de cancelar a su alcance).
+- **Online-only** (no usa el outbox; sin señal avisa). Almacenes sin Odoo: flujo anterior intacto.
+
+### (Histórico) contrato que se pidió a SGC antes de que existiera
 
 **Confirmado:** la app no conoce `fuente_odoo` por almacén. `grep -ri "fuente_odoo|odoo_corte"` sobre `src/` = 0 resultados; `Bodega` (`inventario.model.ts`) solo trae `id, nombre, es_central, es_principal, proyecto_id`, y `conteo.ts` obtiene las bodegas por el servicio de inventario sin ningún campo de fuente de stock. No se consulta `odoo_corte_bodega` desde el cliente y no se inventó ningún RPC.
 
