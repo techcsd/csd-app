@@ -272,6 +272,13 @@ export class ConteoPage {
     void this.router.navigate(['/inventario/conteos']);
   }
 
+  // TODO(DT-T1, bloqueado en SGC): aviso persistente "En este almacén Odoo manda el stock: un
+  // conteo desde la app puede revertirse en unos minutos. Para un ajuste que quede, usa Conteo
+  // físico en la web (nuevo conteo → cerrar → aprobar → aplicar)." cuando la bodega elegida tenga
+  // Odoo como fuente de stock. La app HOY no conoce `fuente_odoo` por bodega (ni Bodega ni
+  // ningún RPC lo exponen) y NO se consulta `odoo_corte_bodega` desde el cliente. Contrato
+  // pedido a SGC: ver docs/DT-conteo-diagnostico.md §T1. Al llegar: añadir `fuente_odoo?: boolean`
+  // a Bodega, un `conteoAvisoOdoo = computed(...)` y la nota en conteo.html (copy con t(), en/ht).
   async onBodega(id: string): Promise<void> {
     this.bodegaId.set(id);
     this.colapsadas.set(new Set());

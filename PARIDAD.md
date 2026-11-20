@@ -1402,3 +1402,8 @@ empezara — nada quedó detrás de bandera por falta de backend.
 - **Escáner de QR del conduce:** solo web/SGC emite el QR; la app lo consume por enlace (`/conduce-qr/:token`), sin escáner propio (requeriría plugin nativo + declarar permiso, CI13).
 - **Estado contable del conduce:** la app lo muestra solo a roles de gestión y en lenguaje de obra; la web conserva el detalle técnico y «Reintentar».
 - **Asistente de GPS:** solo app (el GPS es del teléfono); pendiente de contrato SGC.
+
+## Ronda DT-conteo (20-nov-2026) — app 2.71.3
+
+- **Solo app, sin equivalente web:** estado `stale` de la barra de sincronización y el reparto de badges de «en proceso» (`inv_*` → Inventario) son conceptos del outbox móvil; la web no tiene cola offline.
+- **Pendiente de paridad (bloqueado en SGC):** aviso «Odoo manda el stock» en Conteo (T1). Requiere que SGC exponga `fuente_odoo` por almacén (contrato en `docs/DT-conteo-diagnostico.md`). La web (Conteo físico: nuevo → cerrar → aprobar → aplicar) es la vía que publica a Odoo y queda; el conteo de la app puede revertirse en minutos en almacenes con Odoo.
