@@ -39,3 +39,12 @@ Inventario › Conteo › elige almacén › cambia una cantidad › **Guardar c
 
 ## Nota Odoo (no es un fallo de esta versión)
 En almacenes con Odoo como fuente de stock, un conteo desde la app puede revertirse en minutos (ver `docs/DT-conteo-diagnostico.md`). Para un ajuste que quede, usar Conteo físico en la web.
+
+## Verificación asistida (Claude, 20-nov-2026) — NO sustituye la prueba de Xaviel
+Teléfono M2101K6G (Chrome, PWA servida desde el código de PR #53 = 2.71.3) contra **dev** (`fzfrnrvn`), usuario `QA guarda_almacen`, almacén BRISAS CITY CENTER, artículo BIROTE 2X4 (1000 → 999). Solo se observó; las casillas de arriba siguen sin marcar.
+- Modo avión + Guardar: pantalla «Pendiente de sincronizar … El stock aún no cambió» (no «guardado» a secas). Observado.
+- Fuera de Conteo (Inventario): barra global «Sin señal · 1 se enviarán solos». Observado.
+- Al quitar el modo avión: «Todo enviado» en ≈40 s sin tocar nada. Observado.
+- Servidor dev (`stock_por_bodega`): cantidad 999, `updated_at` 17:23:11Z = momento del reenvío. Confirmado por consulta de solo lectura.
+- NO probado: estado «Falló», aviso > 2 min, barra `stale`, badge del tile Inventario, selector «Sin existencia aquí», Cambiar artículo, auto-reparación tras deploy, almacenes con fuente Odoo.
+- Nota: el dato de dev quedó en 999 (antes 1000).
