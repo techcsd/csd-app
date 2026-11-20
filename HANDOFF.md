@@ -1,10 +1,10 @@
 # HANDOFF — CSD App
 
-## 🟡 20-nov-2026 — Ronda DT-conteo (PROMPT-151) — v2.71.3 EN PR → dev (nada en prod)
+## 🟢 20-nov-2026 — Ronda DT-conteo (PROMPT-151) — v2.71.3 PUBLICADA EN PROD (envíos atascados visibles)
 
-**En dev / En prod:** **En dev:** código en la rama `feature/dt-conteo` (PR a `dev`); **APK dev 2.71.3 NO construido ni registrado** (falta `npm run apk -- --env dev` + `apk:publish`, a pedido de Xaviel). **En prod:** sigue 2.71.2; no se tocó main ni prod.
+**En dev / En prod:** **En dev:** 2.71.3 (APK dev + registro + publicada, PR #53/#54). **En prod:** 2.71.3 publicada (PR #55 dev→main, APK en bucket prod, data-fix `2026-11-20-dt-publicar-2.71.3.mjs`, `minima=false`, PWA por Vercel). OK explícito de Xaviel (20-nov) saltando las 24 h en dev; prueba PARCIAL en teléfono (ver `qa/release-2.71.3.md`); la actualización in-app NO se probó.
 **Qué:** T1 **bloqueado** (la app no conoce `fuente_odoo`; TODO en `conteo.ts` + contrato pedido a SGC en `docs/DT-conteo-diagnostico.md`). T2 diagnóstico + 3 defectos corregidos: refresh de sesión del drain sin tope (podía congelar toda la cola — **supuesto**, no confirmado en el teléfono de Raykler), barra global sin estado «atascado» (nuevo `stale`), `inv_*` contados bajo Transporte en vez de Inventario. Test nuevo `update.service.spec.ts` (la auto-reparación de chunk nunca toca IndexedDB/outbox). T3 checklist sin probar: `qa/release-2.71.2-prueba-telefono.md`.
-**Pendiente Xaviel:** (1) revisar `/pendientes` en el teléfono de Raykler; (2) pasar el checklist; (3) decidir con SGC el contrato de T1 / `registrar_conteo_app`↔Odoo; (4) OK para APK dev 2.71.3 y luego prod. Registro `qa/release-2.71.3.md` aún no existe.
+**Pendiente Xaviel:** (1) `/pendientes` y versión en el teléfono REAL de Raykler (el outbox es por dispositivo; entrar como él en otro teléfono no lo muestra; el APK que vimos estaba en 2.66.2); (2) pasar lo que quedó sin probar en `qa/release-2.71.2-prueba-telefono.md`; (3) decidir con SGC el contrato de T1 / `registrar_conteo_app`↔Odoo.
 Detalle: `docs/DT-conteo-diagnostico.md`.
 
 ---
