@@ -5900,5 +5900,6 @@
   "No tienes permiso para aplicar conteos de inventario.": "Ou pa gen pèmisyon pou aplike konte envantè.",
   "Ya hay un conteo físico de este almacén sin aplicar. Termínalo en la web (aplicarlo o cancelarlo) y vuelve a intentar.": "Gen yon konte fizik pou depo sa a ki poko aplike. Fini l sou wèb la (aplike l oswa anile l) epi eseye ankò.",
   "No pudimos aplicar el ajuste. Revisa tu conexión e intenta de nuevo.": "Nou pa t ka aplike ajisteman an. Verifye koneksyon w epi eseye ankò.",
-  "Se ajustará el stock de este almacén a lo que contaste y quedará registrado en el SGC. Artículos a ajustar: {n}. Desde la app no se puede deshacer.": "Y ap ajiste stòk depo sa a selon sa ou konte a epi l ap anrejistre nan SGC. Atik pou ajiste: {n}. Nou pa ka defèt sa nan app la."
+  "Se ajustará el stock de este almacén a lo que contaste y quedará registrado en el SGC. Artículos a ajustar: {n}. Desde la app no se puede deshacer.": "Y ap ajiste stòk depo sa a selon sa ou konte a epi l ap anrejistre nan SGC. Atik pou ajiste: {n}. Nou pa ka defèt sa nan app la.",
+  "No pude conectar con el servidor para ver si hay una versión nueva. Prueba con Wi-Fi u otra red, o más tarde.": "Mwen pa t ka konekte ak sèvè a pou wè si gen yon nouvo vèsyon. Eseye ak Wi-Fi oswa yon lòt rezo, oswa pita."
 }
