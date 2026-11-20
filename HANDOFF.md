@@ -4,7 +4,7 @@
 
 **En dev / En prod:** **En dev:** código en la rama `feature/dt-t1-aviso-odoo` (PR a `dev`, sin mergear a la espera del OK); **APK dev 2.71.4 NO construido**. **En prod:** sigue la 2.71.3 publicada (`minima=false`); nada nuevo.
 **Qué:** (1) aviso «Odoo manda el stock» en Conteo vía `bodegas_fuente_stock()` (tolerante: false/null/error/PGRST202/offline sin caché ⇒ sin aviso). (2) **Pedido de Xaviel:** en almacenes Odoo el botón pasa a «Aplicar como conteo físico» (confirmación + motivo; abrir→guardar→cerrar→aplicar, mismos RPC y gate que la web, online-only). Almacenes sin Odoo: flujo anterior intacto. 16 tests nuevos (84/84), build verde.
-**Probado:** localhost→dev en el teléfono con el modo Odoo forzado (dev tiene 0 almacenes Odoo): flujo completo OK, conteo físico `aplicado` y stock 0→3 en dev. **NO verificado:** que el ajuste sobreviva al poll de Odoo (prod, 16 almacenes Odoo) — es LA prueba clave: `qa/release-2.71.4-prueba-telefono.md`.
+**Probado:** localhost→dev en el teléfono con el modo Odoo forzado (dev tiene 0 almacenes Odoo): flujo completo OK, conteo físico `aplicado` y stock 0→3 en dev. **Persistencia frente a Odoo PROBADA en prod por script (20-nov, OK Xaviel):** +1 por Conteo físico en TORRE BOLIVAR (Odoo, sin stock), 12 min, Odoo no lo revirtió; revertido a 0. NO probado: que Odoo reciba el ajuste. Conteo «contado» sin aplicar: la app lo reanuda si es idéntico. Checklist: `qa/release-2.71.4-prueba-telefono.md`.
 **Pendiente Xaviel:** (1) OK para mergear a dev + APK dev 2.71.4; (2) `/pendientes` + versión en el teléfono REAL de Raykler (estaba en 2.66.2); (3) probar el aviso en prod con un almacén Odoo; (4) OK explícito para main/prod.
 Detalle: `docs/DT-conteo-diagnostico.md` §T1.
 

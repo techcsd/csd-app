@@ -357,11 +357,55 @@ export class InventarioService {
       if (/fetch|network|timeout|Failed/i.test(msg)) throw new ConteoFisicoError('red', SIN_SENAL);
       throw new ConteoFisicoError('otro', 'No pudimos aplicar el ajuste. Revisa tu conexión e intenta de nuevo.');
     };
-    const id = (await paso('conteo_fisico_abrir', { p_bodega_id: input.bodegaId, p_ciego: false })) as string;
-    await paso('conteo_fisico_guardar', { p_conteo_id: id, p_items: input.items });
-    await paso('conteo_fisico_cerrar', { p_conteo_id: id }, 'estado: contado');
+    let id: string;
+    let reanudado = false;
+    try {
+      id = (await paso('conteo_fisico_abrir', { p_bodega_id: input.bodegaId, p_ciego: false })) as string;
+    } catch (e) {
+      // Un intento anterior (misma persona, se cortó la señal entre cerrar y aplicar) dejó un conteo
+      // «contado» sin aplicar. Si trae EXACTAMENTE lo que se está aplicando ahora, se reanuda: solo falta aplicar.
+      if (!(e instanceof ConteoFisicoError) || e.causa !== 'pendiente') throw e;
+      const previo = await this.conteoFisicoPendienteIgual(input.bodegaId, input.items, paso);
+      if (!previo) throw e;
+      id = previo;
+      reanudado = true;
+    }
+    if (!reanudado) {
+      await paso('conteo_fisico_guardar', { p_conteo_id: id, p_items: input.items });
+      await paso('conteo_fisico_cerrar', { p_conteo_id: id }, 'estado: contado');
+    }
     const r = (await paso('conteo_fisico_aplicar', { p_conteo_id: id, p_motivo: input.motivo }, 'estado: aplicado')) as { ajustados?: number } | null;
     return { ajustados: Number(r?.ajustados ?? input.items.length) };
+  }
+
+  /**
+   * DT-T1b — id del conteo físico «contado» (cerrado, sin aplicar) de la bodega SOLO si sus ítems son
+   * idénticos a `items` (mismo artículo y misma cantidad); si no, null (no se aplica algo que el usuario no vio).
+   */
+  private async conteoFisicoPendienteIgual(
+    bodegaId: string,
+    items: { articulo_id: string; cantidad_contada: number }[],
+    paso: (fn: string, args: Record<string, unknown>) => Promise<unknown>,
+  ): Promise<string | null> {
+    try {
+      const { data } = await this.supabase.client
+        .from('conteos_inventario')
+        .select('id')
+        .eq('bodega_id', bodegaId)
+        .eq('tipo', 'conteo_fisico')
+        .eq('estado', 'contado')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const id = (data as { id: string }[] | null)?.[0]?.id;
+      if (!id) return null;
+      const det = (await paso('conteo_fisico_detalle', { p_conteo_id: id })) as { items?: { articulo_id: string; cantidad_contada: number | null }[] } | null;
+      const previos = (det?.items ?? []).filter((i) => i.cantidad_contada !== null && i.cantidad_contada !== undefined);
+      if (previos.length !== items.length) return null;
+      const mapa = new Map(previos.map((i) => [i.articulo_id, Number(i.cantidad_contada)]));
+      return items.every((i) => mapa.get(i.articulo_id) === Number(i.cantidad_contada)) ? id : null;
+    } catch {
+      return null;
+    }
   }
 
   async getBodegas(): Promise<Bodega[]> {

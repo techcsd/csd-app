@@ -85,9 +85,17 @@ describe('InventarioService.getBodegasFuenteOdoo (DT-T1)', () => {
   });
 });
 
+// Builder de supabase-js mínimo: select/eq/order/limit encadenan y el await devuelve { data }.
+function cadena(data: unknown[]) {
+  const b: Record<string, unknown> = {};
+  for (const m of ['select', 'eq', 'order', 'limit']) b[m] = () => b;
+  b['then'] = (ok: (v: unknown) => unknown) => Promise.resolve({ data, error: null }).then(ok);
+  return b;
+}
+
 // DT-T1b — ajuste que queda en almacén Odoo = Conteo físico (abrir → guardar → cerrar → aplicar).
 type Res = { data: unknown; error: { code?: string; message?: string } | null };
-function montarFisico(respuestas: Record<string, Res | (() => Promise<Res>)>) {
+function montarFisico(respuestas: Record<string, Res | (() => Promise<Res>)>, pendientes: { id: string }[] = []) {
   const llamadas: { fn: string; args: Record<string, unknown> }[] = [];
   const rpc = vi.fn(async (fn: string, args: Record<string, unknown>) => {
     llamadas.push({ fn, args });
@@ -98,7 +106,7 @@ function montarFisico(respuestas: Record<string, Res | (() => Promise<Res>)>) {
   TestBed.configureTestingModule({
     providers: [
       InventarioService,
-      { provide: SupabaseService, useValue: { client: { rpc } } },
+      { provide: SupabaseService, useValue: { client: { rpc, from: () => cadena(pendientes) } } },
       { provide: CatalogService, useValue: { refresh: vi.fn() } },
       { provide: SyncService, useValue: { register: vi.fn() } },
     ],
@@ -136,6 +144,37 @@ describe('InventarioService.aplicarConteoFisico (DT-T1b)', () => {
     await expect(s.aplicarConteoFisico(ENTRADA)).resolves.toEqual({ ajustados: 1 });
   });
   it('conteo pendiente de aplicar (abrir AT409): mensaje claro y no sigue', async () => {
+    const { s, llamadas } = montarFisico({
+      conteo_fisico_abrir: { data: null, error: { code: 'AT409', message: 'Ya hay un conteo de esta bodega por aplicar.' } },
+    });
+    await expect(s.aplicarConteoFisico(ENTRADA)).rejects.toMatchObject({ causa: 'pendiente' });
+    expect(llamadas.map((l) => l.fn)).toEqual(['conteo_fisico_abrir']);
+  });
+  it('conteo «contado» pendiente con los MISMOS ítems: se reanuda (solo aplica, no vuelve a guardar)', async () => {
+    const { s, llamadas } = montarFisico(
+      {
+        conteo_fisico_abrir: { data: null, error: { code: 'AT409', message: 'Ya hay un conteo de esta bodega por aplicar.' } },
+        conteo_fisico_detalle: { data: { items: [{ articulo_id: 'a1', cantidad_contada: 5 }] }, error: null },
+        conteo_fisico_aplicar: { data: { ok: true, ajustados: 1 }, error: null },
+      },
+      [{ id: 'P1' }],
+    );
+    await expect(s.aplicarConteoFisico(ENTRADA)).resolves.toEqual({ ajustados: 1 });
+    expect(llamadas.map((l) => l.fn)).toEqual(['conteo_fisico_abrir', 'conteo_fisico_detalle', 'conteo_fisico_aplicar']);
+    expect(llamadas[2].args).toEqual({ p_conteo_id: 'P1', p_motivo: 'conteo mensual' });
+  });
+  it('conteo pendiente con ítems DISTINTOS: no lo aplica (el usuario no lo vio) → mensaje', async () => {
+    const { s, llamadas } = montarFisico(
+      {
+        conteo_fisico_abrir: { data: null, error: { code: 'AT409', message: 'Ya hay un conteo de esta bodega por aplicar.' } },
+        conteo_fisico_detalle: { data: { items: [{ articulo_id: 'a1', cantidad_contada: 9 }] }, error: null },
+      },
+      [{ id: 'P1' }],
+    );
+    await expect(s.aplicarConteoFisico(ENTRADA)).rejects.toMatchObject({ causa: 'pendiente' });
+    expect(llamadas.map((l) => l.fn)).not.toContain('conteo_fisico_aplicar');
+  });
+  it('conteo pendiente que la app no puede ver (sin fila): mensaje, no aplica nada', async () => {
     const { s, llamadas } = montarFisico({
       conteo_fisico_abrir: { data: null, error: { code: 'AT409', message: 'Ya hay un conteo de esta bodega por aplicar.' } },
     });
