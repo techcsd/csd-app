@@ -25,6 +25,7 @@
 .sync-bar[data-state='pending'] {
   background: var(--color-warning);
 }
+.sync-bar[data-state='stale'],
 .sync-bar[data-state='error'] {
   background: var(--color-error);
 }

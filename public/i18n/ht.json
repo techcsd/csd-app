@@ -5885,5 +5885,6 @@
   "Ese ya es el artículo del renglón.": "Sa deja se atik liy lan.",
   "Tu rol no puede cambiar artículos de una requisición.": "Wòl ou pa ka chanje atik nan yon rekizisyon.",
   "Renglón: {d}. Elige el artículo correcto del catálogo.": "Liy: {d}. Chwazi bon atik la nan katalòg la.",
-  "No se pudo cargar la foto": "Foto a pa t ka chaje"
+  "No se pudo cargar la foto": "Foto a pa t ka chaje",
+  "{n} sin enviar hace rato · toca para revisar": "{n} poko voye depi lontan · peze pou revize"
 }

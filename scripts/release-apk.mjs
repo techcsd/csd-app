@@ -38,12 +38,13 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-18';
+const RELEASED_AT = '2026-11-20';
 
-const TITULO = 'El GPS sin señal ya no bloquea el conduce';
+const TITULO = 'Los envíos atascados ya no se esconden';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduces', d: 'Si el permiso y la ubicación del teléfono están activos pero no hay señal (por ejemplo bajo techo), ya puedes crear el conduce; antes la app lo bloqueaba como si el GPS estuviera apagado.' },
-  { t: 'mejora', m: 'Conduces', d: 'La app solo pide activar el GPS cuando de verdad está apagado o sin permiso.' },
+  { t: 'arreglo', m: 'Envíos', d: 'Si la cola de envíos se queda trabada con señal, la app ya lo dice en la barra de abajo en vez de mostrar «se enviará solo».' },
+  { t: 'arreglo', m: 'Envíos', d: 'Renovar la sesión antes de enviar ya no puede dejar la cola congelada con mala señal.' },
+  { t: 'mejora', m: 'Inventario', d: 'Un conteo, salida o entrada sin enviar ahora se ve en el aviso de Inventario, aunque no uses Transporte.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

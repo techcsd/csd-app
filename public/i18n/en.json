@@ -6023,5 +6023,6 @@
   "Ese ya es el artículo del renglón.": "That is already the line's item.",
   "Tu rol no puede cambiar artículos de una requisición.": "Your role cannot change items on a requisition.",
   "Renglón: {d}. Elige el artículo correcto del catálogo.": "Line: {d}. Pick the right item from the catalog.",
-  "No se pudo cargar la foto": "The photo could not be loaded"
+  "No se pudo cargar la foto": "The photo could not be loaded",
+  "{n} sin enviar hace rato · toca para revisar": "{n} not sent for a while · tap to review"
 }

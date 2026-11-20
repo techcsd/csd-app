@@ -73,18 +73,15 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'dano_vehiculo',
     'multa_conductor',
     'aviso_novedad_vehiculo',
-    // AE7 — capturas de inventario (antes en ninguna lista → invisibles en
-    // "en proceso"; sí contaban en el badge global y /pendientes).
-    'inv_salida',
-    'inv_entrada',
-    'inv_conteo',
-    'inv_devolucion_obra',
   ],
   rrhh: ['rrhh_asignar_item', 'rrhh_asignacion_estado'],
   mensajes: ['mensaje_enviar'],
   // CT5 — el envío de la recepción (conduce_recepcion) ya se contaba en 'flota'
   // (histórico); no se duplica aquí para no inflar dos badges con el mismo envío.
-  inventario: [],
+  // DT6 — las capturas de inventario (AE7) vivían bajo 'flota': un almacenista SIN
+  // módulo flota nunca veía un conteo/salida atascado en el badge de su tile Inventario
+  // (solo en /pendientes). Ahora cuentan en 'inventario'.
+  inventario: ['inv_salida', 'inv_entrada', 'inv_conteo', 'inv_devolucion_obra'],
   compras: [],
 };
 
