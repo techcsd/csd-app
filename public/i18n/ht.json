@@ -5886,5 +5886,6 @@
   "Tu rol no puede cambiar artículos de una requisición.": "Wòl ou pa ka chanje atik nan yon rekizisyon.",
   "Renglón: {d}. Elige el artículo correcto del catálogo.": "Liy: {d}. Chwazi bon atik la nan katalòg la.",
   "No se pudo cargar la foto": "Foto a pa t ka chaje",
-  "{n} sin enviar hace rato · toca para revisar": "{n} poko voye depi lontan · peze pou revize"
+  "{n} sin enviar hace rato · toca para revisar": "{n} poko voye depi lontan · peze pou revize",
+  "En este almacén Odoo manda el stock: un conteo desde la app puede revertirse en unos minutos. Para un ajuste que quede, usa Conteo físico en la web (nuevo conteo → cerrar → aprobar → aplicar).": "Nan depo sa a Odoo kontwole stòk la: yon konte ki soti nan app la ka tounen nan kèk minit. Pou yon ajisteman ki rete, itilize Konte fizik sou wèb la (nouvo konte → fèmen → apwouve → aplike)."
 }

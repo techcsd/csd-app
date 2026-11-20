@@ -24,6 +24,10 @@
       <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="onBodega($event)" />
 
       @if (bodegaId()) {
+        <!-- DT-T1 — Odoo manda el stock en este almacén: solo informa, no bloquea Guardar -->
+        @if (avisoOdoo()) {
+          <p class="conteo__hint conteo__hint--odoo" role="note">{{ 'En este almacén Odoo manda el stock: un conteo desde la app puede revertirse en unos minutos. Para un ajuste que quede, usa Conteo físico en la web (nuevo conteo → cerrar → aprobar → aplicar).' | t }}</p>
+        }
         <p class="conteo__hint">{{ 'Escribe la cantidad que contaste. Solo se ajusta lo que cambie.' | t }}</p>
         @if (loading()) {
           <app-skeleton [rows]="5" />

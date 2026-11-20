@@ -1403,6 +1403,9 @@ empezara — nada quedó detrás de bandera por falta de backend.
 - **Estado contable del conduce:** la app lo muestra solo a roles de gestión y en lenguaje de obra; la web conserva el detalle técnico y «Reintentar».
 - **Asistente de GPS:** solo app (el GPS es del teléfono); pendiente de contrato SGC.
 
+## Ronda DT-conteo T1 (20-nov-2026) — app 2.71.4
+- Aviso «En este almacén Odoo manda el stock…» en Inventario › Conteo, alimentado por `sgc.bodegas_fuente_stock()` (SGC PR #225). Web: el equivalente es Conteo físico (cerrar → aprobar → aplicar), al que el aviso remite. Sin cambios en el payload ni en `registrar_conteo_app`.
+
 ## Ronda DT-conteo (20-nov-2026) — app 2.71.3
 
 - **Solo app, sin equivalente web:** estado `stale` de la barra de sincronización y el reparto de badges de «en proceso» (`inv_*` → Inventario) son conceptos del outbox móvil; la web no tiene cola offline.

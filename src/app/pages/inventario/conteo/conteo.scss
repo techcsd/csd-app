@@ -40,6 +40,13 @@
   font-size: 14px;
   margin: 12px 0;
 }
+.conteo__hint--odoo {
+  background: var(--color-warning-bg);
+  color: var(--color-text-primary);
+  border-left: 4px solid var(--color-warning);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
 .conteo__muted {
   color: var(--color-text-secondary);
   text-align: center;

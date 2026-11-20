@@ -6024,5 +6024,6 @@
   "Tu rol no puede cambiar artículos de una requisición.": "Your role cannot change items on a requisition.",
   "Renglón: {d}. Elige el artículo correcto del catálogo.": "Line: {d}. Pick the right item from the catalog.",
   "No se pudo cargar la foto": "The photo could not be loaded",
-  "{n} sin enviar hace rato · toca para revisar": "{n} not sent for a while · tap to review"
+  "{n} sin enviar hace rato · toca para revisar": "{n} not sent for a while · tap to review",
+  "En este almacén Odoo manda el stock: un conteo desde la app puede revertirse en unos minutos. Para un ajuste que quede, usa Conteo físico en la web (nuevo conteo → cerrar → aprobar → aplicar).": "At this warehouse Odoo controls the stock: a count from the app may be reverted within a few minutes. For an adjustment that sticks, use Physical count on the web (new count → close → approve → apply)."
 }

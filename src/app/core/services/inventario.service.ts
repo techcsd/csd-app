@@ -6,6 +6,21 @@ import { ArticuloAlias, ArticuloBusqueda, ArticuloCat, Bodega, BodegaAdmin, Bode
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
+// DT-T1 — mapa bodega_id → fuente_odoo (RPC sgc.bodegas_fuente_stock). Cacheado offline.
+const CAT_BODEGAS_FUENTE = 'bodegas_fuente_stock';
+
+/**
+ * DT-T1 — normaliza lo que devuelve `bodegas_fuente_stock()`. Solo `fuente_odoo === true` cuenta;
+ * `false`, null, undefined, filas raras o una respuesta que no es lista = "no se sabe" → sin aviso.
+ */
+export function parseFuenteOdoo(data: unknown): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  if (!Array.isArray(data)) return out;
+  for (const r of data as { bodega_id?: unknown; fuente_odoo?: unknown }[]) {
+    if (r && typeof r.bodega_id === 'string' && r.fuente_odoo === true) out[r.bodega_id] = true;
+  }
+  return out;
+}
 // V14: bumped to _v2 to invalidate the pre-official-catalog offline cache
 // (articles now carry requiere_talla/nota; categories are the official 8).
 // Z16/Z17: bump a _v3 para traer propiedad + imagen_url.
@@ -273,6 +288,28 @@ export class InventarioService {
       return (data as BodegaPendiente[]) ?? [];
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * DT-T1 — ¿en qué almacenes Odoo manda el stock? `{ [bodega_id]: true }` (solo los true).
+   * NUNCA lanza ni bloquea: RPC ausente (PGRST202), error, offline sin caché o formato raro →
+   * `{}` ("desconocido": la pantalla no muestra aviso). Offline devuelve la última caché.
+   */
+  async getBodegasFuenteOdoo(): Promise<Record<string, boolean>> {
+    try {
+      const m = await this.catalog.refresh<Record<string, boolean>>(CAT_BODEGAS_FUENTE, async () => {
+        const { data, error } = await this.supabase.client.rpc('bodegas_fuente_stock');
+        if (error) {
+          // PGRST202 = el RPC no existe en este entorno → desconocido (y se pisa cualquier caché vieja)
+          if (error.code === 'PGRST202') return {};
+          throw new Error(error.message);
+        }
+        return parseFuenteOdoo(data);
+      });
+      return m ?? {};
+    } catch {
+      return {};
     }
   }
 

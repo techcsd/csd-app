@@ -40,11 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-20';
 
-const TITULO = 'Los envíos atascados ya no se esconden';
+const TITULO = 'Aviso cuando Odoo manda el stock';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Envíos', d: 'Si la cola de envíos se queda trabada con señal, la app ya lo dice en la barra de abajo en vez de mostrar «se enviará solo».' },
-  { t: 'arreglo', m: 'Envíos', d: 'Renovar la sesión antes de enviar ya no puede dejar la cola congelada con mala señal.' },
-  { t: 'mejora', m: 'Inventario', d: 'Un conteo, salida o entrada sin enviar ahora se ve en el aviso de Inventario, aunque no uses Transporte.' },
+  { t: 'mejora', m: 'Inventario', d: 'En Conteo, si el almacén elegido recibe su stock de Odoo, la app avisa que el conteo puede revertirse en unos minutos y dice cómo hacer un ajuste que quede.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

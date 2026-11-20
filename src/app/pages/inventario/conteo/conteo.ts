@@ -110,6 +110,10 @@ export class ConteoPage {
   }
 
   bodegas = signal<Bodega[]>([]);
+  // DT-T1 — { bodega_id: true } de los almacenes donde Odoo manda el stock ({} = desconocido).
+  fuenteOdoo = signal<Record<string, boolean>>({});
+  /** Aviso (solo informa, NO bloquea guardar): el almacén elegido tiene a Odoo como fuente. */
+  avisoOdoo = computed(() => !!this.bodegaId() && this.fuenteOdoo()[this.bodegaId()] === true);
   bodegaId = signal('');
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   existencias = signal<Existencia[]>([]);
@@ -253,6 +257,11 @@ export class ConteoPage {
   }
 
   private async init(): Promise<void> {
+    // DT-T1 — fuente de stock por almacén: en segundo plano, jamás bloquea abrir la pantalla.
+    void this.inventario
+      .getBodegasFuenteOdoo()
+      .then((m) => this.fuenteOdoo.set(m))
+      .catch(() => undefined);
     const [b, cats, arts] = await Promise.all([
       this.inventario.getBodegas(),
       this.inventario.getCategorias().catch(() => []),
@@ -272,13 +281,6 @@ export class ConteoPage {
     void this.router.navigate(['/inventario/conteos']);
   }
 
-  // TODO(DT-T1, bloqueado en SGC): aviso persistente "En este almacén Odoo manda el stock: un
-  // conteo desde la app puede revertirse en unos minutos. Para un ajuste que quede, usa Conteo
-  // físico en la web (nuevo conteo → cerrar → aprobar → aplicar)." cuando la bodega elegida tenga
-  // Odoo como fuente de stock. La app HOY no conoce `fuente_odoo` por bodega (ni Bodega ni
-  // ningún RPC lo exponen) y NO se consulta `odoo_corte_bodega` desde el cliente. Contrato
-  // pedido a SGC: ver docs/DT-conteo-diagnostico.md §T1. Al llegar: añadir `fuente_odoo?: boolean`
-  // a Bodega, un `conteoAvisoOdoo = computed(...)` y la nota en conteo.html (copy con t(), en/ht).
   async onBodega(id: string): Promise<void> {
     this.bodegaId.set(id);
     this.colapsadas.set(new Set());

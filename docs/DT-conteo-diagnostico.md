@@ -3,7 +3,14 @@
 Alcance: solo la app (csd-app). Lectura del código en `origin/dev` @ `7767295` (2.71.2). **No se probó en teléfono.**
 Leyenda: **Confirmado** = visto en el código; **Supuesto** = hipótesis sin evidencia de runtime.
 
-## T1 — Aviso «Odoo manda el stock» (BLOQUEADO en SGC)
+## T1 — Aviso «Odoo manda el stock» (RESUELTO en 2.71.4, 20-nov-2026)
+
+**Resuelto:** SGC (PR #225) dejó `sgc.bodegas_fuente_stock()` → `table(bodega_id uuid, fuente_odoo boolean)` en dev y prod (prod: 29 almacenes, 16 con Odoo; dev: 28 y 0). Decisión de Xaviel: **Odoo manda el stock (opción A)**; `registrar_conteo_app` no cambia ni publica a Odoo.
+- `InventarioService.getBodegasFuenteOdoo()` llama el RPC (cacheado offline) y devuelve `{ bodega_id: true }` solo de los `true`. **Nunca lanza**: `false`/null/undefined, fila rara, error de red/RPC, offline sin caché o `PGRST202` ⇒ `{}` = «desconocido» = sin aviso (con `PGRST202` se ignora hasta una caché vieja).
+- `ConteoPage` lo pide en segundo plano al abrir (no bloquea) y `avisoOdoo` = almacén elegido con `true` ⇒ nota persistente sobre la lista; **no bloquea Guardar** y no toca `enqueueConteo`/payload.
+- Tests: `inventario-fuente-odoo.spec.ts` (9). Probado en teléfono contra dev solo con el aviso forzado (dev no tiene almacenes Odoo); con datos reales de prod está **sin probar**.
+
+### (Histórico) contrato que se pidió a SGC antes de que existiera
 
 **Confirmado:** la app no conoce `fuente_odoo` por almacén. `grep -ri "fuente_odoo|odoo_corte"` sobre `src/` = 0 resultados; `Bodega` (`inventario.model.ts`) solo trae `id, nombre, es_central, es_principal, proyecto_id`, y `conteo.ts` obtiene las bodegas por el servicio de inventario sin ningún campo de fuente de stock. No se consulta `odoo_corte_bodega` desde el cliente y no se inventó ningún RPC.
 
