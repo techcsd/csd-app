@@ -10,6 +10,14 @@ Leyenda: **Confirmado** = visto en el código; **Supuesto** = hipótesis sin evi
 - `ConteoPage` lo pide en segundo plano al abrir (no bloquea) y `avisoOdoo` = almacén elegido con `true` ⇒ nota persistente sobre la lista; **no bloquea Guardar** y no toca `enqueueConteo`/payload.
 - Tests: `inventario-fuente-odoo.spec.ts` (9). Probado en teléfono contra dev solo con el aviso forzado (dev no tiene almacenes Odoo); con datos reales de prod está **sin probar**.
 
+### T1b — el ajuste que queda se hace en la app (pedido de Xaviel, 20-nov-2026)
+En vez de mandar a la web, en almacenes con Odoo el botón de Conteo pasa a **«Aplicar como conteo físico»**: confirmación (con n.º de artículos) + motivo (por defecto «Conteo físico desde la app») y corre los RPC de la web **abrir → guardar → cerrar → aplicar** (`InventarioService.aplicarConteoFisico`).
+- **Confirmado en el SGC (SQL BL4, solo lectura):** los 4 pasos usan el MISMO gate que el conteo de la app (`puede_operar_conteo()` = admin o `inventario.conteos` operar); NO hay aprobador aparte (`aplicar` solo exige motivo y guarda `aprobado_por = auth.uid()`). `abrir` reanuda el borrador, `guardar` lo reemplaza, `cerrar`/`aplicar` están protegidos por estado ⇒ reintentable (la app tolera «ya cerrado/ya aplicado»).
+- **Probado en teléfono contra dev (con el modo Odoo forzado, dev no tiene almacenes Odoo):** fila `conteos_inventario` en `aplicado`, ítem 0→3, `stock_por_bodega` = 3.
+- **Online-only** (no usa el outbox; sin señal avisa). Almacenes sin Odoo: flujo anterior intacto.
+- **NO verificado (hace falta Xaviel/SGC):** que un conteo físico aplicado en un almacén **Odoo** realmente sobreviva al poll de ~5 min de Odoo. El SQL de `aplicar` solo rebasa la apertura en SGC; no vi que publique a Odoo. SGC afirmó que Conteo físico «queda»; hay que confirmarlo en prod con un almacén Odoo (escritura real en prod: decisión de Xaviel).
+- **Límite conocido:** si un envío anterior dejó un conteo físico en estado «contado» sin aplicar (p. ej. se cortó la señal entre cerrar y aplicar), `abrir` lo rechaza y la app dice que lo termine en la web (no existe un RPC de cancelar al alcance de la app).
+
 ### (Histórico) contrato que se pidió a SGC antes de que existiera
 
 **Confirmado:** la app no conoce `fuente_odoo` por almacén. `grep -ri "fuente_odoo|odoo_corte"` sobre `src/` = 0 resultados; `Bodega` (`inventario.model.ts`) solo trae `id, nombre, es_central, es_principal, proyecto_id`, y `conteo.ts` obtiene las bodegas por el servicio de inventario sin ningún campo de fuente de stock. No se consulta `odoo_corte_bodega` desde el cliente y no se inventó ningún RPC.

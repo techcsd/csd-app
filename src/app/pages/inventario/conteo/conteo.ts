@@ -110,6 +110,10 @@ export class ConteoPage {
   }
 
   bodegas = signal<Bodega[]>([]);
+  /** DT-T1b — Odoo manda el stock aquí: guardar = aplicar como Conteo físico (queda). */
+  confirmarFisico = signal(false);
+  /** DT-T1b — la pantalla final es de un ajuste físico aplicado (no del outbox). */
+  fisico = signal(false);
   // DT-T1 — { bodega_id: true } de los almacenes donde Odoo manda el stock ({} = desconocido).
   fuenteOdoo = signal<Record<string, boolean>>({});
   /** Aviso (solo informa, NO bloquea guardar): el almacén elegido tiene a Odoo como fuente. */
@@ -144,6 +148,7 @@ export class ConteoPage {
 
   /** V8: with a bodega loaded but no edits, the user can still save "todo conforme". */
   hayCambios = computed(() => this.cambios().length > 0);
+  cambiosCount = computed(() => this.cambios().length);
   puedeGuardar = computed(() => !!this.bodegaId() && this.existencias().length > 0);
 
   // ── Y9 — agrupación por categorías (patrón Z18 de existencias) ──
@@ -311,6 +316,19 @@ export class ConteoPage {
       this.toast.error(this.i18n.t('Elige la bodega.'));
       return;
     }
+    // DT-T1b — almacén con Odoo: el ajuste que queda es Conteo físico (online + confirmación).
+    if (this.avisoOdoo()) {
+      if (!this.hayCambios()) {
+        this.toast.error(this.i18n.t('No cambiaste ninguna cantidad.'));
+        return;
+      }
+      if (!this.online) {
+        this.toast.error(this.i18n.t('Sin señal: para un ajuste que quede en un almacén con Odoo necesitas conexión.'));
+        return;
+      }
+      this.confirmarFisico.set(true);
+      return;
+    }
     // V8: no changes → confirm "todo conforme" instead of blocking the save.
     if (!this.hayCambios()) {
       this.confirmarConforme.set(true);
@@ -328,6 +346,32 @@ export class ConteoPage {
       cantidad_contada: this.contado()[e.articulo_id] ?? e.cantidad,
     }));
     await this.guardar(todos);
+  }
+
+  /** DT-T1b — confirmado: abrir → guardar → cerrar → aplicar (Conteo físico del SGC). */
+  async confirmarAplicarFisico(): Promise<void> {
+    this.confirmarFisico.set(false);
+    if (this.submitting()) return;
+    this.submitting.set(true);
+    try {
+      await this.inventario.aplicarConteoFisico({
+        bodegaId: this.bodegaId(),
+        items: this.cambios(),
+        motivo: this.motivo().trim() || this.i18n.t('Conteo físico desde la app'),
+      });
+      this.fisico.set(true);
+      this.envio.set('ok');
+      this.done.set(true);
+      this.motion.momento('aprobado');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? this.i18n.t(e.message) : this.i18n.t('No se pudo guardar.'));
+    } finally {
+      this.submitting.set(false);
+    }
+  }
+
+  cancelarFisico(): void {
+    this.confirmarFisico.set(false);
   }
 
   cancelarConforme(): void {

@@ -6025,5 +6025,18 @@
   "Renglón: {d}. Elige el artículo correcto del catálogo.": "Line: {d}. Pick the right item from the catalog.",
   "No se pudo cargar la foto": "The photo could not be loaded",
   "{n} sin enviar hace rato · toca para revisar": "{n} not sent for a while · tap to review",
-  "En este almacén Odoo manda el stock: un conteo desde la app puede revertirse en unos minutos. Para un ajuste que quede, usa Conteo físico en la web (nuevo conteo → cerrar → aprobar → aplicar).": "At this warehouse Odoo controls the stock: a count from the app may be reverted within a few minutes. For an adjustment that sticks, use Physical count on the web (new count → close → approve → apply)."
+  "En este almacén Odoo manda el stock. Para que tu ajuste quede, la app lo aplica como Conteo físico: te pide confirmar, un motivo, y necesitas señal.": "At this warehouse Odoo controls the stock. To make your adjustment stick, the app applies it as a Physical count: it asks you to confirm, a reason, and you need signal.",
+  "Aplicar como conteo físico": "Apply as physical count",
+  "Aplicando…": "Applying…",
+  "Ajuste aplicado": "Adjustment applied",
+  "El stock se ajustó a lo contado y quedó registrado como Conteo físico.": "Stock was adjusted to what you counted and recorded as a Physical count.",
+  "Sí, aplicar": "Yes, apply",
+  "No cambiaste ninguna cantidad.": "You did not change any quantity.",
+  "Sin señal: para un ajuste que quede en un almacén con Odoo necesitas conexión.": "No signal: you need a connection for an adjustment that sticks at a warehouse run by Odoo.",
+  "Conteo físico desde la app": "Physical count from the app",
+  "Sin señal. Revisa tu conexión e intenta de nuevo.": "No signal. Check your connection and try again.",
+  "No tienes permiso para aplicar conteos de inventario.": "You do not have permission to apply inventory counts.",
+  "Ya hay un conteo físico de este almacén sin aplicar. Termínalo en la web (aplicarlo o cancelarlo) y vuelve a intentar.": "There is already an unapplied physical count for this warehouse. Finish it on the web (apply or cancel it) and try again.",
+  "No pudimos aplicar el ajuste. Revisa tu conexión e intenta de nuevo.": "We could not apply the adjustment. Check your connection and try again.",
+  "Se ajustará el stock de este almacén a lo que contaste y quedará registrado en el SGC. Artículos a ajustar: {n}. Desde la app no se puede deshacer.": "This warehouse stock will be adjusted to what you counted and recorded in the SGC. Items to adjust: {n}. It cannot be undone from the app."
 }

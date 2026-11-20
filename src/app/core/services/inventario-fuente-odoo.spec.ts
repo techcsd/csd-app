@@ -84,3 +84,85 @@ describe('InventarioService.getBodegasFuenteOdoo (DT-T1)', () => {
     expect(await s.getBodegasFuenteOdoo()).toEqual({});
   });
 });
+
+// DT-T1b — ajuste que queda en almacén Odoo = Conteo físico (abrir → guardar → cerrar → aplicar).
+type Res = { data: unknown; error: { code?: string; message?: string } | null };
+function montarFisico(respuestas: Record<string, Res | (() => Promise<Res>)>) {
+  const llamadas: { fn: string; args: Record<string, unknown> }[] = [];
+  const rpc = vi.fn(async (fn: string, args: Record<string, unknown>) => {
+    llamadas.push({ fn, args });
+    const r = respuestas[fn];
+    if (typeof r === 'function') return r();
+    return r ?? { data: null, error: null };
+  });
+  TestBed.configureTestingModule({
+    providers: [
+      InventarioService,
+      { provide: SupabaseService, useValue: { client: { rpc } } },
+      { provide: CatalogService, useValue: { refresh: vi.fn() } },
+      { provide: SyncService, useValue: { register: vi.fn() } },
+    ],
+  });
+  return { s: TestBed.inject(InventarioService), llamadas };
+}
+const ITEMS = [{ articulo_id: 'a1', cantidad_contada: 5 }];
+const ENTRADA = { bodegaId: B1, items: ITEMS, motivo: 'conteo mensual' };
+
+describe('InventarioService.aplicarConteoFisico (DT-T1b)', () => {
+  it('camino feliz: abrir → guardar → cerrar → aplicar, con los argumentos del RPC', async () => {
+    const { s, llamadas } = montarFisico({
+      conteo_fisico_abrir: { data: 'C1', error: null },
+      conteo_fisico_aplicar: { data: { ok: true, ajustados: 1 }, error: null },
+    });
+    expect(await s.aplicarConteoFisico(ENTRADA)).toEqual({ ajustados: 1 });
+    expect(llamadas.map((l) => l.fn)).toEqual(['conteo_fisico_abrir', 'conteo_fisico_guardar', 'conteo_fisico_cerrar', 'conteo_fisico_aplicar']);
+    expect(llamadas[0].args).toEqual({ p_bodega_id: B1, p_ciego: false });
+    expect(llamadas[1].args).toEqual({ p_conteo_id: 'C1', p_items: ITEMS });
+    expect(llamadas[3].args).toEqual({ p_conteo_id: 'C1', p_motivo: 'conteo mensual' });
+  });
+  it('reintento: cerrar ya hecho (AT409 estado: contado) no falla', async () => {
+    const { s } = montarFisico({
+      conteo_fisico_abrir: { data: 'C1', error: null },
+      conteo_fisico_cerrar: { data: null, error: { code: 'AT409', message: 'Solo un borrador se puede cerrar (estado: contado)' } },
+      conteo_fisico_aplicar: { data: { ok: true, ajustados: 1 }, error: null },
+    });
+    await expect(s.aplicarConteoFisico(ENTRADA)).resolves.toEqual({ ajustados: 1 });
+  });
+  it('reintento: aplicar ya hecho (AT409 estado: aplicado) cuenta como éxito', async () => {
+    const { s } = montarFisico({
+      conteo_fisico_abrir: { data: 'C1', error: null },
+      conteo_fisico_aplicar: { data: null, error: { code: 'AT409', message: 'Solo un conteo cerrado (contado) se puede aplicar (estado: aplicado)' } },
+    });
+    await expect(s.aplicarConteoFisico(ENTRADA)).resolves.toEqual({ ajustados: 1 });
+  });
+  it('conteo pendiente de aplicar (abrir AT409): mensaje claro y no sigue', async () => {
+    const { s, llamadas } = montarFisico({
+      conteo_fisico_abrir: { data: null, error: { code: 'AT409', message: 'Ya hay un conteo de esta bodega por aplicar.' } },
+    });
+    await expect(s.aplicarConteoFisico(ENTRADA)).rejects.toMatchObject({ causa: 'pendiente' });
+    expect(llamadas.map((l) => l.fn)).toEqual(['conteo_fisico_abrir']);
+  });
+  it('sin permiso (42501): causa permiso, sin texto técnico', async () => {
+    const { s } = montarFisico({ conteo_fisico_abrir: { data: null, error: { code: '42501', message: 'x' } } });
+    const e = await s.aplicarConteoFisico(ENTRADA).catch((x) => x);
+    expect(e.causa).toBe('permiso');
+    expect(e.message).toBe('No tienes permiso para aplicar conteos de inventario.');
+  });
+  it('sin red (el cliente lanza): causa red', async () => {
+    const { s } = montarFisico({
+      conteo_fisico_abrir: async () => {
+        throw new TypeError('Failed to fetch');
+      },
+    });
+    await expect(s.aplicarConteoFisico(ENTRADA)).rejects.toMatchObject({ causa: 'red' });
+  });
+  it('error raro del servidor: mensaje genérico (sin SQLSTATE ni texto del servidor)', async () => {
+    const { s } = montarFisico({
+      conteo_fisico_abrir: { data: 'C1', error: null },
+      conteo_fisico_guardar: { data: null, error: { code: 'XX000', message: 'relation x does not exist' } },
+    });
+    const e = await s.aplicarConteoFisico(ENTRADA).catch((x) => x);
+    expect(e.causa).toBe('otro');
+    expect(e.message).not.toMatch(/relation|XX000/);
+  });
+});

@@ -13,6 +13,16 @@ const CAT_BODEGAS_FUENTE = 'bodegas_fuente_stock';
  * DT-T1 — normaliza lo que devuelve `bodegas_fuente_stock()`. Solo `fuente_odoo === true` cuenta;
  * `false`, null, undefined, filas raras o una respuesta que no es lista = "no se sabe" → sin aviso.
  */
+/** DT-T1b — error de Conteo físico ya traducido para el usuario (regla 16: sin texto técnico). */
+export class ConteoFisicoError extends Error {
+  constructor(
+    public readonly causa: 'red' | 'permiso' | 'pendiente' | 'otro',
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 export function parseFuenteOdoo(data: unknown): Record<string, boolean> {
   const out: Record<string, boolean> = {};
   if (!Array.isArray(data)) return out;
@@ -311,6 +321,47 @@ export class InventarioService {
     } catch {
       return {};
     }
+  }
+
+  /**
+   * DT-T1b — ajuste que QUEDA en un almacén donde Odoo manda el stock: Conteo físico del SGC
+   * (abrir → guardar → cerrar → aplicar), los mismos RPC de la web (gate: inventario.conteos operar).
+   * Requiere señal (no pasa por el outbox). Reintentable: abrir reanuda el borrador, guardar lo
+   * reemplaza, y cerrar/aplicar toleran que el paso ya esté hecho. Lanza ConteoFisicoError.
+   */
+  async aplicarConteoFisico(input: {
+    bodegaId: string;
+    items: { articulo_id: string; cantidad_contada: number }[];
+    motivo: string;
+  }): Promise<{ ajustados: number }> {
+    type RpcErr = { code?: string; message?: string };
+    const SIN_SENAL = 'Sin señal. Revisa tu conexión e intenta de nuevo.';
+    const paso = async (fn: string, args: Record<string, unknown>, yaHecho?: string): Promise<unknown> => {
+      let res: { data: unknown; error: RpcErr | null };
+      try {
+        res = (await this.supabase.client.rpc(fn, args)) as { data: unknown; error: RpcErr | null };
+      } catch {
+        throw new ConteoFisicoError('red', SIN_SENAL);
+      }
+      const e = res.error;
+      if (!e) return res.data;
+      const msg = e.message ?? '';
+      if (yaHecho && e.code === 'AT409' && msg.includes(yaHecho)) return null; // ese paso ya estaba hecho
+      if (e.code === '42501') throw new ConteoFisicoError('permiso', 'No tienes permiso para aplicar conteos de inventario.');
+      if (e.code === 'AT409' && fn === 'conteo_fisico_abrir') {
+        throw new ConteoFisicoError(
+          'pendiente',
+          'Ya hay un conteo físico de este almacén sin aplicar. Termínalo en la web (aplicarlo o cancelarlo) y vuelve a intentar.',
+        );
+      }
+      if (/fetch|network|timeout|Failed/i.test(msg)) throw new ConteoFisicoError('red', SIN_SENAL);
+      throw new ConteoFisicoError('otro', 'No pudimos aplicar el ajuste. Revisa tu conexión e intenta de nuevo.');
+    };
+    const id = (await paso('conteo_fisico_abrir', { p_bodega_id: input.bodegaId, p_ciego: false })) as string;
+    await paso('conteo_fisico_guardar', { p_conteo_id: id, p_items: input.items });
+    await paso('conteo_fisico_cerrar', { p_conteo_id: id }, 'estado: contado');
+    const r = (await paso('conteo_fisico_aplicar', { p_conteo_id: id, p_motivo: input.motivo }, 'estado: aplicado')) as { ajustados?: number } | null;
+    return { ajustados: Number(r?.ajustados ?? input.items.length) };
   }
 
   async getBodegas(): Promise<Bodega[]> {

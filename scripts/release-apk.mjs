@@ -40,9 +40,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-20';
 
-const TITULO = 'Aviso cuando Odoo manda el stock';
+const TITULO = 'Ajustes que quedan en almacenes con Odoo';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Inventario', d: 'En Conteo, si el almacén elegido recibe su stock de Odoo, la app avisa que el conteo puede revertirse en unos minutos y dice cómo hacer un ajuste que quede.' },
+  { t: 'nuevo', m: 'Inventario', d: 'En Conteo, en los almacenes donde Odoo manda el stock, ahora puedes aplicar tu ajuste como Conteo físico desde el teléfono (con confirmación y motivo) para que quede, sin tener que usar la web. Necesita señal.' },
+  { t: 'mejora', m: 'Inventario', d: 'La pantalla de Conteo avisa cuando el almacén elegido recibe su stock de Odoo.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
