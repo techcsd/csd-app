@@ -6,6 +6,31 @@ import { ArticuloAlias, ArticuloBusqueda, ArticuloCat, Bodega, BodegaAdmin, Bode
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
+// DT-T1 — mapa bodega_id → fuente_odoo (RPC sgc.bodegas_fuente_stock). Cacheado offline.
+const CAT_BODEGAS_FUENTE = 'bodegas_fuente_stock';
+
+/**
+ * DT-T1 — normaliza lo que devuelve `bodegas_fuente_stock()`. Solo `fuente_odoo === true` cuenta;
+ * `false`, null, undefined, filas raras o una respuesta que no es lista = "no se sabe" → sin aviso.
+ */
+/** DT-T1b — error de Conteo físico ya traducido para el usuario (regla 16: sin texto técnico). */
+export class ConteoFisicoError extends Error {
+  constructor(
+    public readonly causa: 'red' | 'permiso' | 'pendiente' | 'otro',
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export function parseFuenteOdoo(data: unknown): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  if (!Array.isArray(data)) return out;
+  for (const r of data as { bodega_id?: unknown; fuente_odoo?: unknown }[]) {
+    if (r && typeof r.bodega_id === 'string' && r.fuente_odoo === true) out[r.bodega_id] = true;
+  }
+  return out;
+}
 // V14: bumped to _v2 to invalidate the pre-official-catalog offline cache
 // (articles now carry requiere_talla/nota; categories are the official 8).
 // Z16/Z17: bump a _v3 para traer propiedad + imagen_url.
@@ -271,6 +296,113 @@ export class InventarioService {
       const { data, error } = await this.supabase.client.rpc('bodega_pendientes', { p_bodega_id: bodegaId });
       if (error) return null; // capacidad ausente / RLS → sin sección de pendientes
       return (data as BodegaPendiente[]) ?? [];
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * DT-T1 — ¿en qué almacenes Odoo manda el stock? `{ [bodega_id]: true }` (solo los true).
+   * NUNCA lanza ni bloquea: RPC ausente (PGRST202), error, offline sin caché o formato raro →
+   * `{}` ("desconocido": la pantalla no muestra aviso). Offline devuelve la última caché.
+   */
+  async getBodegasFuenteOdoo(): Promise<Record<string, boolean>> {
+    try {
+      const m = await this.catalog.refresh<Record<string, boolean>>(CAT_BODEGAS_FUENTE, async () => {
+        const { data, error } = await this.supabase.client.rpc('bodegas_fuente_stock');
+        if (error) {
+          // PGRST202 = el RPC no existe en este entorno → desconocido (y se pisa cualquier caché vieja)
+          if (error.code === 'PGRST202') return {};
+          throw new Error(error.message);
+        }
+        return parseFuenteOdoo(data);
+      });
+      return m ?? {};
+    } catch {
+      return {};
+    }
+  }
+
+  /**
+   * DT-T1b — ajuste que QUEDA en un almacén donde Odoo manda el stock: Conteo físico del SGC
+   * (abrir → guardar → cerrar → aplicar), los mismos RPC de la web (gate: inventario.conteos operar).
+   * Requiere señal (no pasa por el outbox). Reintentable: abrir reanuda el borrador, guardar lo
+   * reemplaza, y cerrar/aplicar toleran que el paso ya esté hecho. Lanza ConteoFisicoError.
+   */
+  async aplicarConteoFisico(input: {
+    bodegaId: string;
+    items: { articulo_id: string; cantidad_contada: number }[];
+    motivo: string;
+  }): Promise<{ ajustados: number }> {
+    type RpcErr = { code?: string; message?: string };
+    const SIN_SENAL = 'Sin señal. Revisa tu conexión e intenta de nuevo.';
+    const paso = async (fn: string, args: Record<string, unknown>, yaHecho?: string): Promise<unknown> => {
+      let res: { data: unknown; error: RpcErr | null };
+      try {
+        res = (await this.supabase.client.rpc(fn, args)) as { data: unknown; error: RpcErr | null };
+      } catch {
+        throw new ConteoFisicoError('red', SIN_SENAL);
+      }
+      const e = res.error;
+      if (!e) return res.data;
+      const msg = e.message ?? '';
+      if (yaHecho && e.code === 'AT409' && msg.includes(yaHecho)) return null; // ese paso ya estaba hecho
+      if (e.code === '42501') throw new ConteoFisicoError('permiso', 'No tienes permiso para aplicar conteos de inventario.');
+      if (e.code === 'AT409' && fn === 'conteo_fisico_abrir') {
+        throw new ConteoFisicoError(
+          'pendiente',
+          'Ya hay un conteo físico de este almacén sin aplicar. Termínalo en la web (aplicarlo o cancelarlo) y vuelve a intentar.',
+        );
+      }
+      if (/fetch|network|timeout|Failed/i.test(msg)) throw new ConteoFisicoError('red', SIN_SENAL);
+      throw new ConteoFisicoError('otro', 'No pudimos aplicar el ajuste. Revisa tu conexión e intenta de nuevo.');
+    };
+    let id: string;
+    let reanudado = false;
+    try {
+      id = (await paso('conteo_fisico_abrir', { p_bodega_id: input.bodegaId, p_ciego: false })) as string;
+    } catch (e) {
+      // Un intento anterior (misma persona, se cortó la señal entre cerrar y aplicar) dejó un conteo
+      // «contado» sin aplicar. Si trae EXACTAMENTE lo que se está aplicando ahora, se reanuda: solo falta aplicar.
+      if (!(e instanceof ConteoFisicoError) || e.causa !== 'pendiente') throw e;
+      const previo = await this.conteoFisicoPendienteIgual(input.bodegaId, input.items, paso);
+      if (!previo) throw e;
+      id = previo;
+      reanudado = true;
+    }
+    if (!reanudado) {
+      await paso('conteo_fisico_guardar', { p_conteo_id: id, p_items: input.items });
+      await paso('conteo_fisico_cerrar', { p_conteo_id: id }, 'estado: contado');
+    }
+    const r = (await paso('conteo_fisico_aplicar', { p_conteo_id: id, p_motivo: input.motivo }, 'estado: aplicado')) as { ajustados?: number } | null;
+    return { ajustados: Number(r?.ajustados ?? input.items.length) };
+  }
+
+  /**
+   * DT-T1b — id del conteo físico «contado» (cerrado, sin aplicar) de la bodega SOLO si sus ítems son
+   * idénticos a `items` (mismo artículo y misma cantidad); si no, null (no se aplica algo que el usuario no vio).
+   */
+  private async conteoFisicoPendienteIgual(
+    bodegaId: string,
+    items: { articulo_id: string; cantidad_contada: number }[],
+    paso: (fn: string, args: Record<string, unknown>) => Promise<unknown>,
+  ): Promise<string | null> {
+    try {
+      const { data } = await this.supabase.client
+        .from('conteos_inventario')
+        .select('id')
+        .eq('bodega_id', bodegaId)
+        .eq('tipo', 'conteo_fisico')
+        .eq('estado', 'contado')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const id = (data as { id: string }[] | null)?.[0]?.id;
+      if (!id) return null;
+      const det = (await paso('conteo_fisico_detalle', { p_conteo_id: id })) as { items?: { articulo_id: string; cantidad_contada: number | null }[] } | null;
+      const previos = (det?.items ?? []).filter((i) => i.cantidad_contada !== null && i.cantidad_contada !== undefined);
+      if (previos.length !== items.length) return null;
+      const mapa = new Map(previos.map((i) => [i.articulo_id, Number(i.cantidad_contada)]));
+      return items.every((i) => mapa.get(i.articulo_id) === Number(i.cantidad_contada)) ? id : null;
     } catch {
       return null;
     }
