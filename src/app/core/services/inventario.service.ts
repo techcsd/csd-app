@@ -1520,6 +1520,8 @@ export class InventarioService {
       // Y10 — un conteo ajusta el stock: invalidar las existencias cacheadas para
       // que existencias/conteo/salida reflejen las cantidades nuevas al recargar.
       await this.catalog.invalidatePrefix('existencias_');
+      // DT1 — la vista de almacén (Inventario › Almacén) usa otra caché; sin esto seguía mostrando el stock viejo.
+      await this.catalog.invalidatePrefix('inv_almacen_');
     });
   }
 }
