@@ -482,7 +482,15 @@ export class PerfilPage {
       // made this button lie on the APK). Only then fall back to the PWA SW.
       const online = await this.versionSvc.checkFresh();
       if (!online) {
-        this.toast.error(this.i18n.t('Sin señal. No pude verificar si hay una versión nueva.'));
+        // Dos causas distintas: sin red de verdad vs. hay red pero el servidor no
+        // respondió (visto en un Samsung: datos móviles con QUIC roto, Wi-Fi bien).
+        this.toast.error(
+          this.i18n.t(
+            this.online()
+              ? 'No pude conectar con el servidor para ver si hay una versión nueva. Prueba con Wi-Fi u otra red, o más tarde.'
+              : 'Sin señal. No pude verificar si hay una versión nueva.',
+          ),
+        );
         return;
       }
       if (this.versionSvc.hayNueva()) {
