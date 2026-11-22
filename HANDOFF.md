@@ -1,5 +1,14 @@
 # HANDOFF — CSD App
 
+## 🟡 22-nov-2026 — Ronda DV — v2.71.10 EN DEV (archivos del chat con su nombre original)
+
+**En dev / En prod:** **En dev:** 2.71.10 (PR #95 mergeado a `dev`; APK dev firmado + registro + publicada). **En prod:** sigue 2.71.9 (NO se publicó 2.71.10: falta OK de Xaviel, `qa/release-2.71.10.md` y prueba de actualización in-app).
+**Qué:** Ver/descargar un adjunto NO-PDF del chat (p. ej. el CSV de Raykler) guardaba el UUID del objeto del bucket. `MensajesService.adjuntoUrl(path, descargarComo)` → `createSignedUrl(…, {download: nombre})`; PDF sigue inline en el visor. Verificado contra el storage de dev (`content-disposition: attachment; filename=…`); NO probado aún en el teléfono con el APK 2.71.10.
+**Auditoría 22-nov (leída del código + teléfono SM-A205U, APK prod 2.71.5):** adjuntos en mensajes ya se pintan (tarjeta CSV + Ver/↓); tareas sin obra OK (app y `mis_tareas_app` en dev hacen left join, lista y detalle sin romper); la app NO pasa por la edge `odoo-api` (conduces van por `crear_conduce_simple/transportista/externo`), no maneja `degradado`; `odoo_sync_estado` en `conduce_detalle_app` sigue pendiente del padre. PWA prod pidió otro PIN que el APK (no se reintentó).
+**Pendiente Xaviel:** probar 2.71.10 en el teléfono (nombre del CSV); OK para prod.
+
+---
+
 ## 🟢 20-nov-2026 (noche) — v2.71.5 PUBLICADA EN PROD (mensaje de conexión al buscar actualización)
 
 **En dev / En prod:** **En dev:** 2.71.5 (PR #66 código, #67 bump, #68 QA; APK dev + registro + publicada). **En prod:** 2.71.5 publicada (PR #69 dev→main, APK en bucket prod, data-fix `2026-11-20-dt-publicar-2.71.5.mjs`, `minima=false`, PWA por Vercel). OK explícito de Xaviel («release 2.71.5 now, I give my ok»). Cambio único: Perfil › Buscar actualización distingue «Sin señal» (sin red) de «No pude conectar con el servidor… Prueba con Wi-Fi u otra red» (red sí, servidor no; visto en un Samsung con datos móviles, ERR_QUIC_PROTOCOL_ERROR). Probado en teléfono (ver `qa/release-2.71.5.md`). **Actualización in-app 2.71.4→2.71.5 probada DESPUÉS de publicar** (Samsung, APK prod: detecta, descarga, instala; paquete en 2.71.5). **Pendiente Xaviel:** teléfono REAL de Raykler (`/pendientes`, actualizar por Wi-Fi).

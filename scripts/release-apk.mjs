@@ -46,9 +46,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'La app de Android ya no se «repara» sola tras actualizar';
+const TITULO = 'Los archivos del chat se descargan con su nombre';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Actualización', d: 'En Android, después de actualizar ya no sale «Reparando la app…» ni te pide el PIN otra vez: se quitó un componente de la web que sobraba en la app instalada y fallaba siempre.' },
+  { t: 'arreglo', m: 'Mensajes', d: 'Al abrir o descargar un archivo del chat (CSV, Excel, Word…) ahora se guarda con su nombre original, no con un código largo.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
