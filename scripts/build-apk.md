@@ -54,7 +54,9 @@ cd android && ./gradlew assembleRelease --no-daemon
 `android/app/build.gradle`, `VERSION` in `scripts/release-apk.mjs`, and `version`
 in `src/environments/*`. Then:
 ```bash
-npm run apk:publish   # uploads APK + version.json to the app-releases bucket + registers in SGC history
+npm run apk:publish   # uploads APK + version.json to the app-releases bucket + registers in SGC history + MARKS IT AS THE CURRENT VERSION (publicada)
+# --no-publicar  → sube + registra pero NO la marca vigente (los teléfonos siguen recibiendo la anterior)
+# node scripts/publicar-version.mjs --env prod --version X.Y.Z --yes   → marcarla vigente después (prod exige OK válido en qa/release-X.Y.Z.md)
 ```
 The SGC web page **CSD App (móvil)** reads `version.json` and shows the download
 link + QR. The app checks `version.json` on sync and can force-update when

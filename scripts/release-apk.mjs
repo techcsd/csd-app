@@ -6,6 +6,11 @@
  *   node scripts/release-apk.mjs --env dev                 # sube al bucket de dev + registra en dev
  *   node scripts/release-apk.mjs --env prod --yes          # sube a prod + registra (exige haber salido en dev)
  *   node scripts/release-apk.mjs --env <env> --register-only  # SOLO registra (no sube, no publica)
+ *   node scripts/release-apk.mjs --env <env> --no-publicar    # sube + registra, pero NO la marca vigente
+ *
+ * Al terminar, MARCA la versión como vigente (publicada=true): la app consulta version_publicada('movil'),
+ * así que sin ese paso los teléfonos siguen recibiendo la versión anterior (pasó con 2.71.6/2.71.7).
+ * En prod exige una línea OK válida en qa/release-<versión>.md. Se puede hacer aparte con scripts/publicar-version.mjs.
  *
  * REGLA 18 (gate): `--env prod` consulta el app_versiones de DEV; si esa misma
  * `version` no salió en dev → RECHAZA. Excepción explícita: `--force-prod --motivo "…"`.
@@ -17,6 +22,7 @@ import { readFileSync } from 'node:fs';
 import { execSync, execFileSync } from 'node:child_process';
 import { resolverEnv } from './lib/entorno.mjs';
 import { verificarCanalEnZip } from './lib/canal.mjs';
+import { publicarVersion } from './lib/publicar-version.mjs';
 
 const env = await resolverEnv(process.argv.slice(2));
 const ENV = env.entorno; // 'dev' | 'prod'
@@ -200,4 +206,19 @@ try {
 } catch (e) {
   console.error(`\n✗ RELEASE FALLÓ: no se pudo registrar la versión en el historial (${ENV}).\n  ${e instanceof Error ? e.message : e}\n  Regla Y1: ninguna versión debe quedar sin registrar. Corrige y reintenta.`);
   process.exit(1);
+}
+
+// Publicar = marcar vigente. Solo si se subió el APK (no con --register-only) y no se pidió --no-publicar.
+if (registerOnly) {
+  console.log('\nℹ️  --register-only: la versión queda registrada pero NO publicada (la app sigue ofreciendo la anterior).');
+} else if (process.argv.includes('--no-publicar')) {
+  console.log(`\nℹ️  --no-publicar: ${VERSION} quedó subida y registrada pero NO es la vigente. Para publicarla: node scripts/publicar-version.mjs --env ${ENV} --version ${VERSION}${ENV === 'prod' ? ' --yes' : ''}`);
+} else {
+  try {
+    await publicarVersion({ entorno: ENV, url: URL, serviceKey: KEY, version: VERSION });
+  } catch (e) {
+    console.error(`\n🔴 APK subido y registrado, pero NO PUBLICADO (${ENV}): ${e instanceof Error ? e.message : e}
+   Corrige y corre: node scripts/publicar-version.mjs --env ${ENV} --version ${VERSION}${ENV === 'prod' ? ' --yes' : ''}`);
+    process.exit(1);
+  }
 }
