@@ -243,8 +243,9 @@ function aplicarEnfasisInline(texto: string): string {
     .replace(/\*\*\*(.+?)\*\*\*/g, '$1') // ***negrita cursiva***
     .replace(/\*\*(.+?)\*\*/g, '$1') // **negrita**
     .replace(/__(.+?)__/g, '$1') // __negrita__
-    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '$1') // *cursiva*
-    .replace(/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/g, '$1') // _cursiva_
+    // DU3 — sin lookbehind (`(?<!…)` rompe TODO el chunk en Safari/iOS < 16.4 → pantalla en blanco).
+    .replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1$2') // *cursiva*
+    .replace(/(^|[^_])_([^_]+?)_(?!_)/g, '$1$2') // _cursiva_
     .replace(/`([^`]+)`/g, '$1'); // `código`
 }
 

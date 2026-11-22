@@ -93,7 +93,9 @@ export class ActualizarPage implements OnDestroy {
     const n = this.notas();
     if (!n) return [];
     return n
-      .split(/\r?\n|(?<=[.;])\s+/)
+      // DU3 — sin lookbehind (Safari/iOS < 16.4 no lo parsea): marca el corte tras . o ; y parte por línea.
+      .replace(/([.;])\s+/g, '$1\n')
+      .split(/\r?\n/)
       .map((s) => s.trim())
       .filter((s) => s.length > 1);
   });

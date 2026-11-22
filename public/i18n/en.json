@@ -6039,5 +6039,6 @@
   "Ya hay un conteo físico de este almacén sin aplicar. Termínalo en la web (aplicarlo o cancelarlo) y vuelve a intentar.": "There is already an unapplied physical count for this warehouse. Finish it on the web (apply or cancel it) and try again.",
   "No pudimos aplicar el ajuste. Revisa tu conexión e intenta de nuevo.": "We could not apply the adjustment. Check your connection and try again.",
   "Se ajustará el stock de este almacén a lo que contaste y quedará registrado en el SGC. Artículos a ajustar: {n}. Desde la app no se puede deshacer.": "This warehouse stock will be adjusted to what you counted and recorded in the SGC. Items to adjust: {n}. It cannot be undone from the app.",
-  "No pude conectar con el servidor para ver si hay una versión nueva. Prueba con Wi-Fi u otra red, o más tarde.": "Couldn't reach the server to check for a new version. Try Wi-Fi or another network, or try later."
+  "No pude conectar con el servidor para ver si hay una versión nueva. Prueba con Wi-Fi u otra red, o más tarde.": "Couldn't reach the server to check for a new version. Try Wi-Fi or another network, or try later.",
+  "El almacenamiento de tu teléfono falló. Los envíos sin internet no se guardarán. Cierra Safari por completo y vuelve a abrir la app, o reinstálala.": "Your phone's storage failed. Offline submissions won't be saved. Fully close Safari and reopen the app, or reinstall it."
 }

@@ -18,7 +18,7 @@ import {
   TANQUE_CONFIG_DEFAULT,
   UltimaEchada,
 } from '../models/combustible.model';
-import { db, OutboxOp } from '../db/app-db';
+import { db, OutboxOp, outboxPorTipo } from '../db/app-db';
 
 import { I18nService } from '../i18n/i18n.service';
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
@@ -268,7 +268,7 @@ export class CombustibleService {
   /** Mayor kilometraje de echadas de este vehículo aún pendientes en el outbox. */
   private async maxKmPendiente(vehiculoId: string): Promise<number | null> {
     try {
-      const ops = await db.outbox.where('tipo_op').equals('combustible').toArray();
+      const ops = await outboxPorTipo('combustible');
       let max: number | null = null;
       for (const op of ops) {
         const p = op.payload as { vehiculo_id?: string; kilometraje?: number };

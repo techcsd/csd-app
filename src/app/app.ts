@@ -27,6 +27,7 @@ import { CompaFlotante } from './shared/components/compa-flotante/compa-flotante
 import { PoliticasService } from './core/services/politicas.service';
 import { TiendasService } from './core/services/tiendas.service';
 import { SyncService } from './core/sync/sync.service';
+import { almacenamientoRoto } from './core/db/app-db';
 import { NetworkService } from './core/services/network.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { NotifHealthService } from './core/services/notif-health.service';
@@ -66,6 +67,8 @@ import { environment } from '../environments/environment';
   styleUrl: './app.scss',
 })
 export class App {
+  /** DU2d — IndexedDB roto: la app abre sin cola local y avisa. */
+  almacenRoto = almacenamientoRoto;
   // Injecting these boots the connectivity watcher + outbox drainer at startup.
   private theme = inject(ThemeService); // BE6 — aplica el tema y sincroniza con la web
   private sync = inject(SyncService);

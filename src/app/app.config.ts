@@ -5,6 +5,7 @@ import {
   provideAppInitializer,
   isDevMode,
   inject,
+  Type,
 } from '@angular/core';
 import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 
@@ -46,6 +47,9 @@ import { ClaudeModuloService } from './core/services/claude-modulo.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { environment } from '../environments/environment';
 
+// DU2c — servicios que fallaron al instanciarse en el arranque (se reportan al final).
+const fallosArranque: string[] = [];
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -82,61 +86,76 @@ export const appConfig: ApplicationConfig = {
     // Instantiate feature services that register outbox handlers, so queued
     // captures sync even before the user opens that module.
     provideAppInitializer(() => {
+      // DU2c — cada servicio de arranque va aislado: uno roto se reporta y NO tumba la app
+      // (antes cualquier excepción síncrona aquí = pantalla en blanco sin mensaje).
+      const boot = (token: Type<unknown>): void => {
+        try {
+          inject(token);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('[boot]', token.name, e);
+          try {
+            fallosArranque.push(`${token.name}: ${(e as Error)?.message ?? e}`);
+          } catch {
+            /* best-effort */
+          }
+        }
+      };
       // Y6 — instanciar primero la telemetría: registra su handler de outbox y
       // engancha el sink de fallos permanentes del SyncService desde el arranque.
-      inject(ErrorReportService);
+      boot(ErrorReportService);
       // CJ1 — aplica la clase `motion-reduced` en <html> desde el arranque según el
       // ajuste del usuario (antes del primer crossfade).
-      inject(MotionService);
-      inject(VehiculosService);
-      inject(MantenimientosService);
-      inject(ChecklistPreusoService);
-      inject(ReporteSemanalService);
-      inject(ConducesService);
+      boot(MotionService);
+      boot(VehiculosService);
+      boot(MantenimientosService);
+      boot(ChecklistPreusoService);
+      boot(ReporteSemanalService);
+      boot(ConducesService);
       // S30 — faltaba: sin bootearlo, el handler 'combustible' no se registraba y
       // las echadas quedaban "En cola" para siempre (el caso real atascado 23h).
-      inject(CombustibleService);
-      inject(BitacoraService);
-      inject(InventarioService);
-      inject(SolicitudesService);
-      inject(ReportesService);
-      inject(ClLiberacionService);
+      boot(CombustibleService);
+      boot(BitacoraService);
+      boot(InventarioService);
+      boot(SolicitudesService);
+      boot(ReportesService);
+      boot(ClLiberacionService);
       // Q3-fix — sin esto, el handler 'documento_upload' no se registraba al
       // arrancar y las subidas de cédula/licencia quedaban "En cola" para siempre
       // (el drain las saltaba por falta de handler). Booteando el servicio aquí,
       // su handler queda registrado y esos envíos se procesan.
-      inject(DocumentosService);
+      boot(DocumentosService);
       // S22/S24 — handlers de accidente/daño/multa registrados al boot.
-      inject(FlotaReportesService);
+      boot(FlotaReportesService);
       // Y15 — handlers de cronograma (cronograma_tarea_iniciar/completar/enlazar +
       // compat de las claves viejas tarea_iniciar/completar). Ver QA-1.
-      inject(CronogramaService);
+      boot(CronogramaService);
       // AG16 — handlers de Gestión de Obra (charla/NC/incidente/checklist/…).
-      inject(ObraService);
+      boot(ObraService);
       // QA-4 (AJ15) — S30-class: estos 5 servicios registran handlers de outbox en
       // su constructor pero no se instanciaban al arranque → capturas offline
       // (traspaso/mensaje/nota/asignación RRHH/tarea) quedaban "En cola" para siempre
       // tras un reinicio en frío si la señal volvía antes de abrir el módulo.
-      inject(TraspasoService); // vehiculo_traspaso
-      inject(MensajesService); // mensaje_enviar
-      inject(NotasService); // nota_guardar / nota_checklist_set
-      inject(RrhhService); // rrhh_asignar_item / rrhh_asignacion_estado
-      inject(TareasService); // tarea_app_iniciar / tarea_app_completar
-      inject(TecnologiaService); // AL2 — tec_equipo_guardar
-      inject(PersonalObraService); // AR1 — personal_registro / personal_editar
-      inject(SolicitudMovimientoService); // AY11 — solicitud_movimiento_crear (offline)
-      inject(ApoyoService); // CK12/CK13 — apoyo_crear + apoyo_estado (offline, idempotente)
-      inject(TrabajosService); // CK14 — trabajo_evento (chofer reporta avance, offline+foto)
-      inject(RetirosService); // BG4 — retiro_material (retiro de material dañado, offline)
-      inject(CartillaService); // BO10 — cartilla (cartillas de acero, offline)
-      inject(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
-      inject(ReunionesService); // CP8 — reunion_nota (offline, outbox con foto de pizarra)
+      boot(TraspasoService); // vehiculo_traspaso
+      boot(MensajesService); // mensaje_enviar
+      boot(NotasService); // nota_guardar / nota_checklist_set
+      boot(RrhhService); // rrhh_asignar_item / rrhh_asignacion_estado
+      boot(TareasService); // tarea_app_iniciar / tarea_app_completar
+      boot(TecnologiaService); // AL2 — tec_equipo_guardar
+      boot(PersonalObraService); // AR1 — personal_registro / personal_editar
+      boot(SolicitudMovimientoService); // AY11 — solicitud_movimiento_crear (offline)
+      boot(ApoyoService); // CK12/CK13 — apoyo_crear + apoyo_estado (offline, idempotente)
+      boot(TrabajosService); // CK14 — trabajo_evento (chofer reporta avance, offline+foto)
+      boot(RetirosService); // BG4 — retiro_material (retiro de material dañado, offline)
+      boot(CartillaService); // BO10 — cartilla (cartillas de acero, offline)
+      boot(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
+      boot(ReunionesService); // CP8 — reunion_nota (offline, outbox con foto de pizarra)
       // A4 — S30-class: sin bootearlo, el handler 'pagos_firma' no se registra y
       // las firmas/monto-concepto de "Pagos" quedarían "En cola" para siempre.
-      inject(PagosObraService);
+      boot(PagosObraService);
       // DM1 — S30-class: sin bootearlo, 'claude_encuesta'/'claude_skill_crear'
       // no se registran y quedarían "En cola" para siempre si se crean sin red.
-      inject(ClaudeModuloService);
+      boot(ClaudeModuloService);
 
       // BJ5 — al estrenar versión, suelta las cachés de proyectos que pudieron
       // guardar un VACÍO bajo la RLS vieja (lista/pickers/liberación/conduces). El
@@ -146,7 +165,34 @@ export const appConfig: ApplicationConfig = {
       // columnas/specs al `select('*')` de equipos — sin este bust, un caché
       // offline previo a esta versión seguiría sin ellas hasta su TTL natural.
       // Idempotente por versión; nunca rompe el arranque.
-      void inject(CatalogService).invalidateOnVersionChange(environment.version, ['proyectos', 'tec_equipo']);
+      try {
+        void inject(CatalogService).invalidateOnVersionChange(environment.version, ['proyectos', 'tec_equipo']);
+      } catch (e) {
+        fallosArranque.push(`CatalogService: ${(e as Error)?.message ?? e}`);
+      }
+
+      // DU2e — reporta (sin datos personales) lo que falló al arrancar: servicios que
+      // no se pudieron instanciar y/o el último "No pudimos abrir la app" que mostró el
+      // guard de index.html (guardado en localStorage por no haber red/app en ese momento).
+      try {
+        let previo: { motivo?: string; ua?: string } | null = null;
+        try {
+          const raw = localStorage.getItem('csd-boot-fail');
+          if (raw) {
+            previo = JSON.parse(raw) as { motivo?: string; ua?: string };
+            localStorage.removeItem('csd-boot-fail');
+          }
+        } catch {
+          /* best-effort */
+        }
+        if (fallosArranque.length || previo) {
+          const er = inject(ErrorReportService);
+          if (fallosArranque.length) void er.report('crash', `arranque: servicios fallidos — ${fallosArranque.join(' | ')}`, {});
+          if (previo) void er.report('crash', `arranque: pantalla de rescate — ${previo.motivo ?? 'sin motivo'}`, { ua: previo.ua ?? null });
+        }
+      } catch {
+        /* best-effort */
+      }
     }),
   ],
 };
