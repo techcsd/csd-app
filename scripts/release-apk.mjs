@@ -40,12 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'La app ya no se queda en blanco al abrir, y Conteo vuelve a confirmar';
+const TITULO = 'El logo vuelve a verse en el login y el carnet';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Inventario', d: 'Conteo vuelve a mostrar «enviando → ok»: se corrigió un error que impedía confirmar el conteo y otras funciones que leen la cola de envíos pendientes (km pendiente, notas sin conexión, echadas decididas).' },
-  { t: 'arreglo', m: 'Arranque', d: 'Si la app no puede abrir, ahora muestra una pantalla «No pudimos abrir la app» con Reintentar y Reparar en vez de quedarse en blanco; un servicio dañado ya no tumba todo el arranque.' },
-  { t: 'mejora', m: 'Almacenamiento', d: 'Si el almacenamiento del teléfono falla (iPhone), la app abre igual y avisa que los envíos sin internet no se guardarán, en vez de quedar en blanco.' },
-  { t: 'arreglo', m: 'Compatibilidad', d: 'Funciona en iPhone con iOS anterior a 16.4: se quitaron expresiones que ese Safari no entendía y dejaban la app en blanco.' },
+  { t: 'arreglo', m: 'Login', d: 'El logo de CSD salía como imagen rota en el login y en el carnet: los archivos no se estaban incluyendo en la app. Ya se publican.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
