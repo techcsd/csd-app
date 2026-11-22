@@ -11,7 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { EchadaPorAprobar } from '../../../core/models/combustible.model';
-import { db } from '../../../core/db/app-db';
+import { db, outboxPorTipo } from '../../../core/db/app-db';
 import { parseNumeroFlexible } from '../../../core/util/numero';
 
 /**
@@ -92,7 +92,7 @@ export class PorAprobarPage {
   /** Marca como decididas las echadas con una decisión pendiente en la cola. */
   private async sembrarDecididasDesdeOutbox(): Promise<void> {
     try {
-      const ops = await db.outbox.where('tipo_op').equals('revision_echada').toArray();
+      const ops = await outboxPorTipo('revision_echada');
       if (!ops.length) return;
       this.decididas.update((prev) => {
         const next = new Set(prev);

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { db } from '../db/app-db';
+import { db, outboxPorTipo } from '../db/app-db';
 import {
   Nota,
   NotaCaptura,
@@ -141,7 +141,7 @@ export class NotasService {
   private async notasPendientes(uid: string): Promise<Map<string, Partial<Nota>>> {
     const map = new Map<string, Partial<Nota>>();
     try {
-      const ops = await db.outbox.where('tipo_op').equals('nota_guardar').toArray();
+      const ops = await outboxPorTipo('nota_guardar');
       for (const op of ops) {
         const p = op.payload as Record<string, unknown>;
         const fallo = op.estado === 'error'; // AL14
@@ -266,7 +266,7 @@ export class NotasService {
   /** Último `nota_checklist_set` pendiente en el outbox (ítems manuales). */
   private async checklistPendiente(notaId: string): Promise<NotaChecklistItem[] | null> {
     try {
-      const ops = await db.outbox.where('tipo_op').equals('nota_checklist_set').toArray();
+      const ops = await outboxPorTipo('nota_checklist_set');
       const mine = ops
         .filter((o) => (o.payload as Record<string, unknown>)['nota_id'] === notaId)
         .sort((a, b) => (a.created_local ?? 0) - (b.created_local ?? 0));

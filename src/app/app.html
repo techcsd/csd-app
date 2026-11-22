@@ -19,6 +19,12 @@
     </div>
   }
 
+  @if (almacenRoto()) {
+    <!-- DU2d: IndexedDB falló (WebKit) — sin cola local, la app sigue abierta. -->
+    <div class="almacen-roto" role="alert">
+      {{ 'El almacenamiento de tu teléfono falló. Los envíos sin internet no se guardarán. Cierra Safari por completo y vuelve a abrir la app, o reinstálala.' | t }}
+    </div>
+  }
   <app-toast-host />
   <app-celebracion />
   <app-momento />
