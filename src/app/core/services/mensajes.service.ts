@@ -200,8 +200,8 @@ export class MensajesService {
   }
 
   /** URL firmada de un adjunto/avatar (bucket sgc-mensajes, best-effort). */
-  adjuntoUrl(path: string | null | undefined): Promise<string | null> {
-    return this.avatarUrl(path);
+  adjuntoUrl(path: string | null | undefined, descargarComo?: string | null): Promise<string | null> {
+    return this.avatarUrl(path, descargarComo);
   }
 
   async marcarLeida(conversacionId: string): Promise<void> {
@@ -384,10 +384,13 @@ export class MensajesService {
   }
 
   /** URL firmada del avatar del grupo (bucket sgc-mensajes, best-effort). */
-  async avatarUrl(path: string | null | undefined): Promise<string | null> {
+  async avatarUrl(path: string | null | undefined, descargarComo?: string | null): Promise<string | null> {
     if (!path) return null;
     try {
-      const { data } = await this.supabase.client.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
+      // DV1 — con `descargarComo` la URL fuerza Content-Disposition: attachment con el
+      // nombre ORIGINAL (si no, el navegador guarda el UUID del objeto en el bucket).
+      const opts = descargarComo ? { download: descargarComo } : undefined;
+      const { data } = await this.supabase.client.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600, opts);
       return data?.signedUrl ?? null;
     } catch {
       return null;
