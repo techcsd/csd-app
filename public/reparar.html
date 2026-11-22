@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reparar CSD App</title>
+<style>
+body{margin:0;font-family:-apple-system,Helvetica,Arial,sans-serif;background:#1e3a5f;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:24px;text-align:center}
+main{max-width:340px}h1{font-size:22px;margin:0 0 10px}p{font-size:16px;line-height:1.4;margin:0 0 18px}
+button,a.b{display:block;width:100%;box-sizing:border-box;font-size:17px;padding:14px;border-radius:12px;margin:8px 0;border:0;background:#f97316;color:#fff;text-decoration:none}
+button.s{background:transparent;border:2px solid #fff}#log{font-size:14px;opacity:.9;white-space:pre-line;margin-top:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>Reparar CSD App</h1>
+<p>Si la app se queda en blanco, toca <b>Reparar</b>. Limpia la copia guardada de la app en este teléfono. No borra tus envíos pendientes.</p>
+<button id="r">Reparar</button>
+<button id="d" class="s" style="display:none">Borrar también datos locales</button>
+<a id="o" class="b" href="/" style="display:none">Abrir la app</a>
+<div id="log"></div>
+</main>
+<script>
+// Página de reparación independiente de la app (ES5). Funciona aunque la app esté en blanco:
+// el service worker no intercepta rutas con extensión (.html).
+(function () {
+  var $ = function (i) { return document.getElementById(i); };
+  var DBS = ['csd-app', 'csd-dev'];
+  function log(t) { $('log').textContent += t + '\n'; }
+  function limpiar(done) {
+    var p = [];
+    try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) p.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }).then(function () { log('✓ Service worker quitado'); })); } catch (e) {}
+    try { if (window.caches) p.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches['delete'](k); })); }).then(function () { log('✓ Caché borrada'); })); } catch (e) {}
+    Promise.all(p).then(done, done);
+  }
+  function contar(cb) {
+    try {
+      if (!window.indexedDB || !indexedDB.databases) return cb(null);
+      indexedDB.databases().then(function (dbs) {
+        var n = null; for (var i = 0; i < dbs.length; i++) if (DBS.indexOf(dbs[i].name) >= 0) n = dbs[i].name;
+        if (!n) return cb(0);
+        var rq = indexedDB.open(n); rq.onerror = function () { cb(null); };
+        rq.onsuccess = function () { try { var d = rq.result; if (!d.objectStoreNames.contains('outbox')) { d.close(); return cb(0); }
+          var c = d.transaction('outbox', 'readonly').objectStore('outbox').count(); c.onsuccess = function () { var x = c.result; d.close(); cb(x); }; c.onerror = function () { d.close(); cb(null); }; } catch (e) { cb(null); } };
+      }, function () { cb(null); });
+    } catch (e) { cb(null); }
+  }
+  $('r').onclick = function () {
+    $('r').disabled = true; log('Reparando…');
+    limpiar(function () { log('Listo. Abre la app.'); $('o').style.display = 'block'; $('d').style.display = 'block'; });
+  };
+  $('d').onclick = function () {
+    contar(function (n) {
+      var m = n === null ? '¿Borrar los datos locales? Si hay envíos sin sincronizar, se perderán.' : (n > 0 ? 'Hay ' + n + ' envío(s) sin sincronizar. Si borras los datos locales se perderán. ¿Borrarlos?' : 'No hay envíos pendientes. ¿Borrar los datos locales?');
+      if (!window.confirm(m)) return;
+      for (var i = 0; i < DBS.length; i++) { try { indexedDB.deleteDatabase(DBS[i]); } catch (e) {} }
+      log('✓ Datos locales borrados');
+    });
+  };
+})();
+</script>
+</body>
+</html>
