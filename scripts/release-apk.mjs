@@ -38,11 +38,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-20';
+const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'Aviso de conexión más claro al buscar actualización';
+const TITULO = 'La app ya no se queda en blanco al abrir, y Conteo vuelve a confirmar';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Perfil', d: 'Al buscar una actualización, si hay red pero el servidor no responde, la app ya no dice «Sin señal»: explica que no pudo conectar con el servidor y sugiere probar con Wi-Fi u otra red.' },
+  { t: 'arreglo', m: 'Inventario', d: 'Conteo vuelve a mostrar «enviando → ok»: se corrigió un error que impedía confirmar el conteo y otras funciones que leen la cola de envíos pendientes (km pendiente, notas sin conexión, echadas decididas).' },
+  { t: 'arreglo', m: 'Arranque', d: 'Si la app no puede abrir, ahora muestra una pantalla «No pudimos abrir la app» con Reintentar y Reparar en vez de quedarse en blanco; un servicio dañado ya no tumba todo el arranque.' },
+  { t: 'mejora', m: 'Almacenamiento', d: 'Si el almacenamiento del teléfono falla (iPhone), la app abre igual y avisa que los envíos sin internet no se guardarán, en vez de quedar en blanco.' },
+  { t: 'arreglo', m: 'Compatibilidad', d: 'Funciona en iPhone con iOS anterior a 16.4: se quitaron expresiones que ese Safari no entendía y dejaban la app en blanco.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
