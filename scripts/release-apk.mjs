@@ -40,9 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'El logo vuelve a verse en el login y el carnet';
+const TITULO = 'Página de reparación para cuando la app se queda en blanco';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Login', d: 'El logo de CSD salía como imagen rota en el login y en el carnet: los archivos no se estaban incluyendo en la app. Ya se publican.' },
+  { t: 'nuevo', m: 'Reparación', d: 'Nueva página app.sgcconstructorasd.com/reparar.html: si la app se queda en blanco (sobre todo en iPhone), limpia la copia guardada de la app sin borrar envíos pendientes. Opción aparte para borrar datos locales, avisando cuántos envíos se pierden.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
