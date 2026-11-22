@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { signal } from '@angular/core';
 import { SyncState } from '../../shared/ui/sync-badge/sync-badge';
 import { environment } from '../../../environments/environment';
 
@@ -177,3 +178,43 @@ export class AppDb extends Dexie {
 
 /** Single shared instance. */
 export const db = new AppDb();
+
+/**
+ * DU2d — IndexedDB de WebKit a veces queda inutilizable ("An internal error was
+ * encountered in the Indexed Database server", iPhone 20-21-nov-2026). Abrimos Dexie
+ * al cargar, reintentamos UNA vez y, si sigue fallando, la app abre en modo "sin cola
+ * local" (los envíos offline no se guardan) con un banner, en vez de quedar en blanco.
+ */
+export const almacenamientoRoto = signal(false);
+(async () => {
+  for (let intento = 0; intento < 2; intento++) {
+    try {
+      await db.open();
+      return;
+    } catch {
+      try {
+        db.close();
+      } catch {
+        /* best-effort */
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  }
+  almacenamientoRoto.set(true);
+})();
+
+/**
+ * DU1 — ops del outbox de un `tipo_op`. `tipo_op` NO está indexado en `outbox`
+ * (solo `id, estado, created_local`): `db.outbox.where('tipo_op')` lanza
+ * `KeyPath tipo_op on object store outbox is not indexed` (regresión 2.71.x que
+ * dejó Conteo sin llegar a "ok"). Scan + filter; NO subimos la versión del esquema
+ * (migrar IndexedDB en iPhones con base dañada es justo el riesgo a evitar).
+ * Nunca lanza: si IndexedDB falla devuelve [] (la cola local queda inerte, no la app).
+ */
+export async function outboxPorTipo(tipo: string): Promise<OutboxOp[]> {
+  try {
+    return (await db.outbox.toArray()).filter((o) => o.tipo_op === tipo);
+  } catch {
+    return [];
+  }
+}

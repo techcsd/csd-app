@@ -3,13 +3,13 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8436 textos medidos en 290 pantallas)
-- Textos con t(): 8436 · sin t(): 0
+- **English: 100%** · **Kreyòl: 100%** (8437 textos medidos en 290 pantallas)
+- Textos con t(): 8437 · sin t(): 0
 - Pantallas `enforce:true`: 250 de 290
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
-| (raíz) | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| (raíz) | 21 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/models | 157 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/practica | 156 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/services | 258 | 0 | 0 | 0 | 100% | 100% | ✅ |

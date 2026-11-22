@@ -37,6 +37,133 @@
         if (oldAndroid || lowMem) document.documentElement.classList.add('no-glass');
       } catch (e) {}
     </script>
+    <script>
+      // DU2 — red de seguridad de arranque (ES5, sin dependencias). Si la app no pinta
+      // nada dentro de <app-root> en 8 s, o salta un error/promesa rechazada ANTES del
+      // primer render, o un <script> falla al cargar/parsear (p. ej. regex no soportado
+      // en iOS viejo, chunk servido como HTML), muestra una pantalla en español en vez
+      // de dejar el teléfono en blanco. Reintentar = recargar; Reparar = limpia el SW y
+      // las cachés y, SOLO con confirmación, la base local (avisa cuántos envíos se pierden).
+      (function () {
+        var shown = false;
+        var DB_NAMES = ['csd-app', 'csd-dev'];
+        function rootVacio() {
+          var r = document.querySelector('app-root');
+          return !r || r.childNodes.length === 0;
+        }
+        function guardarMotivo(motivo) {
+          // La app lo reporta a error_reports en el próximo arranque sano (DU2e).
+          try {
+            localStorage.setItem('csd-boot-fail', JSON.stringify({ motivo: String(motivo).slice(0, 300), t: Date.now(), ua: navigator.userAgent }));
+          } catch (e) {}
+        }
+        function el(tag, css, txt) {
+          var n = document.createElement(tag);
+          if (css) n.style.cssText = css;
+          if (txt) n.appendChild(document.createTextNode(txt));
+          return n;
+        }
+        function contarOutbox(cb) {
+          try {
+            if (!window.indexedDB || !indexedDB.databases) return cb(null);
+            indexedDB.databases().then(function (dbs) {
+              var name = null;
+              for (var i = 0; i < dbs.length; i++) if (DB_NAMES.indexOf(dbs[i].name) >= 0) name = dbs[i].name;
+              if (!name) return cb(0);
+              var rq = indexedDB.open(name);
+              rq.onerror = function () { cb(null); };
+              rq.onsuccess = function () {
+                try {
+                  var d = rq.result;
+                  if (!d.objectStoreNames.contains('outbox')) { d.close(); return cb(0); }
+                  var c = d.transaction('outbox', 'readonly').objectStore('outbox').count();
+                  c.onsuccess = function () { var n = c.result; d.close(); cb(n); };
+                  c.onerror = function () { d.close(); cb(null); };
+                } catch (e) { cb(null); }
+              };
+            }, function () { cb(null); });
+          } catch (e) { cb(null); }
+        }
+        function limpiarSwYCaches(done) {
+          var pend = 2;
+          function fin() { if (--pend === 0) done(); }
+          try {
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+              navigator.serviceWorker.getRegistrations().then(function (rs) {
+                var n = rs.length;
+                if (!n) return fin();
+                for (var i = 0; i < rs.length; i++) rs[i].unregister().then(function () { if (--n === 0) fin(); }, function () { if (--n === 0) fin(); });
+              }, fin);
+            } else fin();
+          } catch (e) { fin(); }
+          try {
+            if (window.caches && caches.keys) {
+              caches.keys().then(function (ks) {
+                var n = ks.length;
+                if (!n) return fin();
+                for (var i = 0; i < ks.length; i++) caches['delete'](ks[i]).then(function () { if (--n === 0) fin(); }, function () { if (--n === 0) fin(); });
+              }, fin);
+            } else fin();
+          } catch (e) { fin(); }
+        }
+        function reparar() {
+          limpiarSwYCaches(function () {
+            contarOutbox(function (n) {
+              var msg = n === null
+                ? '¿Borrar también los datos guardados en este teléfono? Si hay envíos sin sincronizar, se perderán.'
+                : n > 0
+                  ? 'Hay ' + n + ' envío(s) sin sincronizar en este teléfono. Si borras los datos locales se perderán. ¿Borrarlos?'
+                  : 'No hay envíos pendientes. ¿Borrar también los datos locales para empezar limpio?';
+              if (window.confirm(msg)) {
+                for (var i = 0; i < DB_NAMES.length; i++) { try { indexedDB.deleteDatabase(DB_NAMES[i]); } catch (e) {} }
+                setTimeout(function () { location.reload(); }, 600);
+              } else location.reload();
+            });
+          });
+        }
+        window.__csdBootFail = function (motivo) {
+          if (shown) return;
+          shown = true;
+          guardarMotivo(motivo);
+          var wrap = el('div', 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483647;background:#1e3a5f;color:#fff;font-family:-apple-system,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;');
+          wrap.appendChild(el('h1', 'font-size:22px;margin:0 0 12px;', 'No pudimos abrir la app'));
+          wrap.appendChild(el('p', 'font-size:16px;line-height:1.4;max-width:320px;margin:0 0 24px;', 'Toca Reintentar. Si sigue igual, toca Reparar (limpia la caché de la app). Si tu iPhone es muy viejo, actualiza iOS.'));
+          var b1 = el('button', 'font-size:17px;padding:14px 28px;border:0;border-radius:12px;background:#f97316;color:#fff;margin:6px;min-width:200px;', 'Reintentar');
+          b1.onclick = function () { location.reload(); };
+          var b2 = el('button', 'font-size:17px;padding:14px 28px;border:2px solid #fff;border-radius:12px;background:transparent;color:#fff;margin:6px;min-width:200px;', 'Reparar');
+          b2.onclick = reparar;
+          wrap.appendChild(b1);
+          wrap.appendChild(b2);
+          document.body.appendChild(wrap);
+        };
+        var CHUNK = /not a valid javascript mime type|importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|chunkloaderror/i;
+        function onErr(msg) {
+          if (!rootVacio()) return; // ya pintó: lo maneja ErrorReportService
+          // Chunk perdido (deploy nuevo + caché vieja): una recarga limpia basta, UNA vez.
+          if (CHUNK.test(String(msg))) {
+            try {
+              var k = 'csd-boot-reload', last = Number(sessionStorage.getItem(k) || 0);
+              if (!last || Date.now() - last > 60000) { sessionStorage.setItem(k, String(Date.now())); location.reload(); return; }
+            } catch (e) {}
+          }
+          window.__csdBootFail(msg);
+        }
+        window.addEventListener('error', function (e) {
+          var t = e && e.target;
+          if (t && t.tagName === 'SCRIPT') return onErr('script no cargó: ' + (t.src || ''));
+          onErr((e && e.message) || 'error de arranque');
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e && e.reason;
+          onErr((r && (r.message || r)) || 'promesa rechazada');
+        });
+        var t0 = Date.now();
+        var iv = setInterval(function () {
+          if (!rootVacio()) { clearInterval(iv); return; }
+          if (Date.now() - t0 > 8000) { clearInterval(iv); window.__csdBootFail('timeout 8s sin render'); }
+        }, 500);
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>

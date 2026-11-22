@@ -4860,3 +4860,9 @@ Viven en la **memoria del proyecto** (`.claude/.../memory/MEMORY.md`) — no los
 - `git log --oneline -4` (último = `9395a21`, bump 1.69.0; antes `9e10db0`/`c9b40ea` PROMPT-15).
 - `npm run build` → exit 0.
 - `select sgc.version_publicada();` → publicada 1.69.0 / minima 1.42.0.
+
+## 2026-11-21 — PROMPT-151 hotfix iPhone en blanco (DU1-DU3, v2.71.6) — rama feature/du-hotfix-iphone-blanco, SIN push
+- DU1: `outboxPorTipo()` (core/db/app-db.ts) reemplaza los 5 `outbox.where('tipo_op')` (no indexado → crash, 60 en prod desde 20-nov). Sin subir esquema Dexie.
+- DU2: guard inline en `index.html` (8 s / error / script no carga → "No pudimos abrir la app" + Reintentar/Reparar con confirmación para IndexedDB y conteo de pendientes), `main.ts` catch, initializer con `boot()` aislado, Dexie `open()` con 1 reintento + banner `almacenamientoRoto`, fallos de arranque se reportan en el siguiente arranque sano.
+- DU3: sin lookbehind (`markdown.ts`, `actualizar.ts`), sin `.at()`; guard `scripts/verify-compat-ios.mjs` en prebuild.
+- PENDIENTE: F0b WebKit iOS<16.4 real, F0c/F0d PWA+APK en dispositivo, DU5 Odoo↔SGC↔app (contra dev), prueba humana en iPhone, release/registro de versión. Test pre-existente `estadoLicencia` falla de noche por zona horaria (no es de este cambio).

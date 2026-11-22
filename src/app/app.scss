@@ -223,3 +223,18 @@
   font-weight: 800;
   font-size: 13px;
 }
+
+// DU2d — banner de almacenamiento local roto (arriba, sobre el shell).
+.almacen-roto {
+  position: fixed;
+  top: env(safe-area-inset-top, 0);
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  padding: 10px 14px;
+  background: var(--warning-bg, #7a4a00);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+}

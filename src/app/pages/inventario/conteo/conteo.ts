@@ -14,7 +14,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ArticuloCat, Bodega, CategoriaInv, Existencia } from '../../../core/models/inventario.model';
 import { SyncService } from '../../../core/sync/sync.service';
-import { db } from '../../../core/db/app-db';
+import { db, outboxPorTipo } from '../../../core/db/app-db';
 import { outboxCategoria, MENSAJE_SISTEMA } from '../../../core/util/outbox-categoria';
 import { MotionService } from '../../../core/services/motion.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
@@ -75,7 +75,7 @@ export class ConteoPage {
   }
 
   private async refrescarEnvio(): Promise<void> {
-    const rows = (await db.outbox.where('tipo_op').equals('inv_conteo').toArray()).filter((o) => o.estado !== 'done');
+    const rows = (await outboxPorTipo('inv_conteo')).filter((o) => o.estado !== 'done');
     this.conteoAtascado.set(rows.some((o) => o.estado === 'error' || Date.now() - o.created_local > 120_000));
     const id = this.opId();
     if (!id) return;
