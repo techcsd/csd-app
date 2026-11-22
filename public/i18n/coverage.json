@@ -1,8 +1,8 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 8437,
-  "conT": 8437,
+  "literales": 8438,
+  "conT": 8438,
   "sinT": 0,
   "pantallas": 290,
   "byScreen": {
@@ -111,7 +111,7 @@
       "ht": 100
     },
     "pages/actualizar": {
-      "conT": 28,
+      "conT": 29,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
