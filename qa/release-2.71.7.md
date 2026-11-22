@@ -4,4 +4,4 @@
 - Qué se probó: tras instalar y abrir, el login muestra el logo «SD» (antes aparecía como imagen rota). Causa: `angular.json` solo publica `public/` y los logos estaban en `src/assets/`; se movieron a `public/assets/imgs/logos/`. Los 3 archivos aparecen en `dist/.../assets/imgs/logos/`. Build verde.
 - Resultado: OK — logo visible en el teléfono (captura del login, 22-nov 00:20). No se probó el logo en el carnet ni en iPhone.
 - Fecha: 2026-11-22
-**OK de Xaviel** 2026-11-22: «pues dale con todo lo pendiente» (publicar 2.71.7 en main/prod).
+**OK de Xaviel** 2026-11-22: «publica el APK y registra la versión, do all the stuff» (publicar el APK 2.71.7 como versión vigente en prod).
