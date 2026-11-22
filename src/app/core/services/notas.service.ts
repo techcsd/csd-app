@@ -270,7 +270,7 @@ export class NotasService {
       const mine = ops
         .filter((o) => (o.payload as Record<string, unknown>)['nota_id'] === notaId)
         .sort((a, b) => (a.created_local ?? 0) - (b.created_local ?? 0));
-      const last = mine.at(-1);
+      const last = mine[mine.length - 1];
       if (!last) return null;
       const items = ((last.payload as Record<string, unknown>)['items'] as NotaChecklistItemCaptura[]) ?? [];
       return items.map((it) => ({
