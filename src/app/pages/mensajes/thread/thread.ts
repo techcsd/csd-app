@@ -529,7 +529,8 @@ export class MensajesThreadPage implements OnDestroy {
       this.toast.error(this.i18n.t('El archivo aún se está enviando…'));
       return;
     }
-    const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+    // DV1 — PDF: inline (visor); otros tipos: se descargan con su nombre original.
+    const url = await this.mensajes.adjuntoUrl(m.archivo_path, this.esPdf(m) ? null : m.archivo_nombre);
     if (!url) {
       this.toast.error(this.i18n.t('No pudimos abrir el archivo.'));
       return;
@@ -549,7 +550,8 @@ export class MensajesThreadPage implements OnDestroy {
       this.toast.error(this.i18n.t('El archivo aún se está enviando…'));
       return;
     }
-    const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+    // DV1 — nombre original del archivo (no el UUID del bucket).
+    const url = await this.mensajes.adjuntoUrl(m.archivo_path, m.archivo_nombre);
     if (!url) {
       this.toast.error(this.i18n.t('No pudimos abrir el archivo.'));
       return;
