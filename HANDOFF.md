@@ -2,8 +2,8 @@
 
 ## 🟡 22-nov-2026 (noche) — v2.71.12 EN DEV; PROD CONGELADO en 2.71.11 antes del lunes
 
-**En dev / En prod:** **En dev:** 2.71.12 (PR #"+process.argv[1]+"; APK dev firmado + registro + publicada; actualización in-app 2.71.11→2.71.12 OK en el A20). **En prod:** 2.71.11 (NO se publica 2.71.12 hasta pasado el lunes). **Mínima prod = 2.71.5, puesta A PROPÓSITO por Xaviel (arregla muchos errores): NO bajarla.**
-**Qué:** 2.71.12 quita el aviso duplicado «Hay una versión nueva… Descárgala desde "CSD App" en el sistema» (, versión vieja de cuando la app nativa no se actualizaba sola); queda solo el de  + banner + /actualizar. Visto duplicado en el A20 con 2.71.11-dev antes del fix.
+**En dev / En prod:** **En dev:** 2.71.12 (PR #106 código, #107 docs; APK dev firmado + registro + publicada; actualización in-app 2.71.11→2.71.12 OK en el A20). **En prod:** 2.71.11 (NO se publica 2.71.12 hasta pasado el lunes). **Mínima prod = 2.71.5, puesta A PROPÓSITO por Xaviel (arregla muchos errores): NO bajarla.**
+**Qué:** 2.71.12 quita el aviso duplicado «Hay una versión nueva… Descárgala desde "CSD App" en el sistema» (`UpdateService.checkAppVersion`, versión vieja de cuando la app nativa no se actualizaba sola); queda solo el de `app.ts`  + banner + /actualizar. Visto duplicado en el A20 con 2.71.11-dev antes del fix.
 **Verificación pre-lunes (22-nov):** 12 módulos de prod abren con datos en el A20 (2.71.11); RPC de lectura OK para ingeniero_campo/logistica/gerente_proyectos (403 de pulso/tablero = por rol, esperado); chofer/capataz QA no se pudieron probar (login por cédula+PIN); PWA/APK/version_publicada OK. **12 usuarios Android < 2.71.5 quedarán bloqueados el lunes** (5 en 2.45.0, 2.55.0, 2.58.5, 2×2.68.0, 3×2.71.1; incl. choferes Dallin Vido, Félix Mateo, Félix Delgado); riesgo: Play Protect — con «Instalar sin analizar» falla, con «Analizar app» instala; sus versiones no traen el aviso de 2.71.11. Mensaje de WhatsApp preparado (ver sesión).
 **Pendiente:** publicar 2.71.12 en prod después del lunes (OK de Xaviel); ver cuántos de los 12 actualizaron (usuario_dispositivos.app_version).
 
