@@ -4866,3 +4866,8 @@ Viven en la **memoria del proyecto** (`.claude/.../memory/MEMORY.md`) — no los
 - DU2: guard inline en `index.html` (8 s / error / script no carga → "No pudimos abrir la app" + Reintentar/Reparar con confirmación para IndexedDB y conteo de pendientes), `main.ts` catch, initializer con `boot()` aislado, Dexie `open()` con 1 reintento + banner `almacenamientoRoto`, fallos de arranque se reportan en el siguiente arranque sano.
 - DU3: sin lookbehind (`markdown.ts`, `actualizar.ts`), sin `.at()`; guard `scripts/verify-compat-ios.mjs` en prebuild.
 - PENDIENTE: F0b WebKit iOS<16.4 real, F0c/F0d PWA+APK en dispositivo, DU5 Odoo↔SGC↔app (contra dev), prueba humana en iPhone, release/registro de versión. Test pre-existente `estadoLicencia` falla de noche por zona horaria (no es de este cambio).
+
+### Cierre 2026-11-22 — 2.71.6 en PROD
+- PWA en `main` (PR #76/#79). APK 2.71.6 publicado (`app-releases/csd-app-2.71.6.apk`, cert 3C:53:16…) y registrado en `app_versiones` prod+dev. Probado: build dev instalado encima en Xiaomi M2101K6G (Android 13) → abre al login. iPhone/Android del usuario: probados según Xaviel (ver qa/release-2.71.6.md).
+- Odoo prod: la base real es `4enfkfierou.cloudpepper.site` (los nombres `scheker…`/`staging-scheker…` ya no existen). Secret `ODOO_DB` aplicado en prod 2026-11-22 04:00 UTC; sondeo recuperado. Nombre guardado en `.env.local` del padre como `ODOO_DB_PROD`.
+- Abierto (no es bug de la app): 24 discrepancias `picking_a_no_validado` + 11 nuevas sin salida en Odoo prod (decisión de negocio, no reenviar a ciegas); 9 eventos `solicitud_compra` en outbox sin política (solo auditoría); `odoo_instancias.base_datos` prod informativa con nombre viejo; logo de login sale roto en build local/dev (revisar asset).
