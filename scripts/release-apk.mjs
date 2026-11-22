@@ -46,9 +46,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'Página de reparación para cuando la app se queda en blanco';
+const TITULO = 'La app de Android ya no se «repara» sola tras actualizar';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Reparación', d: 'Nueva página app.sgcconstructorasd.com/reparar.html: si la app se queda en blanco (sobre todo en iPhone), limpia la copia guardada de la app sin borrar envíos pendientes. Opción aparte para borrar datos locales, avisando cuántos envíos se pierden.' },
+  { t: 'arreglo', m: 'Actualización', d: 'En Android, después de actualizar ya no sale «Reparando la app…» ni te pide el PIN otra vez: se quitó un componente de la web que sobraba en la app instalada y fallaba siempre.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
