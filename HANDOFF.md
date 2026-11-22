@@ -1,8 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 22-nov-2026 — v2.71.11 EN DEV (aviso de Play Protect al actualizar)
+## 🟢 22-nov-2026 — v2.71.11 PUBLICADA EN PROD (aviso de Play Protect al actualizar)
 
-**En dev / En prod:** **En dev:** 2.71.11 (PR #101; APK dev firmado + registro + publicada; el A20 ya la tiene instalada por vía in-app). **En prod:** sigue 2.71.10 (2.71.11 NO publicada: falta OK de Xaviel y `qa/release-2.71.11.md`).
+**En dev / En prod:** **En dev:** 2.71.11 (PR #101 código, #102/#103 docs; APK dev + registro + publicada). **En prod:** 2.71.11 publicada (PR #104 dev→main, APK en bucket prod, `minima=false`, la mínima sigue 2.71.5, 2.71.10 despublicada; PWA por Vercel). OK explícito de Xaviel («OK --yes»). **Actualización in-app en PROD 2.71.10 → 2.71.11 PROBADA en el A20** (Play Protect «Analizar app» → «parece segura» → ALLOW; abre con PIN/sesión intactos; `qa/release-2.71.11.md`). El aviso no se vio en pantalla (solo sale si hay versión nueva) y no se repitió «Instalar sin analizar» en prod.
 **Qué:** `actualizar.html` muestra (solo canal apk) «Si Google Play Protect pregunta, toca «Analizar app» y luego «Instalar»…» + en/ht. Cambio solo de texto/estilo. Causa y prueba: ver la ronda DV abajo.
 
 ---
