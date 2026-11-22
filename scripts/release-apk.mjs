@@ -46,9 +46,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'Aviso sobre Play Protect al actualizar';
+const TITULO = 'Un solo aviso de versión nueva';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Actualización', d: 'La pantalla de actualizar en Android ahora avisa qué tocar cuando Google Play Protect pregunta: «Analizar app» y luego «Instalar». Con «Instalar sin analizar» Android podía cancelar la instalación.' },
+  { t: 'arreglo', m: 'Actualización', d: 'Al abrir la app con una versión nueva disponible ya sale un solo aviso, no dos; se quitó el mensaje viejo «Descárgala desde CSD App en el sistema».' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

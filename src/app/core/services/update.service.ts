@@ -1,18 +1,12 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { NavigationEnd, NavigationError, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
-import { Capacitor } from '@capacitor/core';
 import { ToastService } from './toast.service';
 import { NavGuardService } from './nav-guard.service';
 import { SyncService } from '../sync/sync.service';
 import { ErrorReportService } from './error-report.service';
-import { environment } from '../../../environments/environment';
 
 import { I18nService } from '../i18n/i18n.service';
-// BU1 — el version.json vive en el bucket app-releases del proyecto del ENTORNO
-// (dev tiene su propio historial/APK). Se deriva de environment.supabaseUrl; nunca
-// se hardcodea el ref de prod. Una app dev jamás mira el version.json de prod.
-const VERSION_URL = `${environment.supabaseUrl}/storage/v1/object/public/app-releases/version.json`;
 
 /**
  * PWA update handling (Deployment doc §3 / AU10). Una PWA es una página web: cuando
@@ -126,10 +120,10 @@ export class UpdateService {
       });
     }
 
-    // Native (APK): can't self-update — check version.json and nudge the user.
-    if (Capacitor.isNativePlatform()) {
-      setTimeout(() => void this.checkAppVersion(), 5000);
-    }
+    // DV3 — ya no hay aviso propio en la app nativa: el aviso de "versión nueva" lo da
+    // app.ts (RPC version_publicada) con toast + banner + pantalla /actualizar. El
+    // aviso viejo (version.json → «Descárgala desde "CSD App" en el sistema») salía
+    // DUPLICADO y con un texto obsoleto (también en los canales Play/App Store).
   }
 
   /** Best-effort: pide al SW que busque una versión nueva (silencioso si no hay). */
@@ -231,38 +225,6 @@ export class UpdateService {
     this.necesitaReparar.set(false);
     this.toast.show(this.i18n.t('Reparando la app…'), 'info', 1500);
     setTimeout(() => document.location.reload(), 800);
-  }
-
-  /** Compares the published versionName to the installed one (native APK). */
-  private async checkAppVersion(): Promise<void> {
-    try {
-      const res = await fetch(VERSION_URL, { cache: 'no-store' });
-      if (!res.ok) return;
-      const info = (await res.json()) as { versionName: string; entorno?: string };
-      // BU1 F2.4 — solo aceptamos el version.json de NUESTRO propio entorno: una app
-      // prod jamás ofrece instalar un APK dev y viceversa (el bucket es por proyecto,
-      // pero esto lo blinda por si alguien apunta mal la URL).
-      if (info.entorno && info.entorno !== environment.entorno) return;
-      if (this.isNewer(info.versionName, environment.version)) {
-        this.toast.show(
-          `Hay una versión nueva (${info.versionName}). Descárgala desde "CSD App" en el sistema.`,
-          'info',
-          6000,
-        );
-      }
-    } catch {
-      /* offline — ignore */
-    }
-  }
-
-  private isNewer(remote: string, local: string): boolean {
-    const r = remote.split('.').map(Number);
-    const l = local.split('.').map(Number);
-    for (let i = 0; i < Math.max(r.length, l.length); i++) {
-      if ((r[i] ?? 0) > (l[i] ?? 0)) return true;
-      if ((r[i] ?? 0) < (l[i] ?? 0)) return false;
-    }
-    return false;
   }
 
   /**
