@@ -170,6 +170,16 @@
   width: 100%;
 }
 
+// DV2 — aviso sobre el diálogo de Google Play Protect (canal APK).
+.actu__playprotect {
+  margin: 0;
+  padding: 8px 20px 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
 // CL4 (F1.4) — enlace discreto de rescate SIEMPRE disponible en el canal APK.
 .actu__rescate-link {
   display: block;

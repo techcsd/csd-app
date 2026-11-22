@@ -1,11 +1,21 @@
 # HANDOFF — CSD App
 
-## 🟡 22-nov-2026 — Ronda DV — v2.71.10 EN DEV (archivos del chat con su nombre original)
+## 🟡 22-nov-2026 — v2.71.11 EN DEV (aviso de Play Protect al actualizar)
 
-**En dev / En prod:** **En dev:** 2.71.10 (PR #95 mergeado a `dev`; APK dev firmado + registro + publicada). **En prod:** sigue 2.71.9 (NO se publicó 2.71.10: falta OK de Xaviel, `qa/release-2.71.10.md` y prueba de actualización in-app).
-**Qué:** Ver/descargar un adjunto NO-PDF del chat (p. ej. el CSV de Raykler) guardaba el UUID del objeto del bucket. `MensajesService.adjuntoUrl(path, descargarComo)` → `createSignedUrl(…, {download: nombre})`; PDF sigue inline en el visor. Verificado contra el storage de dev (`content-disposition: attachment; filename=…`); NO probado aún en el teléfono con el APK 2.71.10.
+**En dev / En prod:** **En dev:** 2.71.11 (PR #101; APK dev firmado + registro + publicada; el A20 ya la tiene instalada por vía in-app). **En prod:** sigue 2.71.10 (2.71.11 NO publicada: falta OK de Xaviel y `qa/release-2.71.11.md`).
+**Qué:** `actualizar.html` muestra (solo canal apk) «Si Google Play Protect pregunta, toca «Analizar app» y luego «Instalar»…» + en/ht. Cambio solo de texto/estilo. Causa y prueba: ver la ronda DV abajo.
+
+---
+
+## 🟢 22-nov-2026 — Ronda DV — v2.71.10 PUBLICADA EN PROD (archivos del chat con su nombre original)
+
+**En dev / En prod:** **En dev:** 2.71.10 (PR #95 código, #96/#97/#98 docs/QA/OK; APK dev firmado + registro + publicada). **En prod:** 2.71.10 publicada (PR #99 dev→main, APK en bucket prod, `minima=false`, la mínima sigue 2.71.5, 2.71.9 despublicada; PWA por Vercel). OK explícito de Xaviel («OK --yes»), saltando las 24 h en dev.
+**Qué:** Ver/descargar un adjunto NO-PDF del chat (p. ej. el CSV de Raykler) guardaba el UUID del objeto del bucket. `MensajesService.adjuntoUrl(path, descargarComo)` → `createSignedUrl(…, {download: nombre})`; PDF sigue inline en el visor.
+**Probado:** storage de dev (`content-disposition` con el nombre); APK dev en el SM-A205U (CSV → nombre original); y en PROD con 2.71.10 el CSV real de Raykler → `conduces-atascados-18nov.csv`.
+**⚠️ La actualización in-app 2.71.5 → 2.71.10 FALLÓ en el Samsung A20 — causa encontrada (22-nov):** NO es el APK (el del bucket es byte a byte el que instala con `adb install -r`) ni el disco. Logcat: el escaneo de Play Protect venció a los 15 s (verdict 9) → diálogo «Se recomienda analizar la app»; con «Instalar sin analizar» Finsky devolvió `result=REJECT` y PackageManager `-22` (verificación fallida). Reproducido en la app DEV con otra versión: «Analizar app» → «Esta app parece segura» → instala (2.71.9→2.71.10 y 2.71.10→2.71.11 por la vía in-app OK); cada APK nuevo dispara el diálogo una vez. Mitigación en la app: **2.71.11** (aviso en la pantalla de actualizar, canal apk). Tampoco probados: botón ↓, PDF inline, iPhone/PWA, el aviso visualmente (solo sale si hay una versión nueva).
+
 **Auditoría 22-nov (leída del código + teléfono SM-A205U, APK prod 2.71.5):** adjuntos en mensajes ya se pintan (tarjeta CSV + Ver/↓); tareas sin obra OK (app y `mis_tareas_app` en dev hacen left join, lista y detalle sin romper); la app NO pasa por la edge `odoo-api` (conduces van por `crear_conduce_simple/transportista/externo`), no maneja `degradado`; `odoo_sync_estado` en `conduce_detalle_app` sigue pendiente del padre. PWA prod pidió otro PIN que el APK (no se reintentó).
-**Pendiente Xaviel:** probar 2.71.10 en el teléfono (nombre del CSV); OK para prod.
+**Pendiente Xaviel:** OK para publicar 2.71.11 en prod; PIN de la PWA de prod.
 
 ---
 

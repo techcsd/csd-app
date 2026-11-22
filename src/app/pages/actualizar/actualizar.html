@@ -118,6 +118,14 @@
   <!-- CL4 (F1.4) — enlace de rescate SIEMPRE disponible en el canal APK: si la
        instalación in-app no arranca, se baja el APK desde el navegador. Degradable:
        sin apkUrl no se pinta. -->
+  <!-- DV2 — Google Play Protect puede preguntar al instalar. En el A20 de prueba,
+       «Instalar sin analizar» terminó en «No se instaló la app» (Play Protect lo
+       rechazó) y «Analizar app» dejó instalar. Se guía al usuario antes de tocar. -->
+  @if (esApk) {
+    <p class="actu__playprotect">
+      {{ 'Si Google Play Protect pregunta, toca «Analizar app» y luego «Instalar». Si eliges «Instalar sin analizar», Android puede cancelar la instalación.' | t }}
+    </p>
+  }
   @if (esApk && apkUrl()) {
     <button type="button" class="actu__rescate-link" (click)="descargarNavegador()">
       {{ '¿No se instala? Descargar desde el navegador' | t }}

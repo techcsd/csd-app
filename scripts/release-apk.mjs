@@ -46,9 +46,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-22';
 
-const TITULO = 'Los archivos del chat se descargan con su nombre';
+const TITULO = 'Aviso sobre Play Protect al actualizar';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Mensajes', d: 'Al abrir o descargar un archivo del chat (CSV, Excel, Word…) ahora se guarda con su nombre original, no con un código largo.' },
+  { t: 'mejora', m: 'Actualización', d: 'La pantalla de actualizar en Android ahora avisa qué tocar cuando Google Play Protect pregunta: «Analizar app» y luego «Instalar». Con «Instalar sin analizar» Android podía cancelar la instalación.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
