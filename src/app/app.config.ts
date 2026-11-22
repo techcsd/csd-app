@@ -11,6 +11,7 @@ import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angu
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
+import { Capacitor } from '@capacitor/core';
 import { ErrorReportService } from './core/services/error-report.service';
 import { MotionService } from './core/services/motion.service';
 import { VehiculosService } from './core/services/vehiculos.service';
@@ -76,7 +77,10 @@ export const appConfig: ApplicationConfig = {
     // y si no, no hace nada). Angular sigue gestionando caché/versión normalmente;
     // `provideServiceWorker` no exige que el archivo se llame `ngsw-worker.js`.
     provideServiceWorker('push-sw.js', {
-      enabled: !isDevMode(),
+      // DU — en la app NATIVA (APK/IPA) el service worker sobra: los archivos ya viajan dentro del paquete y
+      // el push es nativo. Allí su instalación fallaba siempre en `/favicon.ico` (WebView) y cada fallo
+      // disparaba «Reparando la app…» + PIN de nuevo tras actualizar. Solo la PWA lo usa.
+      enabled: !isDevMode() && !Capacitor.isNativePlatform(),
       // CO1 — con `registerWhenStable:30000` un chofer que abre y cierra la PWA
       // antes de los 30s nunca llega a registrar el SW ese día (y con el sistema de
       // movimiento de CJ, "estable" tarda más). `registerImmediately` registra el SW
@@ -88,6 +92,13 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       // DU2c — cada servicio de arranque va aislado: uno roto se reporta y NO tumba la app
       // (antes cualquier excepción síncrona aquí = pantalla en blanco sin mensaje).
+      // DU — instalaciones nativas anteriores ya tienen el service worker registrado: se quita (best-effort).
+      if (Capacitor.isNativePlatform() && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+        void navigator.serviceWorker
+          .getRegistrations()
+          .then((rs) => Promise.all(rs.map((r) => r.unregister())))
+          .catch(() => undefined);
+      }
       const boot = (token: Type<unknown>): void => {
         try {
           inject(token);
