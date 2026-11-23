@@ -1,0 +1,6 @@
+@if (src(); as s) {
+  <figure class="docqr">
+    <img class="docqr__img" [src]="s" [alt]="'QR del documento' | t" width="220" height="220" />
+    <figcaption class="docqr__cap">{{ 'Escanéalo con «Escanear» en la app para abrir este documento.' | t }}</figcaption>
+  </figure>
+}

@@ -57,3 +57,19 @@
 .rep-card__area {
   margin-bottom: 12px;
 }
+
+// DX10 — lista de adjuntos del reporte
+.rep-card__adjuntos {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rep-card__adjunto {
+  min-height: 48px;
+  width: 100%;
+  text-align: left;
+  overflow-wrap: anywhere;
+}

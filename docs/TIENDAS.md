@@ -1,6 +1,6 @@
 # CSD App — Publicar en Google Play y App Store (CI1–CI14)
 
-Guía paso a paso para 👤 **Xaviel**. La app ya quedó **técnicamente lista** (2.44.0, tanda CI). Lo que falta aquí es **físico**: abrir cuentas, subir binarios, llenar formularios. Claude Code no puede hacer nada de esto (requiere identidad legal, pagos y consolas).
+Guía paso a paso para 👤 **Xaviel**. La app está **técnicamente lista** (tanda CI sobre 2.44.0; releída y reconstruida contra la **2.72.0** en la ronda DX, 23-nov-2026 — ver `docs/TIENDAS-CHECKLIST-DICIEMBRE.md`). Lo que falta aquí es **físico**: abrir cuentas, subir binarios, llenar formularios. Claude Code no puede hacer nada de esto (requiere identidad legal, pagos y consolas).
 
 **Decisiones tomadas (CONTEXTO-42 §0):** Google Play **pública** · Apple **Unlisted** (se instala con un enlace que repartimos) · cuentas de **organización** a nombre de Constructora SD · iOS se compila **en la nube** (GitHub Actions, sin Mac).
 
@@ -39,21 +39,21 @@ Guía paso a paso para 👤 **Xaviel**. La app ya quedó **técnicamente lista**
 - La regla de "12 probadores por 14 días" **NO aplica** a cuentas de organización (solo a personales creadas después del 13-nov-2023).
 
 ### 1.2 Play App Signing con la **llave actual** (PEPK) — crítico
-Para que los teléfonos que hoy tienen el APK instalado **actualicen desde Play sin desinstalar**, Play debe firmar con **la misma llave** (`android/csd-release.keystore`, cert SHA-256 `3c5316d8…5065`).
+Para que los teléfonos que hoy tienen el APK instalado **actualicen desde Play sin desinstalar**, Play debe firmar con **la misma llave** (`C:/Users/xavie/keystores/constructorasd.keystore`, alias `constructorasd`; es el mismo certificado que antes se llamaba `csd-release.keystore`; SHA-256 `3C:53:16:D8:…:50:65`, verificado 23-nov).
 1. Al crear la app en Play, elige **"Exportar y subir una clave desde un almacén de claves de Java"**.
 2. Google te da el comando PEPK (descarga `pepk.jar`). Ejemplo:
    ```
-   java -jar pepk.jar --keystore=android/csd-release.keystore --alias=<alias> \
+   java -jar pepk.jar --keystore=C:/Users/xavie/keystores/constructorasd.keystore --alias=constructorasd \
      --output=output.zip --include-cert \
      --encryptionkey=<la clave pública que te muestra Play>
    ```
    (el alias/contraseñas están en `android/keystore.properties`, gitignored).
 3. Sube `output.zip` en Play Console.
-> ⚠️ **Respalda `csd-release.keystore` + `keystore.properties` FUERA del PC** (nube privada / USB). Perder la llave = no poder actualizar NUNCA el canal APK (los teléfonos sin Play).
+> ⚠️ **Respalda `constructorasd.keystore` + `android/keystore.properties` FUERA del PC** (nube privada / USB). Perder la llave = no poder actualizar NUNCA el canal APK (los teléfonos sin Play).
 
 ### 1.3 Subir el AAB
 ```
-npm run aab -- --env prod        # genera dist-store/csd-app-2.44.0-play.aab (NO se sube solo)
+npm run aab -- --env prod        # genera dist-store/csd-app-<versión>-play.aab (NO se sube solo)
 ```
 - Play Console → **Prueba interna** primero (añade tu correo como probador) → instala, verifica.
 - Luego **Producción** → % de lanzamiento.
@@ -118,6 +118,6 @@ Con eso:
 - Global en 2027; ya exigida (sep-2026) en BR/ID/SG/TH. Si algún día se abandona el APK, se apaga ese canal (publicar solo para Play).
 
 ## 5. Firma — resumen
-- **Una sola llave** (`csd-release.keystore`) para TODO: canal apk y canal play (Play App Signing la recibe por PEPK). Mismo `applicationId` `com.constructorasd.csdapp`.
+- **Una sola llave** (`constructorasd.keystore`) para TODO: canal apk y canal play (Play App Signing la recibe por PEPK). Mismo `applicationId` `com.constructorasd.csdapp`.
 - Dev instala aparte (`…​.dev`), nunca va a tienda.
 - **Respaldo de la keystore fuera del PC = obligatorio.**

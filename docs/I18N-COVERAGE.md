@@ -3,17 +3,17 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8438 textos medidos en 290 pantallas)
-- Textos con t(): 8438 · sin t(): 0
-- Pantallas `enforce:true`: 250 de 290
+- **English: 99.98%** · **Kreyòl: 99.98%** (8465 textos medidos en 293 pantallas)
+- Textos con t(): 8464 · sin t(): 1
+- Pantallas `enforce:true`: 250 de 293
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
 | (raíz) | 21 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/models | 157 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/practica | 156 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/services | 258 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/util | 154 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/services | 259 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/util | 162 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/utils | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/actualizar | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -21,7 +21,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/admin/catalogos | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/conteos | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/parametros | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/admin/reportes | 8 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/admin/reportes | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/roles | 28 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/unidades | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/usuarios | 73 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -59,13 +59,14 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/compras/solicitud-compra | 41 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/conduce-qr | 5 | 0 | 0 | 0 | 100% | 100% |  |
 | pages/demo/escenarios | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/doc-qr | 2 | 0 | 0 | 0 | 100% | 100% |  |
 | pages/documentos | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/generar | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/historial | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/plantillas | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/en-proceso | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/forbidden | 1 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/home | 58 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/home | 59 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/incentivos | 54 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/incentivos/participantes | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/ingenieria | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -114,7 +115,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/obra/subcontratistas | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/pendientes | 65 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/pendientes/outbox-detalle | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/perfil | 112 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/perfil | 113 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/claude | 24 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/mi-detalle | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -133,7 +134,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/rrhh/empleados | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/bandeja | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/solicitudes/detalle | 126 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/solicitudes/detalle | 128 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/mis | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/pedir | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/soporte | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -160,7 +161,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/checklists-historial | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible | 185 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible-log | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conduce-detalle | 108 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conduce-detalle | 112 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-externo | 104 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-transferencias | 53 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces | 97 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -226,8 +227,10 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/ui/ayudante-picker | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/celebracion | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/destino-selector | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/doc-qr | 2 | 0 | 0 | 0 | 100% | 100% |  |
 | shared/ui/doc-slot | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/draft-banner | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/escaner | 2 | 1 | 0 | 0 | 67% | 67% |  |
 | shared/ui/in-app-camera | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/km-input | 8 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/language-onboarding | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |

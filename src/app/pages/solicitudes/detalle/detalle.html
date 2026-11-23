@@ -49,6 +49,9 @@
         }
       </div>
 
+      <!-- DX7 — QR de la requisición (si el tipo está encendido en el servidor y el rol la ve) -->
+      <app-doc-qr tipo="requisicion" [id]="r.id" />
+
       <!-- BV10/BV11 — Fecha de necesidad DESTACADA, arriba de Fecha, editable -->
       @let ni = necesidad();
       <div class="reqd__nec" [class.reqd__nec--venc]="ni.estado === 'vencida'">
@@ -304,6 +307,11 @@
           <h3 class="reqd__sec">{{ 'Rechazar requisición' | t }}</h3>
           <label class="field-label">{{ 'Motivo (mínimo 10 caracteres)' | t }}</label>
           <textarea class="field reqd__nota" [ngModel]="rechazoNota()" (ngModelChange)="rechazoNota.set($event)" rows="3" maxlength="240" [placeholder]="'Por qué se rechaza' | t"></textarea>
+          <!-- DX11 — contador del motivo: el botón nunca se queda "sin efecto" sin decir por qué -->
+          <p class="reqd__off" role="status">
+            @if (motivoRechazoFalta() > 0) { {{ '{n}/{min} · faltan {falta} caracteres para poder rechazar.' | t: { n: rechazoLongitud(), min: motivoMin, falta: motivoRechazoFalta() } }} }
+            @else { {{ '{n}/{min} · listo para rechazar.' | t: { n: rechazoLongitud(), min: motivoMin } }} }
+          </p>
           @if (!online) { <p class="reqd__off">{{ 'Necesitas conexión para rechazar.' | t }}</p> }
           <div class="reqd__acciones reqd__mt">
             <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online || rechazoNota().trim().length < 10" (click)="confirmarRechazar()">{{ procesando() ? 'Rechazando…' : 'Confirmar rechazo' }}</button>

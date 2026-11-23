@@ -1,3 +1,5 @@
+import { DocQr } from '../../../shared/ui/doc-qr/doc-qr';
+import { MOTIVO_MIN, motivoFalta, motivoLongitud } from '../../../core/util/motivo';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -53,7 +55,7 @@ interface EditItem {
   selector: 'app-requisicion-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, ArticuloPicker, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, ArticuloPicker, DocQr, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -97,6 +99,10 @@ export class RequisicionDetallePage {
   responsable = signal('');
   observaciones = signal('');
   rechazoNota = signal('');
+  // DX11 — contador del motivo (mínimo del servidor).
+  readonly motivoMin = MOTIVO_MIN;
+  rechazoLongitud = computed(() => motivoLongitud(this.rechazoNota()));
+  motivoRechazoFalta = computed(() => motivoFalta(this.rechazoNota()));
   procesando = signal(false);
   // AT7 — stock por renglón del almacén elegido (para el aprobador).
   private stockPorArticulo = signal<Record<string, number>>({});
@@ -411,7 +417,7 @@ export class RequisicionDetallePage {
       return;
     }
     // DS-24 — motivo obligatorio (mismo mínimo que el RPC: 10 caracteres sin espacios sobrantes).
-    if (this.rechazoNota().trim().length < 10) {
+    if (this.motivoRechazoFalta() > 0) {
       this.toast.error(this.i18n.t('Escribe el motivo del rechazo (mínimo 10 caracteres).'));
       return;
     }

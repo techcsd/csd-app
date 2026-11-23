@@ -1,0 +1,9 @@
+<!-- Destino del QR de un documento -->
+<section class="doc-qr">
+  @if (!error()) {
+    <p class="doc-qr__msg">{{ 'Abriendo el documento…' | t }}</p>
+  } @else {
+    <p class="doc-qr__msg doc-qr__msg--error">{{ error() }}</p>
+    <a class="btn-cta" routerLink="/home">{{ 'Ir al inicio' | t }}</a>
+  }
+</section>

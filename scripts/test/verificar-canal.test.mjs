@@ -25,5 +25,9 @@ esperaThrow('versión equivocada', () => verificarCanalEnJs(bundleApk, 'apk', '2
 esperaThrow('sin canal en el bundle', () => verificarCanalEnJs('x={version:"2.46.0"}', 'apk', '2.46.0'));
 esperaOk('canal play correcto', () => verificarCanalEnJs('x={version:"2.46.0",canal:"play"}', 'play', '2.46.0'));
 
+// Constante NO inlineada por el minificador (canal:Hy + Hy="play"): se resuelve el alias.
+esperaOk('alias del minificador canal:Hy → "play"', () => verificarCanalEnJs('const Hy="play";x={version:"2.46.0",canal:Hy}', 'play', '2.46.0'));
+esperaThrow('alias del minificador que apunta a "pwa"', () => verificarCanalEnJs('const Hy="pwa";x={version:"2.46.0",canal:Hy}', 'play', '2.46.0'));
+
 if (fallos) { console.error(`\n🔴 ${fallos} fallo(s).`); process.exit(1); }
 console.log('\n✓ candado canal: todos los casos OK');

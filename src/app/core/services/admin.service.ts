@@ -13,6 +13,15 @@ export interface Reporte {
   usuario?: { nombre: string } | null;
 }
 
+/** DX10 — adjuntos de un reporte (fotos antiguas + documentos nuevos). */
+export interface ReporteAdjunto {
+  id: string;
+  path: string;
+  nombre: string;
+  mime: string | null;
+  esFoto: boolean;
+}
+
 export interface Unidad {
   id: number;
   codigo: string;
@@ -400,6 +409,30 @@ export class AdminService {
       .limit(100);
     if (error) throw new Error(error.message);
     return (data as unknown as Reporte[]) ?? [];
+  }
+
+  /** DX10 — fotos y documentos de un reporte (best-effort: si la tabla nueva aún no existe, solo fotos). */
+  async getAdjuntosReporte(reporteId: string): Promise<ReporteAdjunto[]> {
+    const out: ReporteAdjunto[] = [];
+    const fotos = await this.supabase.client.from('reportes_usuario_fotos').select('id, storage_path').eq('reporte_id', reporteId);
+    for (const f of (fotos.data ?? []) as Array<{ id: string; storage_path: string }>) {
+      out.push({ id: f.id, path: f.storage_path, nombre: f.storage_path.split('/').pop() ?? 'foto', mime: 'image/*', esFoto: true });
+    }
+    const docs = await this.supabase.client
+      .from('reportes_usuario_adjuntos')
+      .select('id, storage_path, nombre_original, mime')
+      .eq('reporte_id', reporteId);
+    for (const d of (docs.data ?? []) as Array<{ id: string; storage_path: string; nombre_original: string; mime: string }>) {
+      out.push({ id: d.id, path: d.storage_path, nombre: d.nombre_original, mime: d.mime, esFoto: false });
+    }
+    return out;
+  }
+
+  /** DX10 — URL firmada; con `descargarComo` baja con el nombre ORIGINAL (patrón 2.71.10). */
+  async urlAdjuntoReporte(path: string, descargarComo?: string | null): Promise<string | null> {
+    const opts = descargarComo ? { download: descargarComo } : undefined;
+    const { data } = await this.supabase.client.storage.from('reportes').createSignedUrl(path, 3600, opts);
+    return data?.signedUrl ?? null;
   }
 
   async resolverReporte(id: string, respuesta: string): Promise<void> {

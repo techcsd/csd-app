@@ -18,7 +18,7 @@ Xaviel** (cuenta Apple Developer + llaves + secretos). `ios/` NO se versiona: lo
 2. **App iOS en Firebase** (`com.constructorasd.csdapp`, proyecto `csd-core`) → `GoogleService-Info.plist` → secreto `GOOGLE_SERVICE_INFO_PLIST` (base64).
 3. **APNs .p8** subida a Firebase (para que el token FCM funcione en iOS sin tocar `send-push`).
 4. **Secretos de GitHub:** `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` (App Store Connect API key), `GOOGLE_SERVICE_INFO_PLIST`, y para firma `MATCH_GIT_URL` + `MATCH_PASSWORD` (o certificados manuales).
-5. Disparar el workflow **iOS → TestFlight** (manual) → revisar en TestFlight → enviar a revisión → pedir **Unlisted**.
+5. **(DX, sin cuenta)** Disparar primero el workflow con `solo_compilar = true`: compila para el simulador, **sin firma ni subida ni secretos**, y deja registrado qué falla del proyecto generado. Luego, con cuenta y secretos: **iOS → TestFlight** (manual) → revisar en TestFlight → enviar a revisión → pedir **Unlisted**.
 
 ## Compatibilidad verificada (07-oct-2026)
 - `@capacitor/ios@8.5.3` → OK con Capacitor 8.4.1.
@@ -44,3 +44,8 @@ Xaviel** (cuenta Apple Developer + llaves + secretos). `ios/` NO se versiona: lo
 
 ## Costo
 - Minutos de macOS en repos privados = **10×**. Por eso el workflow es de **disparo manual**, no por push.
+
+## Universal Links (DX7, 23-nov-2026) — qué falta
+- Android ya está listo: `public/.well-known/assetlinks.json` + intent-filter `autoVerify` para `/d/*` y `/conduce-qr/*`.
+- iOS necesita el **Team ID** (sale de la cuenta Apple): copiar `ios-templates/apple-app-site-association.example` a `public/.well-known/apple-app-site-association` (sin extensión, `Content-Type: application/json`), reemplazar `TEAMID`, y añadir el *Associated Domain* `applinks:app.sgcconstructorasd.com` al proyecto iOS (entitlements). Sin eso, el QR abre la PWA en Safari (funciona igual, solo no abre la app instalada).
+- `capacitor://localhost` ya está permitido en CORS de las edges.

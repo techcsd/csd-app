@@ -185,6 +185,11 @@
       {{ checking() ? ('Buscando…' | t) : ('🔄 ' + ('Buscar actualización' | t)) }}
     </button>
 
+    <!-- DX6/F7 — Ayuda: cómo instalar la app (QR a Play / App Store / PWA), página pública de SGC -->
+    <button type="button" class="btn-ghost perfil__btn" (click)="abrirInstalar()">
+      {{ 'Instalar la app en otro teléfono' | t }}
+    </button>
+
     @if (!esNativo) {
       <button type="button" class="btn-ghost perfil__btn" [disabled]="reparando()" (click)="repararApp()">
         {{ (reparando() ? 'Reparando…' : 'Reparar la app') | t }}

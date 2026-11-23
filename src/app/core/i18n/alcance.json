@@ -151,6 +151,9 @@
     "pages/demo/escenarios": {
       "enforce": true
     },
+    "pages/doc-qr": {
+      "enforce": false
+    },
     "pages/documentos": {
       "enforce": true
     },
@@ -652,11 +655,17 @@
     "shared/ui/destino-selector": {
       "enforce": true
     },
+    "shared/ui/doc-qr": {
+      "enforce": false
+    },
     "shared/ui/doc-slot": {
       "enforce": true
     },
     "shared/ui/draft-banner": {
       "enforce": true
+    },
+    "shared/ui/escaner": {
+      "enforce": false
     },
     "shared/ui/in-app-camera": {
       "enforce": true

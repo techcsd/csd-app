@@ -1,0 +1,22 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.constructorasd.csdapp",
+      "sha256_cert_fingerprints": [
+        "3C:53:16:D8:B0:6C:6D:BE:E0:0E:77:BF:3A:37:C5:73:75:B5:9A:5F:17:44:27:03:83:55:0C:D4:04:DF:50:65"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.constructorasd.csdapp.dev",
+      "sha256_cert_fingerprints": [
+        "3C:53:16:D8:B0:6C:6D:BE:E0:0E:77:BF:3A:37:C5:73:75:B5:9A:5F:17:44:27:03:83:55:0C:D4:04:DF:50:65"
+      ]
+    }
+  }
+]
