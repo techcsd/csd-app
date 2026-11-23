@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { MOTIVO_MIN, motivoFalta, motivoLongitud } from '../../../core/util/motivo';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
@@ -86,6 +87,11 @@ export class ConduceDetallePage {
   }
   confirmarEliminar = signal(false);
   eliminando = signal(false);
+  // DX11 — motivo obligatorio de la anulación (espeja anular_conduce, >= 10).
+  readonly motivoMin = MOTIVO_MIN;
+  motivoEliminar = signal('');
+  motivoEliminarLongitud = computed(() => motivoLongitud(this.motivoEliminar()));
+  motivoEliminarFalta = computed(() => motivoFalta(this.motivoEliminar()));
   /** AT10 — marcar/desmarcar el conduce como dato de prueba (admin). */
   marcandoPrueba = signal(false);
   esAdmin = computed(() => this.userCtx.esAdmin());
@@ -528,16 +534,17 @@ export class ConduceDetallePage {
 
   /** AQ10 — abre la advertencia de eliminación. */
   pedirEliminar(): void {
+    this.motivoEliminar.set('');
     this.confirmarEliminar.set(true);
   }
 
   /** AQ10 — confirma: encola el anular_conduce (repone stock + cancela ruta) y sale. */
   async eliminar(): Promise<void> {
     const d = this.detalle();
-    if (!d || this.eliminando()) return;
+    if (!d || this.eliminando() || this.motivoEliminarFalta() > 0) return;
     this.eliminando.set(true);
     try {
-      await this.conduces.eliminarConduce(d.id);
+      await this.conduces.eliminarConduce(d.id, this.motivoEliminar().trim());
       this.confirmarEliminar.set(false);
       this.toast.success(
         this.network.online()

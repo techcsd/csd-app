@@ -1,8 +1,8 @@
 {
   "en": 100,
   "ht": 100,
-  "literales": 8438,
-  "conT": 8438,
+  "literales": 8445,
+  "conT": 8445,
   "sinT": 0,
   "pantallas": 290,
   "byScreen": {
@@ -95,7 +95,7 @@
       "ht": 100
     },
     "core/util": {
-      "conT": 154,
+      "conT": 155,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1055,7 +1055,7 @@
       "ht": 100
     },
     "pages/solicitudes/detalle": {
-      "conT": 126,
+      "conT": 128,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1271,7 +1271,7 @@
       "ht": 100
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 108,
+      "conT": 112,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

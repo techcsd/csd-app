@@ -176,7 +176,7 @@ export class PermissionsService {
       return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
     } catch (e) {
       const reason = this.classifyPosError(e);
-      void this.reportGpsFallo(e, { native: this.native, high_accuracy: enableHighAccuracy, timeout, escalado: enableHighAccuracy });
+      void this.reportGpsFallo(e, { native: this.native, high_accuracy: enableHighAccuracy, timeout, escalado: enableHighAccuracy }, reason);
       return { ok: false, reason };
     }
   }
@@ -186,8 +186,16 @@ export class PermissionsService {
    * outbox/sanitizado/anti-loop + el límite global de ErrorReportService ya
    * actúa como muestreo: no más de 30 reportes/hora entre TODOS los tipos).
    */
-  private reportGpsFallo(e: unknown, context: Record<string, unknown>): void {
-    void this.errors.report('gps', this.errMessage(e), context);
+  private reportGpsFallo(e: unknown, context: Record<string, unknown>, reason?: string): void {
+    // DX2/F2 — «sin señal» (timeout tras escalar a alta precisión) y «GPS apagado en el teléfono»
+    // son ESTADOS del entorno/usuario (bajo techo, ubicación apagada), no fallos del sistema:
+    // se registran como 'info' (con la causa) para que Vigía no abra un reporte de bug por
+    // cada chequeo sin señal. 'unavailable' (causa desconocida) sigue siendo 'gps'.
+    const esEstado = reason === 'timeout' || reason === 'gps-off';
+    void this.errors.report(esEstado ? 'info' : 'gps', this.errMessage(e), {
+      ...context,
+      causa: reason === 'timeout' ? 'sin_senal' : reason === 'gps-off' ? 'gps_apagado_en_telefono' : (reason ?? null),
+    });
   }
 
   /** DH15 — mensaje legible de un error de posición, sea `Error` o `GeolocationPositionError`. */

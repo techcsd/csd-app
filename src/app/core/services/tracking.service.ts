@@ -603,6 +603,16 @@ export class TrackingService {
    * y reintenta luego; el server acepta timestamps viejos (buffer offline) y
    * re-consolida el recorrido del día. Single-flight (QA-10).
    */
+  /** F2 — clasifica por qué el servidor rechazó un lote de posiciones. */
+  private causaRechazoLote(error: { code?: string; message?: string; status?: number }, permanente: boolean, kind: string | null): string {
+    const code = String(error.code ?? '');
+    const msg = error.message ?? '';
+    if (/jwt|expired|not authenticated|invalid claim/i.test(msg) || error.status === 401 && !/^42/.test(code)) return 'sesion';
+    if (kind === 'permiso' || /^42501/.test(code) || /row-level security/i.test(msg)) return 'rls_permiso';
+    if (permanente) return 'carga_invalida';
+    return 'transitorio';
+  }
+
   private async flush(): Promise<void> {
     if (!this.net.online()) return;
     if (this.flushing) {
@@ -648,6 +658,8 @@ export class TrackingService {
             lote: lote.length,
             permanente,
             kind,
+            // F2 — causa legible para separar sesión / RLS / carga inválida / transitorio.
+            causa: this.causaRechazoLote(error, permanente, kind),
           });
           if (!permanente) return; // transitorio (incl. 401 ya refrescado arriba): conserva el buffer
 

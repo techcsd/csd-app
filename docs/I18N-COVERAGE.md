@@ -3,8 +3,8 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8438 textos medidos en 290 pantallas)
-- Textos con t(): 8438 · sin t(): 0
+- **English: 100%** · **Kreyòl: 100%** (8445 textos medidos en 290 pantallas)
+- Textos con t(): 8445 · sin t(): 0
 - Pantallas `enforce:true`: 250 de 290
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
@@ -13,7 +13,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | core/models | 157 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/practica | 156 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/services | 258 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/util | 154 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/util | 155 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/utils | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/actualizar | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -133,7 +133,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/rrhh/empleados | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/bandeja | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/solicitudes/detalle | 126 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/solicitudes/detalle | 128 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/mis | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/solicitudes/pedir | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/soporte | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -160,7 +160,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/transporte/checklists-historial | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible | 185 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/combustible-log | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/transporte/conduce-detalle | 108 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/transporte/conduce-detalle | 112 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-externo | 104 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduce-transferencias | 53 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/conduces | 97 | 0 | 0 | 0 | 100% | 100% | ✅ |

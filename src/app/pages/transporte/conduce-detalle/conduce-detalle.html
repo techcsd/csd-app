@@ -246,15 +246,20 @@
     }
   </div>
 
-  <app-confirm-dialog
-    [open]="confirmarEliminar()"
-    [title]="'¿Eliminar este conduce?' | t"
-    [message]="'Se eliminará el conduce {numero} y se repondrá su stock al almacén de origen. No se puede deshacer.' | t: { numero: detalle()?.numero || '' }"
-    [confirmLabel]="'Sí, eliminar' | t"
-    [cancelLabel]="'Cancelar' | t"
-    tone="danger"
-    (confirmed)="eliminar()"
-    (cancelled)="confirmarEliminar.set(false)" />
+  <!-- DX11 — eliminar conduce: el servidor exige motivo >= 10 caracteres (anular_conduce) -->
+  <app-bottom-sheet [open]="confirmarEliminar()" [titulo]="'¿Eliminar este conduce?' | t" (closed)="confirmarEliminar.set(false)">
+    <p class="doc__sub">{{ 'Se eliminará el conduce {numero} y se repondrá su stock al almacén de origen. No se puede deshacer.' | t: { numero: detalle()?.numero || '' } }}</p>
+    <label class="cdet__motivo-label" for="cdet-motivo">{{ 'Motivo (mínimo 10 caracteres)' | t }}</label>
+    <textarea id="cdet-motivo" class="cdet__otros-input" rows="3" maxlength="240" [value]="motivoEliminar()"
+              (input)="motivoEliminar.set($any($event.target).value)" [attr.placeholder]="'Por qué se elimina' | t"></textarea>
+    <p class="cdet__peligro-nota" role="status">
+      @if (motivoEliminarFalta() > 0) { {{ '{n}/{min} · faltan {falta} caracteres para poder eliminar.' | t: { n: motivoEliminarLongitud(), min: motivoMin, falta: motivoEliminarFalta() } }} }
+      @else { {{ '{n}/{min} · listo para eliminar.' | t: { n: motivoEliminarLongitud(), min: motivoMin } }} }
+    </p>
+    <button type="button" class="cdet__eliminar" [disabled]="eliminando() || motivoEliminarFalta() > 0" (click)="eliminar()">
+      🗑️ {{ 'Sí, eliminar' | t }}
+    </button>
+  </app-bottom-sheet>
 
   <!-- CK4 — hoja "¿Quién recibe este conduce?" (asignar/cambiar receptor) -->
   <app-bottom-sheet [open]="receptorSheet()" [titulo]="'¿Quién recibe este conduce?' | t" (closed)="cerrarReceptorSheet()">
