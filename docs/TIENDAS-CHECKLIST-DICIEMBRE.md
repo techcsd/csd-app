@@ -20,7 +20,7 @@ Versión de la app auditada: **2.72.0** (en dev). **Sin cuentas todavía** (deci
 | 13 | URL pública de privacidad y soporte (sin sesión) | Claude (PROMPT-154 F10) / Xaviel confirma | SGC | Pendiente: verificar en prod que `https://sgcconstructorasd.com/politicas/privacidad` abre sin login |
 | 14 | Clasificación IARC, público 18+, anuncios «No», funciones financieras «ninguna» | Xaviel | cuenta Play | Pendiente; respuestas en `TIENDAS-DATOS.md` |
 | 15 | Video de ubicación en segundo plano (≤30 s) | Xaviel graba | cuenta Play | Pendiente; guion listo |
-| 16 | iOS: proyecto generado y compilado **sin firma** | GitHub Actions | tu OK para empujar la rama | Workflow con `solo_compilar` listo; **no corrido** (10× minutos macOS) |
+| 16 | iOS: proyecto generado y compilado **sin firma** | GitHub Actions | tu OK para empujar la rama | **Hecho:** corrida `solo_compilar` OK en GitHub (run 45271974584, 23-nov); compila sin firma. Falta solo lo que exige cuenta (firma, TestFlight) |
 | 17 | iOS: `Info.plist` (cámara incl. QR, ubicación siempre/en uso, micrófono, fotos, Face ID) y `PrivacyInfo.xcprivacy` | Claude | — | **Revisado/actualizado** (cámara menciona QR) |
 | 18 | iOS: llave App Store Connect (`.p8`, Key ID, Issuer ID) y APNs `.p8` en Firebase `csd-core` | Xaviel | cuenta Apple | Pendiente |
 | 19 | iOS: secretos de GitHub (solo nombres): `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8`, `MATCH_PASSWORD` (+ `MATCH_GIT_URL`), `GOOGLE_SERVICE_INFO_PLIST` | Xaviel | cuenta Apple | Pendiente |
