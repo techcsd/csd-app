@@ -1,8 +1,8 @@
 {
   "en": 99.98,
   "ht": 99.98,
-  "literales": 8461,
-  "conT": 8460,
+  "literales": 8465,
+  "conT": 8464,
   "sinT": 1,
   "pantallas": 293,
   "byScreen": {
@@ -159,7 +159,7 @@
       "ht": 100
     },
     "pages/admin/reportes": {
-      "conT": 8,
+      "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -911,7 +911,7 @@
       "ht": 100
     },
     "pages/perfil": {
-      "conT": 112,
+      "conT": 113,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

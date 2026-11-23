@@ -5925,5 +5925,10 @@
   "Este documento ya no existe.": "Dokiman sa a pa egziste ankò.",
   "No tienes acceso a esto.": "Ou pa gen aksè nan sa a.",
   "Este documento se atiende desde el sistema en la computadora.": "Dokiman sa a trete nan sistèm lan sou òdinatè a.",
-  "Este QR no es válido. Pide que te compartan el documento de nuevo.": "QR sa a pa valid. Mande pou yo pataje dokiman an ankò."
+  "Este QR no es válido. Pide que te compartan el documento de nuevo.": "QR sa a pa valid. Mande pou yo pataje dokiman an ankò.",
+  "Cargando adjuntos…": "Ap chaje atachman yo…",
+  "No se pudo abrir el archivo. Intenta de nuevo.": "Pa t ka louvri fichye a. Eseye ankò.",
+  "Guardado. Se registrará solo en el sistema contable.": "Anrejistre. Li pral anrejistre otomatikman nan sistèm kontab la.",
+  "Odoo no responde; tu conduce quedó guardado y se enviará solo. Si sigue así, avisa a Tecnología.": "Odoo pa reponn; konduse w la anrejistre epi l ap voye otomatikman. Si sa kontinye, avèti Teknoloji.",
+  "Instalar la app en otro teléfono": "Enstale aplikasyon an sou yon lòt telefòn"
 }

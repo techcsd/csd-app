@@ -32,6 +32,20 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="@string/custom_url_scheme" />
             </intent-filter>
+
+            <!-- DX7/F4 — App Links: https://app[-dev].sgcconstructorasd.com/d/<token> (y el legado
+                 /conduce-qr/<token>) abren la app instalada. Verificación por
+                 /.well-known/assetlinks.json (public/.well-known). Si la verificación falla, el
+                 enlace simplemente abre la PWA en el navegador. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="app.sgcconstructorasd.com" android:pathPrefix="/d/" />
+                <data android:scheme="https" android:host="app.sgcconstructorasd.com" android:pathPrefix="/conduce-qr/" />
+                <data android:scheme="https" android:host="app-dev.sgcconstructorasd.com" android:pathPrefix="/d/" />
+                <data android:scheme="https" android:host="app-dev.sgcconstructorasd.com" android:pathPrefix="/conduce-qr/" />
+            </intent-filter>
         </activity>
 
         <!-- AQ1 — FCM usa este canal de ALTA importancia por defecto para las push

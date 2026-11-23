@@ -3,8 +3,8 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 99.98%** · **Kreyòl: 99.98%** (8461 textos medidos en 293 pantallas)
-- Textos con t(): 8460 · sin t(): 1
+- **English: 99.98%** · **Kreyòl: 99.98%** (8465 textos medidos en 293 pantallas)
+- Textos con t(): 8464 · sin t(): 1
 - Pantallas `enforce:true`: 250 de 293
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
@@ -21,7 +21,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/admin/catalogos | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/conteos | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/parametros | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/admin/reportes | 8 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/admin/reportes | 11 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/roles | 28 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/unidades | 5 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin/usuarios | 73 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -115,7 +115,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/obra/subcontratistas | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/pendientes | 65 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/pendientes/outbox-detalle | 32 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/perfil | 112 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/perfil | 113 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/claude | 24 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/perfil/mi-detalle | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |

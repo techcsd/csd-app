@@ -200,11 +200,14 @@ export class ConduceDetallePage {
     switch (this.syncEstado()) {
       case 'sincronizado':
         return this.i18n.t('Registrado en el sistema contable');
+      // DX12 — mismo vocabulario que la web (Tecnología › Sincronización con Odoo): el conduce
+      // YA está guardado; lo contable se reintenta solo. Nada técnico que pedirle al usuario.
       case 'pendiente':
-        return this.i18n.t('Pendiente de registrar');
+      case 'degradado':
+        return this.i18n.t('Guardado. Se registrará solo en el sistema contable.');
       case 'incierto':
       case 'error':
-        return this.i18n.t('Hay que revisar');
+        return this.i18n.t('Odoo no responde; tu conduce quedó guardado y se enviará solo. Si sigue así, avisa a Tecnología.');
       default:
         return '';
     }

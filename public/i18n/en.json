@@ -6063,5 +6063,10 @@
   "Este documento ya no existe.": "This document no longer exists.",
   "No tienes acceso a esto.": "You do not have access to this.",
   "Este documento se atiende desde el sistema en la computadora.": "This document is handled from the system on the computer.",
-  "Este QR no es válido. Pide que te compartan el documento de nuevo.": "This QR is not valid. Ask for the document to be shared again."
+  "Este QR no es válido. Pide que te compartan el documento de nuevo.": "This QR is not valid. Ask for the document to be shared again.",
+  "Cargando adjuntos…": "Loading attachments…",
+  "No se pudo abrir el archivo. Intenta de nuevo.": "The file could not be opened. Try again.",
+  "Guardado. Se registrará solo en el sistema contable.": "Saved. It will be recorded in the accounting system automatically.",
+  "Odoo no responde; tu conduce quedó guardado y se enviará solo. Si sigue así, avisa a Tecnología.": "Odoo is not responding; your delivery note is saved and will be sent automatically. If this continues, tell Technology.",
+  "Instalar la app en otro teléfono": "Install the app on another phone"
 }
