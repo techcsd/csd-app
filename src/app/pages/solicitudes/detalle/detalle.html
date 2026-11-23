@@ -49,6 +49,9 @@
         }
       </div>
 
+      <!-- DX7 — QR de la requisición (si el tipo está encendido en el servidor y el rol la ve) -->
+      <app-doc-qr tipo="requisicion" [id]="r.id" />
+
       <!-- BV10/BV11 — Fecha de necesidad DESTACADA, arriba de Fecha, editable -->
       @let ni = necesidad();
       <div class="reqd__nec" [class.reqd__nec--venc]="ni.estado === 'vencida'">

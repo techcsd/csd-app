@@ -3,17 +3,17 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 100%** · **Kreyòl: 100%** (8445 textos medidos en 290 pantallas)
-- Textos con t(): 8445 · sin t(): 0
-- Pantallas `enforce:true`: 250 de 290
+- **English: 99.98%** · **Kreyòl: 99.98%** (8461 textos medidos en 293 pantallas)
+- Textos con t(): 8460 · sin t(): 1
+- Pantallas `enforce:true`: 250 de 293
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
 | (raíz) | 21 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/models | 157 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/practica | 156 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/services | 258 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| core/util | 155 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/services | 259 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| core/util | 162 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | core/utils | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/actualizar | 29 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/admin | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -59,13 +59,14 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/compras/solicitud-compra | 41 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/conduce-qr | 5 | 0 | 0 | 0 | 100% | 100% |  |
 | pages/demo/escenarios | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/doc-qr | 2 | 0 | 0 | 0 | 100% | 100% |  |
 | pages/documentos | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/generar | 20 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/historial | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/documentos/plantillas | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/en-proceso | 27 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/forbidden | 1 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/home | 58 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/home | 59 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/incentivos | 54 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/incentivos/participantes | 22 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/ingenieria | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -226,8 +227,10 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | shared/ui/ayudante-picker | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/celebracion | 9 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/destino-selector | 7 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/doc-qr | 2 | 0 | 0 | 0 | 100% | 100% |  |
 | shared/ui/doc-slot | 13 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/draft-banner | 4 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| shared/ui/escaner | 2 | 1 | 0 | 0 | 67% | 67% |  |
 | shared/ui/in-app-camera | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/km-input | 8 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | shared/ui/language-onboarding | 3 | 0 | 0 | 0 | 100% | 100% | ✅ |

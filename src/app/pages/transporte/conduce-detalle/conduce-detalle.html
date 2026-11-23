@@ -61,6 +61,9 @@
           <button type="button" class="btn-ghost" [disabled]="generando()" (click)="descargar()">⬇️ {{ 'Descargar PDF' | t }}</button>
         </div>
 
+        <!-- DX7 — QR del conduce: quien lo recibe lo escanea con «Escanear» y va directo a recibirlo -->
+        <app-doc-qr tipo="conduce" [id]="d.id" />
+
         <!-- Info -->
         <div class="doc__grid">
           <div class="doc__kv"><span class="doc__k">{{ 'Almacén de origen' | t }}</span><span class="doc__v">{{ d.bodega || '—' }}</span></div>

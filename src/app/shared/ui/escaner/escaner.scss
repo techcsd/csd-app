@@ -1,0 +1,45 @@
+// DX7 — visor mínimo (sin rediseño): pantalla completa, marco y botón
+.esc {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+  background: var(--color-text);
+}
+.esc__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.esc__marco {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(70vw, 280px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -60%);
+  border: 3px solid var(--color-surface);
+  border-radius: 16px;
+}
+.esc__txt {
+  position: relative;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: center;
+}
+.esc__cerrar {
+  position: relative;
+  min-height: 56px;
+  width: 100%;
+  max-width: 360px;
+}

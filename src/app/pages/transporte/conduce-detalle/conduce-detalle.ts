@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { DocQr } from '../../../shared/ui/doc-qr/doc-qr';
 import { MOTIVO_MIN, motivoFalta, motivoLongitud } from '../../../core/util/motivo';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
@@ -34,7 +35,7 @@ import { tipoOpLabel } from '../../../core/util/outbox-labels';
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, BottomSheet, SelectList, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, DocQr, SignaturePad, BottomSheet, SelectList, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })

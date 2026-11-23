@@ -1,0 +1,17 @@
+.doc-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 60vh;
+  padding: 24px 16px;
+  text-align: center;
+}
+.doc-qr__msg {
+  font-size: 18px;
+  color: var(--color-text-primary);
+}
+.doc-qr__msg--error {
+  color: var(--color-danger, var(--color-text-primary));
+}

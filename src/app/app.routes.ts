@@ -463,6 +463,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/conduce-qr/conduce-qr').then((m) => m.ConduceQrPage),
   },
   {
+    // DX7/F4 — destino único del QR de cualquier documento (`/d/<token>`): resuelve el tipo y
+    // lleva a la pantalla correcta. Sin moduleGuard: el rol lo decide la pantalla destino/RLS.
+    path: 'd/:token',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/doc-qr/doc-qr').then((m) => m.DocQrPage),
+  },
+  {
     // AJ8 — bandeja del RECEPTOR: entregas que debe confirmar en SU teléfono.
     // Sin moduleGuard: el receptor puede ser inventario/obra sin módulo flota; el
     // RPC solo devuelve entregas donde el usuario actual es receptor autorizado.

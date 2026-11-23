@@ -5911,5 +5911,19 @@
   "Por qué se elimina": "Poukisa w ap efase l",
   "Correo de la requisición": "Imèl rekizisyon an",
   "correo de requisición": "imèl rekizisyon",
-  "correos de requisición": "imèl rekizisyon yo"
+  "correos de requisición": "imèl rekizisyon yo",
+  "Este QR no es de CSD. Escanea el QR de un conduce o de una requisición.": "QR sa a pa soti nan CSD. Eskane QR yon konduse oswa yon rekizisyon.",
+  "Escanear QR": "Eskane QR",
+  "Apunta la cámara al QR del documento": "Pwente kamera a sou QR dokiman an",
+  "No pudimos abrir la cámara. Revisa el permiso de cámara de la app.": "Nou pa t ka louvri kamera a. Verifye pèmisyon kamera aplikasyon an.",
+  "Abriendo el documento…": "Ap louvri dokiman an…",
+  "Ir al inicio": "Ale nan akèy",
+  "QR del documento": "QR dokiman an",
+  "Escanéalo con «Escanear» en la app para abrir este documento.": "Eskane l ak «Eskane» nan aplikasyon an pou louvri dokiman sa a.",
+  "Este tipo de QR aún no está disponible. Abre el documento desde tu bandeja.": "Kalite QR sa a poko disponib. Louvri dokiman an nan bwat ou.",
+  "Este QR ya venció. Pide que te compartan el documento de nuevo.": "QR sa a ekspire. Mande pou yo pataje dokiman an ankò.",
+  "Este documento ya no existe.": "Dokiman sa a pa egziste ankò.",
+  "No tienes acceso a esto.": "Ou pa gen aksè nan sa a.",
+  "Este documento se atiende desde el sistema en la computadora.": "Dokiman sa a trete nan sistèm lan sou òdinatè a.",
+  "Este QR no es válido. Pide que te compartan el documento de nuevo.": "QR sa a pa valid. Mande pou yo pataje dokiman an ankò."
 }

@@ -1,3 +1,4 @@
+import { DocQr } from '../../../shared/ui/doc-qr/doc-qr';
 import { MOTIVO_MIN, motivoFalta, motivoLongitud } from '../../../core/util/motivo';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
@@ -54,7 +55,7 @@ interface EditItem {
   selector: 'app-requisicion-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, ArticuloPicker, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, ArticuloPicker, DocQr, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
