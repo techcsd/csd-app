@@ -4,6 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { DocQr } from '../../../shared/ui/doc-qr/doc-qr';
+import { MOTIVO_MIN, motivoFalta, motivoLongitud } from '../../../core/util/motivo';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
@@ -33,7 +35,7 @@ import { tipoOpLabel } from '../../../core/util/outbox-labels';
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, BottomSheet, SelectList, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, DocQr, SignaturePad, BottomSheet, SelectList, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })
@@ -86,6 +88,11 @@ export class ConduceDetallePage {
   }
   confirmarEliminar = signal(false);
   eliminando = signal(false);
+  // DX11 — motivo obligatorio de la anulación (espeja anular_conduce, >= 10).
+  readonly motivoMin = MOTIVO_MIN;
+  motivoEliminar = signal('');
+  motivoEliminarLongitud = computed(() => motivoLongitud(this.motivoEliminar()));
+  motivoEliminarFalta = computed(() => motivoFalta(this.motivoEliminar()));
   /** AT10 — marcar/desmarcar el conduce como dato de prueba (admin). */
   marcandoPrueba = signal(false);
   esAdmin = computed(() => this.userCtx.esAdmin());
@@ -193,11 +200,14 @@ export class ConduceDetallePage {
     switch (this.syncEstado()) {
       case 'sincronizado':
         return this.i18n.t('Registrado en el sistema contable');
+      // DX12 — mismo vocabulario que la web (Tecnología › Sincronización con Odoo): el conduce
+      // YA está guardado; lo contable se reintenta solo. Nada técnico que pedirle al usuario.
       case 'pendiente':
-        return this.i18n.t('Pendiente de registrar');
+      case 'degradado':
+        return this.i18n.t('Guardado. Se registrará solo en el sistema contable.');
       case 'incierto':
       case 'error':
-        return this.i18n.t('Hay que revisar');
+        return this.i18n.t('Odoo no responde; tu conduce quedó guardado y se enviará solo. Si sigue así, avisa a Tecnología.');
       default:
         return '';
     }
@@ -528,16 +538,17 @@ export class ConduceDetallePage {
 
   /** AQ10 — abre la advertencia de eliminación. */
   pedirEliminar(): void {
+    this.motivoEliminar.set('');
     this.confirmarEliminar.set(true);
   }
 
   /** AQ10 — confirma: encola el anular_conduce (repone stock + cancela ruta) y sale. */
   async eliminar(): Promise<void> {
     const d = this.detalle();
-    if (!d || this.eliminando()) return;
+    if (!d || this.eliminando() || this.motivoEliminarFalta() > 0) return;
     this.eliminando.set(true);
     try {
-      await this.conduces.eliminarConduce(d.id);
+      await this.conduces.eliminarConduce(d.id, this.motivoEliminar().trim());
       this.confirmarEliminar.set(false);
       this.toast.success(
         this.network.online()

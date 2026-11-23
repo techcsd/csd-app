@@ -8,6 +8,7 @@
     </div>
     <div class="home__header-actions">
       <button type="button" class="home__bell" (click)="buscar()" [attr.aria-label]="'Buscar' | t">🔍</button><!-- tropes-allow: lupa = mismo icono de la cabecera de Mensajes/buscador (DG2) -->
+      <button type="button" class="home__bell" (click)="escanear()" [attr.aria-label]="'Escanear QR' | t">📷</button><!-- tropes-allow: cámara = escanear QR, mismo gesto en todos los roles (DX7) -->
       <button type="button" class="home__bell" (click)="avisos()" aria-label="Avisos">
         🔔
         @if (avisosNoLeidos() > 0) {

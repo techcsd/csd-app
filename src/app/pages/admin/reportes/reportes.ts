@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, Reporte } from '../../../core/services/admin.service';
+import { AdminService, Reporte, ReporteAdjunto } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -30,6 +30,9 @@ export class AdminReportesPage {
   expandedId = signal<string | null>(null);
   respuesta = signal('');
   saving = signal(false);
+  // DX10 — adjuntos del reporte abierto (fotos + documentos), con su nombre original
+  adjuntos = signal<ReporteAdjunto[]>([]);
+  cargandoAdjuntos = signal(false);
 
   constructor() {
     void this.load();
@@ -53,6 +56,30 @@ export class AdminReportesPage {
   toggle(r: Reporte): void {
     this.expandedId.set(this.expandedId() === r.id ? null : r.id);
     this.respuesta.set('');
+    this.adjuntos.set([]);
+    if (this.expandedId() === r.id) void this.cargarAdjuntos(r.id);
+  }
+
+  private async cargarAdjuntos(id: string): Promise<void> {
+    this.cargandoAdjuntos.set(true);
+    try {
+      const lista = await this.admin.getAdjuntosReporte(id);
+      if (this.expandedId() === id) this.adjuntos.set(lista);
+    } catch {
+      /* los adjuntos son un extra: el reporte se lee igual */
+    } finally {
+      this.cargandoAdjuntos.set(false);
+    }
+  }
+
+  /** DX10 — abre/descarga un adjunto. Office/PDF/CSV: solo descarga con su nombre (sin previsualizar). */
+  async abrirAdjunto(a: ReporteAdjunto): Promise<void> {
+    const url = await this.admin.urlAdjuntoReporte(a.path, a.esFoto ? null : a.nombre);
+    if (!url) {
+      this.toast.error(this.i18n.t('No se pudo abrir el archivo. Intenta de nuevo.'));
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
   }
 
   async resolver(r: Reporte): Promise<void> {

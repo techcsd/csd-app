@@ -64,7 +64,7 @@ export class DeepLinkService {
     const esEsquemaPropio = u.protocol !== 'http:' && u.protocol !== 'https:';
     const pathname = esEsquemaPropio ? `/${u.host}${u.pathname}`.replace(/\/+$/, '') : u.pathname;
     const path = `${pathname}${u.search}`;
-    if (/^\/conduce-qr\/[^/]+$/.test(pathname)) return path;
+    if (/^\/(conduce-qr|d)\/[^/]+$/.test(pathname)) return path; // DX7 — QR de documentos
     const dest = notifAppRoute({ tipo: 'info', ruta: path, referencia_id: null, referencia_tipo: null });
     return dest && dest !== '/home' ? dest : null;
   }

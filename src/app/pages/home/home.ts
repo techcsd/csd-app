@@ -1,3 +1,4 @@
+import { EscanerService } from '../../core/services/escaner.service';
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppLauncher } from '@capacitor/app-launcher';
@@ -277,6 +278,7 @@ export function visibleHomeTiles(ctx: UserContextService): HomeTile[] {
 })
 export class HomePage implements OnDestroy {
   private ctx = inject(UserContextService);
+  private escaner = inject(EscanerService);
   private router = inject(Router);
   private badges = inject(BadgesService);
   private enProceso = inject(EnProcesoService);
@@ -716,6 +718,11 @@ export class HomePage implements OnDestroy {
   }
 
   // DG2 — lupa de la cabecera → buscador compacto (pantalla completa).
+  /** DX7/F4 — escáner de QR de documentos (mismo botón para todos los roles). */
+  escanear(): void {
+    void this.escaner.escanearYAbrir();
+  }
+
   buscar(): void {
     void this.router.navigate(['/buscador']);
   }

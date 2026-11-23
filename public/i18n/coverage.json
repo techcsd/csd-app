@@ -1,10 +1,10 @@
 {
-  "en": 100,
-  "ht": 100,
-  "literales": 8438,
-  "conT": 8438,
-  "sinT": 0,
-  "pantallas": 290,
+  "en": 99.98,
+  "ht": 99.98,
+  "literales": 8465,
+  "conT": 8464,
+  "sinT": 1,
+  "pantallas": 293,
   "byScreen": {
     "": {
       "conT": 21,
@@ -79,7 +79,7 @@
       "ht": 100
     },
     "core/services": {
-      "conT": 258,
+      "conT": 259,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -95,7 +95,7 @@
       "ht": 100
     },
     "core/util": {
-      "conT": 154,
+      "conT": 162,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -159,7 +159,7 @@
       "ht": 100
     },
     "pages/admin/reportes": {
-      "conT": 8,
+      "conT": 11,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -462,6 +462,14 @@
       "en": 100,
       "ht": 100
     },
+    "pages/doc-qr": {
+      "conT": 2,
+      "sinT": 0,
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
+    },
     "pages/documentos": {
       "conT": 6,
       "sinT": 0,
@@ -511,7 +519,7 @@
       "ht": 100
     },
     "pages/home": {
-      "conT": 58,
+      "conT": 59,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -903,7 +911,7 @@
       "ht": 100
     },
     "pages/perfil": {
-      "conT": 112,
+      "conT": 113,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1055,7 +1063,7 @@
       "ht": 100
     },
     "pages/solicitudes/detalle": {
-      "conT": 126,
+      "conT": 128,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1271,7 +1279,7 @@
       "ht": 100
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 108,
+      "conT": 112,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1910,6 +1918,14 @@
       "en": 100,
       "ht": 100
     },
+    "shared/ui/doc-qr": {
+      "conT": 2,
+      "sinT": 0,
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
+    },
     "shared/ui/doc-slot": {
       "conT": 13,
       "sinT": 0,
@@ -1933,6 +1949,14 @@
       "faltaHt": 0,
       "en": 100,
       "ht": 100
+    },
+    "shared/ui/escaner": {
+      "conT": 2,
+      "sinT": 1,
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 67,
+      "ht": 67
     },
     "shared/ui/estado-chip": {
       "conT": 0,

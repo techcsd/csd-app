@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { evaluarRespuestaNotificar, ResultadoNotificar } from '../util/notificar-resultado';
 import { db } from '../db/app-db';
 import { Proyecto } from '../models/bitacora.model';
 import { MiOrdenCompra, RequisicionAvanceItem, RequisicionBandeja, RequisicionCobertura, RequisicionDetalle, RequisicionEdicion, RequisicionEditar, Solicitud, Urgencia } from '../models/inventario.model';
@@ -454,6 +455,18 @@ export class SolicitudesService {
     // la pantalla se refresca sola cuando `sync.changed` avisa que el outbox cambió.
   }
 
+  /** DX4 — invoca la edge y clasifica el resultado real (enviado / omitido / fallo). */
+  private async enviarCorreoSolicitud(solicitudId: string): Promise<ResultadoNotificar> {
+    try {
+      const res = await this.supabase.client.functions.invoke('notificar-solicitud', {
+        body: { tipo: 'material', solicitudId, evento: 'creada' },
+      });
+      return evaluarRespuestaNotificar(res);
+    } catch (e) {
+      return { estado: 'fallo', motivo: e instanceof Error ? e.message : String(e) };
+    }
+  }
+
   private registerHandler(): void {
     // BV11 — editar la fecha de necesidad (offline-safe).
     this.sync.register('requisicion_fecha', async (payload) => {
@@ -498,13 +511,32 @@ export class SolicitudesService {
       }
 
       // Same email notification the web fires (notificar-solicitud edge fn).
-      // Fire-and-forget: a notification failure must not fail the sync — the
-      // solicitud already lands in SGC and shows on the approver's badge.
-      this.supabase.client.functions
-        .invoke('notificar-solicitud', {
-          body: { tipo: 'material', solicitudId: payload['id'], evento: 'creada' },
-        })
-        .catch(() => {});
+      // DX4 — antes era fire-and-forget MUDO: `invoke` no rechaza, devuelve {error}, así
+      // que el `.catch` nunca corría y un fallo no dejaba rastro. Ahora se lee el
+      // resultado; si falla se encola un reintento propio (op 'solicitud_correo') que el
+      // outbox reintenta con backoff y, si no cede, queda visible como "atascado".
+      // La solicitud ya está en SGC: un fallo del correo NUNCA hace fallar este sync.
+      const id = String(payload['id']);
+      const r = await this.enviarCorreoSolicitud(id);
+      if (r.estado === 'fallo') {
+        console.warn('[solicitud] correo falló, se reintentará:', r.motivo);
+        await this.sync.enqueue({
+          id: crypto.randomUUID(),
+          tipo_op: 'solicitud_correo',
+          capturado_en: new Date().toISOString(),
+          payload: { id },
+          fotos: [],
+          resumen: { solicitud_id: id, motivo: r.motivo },
+        });
+      } else if (r.estado === 'omitido') {
+        console.info('[solicitud] correo omitido:', r.motivo);
+      }
+    });
+
+    // DX4 — reintento del correo de una requisición (transitorio → backoff del outbox).
+    this.sync.register('solicitud_correo', async (payload) => {
+      const r = await this.enviarCorreoSolicitud(String(payload['id']));
+      if (r.estado === 'fallo') throw new Error(r.motivo); // Error plano = transitorio
     });
   }
 }

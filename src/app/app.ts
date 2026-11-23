@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { AppLauncher } from '@capacitor/app-launcher';
+import { Escaner } from './shared/ui/escaner/escaner';
 import { ToastHost } from './shared/components/toast-host/toast-host';
 import { PermisoHost } from './shared/components/permiso-host/permiso-host';
 import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
@@ -62,7 +63,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, CompaFlotante, GpsAsistente, TranslatePipe],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, Escaner, NotifHealthBand, CompaFlotante, GpsAsistente, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

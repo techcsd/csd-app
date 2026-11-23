@@ -5,6 +5,7 @@ import { esEmailSintetico } from '../../core/util/usuario-email';
 import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { environment } from '../../../environments/environment';
+import { abrirUrlExterna } from '../../core/utils/abrir-url.util';
 import { UserContextService } from '../../core/services/user-context.service';
 import { CompaFlotanteService } from '../../core/services/compa-flotante.service';
 import { SessionService } from '../../core/services/session.service';
@@ -510,6 +511,12 @@ export class PerfilPage {
   /** CO1 — "Reparar la app" (solo PWA): desregistra el service worker y borra las
    *  cachés de assets, nunca el outbox (IndexedDB/Dexie). Último recurso cuando la
    *  actualización automática se quedó atascada. */
+  /** DX6/F7 — abre la página pública «Instalar la app» de SGC (mismo entorno que esta app). */
+  abrirInstalar(): void {
+    const web = environment.appUrl.replace('//app-dev.', '//dev.').replace('//app.', '//');
+    void abrirUrlExterna(`${web}/instalar`);
+  }
+
   async repararApp(): Promise<void> {
     if (this.esNativo || this.reparando()) return;
     this.reparando.set(true);

@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.constructorasd.csdapp"],
+        "components": [
+          { "/": "/d/*", "comment": "QR de documentos (DX7)" },
+          { "/": "/conduce-qr/*", "comment": "QR legado del conduce" }
+        ]
+      }
+    ]
+  }
+}

@@ -21,6 +21,19 @@
           @if (expandedId() === r.id) {
             <div class="rep-card__detail">
               <p class="rep-card__desc">{{ r.descripcion }}</p>
+              @if (adjuntos().length) {
+                <ul class="rep-card__adjuntos">
+                  @for (a of adjuntos(); track a.id) {
+                    <li>
+                      <button type="button" class="btn-ghost rep-card__adjunto" (click)="abrirAdjunto(a)">
+                        {{ a.esFoto ? ('Foto' | t) : a.nombre }}
+                      </button>
+                    </li>
+                  }
+                </ul>
+              } @else if (cargandoAdjuntos()) {
+                <p class="adm-sub__muted">{{ 'Cargando adjuntos…' | t }}</p>
+              }
               @if (r.respuesta_admin) {
                 <p class="rep-card__resp">{{ 'Respuesta:' | t }} {{ r.respuesta_admin }}</p>
               }

@@ -1,8 +1,27 @@
 # HANDOFF — CSD App
 
-## 🟡 22-nov-2026 — v2.71.11 EN DEV (aviso de Play Protect al actualizar)
+## 23-nov-2026 — Ronda DX (PROMPT-155) — v2.72.0 EN DEV (NO publicada; prod sigue en 2.71.11)
 
-**En dev / En prod:** **En dev:** 2.71.11 (PR #101; APK dev firmado + registro + publicada; el A20 ya la tiene instalada por vía in-app). **En prod:** sigue 2.71.10 (2.71.11 NO publicada: falta OK de Xaviel y `qa/release-2.71.11.md`).
+**En dev / En prod:** **En dev:** 2.72.0 publicada (PR #109 mergeado a `dev`; APK dev firmado en el bucket dev + registro + `version_publicada` = 2.72.0; el APK dev NO trae push: falta `src/dev/google-services.json`). **En prod:** 2.71.11 (sin cambios). Nada a prod sin OK de Xaviel. **iOS sin firma:** workflow `solo_compilar` corrido en GitHub (run 45271974584, 23-nov) → **compiló OK** para el simulador (el proyecto iOS generado, Xcode 26, pods e Info.plist compilan sin cuenta Apple).
+**Qué (código):** F1 motivo visible (contador n/10) al rechazar requisición + motivo OBLIGATORIO al eliminar conduce (bug real: sin motivo `anular_conduce` lo rechaza desde dj7 y la op quedaba atascada); F3 correo de requisición lee `{data,error}`/`skipped` y reintenta por outbox (`solicitud_correo`); F2 GPS «sin señal»/«GPS apagado» pasan a `info` con `causa`, rechazo de lote con `causa`; F4 escáner de QR (`@capacitor-mlkit/barcode-scanning` + `BarcodeDetector`/`jsqr` en PWA), botón «Escanear» en Home, destino `/d/:token` (edge `conduce-qr` de SGC), `app-doc-qr` en conduce y requisición (se guarda el último QR para mostrarlo sin red), deep link `/d/*`, App Links Android (`assetlinks.json`); F3 adjuntos de reportes en Admin › Reportes; chip de sync del conduce con mensaje claro (Odoo no responde → guardado y se envía solo); Perfil › «Instalar la app en otro teléfono»; guard del canal resuelve el alias del minificador (`canal:Hy`).
+**Tiendas:** `docs/TIENDAS-CHECKLIST-DICIEMBRE.md` (tabla qué/quién/bloqueo + calendario honesto), `TIENDAS-DATOS.md` releído contra 2.72.0, `TIENDAS-FICHA/-IOS/TIENDAS.md` actualizados, workflow iOS con `solo_compilar` (sin firma/secretos, no corrido).
+**Probado:** `npm run build`, `ng test` (104), `test:canal`, AAB dev firmado (64 bits, targetSdk 36, 16 KB, flavor play sin `REQUEST_INSTALL_PACKAGES`). **NO probado en teléfono** (no había dispositivo conectado): escanear un QR real de conduce→recibir, eliminar conduce con motivo, actualización in-app, push, offline, `/reparar.html`.
+**Gaps / pendiente:** SGC solo emite QR de `conduce`, `requisicion` y `solicitud_compra` (la app no tiene pantalla de detalle para `solicitud_compra`: muestra «se atiende desde la computadora»); OC/entrada/retiro no tienen QR en SGC. Interruptores `doc_qr_*_activo` apagados por defecto en SGC (la app no pinta QR hasta que se enciendan). Fotos de los reportes de Raykler no abiertas. Compa de la app y herramientas Odoo (PROMPT-154 F4 12.3) no verificadas (SGC aún no las trae). `odoo_sync_estado` depende del padre.
+
+---
+
+## 🟡 22-nov-2026 (noche) — v2.71.12 EN DEV; PROD CONGELADO en 2.71.11 antes del lunes
+
+**En dev / En prod:** **En dev:** 2.71.12 (PR #106 código, #107 docs; APK dev firmado + registro + publicada; actualización in-app 2.71.11→2.71.12 OK en el A20). **En prod:** 2.71.11 (NO se publica 2.71.12 hasta pasado el lunes). **Mínima prod = 2.71.5, puesta A PROPÓSITO por Xaviel (arregla muchos errores): NO bajarla.**
+**Qué:** 2.71.12 quita el aviso duplicado «Hay una versión nueva… Descárgala desde "CSD App" en el sistema» (`UpdateService.checkAppVersion`, versión vieja de cuando la app nativa no se actualizaba sola); queda solo el de `app.ts`  + banner + /actualizar. Visto duplicado en el A20 con 2.71.11-dev antes del fix.
+**Verificación pre-lunes (22-nov):** 12 módulos de prod abren con datos en el A20 (2.71.11); RPC de lectura OK para ingeniero_campo/logistica/gerente_proyectos (403 de pulso/tablero = por rol, esperado); chofer/capataz QA no se pudieron probar (login por cédula+PIN); PWA/APK/version_publicada OK. **12 usuarios Android < 2.71.5 quedarán bloqueados el lunes** (5 en 2.45.0, 2.55.0, 2.58.5, 2×2.68.0, 3×2.71.1; incl. choferes Dallin Vido, Félix Mateo, Félix Delgado); riesgo: Play Protect — con «Instalar sin analizar» falla, con «Analizar app» instala; sus versiones no traen el aviso de 2.71.11. Mensaje de WhatsApp preparado (ver sesión).
+**Pendiente:** publicar 2.71.12 en prod después del lunes (OK de Xaviel); ver cuántos de los 12 actualizaron (usuario_dispositivos.app_version).
+
+---
+
+## 🟢 22-nov-2026 — v2.71.11 PUBLICADA EN PROD (aviso de Play Protect al actualizar)
+
+**En dev / En prod:** **En dev:** 2.71.11 (PR #101 código, #102/#103 docs; APK dev + registro + publicada). **En prod:** 2.71.11 publicada (PR #104 dev→main, APK en bucket prod, `minima=false`, la mínima sigue 2.71.5, 2.71.10 despublicada; PWA por Vercel). OK explícito de Xaviel («OK --yes»). **Actualización in-app en PROD 2.71.10 → 2.71.11 PROBADA en el A20** (Play Protect «Analizar app» → «parece segura» → ALLOW; abre con PIN/sesión intactos; `qa/release-2.71.11.md`). El aviso no se vio en pantalla (solo sale si hay versión nueva) y no se repitió «Instalar sin analizar» en prod.
 **Qué:** `actualizar.html` muestra (solo canal apk) «Si Google Play Protect pregunta, toca «Analizar app» y luego «Instalar»…» + en/ht. Cambio solo de texto/estilo. Causa y prueba: ver la ronda DV abajo.
 
 ---

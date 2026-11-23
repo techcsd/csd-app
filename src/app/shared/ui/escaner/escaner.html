@@ -1,0 +1,8 @@
+@if (svc.abierto()) {
+  <div class="esc" role="dialog" aria-modal="true" [attr.aria-label]="'Escanear QR' | t">
+    <video #video class="esc__video" muted playsinline></video>
+    <div class="esc__marco" aria-hidden="true"></div>
+    <p class="esc__txt">{{ (error() || 'Apunta la cámara al QR del documento') | t }}</p>
+    <button type="button" class="esc__cerrar btn-ghost" (click)="cerrar()">{{ 'Cancelar' | t }}</button>
+  </div>
+}

@@ -15,6 +15,11 @@ on:
         default: "prod"
         type: choice
         options: [dev, prod]
+      solo_compilar:
+        description: "Solo compilar (simulador, SIN firma ni subida; no pide secretos de Apple)"
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build:
@@ -31,6 +36,7 @@ jobs:
           node-version: 22
 
       - name: Verificar secretos
+        if: ${{ !inputs.solo_compilar }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -59,6 +65,7 @@ jobs:
         run: npx cap add ios || echo "ios/ ya existe"
 
       - name: GoogleService-Info.plist
+        if: ${{ !inputs.solo_compilar }}
         env:
           GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
         run: echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
@@ -69,7 +76,16 @@ jobs:
       - name: cap sync ios
         run: npx cap sync ios
 
+      # DX6/F6 — prueba SIN cuenta: compila para el simulador, sin firma ni subida. Deja
+      # registrado qué falla del proyecto iOS generado (Xcode 26, pods, Info.plist).
+      - name: Compilar sin firma (simulador)
+        if: ${{ inputs.solo_compilar }}
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tail -60
+
       - name: Fastlane → TestFlight
+        if: ${{ !inputs.solo_compilar }}
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
