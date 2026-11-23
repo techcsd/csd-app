@@ -15,5 +15,8 @@ Worktree: `../csd-app-dx` · rama `feature/dx-ronda-23nov-app` desde `origin/dev
 - **F2 (GPS):** timeout adaptativo ya existía (DM-25). Ahora «sin señal» y «GPS apagado en el teléfono» se registran como `info` con `causa` (Vigía no abre bug por cada chequeo bajo techo); `registrar_posiciones rechazó el lote` lleva `causa` = sesion | rls_permiso | carga_invalida | transitorio.
 - Build verde (`npm run build`), `ng test` 97/97.
 
-## Pendiente (siguiente sesión)
+## Actualización (misma sesión, tras «haz todo»)
+Commits en la rama: F1-F3, F4 (escáner), F3/F5/F7 (adjuntos de reportes, mensajes Odoo, App Links, enlace Instalar). Versión 2.72.0, AAB dev OK. Ver `HANDOFF.md` (bloque 23-nov) y `docs/TIENDAS-CHECKLIST-DICIEMBRE.md`.
+
+## Pendiente histórico (antes de «haz todo»)
 F3 adjuntos de reportes en Administración + mensajes Odoo/chip `conduce_estado_sync` · F4 escáner QR (plugin Capacitor + BarcodeDetector, deep link `/d/:token`, QR en requisición/OC/entrada/retiro; depende de la edge `doc-qr` de PROMPT-154 F7) · F5–F8 tiendas (AAB, permisos, TIENDAS-DATOS vs 2.71.x, CI iOS, checklist diciembre) · F7 fuente de instalación/Play in-app updates · F9 verificación Odoo/Compa · F10 cierre (graphify, PARIDAD/HANDOFF, versión a dev).

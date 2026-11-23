@@ -38,6 +38,13 @@ const RE_VERSION = /(?<![\w$])version:\s*["']([^"']+)["']/g;
 export function verificarCanalEnJs(jsText, expectedCanal, expectedVersion, meta = {}) {
   const fuente = meta.fuente ? ` (${meta.fuente})` : '';
   const canales = [...jsText.matchAll(RE_CANAL)].map((m) => m[1]);
+  // El minificador puede NO inlinear la constante (chunks compartidos): `canal:Hy` + `Hy="play"`.
+  // Se resuelve el alias para no abortar un build correcto (pasó al añadir el escáner de QR).
+  for (const m of jsText.matchAll(/(?<![\w$])canal:([A-Za-z_$][\w$]*)(?![\w$"'])/g)) {
+    const id = m[1].replace(/\$/g, '\\$');
+    const d = jsText.match(new RegExp('(?<![\\w$.])' + id + '\\s*=\\s*["\'`]([a-z]+)["\'`]'));
+    if (d) canales.push(d[1]);
+  }
   const versiones = [...jsText.matchAll(RE_VERSION)].map((m) => m[1]);
   const canalOk = canales.includes(expectedCanal);
   const versionOk = versiones.includes(expectedVersion);

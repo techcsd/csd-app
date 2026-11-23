@@ -24,7 +24,7 @@ function set(key, type, value) {
 }
 
 // Textos de permiso (guía Apple 5.1.1(ii): claros, en español).
-set('NSCameraUsageDescription', 'string', 'La CSD App usa la cámara para tomar fotos de evidencias de obra, recibos y conduces.');
+set('NSCameraUsageDescription', 'string', 'La CSD App usa la cámara para tomar fotos de evidencias de obra, recibos y conduces, y para escanear códigos QR de documentos.');
 set('NSMicrophoneUsageDescription', 'string', 'La CSD App usa el micrófono para grabar notas de voz de incidentes.');
 set('NSPhotoLibraryUsageDescription', 'string', 'La CSD App accede a tus fotos para adjuntar evidencias desde la galería.');
 set('NSPhotoLibraryAddUsageDescription', 'string', 'La CSD App guarda documentos (p. ej. carnets y PDFs) en tus fotos.');

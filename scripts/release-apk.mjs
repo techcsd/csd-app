@@ -44,11 +44,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-22';
+const RELEASED_AT = '2026-11-23';
 
-const TITULO = 'Un solo aviso de versión nueva';
+const TITULO = 'Escanear QR de documentos';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Actualización', d: 'Al abrir la app con una versión nueva disponible ya sale un solo aviso, no dos; se quitó el mensaje viejo «Descárgala desde CSD App en el sistema».' },
+  { t: 'nuevo', m: 'QR', d: 'Nuevo botón «Escanear» en el inicio: apunta la cámara al QR de un conduce o de una requisición y la app te lleva directo a recibirlo o verlo. El QR también se muestra en el detalle del conduce y de la requisición.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Al eliminar un conduce la app ahora pide el motivo (mínimo 10 letras); antes parecía eliminado pero quedaba atascado.' },
+  { t: 'arreglo', m: 'Requisiciones', d: 'Al rechazar una requisición se ve cuántas letras lleva el motivo (por ejemplo 9/10) en vez de dejar el botón sin respuesta.' },
+  { t: 'mejora', m: 'Correo', d: 'Si el correo de una requisición no sale, la app lo reintenta sola y deja constancia.' },
+  { t: 'mejora', m: 'Ubicación', d: 'Estar bajo techo sin señal de GPS ya no se reporta como falla del sistema.' },
+  { t: 'mejora', m: 'Contabilidad', d: 'El conduce explica con palabras claras cuando Odoo no responde: queda guardado y se envía solo.' },
+  { t: 'nuevo', m: 'Reportes', d: 'En Administración › Reportes se pueden abrir las fotos y los documentos adjuntos con su nombre original.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

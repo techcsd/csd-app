@@ -1,5 +1,15 @@
 # HANDOFF — CSD App
 
+## 23-nov-2026 — Ronda DX (PROMPT-155) — v2.72.0 EN DEV (NO publicada; prod sigue en 2.71.11)
+
+**En dev / En prod:** **En dev:** 2.72.0 en la rama `feature/dx-ronda-23nov-app` (código + AAB de prueba `dist-store/csd-app-2.72.0-dev-play.aab`; registro en `app_versiones` de dev lo hace `npm run aab`/`apk`; APK dev y publicación en dev: pendientes de tu OK para empujar la rama). **En prod:** 2.71.11 (sin cambios; 2.71.12 también congelada en dev). Nada a prod sin OK de Xaviel.
+**Qué (código):** F1 motivo visible (contador n/10) al rechazar requisición + motivo OBLIGATORIO al eliminar conduce (bug real: sin motivo `anular_conduce` lo rechaza desde dj7 y la op quedaba atascada); F3 correo de requisición lee `{data,error}`/`skipped` y reintenta por outbox (`solicitud_correo`); F2 GPS «sin señal»/«GPS apagado» pasan a `info` con `causa`, rechazo de lote con `causa`; F4 escáner de QR (`@capacitor-mlkit/barcode-scanning` + `BarcodeDetector`/`jsqr` en PWA), botón «Escanear» en Home, destino `/d/:token` (edge `conduce-qr` de SGC), `app-doc-qr` en conduce y requisición (se guarda el último QR para mostrarlo sin red), deep link `/d/*`, App Links Android (`assetlinks.json`); F3 adjuntos de reportes en Admin › Reportes; chip de sync del conduce con mensaje claro (Odoo no responde → guardado y se envía solo); Perfil › «Instalar la app en otro teléfono»; guard del canal resuelve el alias del minificador (`canal:Hy`).
+**Tiendas:** `docs/TIENDAS-CHECKLIST-DICIEMBRE.md` (tabla qué/quién/bloqueo + calendario honesto), `TIENDAS-DATOS.md` releído contra 2.72.0, `TIENDAS-FICHA/-IOS/TIENDAS.md` actualizados, workflow iOS con `solo_compilar` (sin firma/secretos, no corrido).
+**Probado:** `npm run build`, `ng test` (104), `test:canal`, AAB dev firmado (64 bits, targetSdk 36, 16 KB, flavor play sin `REQUEST_INSTALL_PACKAGES`). **NO probado en teléfono** (no había dispositivo conectado): escanear un QR real de conduce→recibir, eliminar conduce con motivo, actualización in-app, push, offline, `/reparar.html`.
+**Gaps / pendiente:** SGC solo emite QR de `conduce`, `requisicion` y `solicitud_compra` (la app no tiene pantalla de detalle para `solicitud_compra`: muestra «se atiende desde la computadora»); OC/entrada/retiro no tienen QR en SGC. Interruptores `doc_qr_*_activo` apagados por defecto en SGC (la app no pinta QR hasta que se enciendan). Fotos de los reportes de Raykler no abiertas. Compa de la app y herramientas Odoo (PROMPT-154 F4 12.3) no verificadas (SGC aún no las trae). `odoo_sync_estado` depende del padre.
+
+---
+
 ## 🟡 22-nov-2026 (noche) — v2.71.12 EN DEV; PROD CONGELADO en 2.71.11 antes del lunes
 
 **En dev / En prod:** **En dev:** 2.71.12 (PR #106 código, #107 docs; APK dev firmado + registro + publicada; actualización in-app 2.71.11→2.71.12 OK en el A20). **En prod:** 2.71.11 (NO se publica 2.71.12 hasta pasado el lunes). **Mínima prod = 2.71.5, puesta A PROPÓSITO por Xaviel (arregla muchos errores): NO bajarla.**

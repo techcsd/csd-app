@@ -1410,3 +1410,7 @@ empezara — nada quedó detrás de bandera por falta de backend.
 
 - **Solo app, sin equivalente web:** estado `stale` de la barra de sincronización y el reparto de badges de «en proceso» (`inv_*` → Inventario) son conceptos del outbox móvil; la web no tiene cola offline.
 - **Pendiente de paridad (bloqueado en SGC):** aviso «Odoo manda el stock» en Conteo (T1). Requiere que SGC exponga `fuente_odoo` por almacén (contrato en `docs/DT-conteo-diagnostico.md`). La web (Conteo físico: nuevo → cerrar → aprobar → aplicar) es la vía que publica a Odoo y queda; el conteo de la app puede revertirse en minutos en almacenes con Odoo.
+
+
+## QR de documentos (DX7, 23-nov-2026)
+Mismo mecanismo en web y app: edge `conduce-qr` (emitir/resolver), token `<tipo>.<id>.<exp>.<firma>` (+ legado del conduce), destino `/d/:token`. App: escáner propio (nativo ML Kit / PWA BarcodeDetector+jsqr) y `app-doc-qr`; web: `ConduceQrService`. Divergencia deliberada: la app NO tiene pantalla de detalle de `solicitud_compra` (mensaje «se atiende desde la computadora»). El QR no otorga permisos: la pantalla destino y la RLS deciden.

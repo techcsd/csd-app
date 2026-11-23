@@ -23,6 +23,10 @@ Con una sola app, el equipo de obra trabaja aunque no haya señal:
 • Inventario: conteos, recepciones, requisiciones y retiro de material.
 • Estado del chofer: el mismo trabajador indica cuándo está disponible o inactivo; la
   ubicación solo se comparte durante la jornada y se apaga al marcar Inactivo.
+• Escanear QR: apunta la cámara al QR de un conduce o de una requisición y la app te
+  lleva directo a recibirlo o verlo.
+• Español, inglés y kreyòl ayisyen, a tu elección.
+• Modo práctica con misiones de ejemplo para aprender sin tocar datos reales.
 • Funciona sin conexión: todo lo que capturas se guarda y se envía solo cuando vuelve
   la señal.
 • Asistente con IA opcional (Compa), transcripción de notas de voz y lectura de
@@ -49,7 +53,7 @@ Soporte: https://sgcconstructorasd.com/politicas/soporte
 - Soporte: `https://sgcconstructorasd.com/politicas/soporte`
 - Copyright: `© Constructora SD`
 
-## "Novedades" / notas de versión 2.44.0
+## "Novedades" / notas de versión (ejemplo para el primer envío; ajustar a la versión real)
 ```
 • Lista para Google Play y App Store.
 • Nuevas opciones de privacidad: enlaces legales, aceptación de políticas y solicitud
@@ -57,6 +61,8 @@ Soporte: https://sgcconstructorasd.com/politicas/soporte
 • La ubicación sigue tu estado de chofer: solo se comparte durante la jornada y se
   apaga al marcar Inactivo.
 • El asistente con IA ahora pide tu permiso antes del primer uso.
+• Nuevo botón «Escanear»: lee el QR de conduces y requisiciones y abre la pantalla correcta.
+• Disponible en español, inglés y kreyòl ayisyen.
 ```
 
 ## Activos
