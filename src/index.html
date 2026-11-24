@@ -137,8 +137,22 @@
           document.body.appendChild(wrap);
         };
         var CHUNK = /not a valid javascript mime type|importing a module script failed|failed to fetch dynamically imported module|error loading dynamically imported module|chunkloaderror/i;
+        // DZ — shell viejo en iPhone: el service worker sirve un index.html cuyo main-*.js ya no
+        // existe tras un deploy. Recargar NO basta (el SW devuelve el mismo index): hay que
+        // desregistrar el SW y vaciar cachés (sin tocar la base local) y recargar. UNA vez por
+        // sesión/5 min; si vuelve a fallar, se muestra la pantalla de rescate.
+        function autoReparar() {
+          try {
+            var k = 'csd-boot-auto', last = Number(sessionStorage.getItem(k) || 0);
+            if (last && Date.now() - last < 300000) return false;
+            sessionStorage.setItem(k, String(Date.now()));
+          } catch (e) { return false; }
+          limpiarSwYCaches(function () { location.reload(); });
+          return true;
+        }
         function onErr(msg) {
           if (!rootVacio()) return; // ya pintó: lo maneja ErrorReportService
+          if (/^script no carg/.test(String(msg)) || CHUNK.test(String(msg))) { if (autoReparar()) return; }
           // Chunk perdido (deploy nuevo + caché vieja): una recarga limpia basta, UNA vez.
           if (CHUNK.test(String(msg))) {
             try {
@@ -160,7 +174,7 @@
         var t0 = Date.now();
         var iv = setInterval(function () {
           if (!rootVacio()) { clearInterval(iv); return; }
-          if (Date.now() - t0 > 8000) { clearInterval(iv); window.__csdBootFail('timeout 8s sin render'); }
+          if (Date.now() - t0 > 8000) { clearInterval(iv); if (autoReparar()) return; window.__csdBootFail('timeout 8s sin render'); }
         }, 500);
       })();
     </script>
