@@ -71,6 +71,7 @@ keystore.properties
 # Keep it out of the repo (AG1). Place the real file locally / in CI from a
 # secret; a redacted template lives at google-services.json.example.
 /android/app/google-services.json
+/android/app/src/dev/google-services.json
 
 # Vercel
 .vercel
