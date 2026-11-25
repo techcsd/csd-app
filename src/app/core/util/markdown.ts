@@ -238,6 +238,8 @@ export function htmlToMarkdown(html: string): string {
 /** Quita negrita/cursiva/tachado/código inline y deja enlaces como "texto (url)". */
 function aplicarEnfasisInline(texto: string): string {
   return texto
+    // EA8 — imagen `![alt](nota-img:ruta)` → "[imagen]" (antes quedaba `!alt (nota-img:ruta)`).
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '[imagen]')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)') // [texto](url)
     .replace(/~~(.+?)~~/g, '$1') // ~~tachado~~
     .replace(/\*\*\*(.+?)\*\*\*/g, '$1') // ***negrita cursiva***
@@ -319,4 +321,14 @@ export function markdownAPlano(markdown: string): string {
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+/**
+ * EA8 — vista previa corta de una nota para listas: texto plano sin sintaxis Markdown
+ * (las imágenes salen como "[imagen]", nunca como `![…](nota-img:…)`), en una sola
+ * línea y recortada a `max` caracteres.
+ */
+export function previewNota(markdown: string, max = 120): string {
+  const plano = markdownAPlano(markdown ?? '').replace(/\s+/g, ' ').trim();
+  return plano.length > max ? `${plano.slice(0, max - 1).trimEnd()}…` : plano;
 }

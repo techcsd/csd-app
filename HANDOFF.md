@@ -1,5 +1,14 @@
 # HANDOFF — CSD App
 
+## 25-nov-2026 — Ronda EA (PROMPT-157) — EN RAMAS LOCALES, nada publicado
+
+**En dev / En prod:** **En dev:** nada (sin push ni PR; 4 ramas locales en el worktree `csd-app-ea`: `feature/ea-proveedores-app`, `feature/ea-devnotes-app`, `feature/ea-agentes-app`, `docs/ea-cierre`). **En prod:** 2.72.1 sin cambios. Sin bump de versión, sin APK.
+**Qué:** EA1 Proveedores de Tecnología en la app (solo lectura + contacto, RPC `buscar_tec_proveedores`, ficha con 4 pestañas, offline = última lista). EA5 tocar imagen en el editor de Dev notes abre el visor; EA8 `[imagen]` en «Mandar a ronda» + `previewNota()`. EA3 llamador del Ingeniero + guardianes adaptados + zona roja propia (inerte). EA2 y EA4: sin trabajo en la app (paridad verificada / no aplica).
+**Probado:** `npm run build` (guards) verde en cada rama, `ng test` 104 verdes, `test:canal`, G1 de SGC simulado sobre diffs sembrados. **NO probado:** ningún dispositivo (visor en el editor, proveedores con datos reales de un usuario Tecnología/Compras), ninguna corrida en GitHub Actions.
+**Pendiente Xaviel:** secrets/Environments de `docs/AGENTES-APP.md`, aplicar protección de ramas, decidir si csd-app debe auto-promover la PWA (hoy NO, ver doc), OK para push/PR a `dev`. Hueco: stacks minificados sin source maps.
+
+---
+
 ## 23-nov-2026 — Ronda DX (PROMPT-155) — v2.72.0 PUBLICADA EN PROD
 
 **En dev / En prod:** **En dev:** 2.72.0 (PR #109/#110/#111; APK dev publicada; sin push en el APK dev: falta `src/dev/google-services.json`). **En prod:** 2.72.0 publicada (PR #112 dev→main, APK en bucket prod, `release-check` 4/4 PASS, `publicada=true`, **`minima` sigue en 2.71.5** — verificado, no se tocó; 2.71.11 despublicada; PWA por Vercel). OK explícito de Xaviel (23-nov: «toca prod… i give u my OK. --yes» + «i test it on my phone»; sin detalle de qué probó → `qa/release-2.72.0.md` lo dice así). iOS sin firma: `solo_compilar` compiló OK (run 45271974584). La actualización in-app en PROD 2.71.11→2.72.0 NO se probó (Claude no tenía teléfono conectado).

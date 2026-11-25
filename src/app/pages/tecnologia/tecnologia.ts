@@ -72,6 +72,8 @@ export class TecnologiaPage {
   // CZ1/CZ4 — Cotizaciones: mismo gate que Compras tecnológicas + permiso
   // granular 'tecnologia.cotizaciones' (DZ-05, para el rol Subadministrador).
   verCotizaciones = computed(() => this.esTecnologia() || this.ctx.puedeVerSubmodulo('tecnologia.cotizaciones'));
+  // EA1 — Proveedores de tecnología: Tecnología opera; Compras y admin solo ven.
+  verProveedores = computed(() => this.esTecnologia() || this.ctx.puedeVerSubmodulo('tecnologia.proveedores'));
 
   // Z30 — Dudas (mismo contenido que la web, desde sgc.ayuda_contenido).
   private dudasCargadas = false;
@@ -364,6 +366,11 @@ export class TecnologiaPage {
   /** CO8 — abre "Compras por aprobar". */
   abrirComprasTec(): void {
     void this.router.navigate(['/tecnologia/compras-aprobar']);
+  }
+
+  /** EA1 — abre Proveedores de tecnología. */
+  abrirProveedores(): void {
+    void this.router.navigate(['/tecnologia/proveedores']);
   }
 
   /** CZ1/CZ6 — abre la biblioteca de Cotizaciones. */

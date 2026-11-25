@@ -1,0 +1,124 @@
+<div class="screen prov" data-testid="proveedor-detalle">
+  <header class="prov__header">
+    <button type="button" class="prov__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="prov__title">{{ detalle()?.ficha?.nombre || ('Proveedor' | t) }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!online) {
+      <app-empty-state icon="📶" [title]="'Necesitas conexión' | t" [message]="'El detalle del proveedor requiere internet.' | t" /><!-- tropes-allow: icono del patrón EmptyState (emoji, ya establecido en toda la app) -->
+    } @else if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!detalle()) {
+      <app-empty-state
+        [title]="'No pudimos cargar' | t"
+        [message]="'Revisa la conexión y vuelve a intentar.' | t"
+        [ctaLabel]="'Reintentar' | t"
+        (action)="cargar()"
+      />
+    } @else {
+      @if (detalle(); as d) {
+        <div class="prov__tabs" role="tablist">
+          @for (t of tabs; track t.id) {
+            <button type="button" role="tab" class="prov__tab" [class.prov__tab--on]="tab() === t.id" [attr.aria-selected]="tab() === t.id" (click)="tab.set(t.id)">{{ t.label | t }}</button>
+          }
+        </div>
+
+        @switch (tab()) {
+          @case ('resumen') {
+            <!-- Resumen -->
+            <div class="prov__panel">
+              @if (d.ficha.nombre_comercial) { <p class="prov__dato"><b>{{ 'Nombre comercial' | t }}:</b> {{ d.ficha.nombre_comercial }}</p> }
+              @if (d.ficha.categoria) { <p class="prov__dato"><b>{{ 'Categoría' | t }}:</b> {{ d.ficha.categoria }}</p> }
+              @if (d.ficha.servicio) { <p class="prov__dato"><b>{{ 'Servicio' | t }}:</b> {{ d.ficha.servicio }}</p> }
+              @if (d.ficha.rnc) { <p class="prov__dato"><b>{{ 'RNC' | t }}:</b> {{ d.ficha.rnc }}</p> }
+              @if (d.ficha.direccion || d.ficha.ciudad) { <p class="prov__dato"><b>{{ 'Dirección' | t }}:</b> {{ d.ficha.direccion }} {{ d.ficha.ciudad }}</p> }
+              @if (d.ficha.valoracion) { <p class="prov__dato"><b>{{ 'Valoración' | t }}:</b> {{ d.ficha.valoracion }}/5</p> }
+              @if (d.ficha.estado === 'inactivo') { <p class="prov__dato">{{ 'Proveedor inactivo' | t }}</p> }
+              @if (d.ficha.etiquetas.length) {
+                <div class="prov__etiquetas">
+                  @for (e of d.ficha.etiquetas; track e) { <span class="prov__card-chip">#{{ e }}</span> }
+                </div>
+              }
+              @if (d.ficha.notas) { <p class="prov__dato">{{ d.ficha.notas }}</p> }
+              @if (webUrl(d.ficha.web); as w) {
+                <button type="button" class="prov__btn" (click)="abrir(w)">{{ 'Sitio web' | t }}</button>
+              }
+              @if (puedeOperar()) {
+                <p class="prov__aviso">{{ 'Edita en la web' | t }}</p>
+              }
+            </div>
+          }
+          @case ('contactos') {
+            <!-- Contactos -->
+            <div class="prov__lista">
+              @for (c of d.contactos; track c.id) {
+                <div class="prov__card">
+                  <div class="prov__card-main">
+                    <p class="prov__card-titulo">{{ c.nombre }} @if (c.principal) { <span class="prov__card-chip">{{ 'Principal' | t }}</span> }</p>
+                    @if (c.cargo) { <span class="prov__card-meta">{{ c.cargo }}</span> }
+                    @if (c.telefono) { <span class="prov__card-meta">{{ c.telefono }}</span> }
+                    @if (c.correo) { <span class="prov__card-meta">{{ c.correo }}</span> }
+                    @if (c.notas) { <span class="prov__card-meta">{{ c.notas }}</span> }
+                  </div>
+                  <div class="prov__acciones">
+                    @if (tel(c); as u) { <button type="button" class="prov__btn" (click)="abrir(u)">{{ 'Llamar' | t }}</button> }
+                    @if (wa(c); as u) { <button type="button" class="prov__btn" (click)="abrir(u)">WhatsApp</button> }
+                    @if (mail(c); as u) { <button type="button" class="prov__btn" (click)="abrir(u)">{{ 'Correo' | t }}</button> }
+                  </div>
+                </div>
+              } @empty {
+                <app-empty-state [title]="'Sin contactos' | t" [message]="'Agrega contactos desde la web.' | t" />
+              }
+            </div>
+          }
+          @case ('trabajos') {
+            <!-- Trabajos realizados -->
+            <div class="prov__lista">
+              @for (w of d.trabajos; track w.id) {
+                <div class="prov__card">
+                  <div class="prov__card-main">
+                    <p class="prov__card-titulo">{{ w.titulo }}</p>
+                    <span class="prov__card-meta">
+                      {{ estadoLabel(w.estado) | t }}
+                      @if (w.fecha) { · {{ fmtFecha(w.fecha) }} }
+                      @if (w.costo !== null) { · {{ w.moneda }} {{ w.costo | number:'1.0-0' }} }
+                    </span>
+                    @if (w.descripcion) { <span class="prov__card-meta">{{ w.descripcion }}</span> }
+                  </div>
+                </div>
+              } @empty {
+                <app-empty-state [title]="'Sin trabajos registrados' | t" [message]="'Los trabajos se registran desde la web.' | t" />
+              }
+            </div>
+          }
+          @case ('facturas') {
+            <!-- Facturas -->
+            <div class="prov__lista">
+              @for (f of d.facturas; track f.id) {
+                <div class="prov__card">
+                  <div class="prov__card-main">
+                    <p class="prov__card-titulo">{{ f.numero }}</p>
+                    <span class="prov__card-meta">
+                      {{ estadoLabel(f.estado) | t }}
+                      @if (f.fecha) { · {{ fmtFecha(f.fecha) }} }
+                      @if (f.monto !== null) { · {{ f.moneda }} {{ f.monto | number:'1.0-0' }} }
+                    </span>
+                    @if (f.notas) { <span class="prov__card-meta">{{ f.notas }}</span> }
+                  </div>
+                  @if (f.archivo_path) {
+                    <div class="prov__acciones">
+                      <button type="button" class="prov__btn" (click)="verFactura(f)">{{ 'Ver archivo' | t }}</button>
+                    </div>
+                  }
+                </div>
+              } @empty {
+                <app-empty-state [title]="'Sin facturas' | t" [message]="'Las facturas se registran desde la web.' | t" />
+              }
+            </div>
+          }
+        }
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,134 @@
+// EA1 — mismos tokens/patrón que cotizaciones (sin estilos nuevos de diseño).
+.prov {
+  background: var(--color-bg);
+  position: relative;
+  min-height: 100%;
+}
+.prov__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.prov__back {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 20px;
+}
+.prov__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: #fff;
+}
+.prov__search {
+  margin-bottom: 10px;
+}
+.prov__aviso {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.prov__lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.prov__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+}
+.prov__card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prov__card-titulo {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.prov__card-meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.prov__card-chip {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.prov__acciones {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.prov__btn {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.prov__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+}
+.prov__tab {
+  flex: none;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.prov__tab--on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.prov__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.prov__dato {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text);
+}
+.prov__etiquetas {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}

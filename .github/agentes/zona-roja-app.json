@@ -1,0 +1,47 @@
+{
+  "_doc": "EA3/F4 — Zona roja PROPIA de csd-app. El workflow agente-guardian la FUSIONA con scripts/guardianes/zona-roja.json de SGC (que ya cubre android/, ios/, capacitor.config, apk/aab/ipa, guards, auth, secrets, dinero, inventario/conduces, notificaciones). Zona roja = el cambio SIEMPRE se detiene en dev y pide el OK de Xaviel; nunca llega solo a produccion. El archivo se lee de la rama BASE (pull_request_target), no del PR.",
+  "categorias": [
+    {
+      "id": "nativo_app",
+      "etiqueta": "App nativa: empaquetado, firma, versionado nativo o tiendas (nunca se publica sola)",
+      "rutas": [
+        "(^|/)ios-templates/",
+        "(^|/)android/",
+        "keystore",
+        "\\.jks$",
+        "google-services",
+        "androidmanifest",
+        "build\\.gradle",
+        "capacitor\\.config",
+        "scripts/(build-apk|release-apk|aab|publicar-version|ios-prepare|store/)",
+        "docs/tiendas",
+        "\\.github/workflows/ios-testflight"
+      ],
+      "contenido": []
+    },
+    {
+      "id": "version_app",
+      "etiqueta": "Version de la app / historial (regla Y1)",
+      "rutas": ["src/environments/", "scripts/(build-env|gen-environment|lib/entorno)"],
+      "contenido": ["app_versiones", "registrar_version"]
+    },
+    {
+      "id": "offline_sync",
+      "etiqueta": "Motor offline: outbox, sincronizacion o esquema Dexie (riesgo de perder capturas de campo)",
+      "rutas": ["(^|/)core/sync/", "(^|/)core/db/"],
+      "contenido": ["\\.version\\(\\d+\\)\\.stores"]
+    },
+    {
+      "id": "pwa_cache",
+      "etiqueta": "Service worker / cache de la PWA (un error deja la app inservible hasta reinstalar)",
+      "rutas": ["ngsw-config", "(^|/)public/ngsw", "service-?worker"],
+      "contenido": []
+    },
+    {
+      "id": "guardia_agentes",
+      "etiqueta": "Guardia de los agentes (workflows, zona roja, proteccion de ramas)",
+      "rutas": ["\\.github/agentes/", "\\.github/workflows/", "\\.github/codeowners", "\\.github/branch-protection"],
+      "contenido": []
+    }
+  ]
+}
