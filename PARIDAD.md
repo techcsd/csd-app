@@ -1414,3 +1414,11 @@ empezara — nada quedó detrás de bandera por falta de backend.
 
 ## QR de documentos (DX7, 23-nov-2026)
 Mismo mecanismo en web y app: edge `conduce-qr` (emitir/resolver), token `<tipo>.<id>.<exp>.<firma>` (+ legado del conduce), destino `/d/:token`. App: escáner propio (nativo ML Kit / PWA BarcodeDetector+jsqr) y `app-doc-qr`; web: `ConduceQrService`. Divergencia deliberada: la app NO tiene pantalla de detalle de `solicitud_compra` (mensaje «se atiende desde la computadora»). El QR no otorga permisos: la pantalla destino y la RLS deciden.
+
+
+## Ronda EA (24-nov-2026) — Proveedores de Tecnología, Dev notes, agentes
+- **Proveedores de Tecnología (EA1):** web = módulo completo (alta/edición, contactos, trabajos, facturas, IA de facturas); **app = solo lectura + contacto** (DEFAULT EA-09): lista con buscador único (RPC `buscar_tec_proveedores`), ficha Resumen/Contactos/Trabajos/Facturas, Llamar/WhatsApp/Correo. Divergencia deliberada: sin alta/edición en la app («Edita en la web»). Offline: solo la última lista (se filtra local por nombre/servicio/etiqueta/contacto; las palabras de trabajos/cotizaciones solo buscan en línea). Permiso `tecnologia.proveedores` (Tecnología opera; Compras y admin solo ven).
+- **Personal de obra · fotos por IA (EA2):** la importación con IA es **solo web**. Las fotos que adjunta se guardan en el mismo bucket `personal-obra` y tabla `personal_obra_fotos` (`personal_id`, `tipo`, `foto_path`); la app las muestra en expediente/carnet **sin cambios**. No existe columna de origen/confianza, así que la app no puede rotular «asignada automáticamente · confianza» (hueco en el padre si se quisiera).
+- **Dev notes (EA5/EA6/EA8):** la app no usa TipTap; renderiza Markdown. Visor ya existía en lectura (`PhotoViewerService`); se añadió tocar-para-ampliar en el **editor**. El texto «Descargar imagen» y el texto crudo de la lista (EA7/EA8) eran de la web: en la app la lista no muestra contenido; `markdownAPlano` («Mandar a ronda») ahora emite `[imagen]` en vez de `!alt (nota-img:…)`.
+- **Empresa/logo (EA4):** la app no tiene módulo Empresa → no aplica.
+- **Agentes (EA3):** carril del Ingeniero conectado (llamador + guardianes adaptados, zona roja propia). **Divergencia deliberada con la web:** csd-app **no** auto-promueve a prod (ver `docs/AGENTES-APP.md`). Inerte hasta cargar secrets.

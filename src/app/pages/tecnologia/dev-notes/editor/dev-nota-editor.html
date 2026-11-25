@@ -72,6 +72,7 @@
           class="dneditor__contenido"
           [attr.contenteditable]="puedeEditar()"
           (input)="onBodyInput(bodyRef)"
+          (click)="onBodyClick($event)"
           [attr.data-placeholder]="'Escribe aquí…' | t"
           aria-label="Contenido de la nota"
         ></div>

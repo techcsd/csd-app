@@ -44,11 +44,13 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-24';
+const RELEASED_AT = '2026-11-25';
 
-const TITULO = 'Arreglo de pantalla en blanco en iPhone';
+const TITULO = 'Proveedores de tecnología y mejoras en notas técnicas';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Arranque', d: 'En iPhone, si la app se quedaba en blanco después de una actualización, ahora se repara sola (limpia su caché y vuelve a abrir) en vez de quedarse esperando.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'Nuevo: Proveedores de tecnología. Busca por nombre, servicio o trabajo (por ejemplo «puertas» o «cerradura») y llama, escribe por WhatsApp o manda un correo con un toque. Incluye contactos, trabajos y facturas.' },
+  { t: 'arreglo', m: 'Notas técnicas', d: 'En el editor de notas técnicas, tocar una imagen ahora la abre ampliada.' },
+  { t: 'arreglo', m: 'Notas técnicas', d: 'Al mandar una nota a la ronda, las imágenes salen como [imagen] en vez de texto raro.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

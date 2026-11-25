@@ -1,0 +1,41 @@
+# EA3/F4 (csd-app) — Llamador del Agente Ingeniero. El cerebro (runner, prompts, guardianes) vive en techcsd/SGC;
+# aquí solo se conecta este repo. Doc: SGC docs/AGENTES-INGENIERO-RUNNER.md y docs/AGENTES-APP.md (este repo).
+#
+# INERTE sin secrets: el reutilizable sale VERDE con «inerte: faltan secrets» (solo nombres). Xaviel carga los valores
+# en Settings → Environments → `agentes-dev` de ESTE repo (el Environment se resuelve en el repo llamador).
+#
+# Disparo: repository_dispatch `agente-ingeniero` con client_payload {tarea_id, repo} (lo manda la edge
+# agente-ingeniero-despachar; solo lo atiende este repo si payload.repo == techcsd/csd-app), o workflow_dispatch manual.
+#
+# ZONA PROTEGIDA: este archivo no lo puede tocar el agente (G1). Los guardianes salen SIEMPRE de techcsd/SGC@main.
+name: agente-ingeniero
+
+on:
+  repository_dispatch:
+    types: [agente-ingeniero]
+  workflow_dispatch:
+    inputs:
+      tarea_id:
+        description: "uuid de la tarea del Ingeniero (sgc.agente_ingeniero_tareas)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  ingeniero:
+    if: github.event_name == 'workflow_dispatch' || github.event.client_payload.repo == github.repository
+    uses: techcsd/SGC/.github/workflows/agente-ingeniero.yml@main
+    with:
+      tarea_id: ${{ github.event.inputs.tarea_id || github.event.client_payload.tarea_id }}
+      repo_guardianes: techcsd/SGC # los guardianes viven solo en SGC (copia confiable)
+      ref_guardianes: main
+      rama_base: dev
+      # build-env prod = guards de la regla 18 (sin ref de prod hardcodeado, tokens, i18n, dev-strings) + ng build producción.
+      build_cmd: node scripts/build-env.mjs --env prod
+      test_cmd: npm test -- --watch=false
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+      SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+      AGENTE_INGENIERO_GITHUB_TOKEN: ${{ secrets.AGENTE_INGENIERO_GITHUB_TOKEN }}

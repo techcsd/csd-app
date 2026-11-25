@@ -4,7 +4,7 @@ import { CANAL_BUILD } from './canal.generated';
 export const environment = {
   production: true,
   entorno: 'dev' as 'dev' | 'prod',
-  version: '2.72.1',
+  version: '2.73.0',
   canal: CANAL_BUILD,
   appUrl: 'https://app-dev.sgcconstructorasd.com',
   webUrl: 'https://dev.sgcconstructorasd.com',

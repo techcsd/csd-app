@@ -40,6 +40,21 @@
       </button>
     }
 
+    <!-- EA1 — Proveedores de tecnología (solo lectura + contacto). Permiso granular
+         'tecnologia.proveedores': Tecnología opera; Compras y admin solo ven. -->
+    @if (verProveedores()) {
+      <button type="button" class="tec__devnotes" appTapScale (click)="abrirProveedores()">
+        <span class="tec__devnotes-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V8l7-5 7 5v13"/><path d="M9 21v-6h6v6M9 10h.01M15 10h.01"/></svg>
+        </span>
+        <span class="tec__devnotes-txt">
+          <span class="tec__devnotes-title">{{ 'Proveedores' | t }}</span>
+          <span class="tec__devnotes-sub">{{ 'Contactos, trabajos y facturas de tecnología' | t }}</span>
+        </span>
+        <span class="tec__devnotes-caret">›</span>
+      </button>
+    }
+
     <!-- CZ1/CZ6 — Cotizaciones: mismo gate que Compras + permiso granular
          'tecnologia.cotizaciones' (Subadministrador). -->
     @if (verCotizaciones()) {

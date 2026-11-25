@@ -1138,6 +1138,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/tecnologia/cotizaciones/cotizacion-detalle/cotizacion-detalle').then((m) => m.CotizacionDetallePage),
   },
+  {
+    // EA1 — Proveedores de Tecnología (solo lectura + contacto). Gate real = RLS/RPC
+    // (puede_ver_submodulo('tecnologia.proveedores')); la página decide qué pintar.
+    path: 'tecnologia/proveedores',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tecnologia/proveedores/proveedores').then((m) => m.ProveedoresPage),
+  },
+  {
+    path: 'tecnologia/proveedores/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/tecnologia/proveedores/proveedor-detalle/proveedor-detalle').then((m) => m.ProveedorDetallePage),
+  },
   // CO13/CO11 — Legal (expedientes + contratos). Solo en línea; gate `legal` dentro
   // del hub/home (RLS real = is_admin() or tiene_modulo('legal')).
   {
