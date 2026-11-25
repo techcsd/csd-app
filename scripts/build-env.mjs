@@ -75,5 +75,9 @@ const canal = writeCanalGenerated(argCanal); // normaliza; default 'pwa'
 console.log(`▶ canal = ${canal} (canal.generated.ts)`);
 execSync(`npx ng build --configuration ${config}`, { stdio: 'inherit' });
 if (target === 'dev') patchDistForDev();
+// PWA iPhone: el service worker debe instalar de forma atómica los chunks que main-*.js importa al arrancar
+// (si no, el primer arranque tras cada deploy cae en la pantalla de rescate y hay que pulsar «Reparar»).
+// Va DESPUÉS de patchDistForDev: también re-hashea lo que ese parche editó.
+execSync('node scripts/ngsw-precache-inicial.mjs', { stdio: 'inherit' });
 // EA — source maps ocultos: salen de dist (nunca se despliegan) y van a un bucket privado.
 execSync(`node scripts/sourcemaps.mjs retirar --env ${target} --canal ${canal}`, { stdio: 'inherit' });
