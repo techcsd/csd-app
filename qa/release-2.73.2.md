@@ -7,4 +7,4 @@
 - Resultado: OK de build y arranque; NO verificado con sesión.
 - Fecha: 2026-11-25
 
-**OK de Xaviel** (25-nov-2026): «aprueba el pr y haz todo lo pendiente… sube el apk haz release, bump y todo».
+**OK de Xaviel** (2026-11-25): «aprueba el pr y haz todo… sube el apk, haz release, bump y todo» (release 2.73.2 a prod).
