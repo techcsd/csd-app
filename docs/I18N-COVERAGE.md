@@ -3,9 +3,9 @@
 Generado por `scripts/i18n-coverage.mjs` (HTML + `.ts`). La unidad es la **pantalla**; el alcance es **toda la app**.
 Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP-12).
 
-- **English: 99.98%** · **Kreyòl: 99.98%** (8465 textos medidos en 293 pantallas)
-- Textos con t(): 8464 · sin t(): 1
-- Pantallas `enforce:true`: 250 de 293
+- **English: 99.98%** · **Kreyòl: 99.98%** (8524 textos medidos en 295 pantallas)
+- Textos con t(): 8523 · sin t(): 1
+- Pantallas `enforce:true`: 252 de 295
 
 | Pantalla | con t() | sin t() | falta en | falta ht | en % | ht % | enforce |
 |---|---:|---:|---:|---:|---:|---:|:--:|
@@ -139,7 +139,7 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/solicitudes/pedir | 51 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/soporte | 23 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tareas | 72 | 0 | 0 | 0 | 100% | 100% | ✅ |
-| pages/tecnologia | 33 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/tecnologia | 35 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia-inventario | 6 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia-inventario/equipo-detalle | 71 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia-inventario/equipo-form | 92 | 0 | 0 | 0 | 100% | 100% | ✅ |
@@ -150,6 +150,8 @@ Un idioma se ofrece sin «beta» solo cuando el número medido llega a 100 % (DP
 | pages/tecnologia/cotizaciones/cotizacion-subir | 26 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia/dev-notes | 12 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/tecnologia/dev-notes/editor | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/tecnologia/proveedores | 19 | 0 | 0 | 0 | 100% | 100% | ✅ |
+| pages/tecnologia/proveedores/proveedor-detalle | 38 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte | 55 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/acta-detalle | 15 | 0 | 0 | 0 | 100% | 100% | ✅ |
 | pages/transporte/apoyo-transporte | 81 | 0 | 0 | 0 | 100% | 100% | ✅ |

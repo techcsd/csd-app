@@ -1,10 +1,10 @@
 {
   "en": 99.98,
   "ht": 99.98,
-  "literales": 8465,
-  "conT": 8464,
+  "literales": 8524,
+  "conT": 8523,
   "sinT": 1,
-  "pantallas": 293,
+  "pantallas": 295,
   "byScreen": {
     "": {
       "conT": 21,
@@ -1103,7 +1103,7 @@
       "ht": 100
     },
     "pages/tecnologia": {
-      "conT": 33,
+      "conT": 35,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,
@@ -1184,6 +1184,22 @@
     },
     "pages/tecnologia/dev-notes/editor": {
       "conT": 15,
+      "sinT": 0,
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "pages/tecnologia/proveedores": {
+      "conT": 19,
+      "sinT": 0,
+      "faltaEn": 0,
+      "faltaHt": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "pages/tecnologia/proveedores/proveedor-detalle": {
+      "conT": 38,
       "sinT": 0,
       "faltaEn": 0,
       "faltaHt": 0,

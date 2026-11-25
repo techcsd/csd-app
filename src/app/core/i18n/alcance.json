@@ -424,6 +424,12 @@
     "pages/tecnologia/dev-notes/editor": {
       "enforce": true
     },
+    "pages/tecnologia/proveedores": {
+      "enforce": true
+    },
+    "pages/tecnologia/proveedores/proveedor-detalle": {
+      "enforce": true
+    },
     "pages/transporte": {
       "enforce": true
     },
