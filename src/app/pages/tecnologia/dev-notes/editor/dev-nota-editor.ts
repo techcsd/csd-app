@@ -22,6 +22,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { NetworkService } from '../../../../core/services/network.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
 import { Nota } from '../../../../core/models/nota.model';
+import { PhotoViewerService } from '../../../../shared/ui/photo-viewer/photo-viewer.service';
 import { formatFechaCortaHora } from '../../../../core/util/fecha';
 import { htmlToMarkdown, markdownAPlano, markdownToHtml, resolverImagenesNota } from '../../../../core/util/markdown';
 
@@ -61,8 +62,19 @@ export class DevNotaEditorPage implements OnDestroy {
   private network = inject(NetworkService);
   private ctx = inject(UserContextService);
   private i18n = inject(I18nService);
+  private photoViewer = inject(PhotoViewerService);
 
   readonly fechaHora = formatFechaCortaHora;
+
+  /** EA5 — tocar una imagen del cuerpo (contenteditable) la abre ampliada en el visor
+   *  de la app (mismo `PhotoViewerService` que la vista de lectura). Las imágenes aún
+   *  sin resolver o rotas no abren nada. */
+  onBodyClick(ev: MouseEvent): void {
+    const img = (ev.target as HTMLElement | null)?.closest?.('img') as HTMLImageElement | null;
+    if (!img || !img.src || img.classList.contains('nota-img-pendiente') || img.classList.contains('nota-img-rota')) return;
+    ev.preventDefault();
+    this.photoViewer.open(img.src, img);
+  }
 
   loading = signal(true);
   private id = '';
