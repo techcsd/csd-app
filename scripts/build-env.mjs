@@ -75,3 +75,5 @@ const canal = writeCanalGenerated(argCanal); // normaliza; default 'pwa'
 console.log(`▶ canal = ${canal} (canal.generated.ts)`);
 execSync(`npx ng build --configuration ${config}`, { stdio: 'inherit' });
 if (target === 'dev') patchDistForDev();
+// EA — source maps ocultos: salen de dist (nunca se despliegan) y van a un bucket privado.
+execSync(`node scripts/sourcemaps.mjs retirar --env ${target} --canal ${canal}`, { stdio: 'inherit' });
