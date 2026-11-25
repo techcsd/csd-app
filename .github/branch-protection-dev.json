@@ -1,0 +1,14 @@
+{
+  "_comment": "EA3/F4 — PROPUESTA (NO aplicada) de proteccion de `dev` en techcsd/csd-app. Aplicar SOLO con OK de Xaviel:  gh api -X PUT repos/techcsd/csd-app/branches/dev/protection --input .github/branch-protection-dev.json  (quitar la clave _comment si GitHub la rechaza). Para PR que NO son del agente los jobs se saltan (skipped cuenta como verde), asi que Xaviel y Claude Code siguen igual. Ver docs/AGENTES-APP.md.",
+  "required_status_checks": {
+    "strict": false,
+    "contexts": ["ci-agente", "g1-determinista", "g2-guardian"]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": null,
+  "restrictions": null,
+  "required_linear_history": false,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "required_conversation_resolution": false
+}
