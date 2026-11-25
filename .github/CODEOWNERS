@@ -1,0 +1,7 @@
+# Zona protegida del carril de agentes: cualquier cambio aqui pide revision de Xaviel.
+/.github/workflows/agente-*.yml @XavielT
+/.github/agentes/ @XavielT
+/.github/branch-protection-*.json @XavielT
+/.github/CODEOWNERS @XavielT
+/CLAUDE.md @XavielT
+/.claude/ @XavielT

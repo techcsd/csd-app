@@ -46,11 +46,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-25';
 
-const TITULO = 'Proveedores de tecnología y mejoras en notas técnicas';
+const TITULO = 'Errores más fáciles de diagnosticar';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Tecnología', d: 'Nuevo: Proveedores de tecnología. Busca por nombre, servicio o trabajo (por ejemplo «puertas» o «cerradura») y llama, escribe por WhatsApp o manda un correo con un toque. Incluye contactos, trabajos y facturas.' },
-  { t: 'arreglo', m: 'Notas técnicas', d: 'En el editor de notas técnicas, tocar una imagen ahora la abre ampliada.' },
-  { t: 'arreglo', m: 'Notas técnicas', d: 'Al mandar una nota a la ronda, las imágenes salen como [imagen] en vez de texto raro.' },
+  { t: 'mejora', m: 'Soporte', d: 'Los reportes de error ahora se pueden rastrear hasta la línea exacta del código, para que Tecnología corrija los fallos más rápido. No cambia nada en tu pantalla.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

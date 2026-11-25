@@ -1,11 +1,11 @@
 # HANDOFF — CSD App
 
-## 25-nov-2026 — Ronda EA (PROMPT-157) — EN RAMAS LOCALES, nada publicado
+## 25-nov-2026 — Ronda EA (PROMPT-157) — v2.73.0 PUBLICADA EN PROD
 
-**En dev / En prod:** **En dev:** nada (sin push ni PR; 4 ramas locales en el worktree `csd-app-ea`: `feature/ea-proveedores-app`, `feature/ea-devnotes-app`, `feature/ea-agentes-app`, `docs/ea-cierre`). **En prod:** 2.72.1 sin cambios. Sin bump de versión, sin APK.
-**Qué:** EA1 Proveedores de Tecnología en la app (solo lectura + contacto, RPC `buscar_tec_proveedores`, ficha con 4 pestañas, offline = última lista). EA5 tocar imagen en el editor de Dev notes abre el visor; EA8 `[imagen]` en «Mandar a ronda» + `previewNota()`. EA3 llamador del Ingeniero + guardianes adaptados + zona roja propia (inerte). EA2 y EA4: sin trabajo en la app (paridad verificada / no aplica).
-**Probado:** `npm run build` (guards) verde en cada rama, `ng test` 104 verdes, `test:canal`, G1 de SGC simulado sobre diffs sembrados. **NO probado:** ningún dispositivo (visor en el editor, proveedores con datos reales de un usuario Tecnología/Compras), ninguna corrida en GitHub Actions.
-**Pendiente Xaviel:** secrets/Environments de `docs/AGENTES-APP.md`, aplicar protección de ramas, decidir si csd-app debe auto-promover la PWA (hoy NO, ver doc), OK para push/PR a `dev`. Hueco: stacks minificados sin source maps.
+**En dev / En prod:** **En dev:** 2.73.0 (PR #120 código, #121 QA; APK dev publicada). **En prod:** 2.73.0 publicada (PR #122 dev→main, `release-check` 4/4 PASS, APK en bucket prod, `publicada=true`, **`minima` sigue en 2.71.5**, 2.72.1 despublicada; PWA por Vercel). OK explícito de Xaviel (25-nov: «i test it, send it to prod… do all the stuff»; no detalló qué probó → `qa/release-2.73.0.md` lo dice así). Actualización in-app 2.72.1→2.73.0 NO probada por Claude.
+**Qué:** EA1 Proveedores de Tecnología (solo lectura + contacto, RPC `buscar_tec_proveedores`; offline = última lista). EA5 tocar imagen en el editor de Dev notes abre el visor; EA8 `[imagen]` en «Mandar a ronda». EA3 llamador del Ingeniero + guardianes adaptados + zona roja propia (INERTE sin secrets; csd-app NO auto-promueve, ver `docs/AGENTES-APP.md`). EA2/EA4: sin trabajo en la app.
+**Probado:** build con guards, `ng test` 104, `test:canal`, G1 de SGC simulado local. **NO probado:** dispositivo, corridas reales en GitHub Actions.
+**Pendiente Xaviel:** secrets/Environments de `docs/AGENTES-APP.md`, protección de ramas, CODEOWNERS, decidir auto-promoción de la PWA. Hueco: stacks minificados sin source maps. APK dev sin push (falta `src/dev/google-services.json`).
 
 ---
 
