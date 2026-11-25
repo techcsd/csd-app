@@ -7,3 +7,5 @@
 - Qué falta: probar en el iPhone de Xaviel una actualización real (2.73.3 → siguiente versión) y confirmar que ya no aparece «Reparar».
 - Resultado: OK de build y de instalación del service worker en escritorio; sin verificar en iPhone.
 - Fecha: 2026-11-25
+
+**OK de Xaviel** (2026-11-25): «sí, mándalo a prod. tienes mi OK para todo» (release 2.73.3 a prod).
