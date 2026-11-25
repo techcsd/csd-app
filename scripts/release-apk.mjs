@@ -46,9 +46,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-11-25';
 
-const TITULO = 'Errores más fáciles de diagnosticar';
+const TITULO = 'Mejoras internas de pruebas y diagnóstico';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Soporte', d: 'Los reportes de error ahora se pueden rastrear hasta la línea exacta del código, para que Tecnología corrija los fallos más rápido. No cambia nada en tu pantalla.' },
+  { t: 'mejora', m: 'Soporte', d: 'La versión de pruebas ahora puede recibir notificaciones push y los reportes de error del PWA se pueden rastrear hasta la línea de código. No cambia nada en tu pantalla.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
