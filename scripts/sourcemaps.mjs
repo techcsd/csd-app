@@ -8,6 +8,7 @@
 //               .map, FALLA (fuga de código fuente). Subir es best-effort: un fallo de red no rompe el build.
 //   subir       re-sube lo que ya está en dist-maps/<version>/<canal>/.
 //   verificar   compara el hash de main-*.js desplegado (--url) con dist-maps/<version>/pwa.
+//   alinear     PWA: sube los maps con los nombres con hash del despliegue de Vercel (emparejo por contenido).
 //   simbolizar  convierte un stack minificado en archivo:línea del código fuente.
 //
 // Uso:
@@ -179,6 +180,36 @@ async function simbolizar() {
   process.exit(total && !resueltas ? 2 : 0);
 }
 
+// ── alinear ────────────────────────────────────────────────────────────────
+// Vercel compila en Linux y los nombres con hash (chunk-XXXX.js) NO coinciden con los del build local aunque el
+// contenido sea el mismo (el hash cascadea). Aquí se baja el JS DESPLEGADO, se empareja con el JS local por contenido
+// (ignorando los nombres con hash) y se suben los maps con los nombres del despliegue. Requiere dist/ del build local
+// de ESTE mismo commit (node scripts/build-env.mjs --env <env> --canal pwa) y dist-maps/<version>/pwa.
+async function alinear() {
+  const url = typeof flag('url') === 'string' ? flag('url') : (ENV === 'prod' ? 'https://app.sgcconstructorasd.com/' : 'https://app-dev.sgcconstructorasd.com/');
+  const version = typeof flag('version') === 'string' ? flag('version') : versionDe(ENV);
+  if (ENV === 'prod' && !flag('yes')) { console.error('🔴 prod requiere --yes'); process.exit(1); }
+  if (!URL_ || !KEY) { console.error('🔴 faltan credenciales del entorno'); process.exit(1); }
+  const dist = join(ROOT, 'dist', 'csd-app', 'browser'), maps = join(ROOT, 'dist-maps', version, 'pwa');
+  const norm = (t) => t.replace(/[A-Za-z0-9_.]*-[A-Z0-9]{8}.js/g, 'X.js');
+  const base = new URL(url).origin + '/';
+  const ngsw = await (await fetch(base + 'ngsw.json', { cache: 'no-store' })).json();
+  const vivos = [...new Set(ngsw.assetGroups.flatMap((g) => g.urls).map((u) => u.slice(1)).filter((u) => u.endsWith('.js')))];
+  const locales = readdirSync(dist).filter((x) => x.endsWith('.js') && existsSync(join(maps, x + '.map')));
+  const porContenido = new Map();
+  for (const l of locales) { const k = norm(readFileSync(join(dist, l), 'utf8')); const a = porContenido.get(k) || []; a.push(l); porContenido.set(k, a); }
+  let ok = 0, sin = 0;
+  for (const v of vivos) {
+    const t = norm(await (await fetch(base + v, { cache: 'no-store' })).text());
+    const l = (porContenido.get(t) || []).shift();
+    if (!l) { sin++; continue; }
+    const r = await fetch(objUrl(`${version}/pwa/${v}.map`), { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json', 'x-upsert': 'true' }, body: readFileSync(join(maps, l + '.map')) });
+    if (r.ok) ok++; else { sin++; console.warn(`⚠ ${v} → HTTP ${r.status}`); }
+  }
+  console.log(`✓ alinear ${ENV}: ${ok}/${vivos.length} maps subidos con los nombres del despliegue${sin ? `, ${sin} sin pareja` : ''}`);
+  process.exit(sin ? 1 : 0);
+}
+
 // ── verificar ──────────────────────────────────────────────────────────────
 // ¿Los maps de dist-maps/<version>/pwa corresponden al PWA DESPLEGADO? (mismo hash de main-*.js)
 async function verificar() {
@@ -190,10 +221,10 @@ async function verificar() {
   const ok = existsSync(join(ROOT, 'dist-maps', version, 'pwa', m[1] + '.map'));
   console.log(ok
     ? `✓ el PWA desplegado (${m[1]}) coincide con dist-maps/${version}/pwa`
-    : `🔴 el PWA desplegado usa ${m[1]} y NO hay mapa local para esa versión: el build local no es idéntico al de Vercel (¿otro commit/canal?)`);
+    : `🔴 el PWA desplegado usa ${m[1]} y NO hay mapa local para esa versión: el build local no es idéntico al de Vercel (¿otro commit/canal, o Vercel compiló en otra plataforma?). Corre: sourcemaps.mjs alinear --env ${ENV} --yes`);
   process.exit(ok ? 0 : 1);
 }
 
-const acciones = { retirar, subir, simbolizar, verificar };
-if (!acciones[cmd]) { console.error('uso: sourcemaps.mjs retirar|subir|simbolizar|verificar --env dev|prod …'); process.exit(1); }
+const acciones = { retirar, subir, simbolizar, verificar, alinear };
+if (!acciones[cmd]) { console.error('uso: sourcemaps.mjs retirar|subir|simbolizar|verificar|alinear --env dev|prod …'); process.exit(1); }
 await acciones[cmd]();
