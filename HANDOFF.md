@@ -4923,3 +4923,9 @@ Viven en la **memoria del proyecto** (`.claude/.../memory/MEMORY.md`) — no los
 - `release-apk.mjs --env prod` sube el APK y REGISTRA la versión en `app_versiones`, pero NO la marca `publicada`. La app consulta `version_publicada('movil')`, así que los teléfonos siguen recibiendo la anterior hasta correr el data-fix versionado `scripts/data-fixes/<fecha>-<ronda>-publicar-<versión>.mjs` (dev primero, luego prod; exige línea OK válida en `qa/release-<versión>.md`).
 - 2.71.6/2.71.7 se subieron el 22-nov pero el actualizador seguía instalando 2.71.5 hasta publicar 2.71.7 (`2026-11-22-du-publicar-2.71.7.mjs`). Probado en un Xiaomi M2101K6G (Android 13): 2.71.5 → 2.71.7 desde el banner de la app, con PIN y sesión, quedó estable. Tras actualizar, la app muestra una vez «Reparando la app…» y pide el PIN otra vez.
 - 2.71.8 es solo PWA (`/reparar.html`); no tiene APK, por eso la versión vigente del APK es 2.71.7.
+
+### Cierre 2026-11-25 (EA) — 2.73.2 en PROD
+- **En prod:** 2.73.2 publicada (minima sin cambios). Mapas del PWA subidos con `node scripts/sourcemaps.mjs alinear --env prod --yes` (Vercel compila en Linux: los hashes difieren de los locales; tras cada merge a main correr build-env --canal pwa + alinear). Simbolizar: `sourcemaps.mjs simbolizar --env prod --reporte <id>`.
+- **En dev:** 2.73.2; APK dev con push (app Firebase com.constructorasd.csdapp.dev en csd-core, JSON en android/app/src/dev/, gitignored). Falta probar un push real con sesion.
+- **Bloqueado en terceros:** secrets del carril de agentes (Environment agentes-dev en techcsd/csd-app: XavielT es solo write, hace falta admin de la org; ANTHROPIC_API_KEY y token fine-grained los crea un humano). CODEOWNERS (@XavielT) ya esta.
+- **No probado con sesion:** flujos en APK/PWA (el teclado Samsung desordena adb input text; teclear caracter a caracter funciona pero el login fallo). Probar Proveedores/Dev notes a mano.
