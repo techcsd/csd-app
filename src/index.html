@@ -39,7 +39,7 @@
     </script>
     <script>
       // DU2 — red de seguridad de arranque (ES5, sin dependencias). Si la app no pinta
-      // nada dentro de <app-root> en 8 s, o salta un error/promesa rechazada ANTES del
+      // nada dentro de <app-root> en 15 s (era 8: en iPhone el primer arranque tras una actualización tarda y daba falsos rescates), o salta un error/promesa rechazada ANTES del
       // primer render, o un <script> falla al cargar/parsear (p. ej. regex no soportado
       // en iOS viejo, chunk servido como HTML), muestra una pantalla en español en vez
       // de dejar el teléfono en blanco. Reintentar = recargar; Reparar = limpia el SW y
@@ -174,7 +174,7 @@
         var t0 = Date.now();
         var iv = setInterval(function () {
           if (!rootVacio()) { clearInterval(iv); return; }
-          if (Date.now() - t0 > 8000) { clearInterval(iv); if (autoReparar()) return; window.__csdBootFail('timeout 8s sin render'); }
+          if (Date.now() - t0 > 15000) { clearInterval(iv); if (autoReparar()) return; window.__csdBootFail('timeout 15s sin render'); }
         }, 500);
       })();
     </script>
