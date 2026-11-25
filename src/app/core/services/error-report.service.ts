@@ -254,7 +254,7 @@ export class ErrorReportService implements ErrorHandler {
         // reconoce por `mem_used_mb` alto / `device_mem_gb` bajo justo antes del crash.
         // BU1 F1.3 — etiqueta el entorno en el context (dev/prod ya escriben a BDs
         // distintas, pero esto lo deja explícito en la fila sin tocar el RPC).
-        context: { entorno: environment.entorno, route: this.currentRoute(), ...this.memoryInfo(), ...this.sanitizeContext(context) },
+        context: { entorno: environment.entorno, canal: environment.canal, route: this.currentRoute(), ...this.memoryInfo(), ...this.sanitizeContext(context) },
         device_model: d.model,
         device_brand: d.manufacturer,
         os_version: d.osVersion,

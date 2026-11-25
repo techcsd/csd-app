@@ -1,0 +1,233 @@
+# EA3/F4 (csd-app) — Guardianes de los PR del Ingeniero. Adaptación de techcsd/SGC/.github/workflows/agente-guardian.yml:
+# los scripts/prompts de los guardianes NO viven aquí: se traen SIEMPRE de techcsd/SGC@main (copia confiable) en
+# `.guardianes-sgc/`, y a la zona roja de SGC se le FUSIONA .github/agentes/zona-roja-app.json (de la rama BASE).
+# Se aplica a PR con etiqueta `agente` o rama agente/** | agente-prod/**. Para PR que NO son del agente los jobs se saltan
+# (skipped cuenta como verde en la protección de rama), así que Xaviel y Claude Code siguen con su flujo normal.
+#
+#   ci-agente        build (guards regla 18) + tests + test de canal, SIN secrets
+#   g1-determinista  G1: zona protegida, secretos, SQL aditivo, service role en cliente, tamaño de diff, zona roja (SGC + app)
+#   g2-guardian      G2: Guardián IA independiente (otro prompt), SOLO LECTURA, veredicto JSON como comentario
+#
+# SEGURIDAD: g1/g2 usan `pull_request_target` => el código y los prompts salen de la rama BASE y de SGC@main; el PR se trae
+# solo como DATOS (git diff) y NUNCA se ejecuta con secrets. ci-agente usa `pull_request` sin secrets.
+# INERTE sin secrets: g2 sale verde con «inerte: faltan secrets».
+# ZONA PROTEGIDA: este archivo no lo puede tocar el agente (G1: .github/workflows/agente-*.yml).
+name: agente-guardian
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [dev, main]
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agente-guardian-${{ github.event.pull_request.number }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  GUARDIANES: .guardianes-sgc/scripts/guardianes
+
+jobs:
+  ci-agente:
+    name: ci-agente
+    if: >-
+      github.event_name == 'pull_request' &&
+      (contains(github.event.pull_request.labels.*.name, 'agente') ||
+       startsWith(github.event.pull_request.head.ref, 'agente/') ||
+       startsWith(github.event.pull_request.head.ref, 'agente-prod/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Build (guards de la regla 18) + tests (sin secrets)
+        run: |
+          npm ci --no-audit --no-fund
+          node scripts/build-env.mjs --env prod
+          npm run test:canal
+          npm test -- --watch=false
+
+  g1-determinista:
+    name: g1-determinista
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      (contains(github.event.pull_request.labels.*.name, 'agente') ||
+       startsWith(github.event.pull_request.head.ref, 'agente/') ||
+       startsWith(github.event.pull_request.head.ref, 'agente-prod/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4 # rama BASE (pull_request_target): zona roja de la app confiable
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4 # guardianes confiables de SGC@main
+        with:
+          repository: techcsd/SGC
+          ref: main
+          path: .guardianes-sgc
+          sparse-checkout: scripts/guardianes
+          token: ${{ secrets.AGENTE_INGENIERO_GITHUB_TOKEN || github.token }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Traer el PR solo como datos
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: git fetch --no-tags origin "pull/${PR_NUMBER}/head:pr-head"
+      - name: Fusionar la zona roja de la app (SGC + csd-app)
+        run: |
+          node -e "const fs=require('fs');const p='${GUARDIANES}/zona-roja.json';const b=JSON.parse(fs.readFileSync(p,'utf8'));const a=JSON.parse(fs.readFileSync('.github/agentes/zona-roja-app.json','utf8'));b.categorias.push(...a.categorias);fs.writeFileSync(p,JSON.stringify(b,null,2));console.log('zona roja: '+b.categorias.length+' categorías')"
+      - name: Topes desde la config del Ingeniero (si hay secrets; si no, 8 archivos / 300 líneas)
+        env:
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+        run: |
+          if node "${GUARDIANES}/rpc.mjs" ing_config_leer '{}' > config.json 2> config.err; then
+            echo "G1_MAX_ARCHIVOS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('config.json','utf8')).max_archivos ?? 8)")" >> "$GITHUB_ENV"
+            echo "G1_MAX_LINEAS=$(node -e "console.log(JSON.parse(require('fs').readFileSync('config.json','utf8')).max_lineas ?? 300)")" >> "$GITHUB_ENV"
+          else
+            echo "topes por defecto ($(head -c 120 config.err))"
+          fi
+      - name: G1
+        run: node "${GUARDIANES}/g1.mjs" --base "origin/${{ github.event.pull_request.base.ref }}" --head pr-head --salida g1.json
+
+  g2-guardian:
+    name: g2-guardian
+    needs: g1-determinista
+    if: >-
+      always() && github.event_name == 'pull_request_target' &&
+      (contains(github.event.pull_request.labels.*.name, 'agente') ||
+       startsWith(github.event.pull_request.head.ref, 'agente/') ||
+       startsWith(github.event.pull_request.head.ref, 'agente-prod/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Guardián = SOLO LECTURA: sin push. pull-requests: write únicamente para comentar el veredicto.
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Preflight (¿hay secrets?)
+        id: pre
+        env:
+          S_ANTHROPIC: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$S_ANTHROPIC" ]; then echo "inerte: faltan secrets: ANTHROPIC_API_KEY"; echo "activo=false" >> "$GITHUB_OUTPUT"; else echo "activo=true" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4 # rama BASE: código de la app confiable (el Guardián lo lee con Read/Glob/Grep)
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/checkout@v4 # guardianes confiables de SGC@main
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          repository: techcsd/SGC
+          ref: main
+          path: .guardianes-sgc
+          sparse-checkout: scripts/guardianes
+          token: ${{ secrets.AGENTE_INGENIERO_GITHUB_TOKEN || github.token }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          node-version: 22
+
+      - name: Fusionar la zona roja de la app (SGC + csd-app)
+        if: steps.pre.outputs.activo == 'true'
+        run: |
+          node -e "const fs=require('fs');const p='${GUARDIANES}/zona-roja.json';const b=JSON.parse(fs.readFileSync(p,'utf8'));const a=JSON.parse(fs.readFileSync('.github/agentes/zona-roja-app.json','utf8'));b.categorias.push(...a.categorias);fs.writeFileSync(p,JSON.stringify(b,null,2))"
+
+      - name: Datos del PR (diff, cuerpo, reporte) — todo como archivos
+        if: steps.pre.outputs.activo == 'true'
+        id: datos
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+        run: |
+          git fetch --no-tags origin "pull/${PR_NUMBER}/head:pr-head"
+          git diff --no-color -M "origin/${BASE_REF}...pr-head" | head -c 150000 > diff.txt
+          printf '%s' "$PR_BODY" > pr-body.txt
+          TAREA=$(printf '%s' "$HEAD_REF" | sed -nE 's#^agente(-prod)?/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).*#\2#p')
+          echo "tarea=$TAREA" >> "$GITHUB_OUTPUT"
+          if [ -n "$TAREA" ] && node "${GUARDIANES}/rpc.mjs" ing_tarea_leer "{\"p_id\":\"$TAREA\"}" > tarea.json 2>/dev/null; then
+            node -e "const t=JSON.parse(require('fs').readFileSync('tarea.json','utf8'));console.log(t.reporte??t.descripcion??t.texto??'')" > reporte.txt
+          else
+            printf '%s' "$PR_TITLE" > reporte.txt
+          fi
+
+      - name: G1 (se recalcula aquí; es determinista)
+        if: steps.pre.outputs.activo == 'true'
+        id: g1
+        run: |
+          set +e
+          node "${GUARDIANES}/g1.mjs" --base "origin/${{ github.event.pull_request.base.ref }}" --head pr-head --salida g1.json > /dev/null
+          echo "codigo=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      # Prompt DISTINTO al del Ingeniero. Solo lectura: Read/Glob/Grep. Entorno mínimo (solo la API key).
+      - name: Guardián IA (solo si G1 no rechazó)
+        if: steps.pre.outputs.activo == 'true' && steps.g1.outputs.codigo == '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_VERSION: "2.1.331"
+        run: |
+          G1R=$(node -e "const g=JSON.parse(require('fs').readFileSync('g1.json','utf8'));console.log(g.veredicto+' | zona roja: '+g.zonaRoja.esZonaRoja+' | medida: '+JSON.stringify(g.medida))")
+          node "${GUARDIANES}/armar-prompt.mjs" "${GUARDIANES}/prompts/guardian.md" \
+            --dato REPORTE=reporte.txt --dato PR_CUERPO=pr-body.txt --dato DIFF=diff.txt --var "G1_RESUMEN=$G1R" > prompt.txt
+          set +e
+          env -i PATH="$PATH" HOME="$HOME" CI=true ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+            npx --yes "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" -p --output-format json --max-turns 12 \
+              --allowedTools "Read,Glob,Grep" --disallowedTools "Bash Write Edit WebFetch WebSearch" < prompt.txt > claude-out.json 2> claude.err
+          echo "claude_exit=$?"
+          exit 0
+
+      - name: Veredicto (G1 + G2) y registro en la tarea
+        if: steps.pre.outputs.activo == 'true'
+        id: veredicto
+        env:
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+          TAREA: ${{ steps.datos.outputs.tarea }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set +e
+          COSTO=$(node "${GUARDIANES}/extraer.mjs" claude-out.json costo 2>/dev/null || echo 0)
+          [ -f claude-out.json ] && node -e "const o=JSON.parse(require('fs').readFileSync('claude-out.json','utf8'));require('fs').writeFileSync('claude-text.txt',o.result??'')" 2>/dev/null
+          node "${GUARDIANES}/g2.mjs" --claude-out claude-text.txt --g1 g1.json --pr "$PR_NUMBER" --sha "$HEAD_SHA" --tarea "$TAREA" --costo "$COSTO"
+          echo "codigo=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Publicar veredicto como comentario
+        if: steps.pre.outputs.activo == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body-file comentario.md
+
+      - name: Resultado del check (falla si el veredicto es rechazado)
+        if: steps.pre.outputs.activo == 'true'
+        run: exit ${{ steps.veredicto.outputs.codigo }}
