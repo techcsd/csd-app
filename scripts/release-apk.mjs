@@ -44,11 +44,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-11-25';
+const RELEASED_AT = '2026-11-26';
 
-const TITULO = 'La app abre bien después de actualizar';
+const TITULO = 'Requisiciones: ya no reaparece la anterior';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Actualizaciones', d: 'En iPhone, la app ya no se queda en la pantalla de rescate la primera vez que se abre después de una actualización: ahora baja todo lo necesario de una vez, antes de cambiar de versión.' },
+  { t: 'arreglo', m: 'Solicitudes', d: 'Al crear una requisición nueva ya no aparece la anterior que ya habías enviado, así no se duplican.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
