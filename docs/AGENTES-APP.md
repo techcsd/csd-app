@@ -1,6 +1,6 @@
 # Agentes (Ingeniero + Guardianes) en csd-app — EA3 · F4
 
-Estado: **código listo, INERTE**. Nada corre hasta que Xaviel cargue los secrets/Environments de abajo.
+Estado: **activo en dev** (desde 2026-11-26, secrets del Environment `agentes-dev` cargados). El Ingeniero abre PR siempre a `dev`; **no hay promoción a prod**.
 El cerebro (cola, despacho, runner, prompts, guardianes, pantalla «Cambios del Ingeniero») vive en **SGC** (PROMPT-156). Aquí solo se conecta este repo.
 Contrato y flujo completos: SGC `docs/AGENTES-INGENIERO.md` y `docs/AGENTES-INGENIERO-RUNNER.md`.
 
@@ -47,4 +47,4 @@ G1 real de SGC (`scripts/guardianes/g1.mjs` de `origin/dev`) con la zona roja fu
 | `SUPABASE_SERVICE_ROLE_KEY` en `src/app/` | **rechazado** (`service_role_en_cliente`) | no |
 | El propio diff de F4 (workflows + zona roja) | **rechazado** (`zona_protegida`, `diff_grande`) | sí |
 
-**NO verificado:** ninguna corrida real en GitHub Actions (sin secrets ni runner); el Guardián IA (G2) y el runner del Ingeniero no se ejecutaron; `ci-agente` no se corrió en CI (su comando equivale a `pr-main` + tests, ambos verdes en local). El prompt del Guardián (`guardian.md`) es el de SGC y no conoce las reglas propias de la app (offline-first/outbox, flujo de versiones); mejorarlo requiere un cambio en SGC (`--dato REGLAS_APP=…`).
+**Verificado (2026-11-26):** ya hubo corridas reales del workflow `agente-ingeniero` en GitHub Actions (lee la tarea, analiza con el modelo y guarda plan, borrador y estado). **Falta verificar:** la fase de código/PR y los guardianes G1/G2 (y `ci-agente`) en una corrida real (su comando equivale a `pr-main` + tests, ambos verdes en local). El prompt del Guardián (`guardian.md`) es el de SGC y no conoce las reglas propias de la app (offline-first/outbox, flujo de versiones); mejorarlo requiere un cambio en SGC (`--dato REGLAS_APP=…`).
