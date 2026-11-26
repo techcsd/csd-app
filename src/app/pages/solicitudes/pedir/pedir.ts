@@ -141,7 +141,9 @@ export class PedirPage implements OnDestroy {
         fechaNecesidad: this.fechaNecesidad(),
         cart: this.cart(),
       };
-      if (!this.hydrated || this.submitting() || !snap.cart.length) return;
+      // Hotfix: tras enviar (hoja 'exito') el carrito sigue lleno; sin esta guarda el autosave
+      // re-guardaba el borrador ya enviado y la siguiente requisición lo restauraba (duplicados).
+      if (!this.hydrated || this.submitting() || this.hoja() === 'exito' || !snap.cart.length) return;
       this.autosave.queue(this.clave, snap, {
         tipo: 'solicitud_pedir',
         etiqueta: this.i18n.t('Requisición de materiales'),
@@ -376,8 +378,8 @@ export class PedirPage implements OnDestroy {
         },
         forzar,
       );
-      void this.autosave.discard(this.clave); // CT5 — borrador enviado → limpiar
-      this.hoja.set('exito');
+      this.hoja.set('exito'); // antes de limpiar: el effect de autosave ya no re-guarda
+      await this.autosave.discard(this.clave); // CT5 — borrador enviado → limpiar
       this.motion.momento('entrada'); // CL2 F4 — requisición enviada (también offline, ya encolada)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar.'));
