@@ -1,5 +1,14 @@
 # HANDOFF — CSD App
 
+## 26-nov-2026 — Hotfix requisición duplicada — v2.73.4 PUBLICADA EN PROD
+
+**En dev / En prod:** 2.73.4 en ambos (PR #137 código, #138 dev→main, `release-check` 4/4, APK en bucket prod, `publicada=true`, `minima` sin tocar, 2.73.3 despublicada). OK de Xaviel («tienes mi OK. --yes»). #84 (`/reparar.html`) también mergeado a dev.
+**Causa:** en `solicitudes/pedir/pedir.ts` el effect de autosave volvía a guardar el carrito justo después de enviar (submitting→false con el carrito lleno); la siguiente «Nueva requisición» restauraba el borrador viejo y al enviarlo se duplicaba. **Arreglo:** el effect no guarda en la hoja `exito` y el `discard` se espera. Patrón a vigilar en otras pantallas con `AutosaveService` (`recibir.ts`, etc.): vaciar/marcar enviado ANTES de que el effect pueda re-encolar.
+**Datos:** duplicados reales en prod (30 días): solo folios 157-159 (4-nov), 158 y 159 ya rechazados; nada que limpiar.
+**NO probado:** en teléfono (enviar una requisición y abrir otra); la actualización in-app 2.73.3→2.73.4.
+
+---
+
 ## 25-nov-2026 — Ronda EA (PROMPT-157) — v2.73.0 PUBLICADA EN PROD
 
 **En dev / En prod:** **En dev:** 2.73.0 (PR #120 código, #121 QA; APK dev publicada). **En prod:** 2.73.0 publicada (PR #122 dev→main, `release-check` 4/4 PASS, APK en bucket prod, `publicada=true`, **`minima` sigue en 2.71.5**, 2.72.1 despublicada; PWA por Vercel). OK explícito de Xaviel (25-nov: «i test it, send it to prod… do all the stuff»; no detalló qué probó → `qa/release-2.73.0.md` lo dice así). Actualización in-app 2.72.1→2.73.0 NO probada por Claude.
