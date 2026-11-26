@@ -1,6 +1,6 @@
 # Agentes (Ingeniero + Guardianes) en csd-app — EA3 · F4
 
-Estado: **código listo, INERTE**. Nada corre hasta que Xaviel cargue los secrets/Environments de abajo.
+Estado: **activo en dev** (26-nov-2026); promoción a prod activa cuando existen los secrets de `agentes-prod`.
 El cerebro (cola, despacho, runner, prompts, guardianes, pantalla «Cambios del Ingeniero») vive en **SGC** (PROMPT-156). Aquí solo se conecta este repo.
 Contrato y flujo completos: SGC `docs/AGENTES-INGENIERO.md` y `docs/AGENTES-INGENIERO-RUNNER.md`.
 
@@ -17,12 +17,12 @@ Contrato y flujo completos: SGC `docs/AGENTES-INGENIERO.md` y `docs/AGENTES-INGE
 Nativo/tiendas (`android/`, `ios-templates/`, keystore, `*.jks`, `google-services`, `build.gradle`, `capacitor.config`, `release-apk`/`build-apk`/`aab`/`store/`, `docs/tiendas*`, `ios-testflight`) · versión (`src/environments/`, `app_versiones`, `registrar_version`) · motor offline (`core/sync/`, `core/db/`, cambios de versión Dexie) · service worker (`ngsw-config`) · guardia de los agentes (`.github/agentes/`, `.github/workflows/`, `branch-protection`).
 **Zona protegida (rechazo automático, definida en SGC):** `.github/workflows/agente-*.yml`, `scripts/guardianes/**`, `.claude/**`, `CLAUDE.md`, `sql/_reversa/**`, `.github/branch-protection-*.json`.
 
-## ⚠️ Desviación consciente: csd-app NO tiene `agente-promocion.yml` (no promueve a prod sola)
-El prompt pedía que los cambios de **web/PWA** de csd-app sí llegaran solos a prod. No lo implementé, por tres razones concretas:
-1. El `agente-promocion.yml` de SGC **no es reutilizable** (no tiene `workflow_call`; está atado a las URLs, el proyecto Vercel y el humo de SGC) y su propio documento dice que csd-app no lo lleva (SGC `AGENTES-INGENIERO-RUNNER.md` §5 d).
-2. **Regla Y1:** cada actualización enviada debe quedar en `sgc.app_versiones` con su versión; un merge a `main` despliega la PWA por Vercel **sin** bump de versión. Subir la versión toca `src/environments/` + `android/app/build.gradle` = zona roja (siempre pide OK). O sea: en la práctica casi todo cambio de la app acabaría en zona roja de todos modos.
-3. No se puede probar sin secrets, y un workflow de auto-merge a `main` sin probar es justo el tipo de cosa que no debe nacer inerte-pero-sin-verificar.
-**Resultado:** el Ingeniero abre PR a `dev`, pasa los guardianes y se mergea a `dev` (carril de agentes), y de ahí a `main` sigue el flujo normal (regla 18: tú pruebas en dev y das el OK). Si quieres auto-prod también para la PWA, el siguiente paso sería un `workflow_call` en SGC parametrizado por repo + una forma de registrar versión sin tocar zona roja; decídelo tú.
+## Promoción automática a prod (solo PWA) — `agente-promocion.yml` (26-nov-2026)
+Decisión de Xaviel (26-nov-2026): los agentes también envían cambios de la app a prod solos, **solo la PWA/web**. Mismo diseño que SGC, pero propio de este repo (el de SGC no es reutilizable): tras mergear a `dev` un PR del agente, `salud-dev` (deployment READY + health de `app-dev`) → decisión (`decidir.mjs promocion`: G1+G2, zona roja SGC+app, tope diario, interruptores `agentes_auto_prod`/`agentes_pausa_total`) → `a-produccion` (cherry-pick sobre `main`, PR `agente-prod/*`, espera `ci-agente`/G1/G2/`pr-main`, merge, health de `app.sgcconstructorasd.com`) → reversión automática + apagado del interruptor si falla.
+- **El APK/AAB/tiendas NUNCA se publica solo.** Nativo, versión, offline, service worker y guardianes = zona roja: se quedan en dev esperando el OK de Xaviel.
+- **Y1:** estos envíos no se registran en `app_versiones` (movil = APK; bump = zona roja y el APK instalado no cambia). Quedan en la tarea del Ingeniero (`en_prod` + `merge_prod`) y en Tecnología › Agentes.
+- **Límite honesto:** la app no tiene smoke e2e ni conteo de errores en este carril; la verificación posterior es health + deployment. Un cambio que rompa solo una pantalla no lo detecta. Mantén `max_prod_por_dia` bajo.
+- Secrets: Environment `agentes-dev` (Anthropic, Supabase dev, tokens) y `agentes-prod` (`AGENTE_PROMOCION_GITHUB_TOKEN`, `SUPABASE_URL_DEV`, `SUPABASE_SERVICE_ROLE_KEY_DEV`).
 
 ## Pasos físicos de Xaviel (solo nombres; nunca pegar valores en chat)
 1. Settings → Environments de **este repo**: crear `agentes-dev` (sin revisores) y, si luego hubiera promoción, `agentes-prod`.
