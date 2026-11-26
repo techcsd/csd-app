@@ -1,0 +1,316 @@
+# EA3/F8 (csd-app) — Promoción de los cambios del Ingeniero a la PWA de prod: dev -> salud -> (auto-prod acotado) -> verificación -> reversión automática.
+#
+# ⭐ EXCEPCIÓN ACOTADA a la regla 18 (BU1) — solo carril de agentes, solo fuera de zona roja, con freno:
+#   interruptor `agentes_auto_prod` / `agentes_pausa_total` (config del Ingeniero, en la base de SGC). Mismo diseño que SGC `agente-promocion.yml`.
+# ⭐ SOLO PWA/web. El APK/AAB/tiendas NUNCA se publica solo (release-apk = decisión de Xaviel). Un cambio que toque nativo, versión,
+#   offline, service worker o los guardianes es zona roja (g1 de SGC@main) y se queda en dev esperando el OK humano.
+# ⭐ Y1: la promoción de agentes NO registra en sgc.app_versiones (movil = APK; subir la versión es zona roja y mentiría: el APK
+#   instalado no cambia). Queda trazada en la tarea del Ingeniero (en_prod + sha de merge) y en Tecnología › Agentes.
+#
+# INERTE sin secrets: cada job sale verde con «inerte: faltan secrets». Los guardianes salen SIEMPRE de techcsd/SGC@main (copia confiable).
+# ZONA PROTEGIDA: este archivo no lo puede tocar el agente (G1: .github/workflows/agente-*.yml).
+name: agente-promocion
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR del agente ya mergeado a dev (reintento manual)"
+        required: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  salud-dev:
+    name: salud-dev
+    if: >-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.merged == true &&
+       (contains(github.event.pull_request.labels.*.name, 'agente') || startsWith(github.event.pull_request.head.ref, 'agente/')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: agentes-dev
+    concurrency:
+      group: agente-promocion-dev
+      cancel-in-progress: false
+    outputs:
+      activo: ${{ steps.pre.outputs.activo }}
+      promover: ${{ steps.decision.outputs.promover }}
+      razon: ${{ steps.decision.outputs.razon }}
+      tarea: ${{ steps.pre.outputs.tarea }}
+      merge_sha: ${{ steps.pre.outputs.merge_sha }}
+      pr: ${{ steps.pre.outputs.pr }}
+    env:
+      DEV_URL: ${{ vars.AGENTES_URL_DEV || 'https://app-dev.sgcconstructorasd.com' }}
+    steps:
+      - name: Preflight
+        id: pre
+        env:
+          S_URL: ${{ secrets.SUPABASE_URL_DEV }}
+          S_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+          S_GH: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PR_INPUT: ${{ github.event.inputs.pr_number }}
+          PR_EVENT: ${{ github.event.pull_request.number }}
+        run: |
+          faltan=""; [ -z "$S_URL" ] && faltan="$faltan SUPABASE_URL_DEV"; [ -z "$S_ROLE" ] && faltan="$faltan SUPABASE_SERVICE_ROLE_KEY_DEV"; [ -z "$S_GH" ] && faltan="$faltan AGENTE_PROMOCION_GITHUB_TOKEN"
+          if [ -n "$faltan" ]; then echo "inerte: faltan secrets:$faltan"; echo "activo=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          PR="${PR_INPUT:-$PR_EVENT}"
+          DATA=$(gh pr view "$PR" --repo "${{ github.repository }}" --json headRefName,mergeCommit,mergedAt,baseRefName)
+          [ "$(echo "$DATA" | jq -r .baseRefName)" = "dev" ] && [ "$(echo "$DATA" | jq -r '.mergedAt // ""')" != "" ] || { echo "inerte: el PR no está mergeado a dev"; echo "activo=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          TAREA=$(echo "$DATA" | jq -r .headRefName | sed -nE 's#^agente/([0-9a-f-]{36}).*#\1#p')
+          [ -n "$TAREA" ] || { echo "inerte: la rama no es agente/<uuid>"; echo "activo=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          { echo "activo=true"; echo "tarea=$TAREA"; echo "pr=$PR"; echo "merge_sha=$(echo "$DATA" | jq -r .mergeCommit.oid)"; } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          ref: ${{ steps.pre.outputs.merge_sha }}
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Guardianes confiables (SGC@main)
+        if: steps.pre.outputs.activo == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: techcsd/SGC
+          ref: main
+          path: .guardianes-tmp
+          sparse-checkout: scripts/guardianes
+          token: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          persist-credentials: false
+      - name: Aislar copia confiable y fusionar zona roja de la app
+        if: steps.pre.outputs.activo == 'true'
+        run: mv .guardianes-tmp "$RUNNER_TEMP/guardianes"
+
+      - uses: actions/setup-node@v4
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          node-version: 22
+
+      - name: Despliegue sano en dev (Vercel READY + health)
+        id: dev
+        if: steps.pre.outputs.activo == 'true'
+        env:
+          VERCEL_TOKEN_AGENTES: ${{ secrets.VERCEL_TOKEN_AGENTES }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+        run: |
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          set +e
+          if [ -n "$VERCEL_TOKEN_AGENTES" ]; then node "$G/salud.mjs" vercel-listo --sha "${{ steps.pre.outputs.merge_sha }}" --target preview; V=$?; else echo "sin VERCEL_TOKEN_AGENTES: no se verifica el deployment, solo health"; V=0; fi
+          [ $V -eq 3 ] && V=0
+          node "$G/salud.mjs" health --url "$DEV_URL"; H=$?
+          echo "sano=$([ $V -eq 0 ] && [ $H -eq 0 ] && echo ok || echo fail)" >> "$GITHUB_OUTPUT"
+
+      - name: Registrar salud y decidir promoción
+        id: decision
+        if: steps.pre.outputs.activo == 'true'
+        env:
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+          GH_TOKEN: ${{ github.token }}
+          TAREA: ${{ steps.pre.outputs.tarea }}
+          PR: ${{ steps.pre.outputs.pr }}
+          MERGE_SHA: ${{ steps.pre.outputs.merge_sha }}
+        run: |
+          set +e
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          HUMO=$([ "${{ steps.dev.outputs.sano }}" = ok ] && echo ok || echo fail)
+          node "$G/rpc.mjs" ing_evento_registrar "{\"p_tarea\":\"$TAREA\",\"p_tipo\":\"humo_dev\",\"p_detalle\":{\"resultado\":\"$HUMO\",\"repo\":\"csd-app\"},\"p_costo_usd\":0}" > /dev/null
+          if [ "$HUMO" != ok ]; then
+            node "$G/rpc.mjs" ing_tarea_actualizar "{\"p_id\":\"$TAREA\",\"p_estado\":\"necesita_humano\",\"p_patch\":{\"motivo\":\"la salud de la PWA en dev falló\"}}" > /dev/null
+          fi
+          node "$G/rpc.mjs" ing_config_leer '{}' > config.json
+          # zona roja = la de SGC fusionada con la de la app (leída del commit de merge: lo ya mergeado a dev pasó G1 antes)
+          node -e "const fs=require('fs');const p='$G/zona-roja.json';const b=JSON.parse(fs.readFileSync(p,'utf8'));const a=JSON.parse(fs.readFileSync('.github/agentes/zona-roja-app.json','utf8'));b.categorias.push(...a.categorias);fs.writeFileSync(p,JSON.stringify(b,null,2))"
+          node "$G/g1.mjs" --base "${MERGE_SHA}^1" --head "$MERGE_SHA" --salida g1.json > /dev/null
+          # SQL en este repo = nunca por esta vía
+          if git diff --name-only "${MERGE_SHA}^1" "$MERGE_SHA" | grep -qE '(^|/)sql/|migrations?/'; then echo "el cambio toca SQL: se queda en dev"; HUMO=fail; fi
+          G2=$(gh api "repos/${{ github.repository }}/issues/${PR}/comments" --jq '[.[]|select(.user.login=="github-actions[bot]")|select(.body|startswith("<!-- guardian-veredicto:"))]|last|.body // ""' | head -n1 | sed 's/^<!-- guardian-veredicto: //; s/ -->$//' | jq -r '.veredicto // "rechazado"')
+          DIA=$(node -e "console.log(new Date(Date.now()-4*3600e3).toISOString().slice(0,10))")
+          HOY=$(gh pr list --repo "${{ github.repository }}" --base main --label agente-prod --state merged --search "merged:>=${DIA}T04:00:00Z" --json number --jq length)
+          node "$G/decidir.mjs" promocion --config config.json --g1 g1.json --g2 "${G2:-rechazado}" --humo "$HUMO" --hoy "${HOY:-0}" | tee decision.txt | head -n2 >> "$GITHUB_OUTPUT"
+          node "$G/rpc.mjs" ing_evento_registrar "{\"p_tarea\":\"$TAREA\",\"p_tipo\":\"decision_promocion\",\"p_detalle\":$(tail -n1 decision.txt),\"p_costo_usd\":0}" > /dev/null
+
+  a-produccion:
+    name: a-produccion
+    needs: salud-dev
+    if: needs.salud-dev.outputs.activo == 'true' && needs.salud-dev.outputs.promover == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: agentes-prod
+    concurrency:
+      group: agente-promocion-prod
+      cancel-in-progress: false
+    env:
+      PROD_URL: ${{ vars.AGENTES_URL_PROD || 'https://app.sgcconstructorasd.com' }}
+      TAREA: ${{ needs.salud-dev.outputs.tarea }}
+      MERGE_SHA_DEV: ${{ needs.salud-dev.outputs.merge_sha }}
+      PR_DEV: ${{ needs.salud-dev.outputs.pr }}
+    steps:
+      - name: Preflight (secrets del Environment agentes-prod)
+        id: pre
+        env:
+          S_GH: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          S_URL: ${{ secrets.SUPABASE_URL_DEV }}
+        run: |
+          faltan=""; [ -z "$S_GH" ] && faltan="$faltan AGENTE_PROMOCION_GITHUB_TOKEN"; [ -z "$S_URL" ] && faltan="$faltan SUPABASE_URL_DEV"
+          if [ -n "$faltan" ]; then echo "inerte: faltan secrets:$faltan"; echo "activo=false" >> "$GITHUB_OUTPUT"; else echo "activo=true" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        if: steps.pre.outputs.activo == 'true'
+        with:
+          node-version: 22
+      - name: Guardianes confiables (SGC@main)
+        if: steps.pre.outputs.activo == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: techcsd/SGC
+          ref: main
+          path: .guardianes-tmp
+          sparse-checkout: scripts/guardianes
+          token: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          persist-credentials: false
+      - name: Aislar copia confiable
+        if: steps.pre.outputs.activo == 'true'
+        run: mv .guardianes-tmp "$RUNNER_TEMP/guardianes"
+
+      # 1) rama agente-prod/<tarea> = origin/main + el commit del agente (cherry-pick); NO el dev->main completo
+      - name: Rama agente-prod y PR a main
+        id: pr
+        if: steps.pre.outputs.activo == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+        run: |
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          git config user.name "agente-promocion"; git config user.email "agente-promocion@users.noreply.github.com"
+          RAMA="agente-prod/${TAREA}-promo"
+          git fetch --quiet origin dev "$MERGE_SHA_DEV" || git fetch --quiet origin dev
+          git checkout -q -B "$RAMA" origin/main
+          PADRES=$(git rev-list --parents -n1 "$MERGE_SHA_DEV" | wc -w)
+          if [ "$PADRES" -gt 2 ]; then OPT="-m 1"; else OPT=""; fi
+          if ! git cherry-pick $OPT "$MERGE_SHA_DEV" >/dev/null 2>&1; then
+            git cherry-pick --abort 2>/dev/null
+            node "$G/rpc.mjs" ing_tarea_actualizar "{\"p_id\":\"$TAREA\",\"p_estado\":\"necesita_humano\",\"p_patch\":{\"motivo\":\"el cambio no aplica limpio sobre main (conflicto o depende de código solo de dev)\"}}" >/dev/null
+            echo "conflicto al cherry-pickear sobre main: queda para humano"; echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          B64=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $B64" push --force-with-lease origin "$RAMA"
+          gh label create agente-prod --force --color d93f0b --description "Promoción automática de agente a prod" >/dev/null 2>&1 || true
+          gh label create agente --force --color 5319e7 --description "PR del Ingeniero IA" >/dev/null 2>&1 || true
+          printf '<!-- agente-tarea: %s -->\n## Promoción a prod (auto, solo PWA)\n\nCommit del agente ya sano en dev (PR #%s). Zona roja: no. Pasa G1+G2 otra vez antes de mergear. El APK no se publica por esta vía.\n' "$TAREA" "$PR_DEV" > body.md
+          URL=$(gh pr create --base main --head "$RAMA" --label agente --label agente-prod --title "[agente→prod] tarea ${TAREA}" --body-file body.md)
+          echo "ok=true" >> "$GITHUB_OUTPUT"; echo "pr=${URL##*/}" >> "$GITHUB_OUTPUT"
+
+      # 2) esperar CI + G1 + G2 + pr-main; si algo falla se cierra y queda para humano
+      - name: Esperar checks (ci-agente, g1, g2, pr-main)
+        id: checks
+        if: steps.pr.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.pr }}
+        run: |
+          set +e
+          sleep 45
+          timeout 2400 gh pr checks "$PR" --repo "${{ github.repository }}" --watch --interval 30
+          echo "codigo=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Checks rojos -> cerrar PR y dejar para humano
+        if: steps.pr.outputs.ok == 'true' && steps.checks.outputs.codigo != '0'
+        env:
+          GH_TOKEN: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+          PR: ${{ steps.pr.outputs.pr }}
+        run: |
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          gh pr close "$PR" --repo "${{ github.repository }}" --comment "Los checks (CI/G1/G2/pr-main) no pasaron para main: se queda en dev. Requiere revisión humana."
+          node "$G/rpc.mjs" ing_tarea_actualizar "{\"p_id\":\"$TAREA\",\"p_estado\":\"necesita_humano\",\"p_patch\":{\"motivo\":\"la promoción a main no pasó G1/G2/CI\"}}" >/dev/null
+          exit 1
+
+      # 3) merge (Vercel despliega main solo)
+      - name: Merge a main
+        id: merge
+        if: steps.checks.outputs.codigo == '0'
+        env:
+          GH_TOKEN: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.pr }}
+        run: |
+          gh pr merge "$PR" --repo "${{ github.repository }}" --squash
+          SHA=$(gh pr view "$PR" --repo "${{ github.repository }}" --json mergeCommit --jq .mergeCommit.oid)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      # 4) verificación posterior: despliegue READY + health de la PWA de prod; si falla, reversión
+      - name: Verificación posterior a prod
+        id: verif
+        if: steps.merge.outcome == 'success'
+        env:
+          VERCEL_TOKEN_AGENTES: ${{ secrets.VERCEL_TOKEN_AGENTES }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+        run: |
+          set +e
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          SHA="${{ steps.merge.outputs.sha }}"
+          if [ -n "$VERCEL_TOKEN_AGENTES" ]; then node "$G/salud.mjs" vercel-listo --sha "$SHA" --target production; V=$?; [ $V -eq 3 ] && V=0; else V=0; fi
+          node "$G/salud.mjs" health --url "$PROD_URL"; H=$?
+          [ $V -eq 0 ] && [ $H -eq 0 ] && HEALTH=ok || HEALTH=fail
+          # sin conteo de errores ni smoke e2e en la app: la decisión usa solo health (se anota)
+          node "$G/decidir.mjs" reversion --health "$HEALTH" --smoke ok --base "" --ahora "" | tee rev.txt | head -n1 >> "$GITHUB_OUTPUT"
+          echo "detalle=$(tail -n1 rev.txt)" >> "$GITHUB_OUTPUT"
+          echo "nota: la app no tiene smoke e2e ni conteo de errores en este carril: solo health del despliegue"
+          exit 0
+
+      - name: Éxito -> tarea en_prod
+        if: steps.verif.outputs.revertir == 'false'
+        env:
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+        run: |
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          node "$G/rpc.mjs" ing_tarea_actualizar "{\"p_id\":\"$TAREA\",\"p_estado\":\"en_prod\",\"p_patch\":{\"merge_prod\":\"${{ steps.merge.outputs.sha }}\"}}" >/dev/null
+          node "$G/rpc.mjs" ing_evento_registrar "{\"p_tarea\":\"$TAREA\",\"p_tipo\":\"prod_verificado\",\"p_detalle\":{\"sha\":\"${{ steps.merge.outputs.sha }}\",\"repo\":\"csd-app\"},\"p_costo_usd\":0}" >/dev/null
+
+      # 5) REVERSIÓN AUTOMÁTICA
+      - name: Reversión automática
+        if: always() && steps.merge.outcome == 'success' && steps.verif.outputs.revertir != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.AGENTE_PROMOCION_GITHUB_TOKEN }}
+          SUPABASE_URL_DEV: ${{ secrets.SUPABASE_URL_DEV }}
+          SUPABASE_SERVICE_ROLE_KEY_DEV: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY_DEV }}
+          DETALLE: ${{ steps.verif.outputs.detalle }}
+        run: |
+          set +e
+          G="$RUNNER_TEMP/guardianes/scripts/guardianes"
+          SHA="${{ steps.merge.outputs.sha }}"
+          git config user.name "agente-promocion"; git config user.email "agente-promocion@users.noreply.github.com"
+          git fetch --quiet origin main; git checkout -q -B "agente-revert/${TAREA}" origin/main
+          git revert --no-edit "$SHA" || { git revert --abort; echo "::error::no se pudo revertir automáticamente: REVERTIR A MANO el commit $SHA"; REVFAIL=1; }
+          if [ -z "$REVFAIL" ]; then
+            B64=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $B64" push origin "agente-revert/${TAREA}"
+            gh label create agente-revert --force --color b60205 >/dev/null 2>&1
+            URL=$(gh pr create --base main --head "agente-revert/${TAREA}" --label agente --label agente-revert --title "[agente] REVERT tarea ${TAREA}" --body "Reversión automática: la verificación posterior a prod falló. Detalle: ${DETALLE}")
+            gh pr merge "${URL##*/}" --repo "${{ github.repository }}" --squash --admin || gh pr merge "${URL##*/}" --repo "${{ github.repository }}" --squash --auto
+          fi
+          node "$G/rpc.mjs" ing_tarea_actualizar "{\"p_id\":\"$TAREA\",\"p_estado\":\"revertida\",\"p_patch\":{\"motivo_reversion\":$(printf '%s' "$DETALLE" | jq -Rs .),\"revert_automatico\":$([ -z "$REVFAIL" ] && echo true || echo false)}}" >/dev/null
+          node "$G/rpc.mjs" ing_evento_registrar "{\"p_tarea\":\"$TAREA\",\"p_tipo\":\"apagar_auto_prod\",\"p_detalle\":{\"motivo\":$(printf '%s' "$DETALLE" | jq -Rs .)},\"p_costo_usd\":0}" >/dev/null
+          node "$G/rpc.mjs" ing_evento_registrar "{\"p_tarea\":\"$TAREA\",\"p_tipo\":\"aviso_xaviel\",\"p_detalle\":{\"asunto\":\"Reversión automática en prod (csd-app)\",\"motivo\":$(printf '%s' "$DETALLE" | jq -Rs .)},\"p_costo_usd\":0}" >/dev/null
+          echo "::error::Reversión automática ejecutada. agentes_auto_prod queda APAGADO. Motivo: $DETALLE"
+          exit 1
