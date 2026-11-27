@@ -264,6 +264,7 @@ jobs:
           VERCEL_TOKEN_AGENTES: ${{ secrets.VERCEL_TOKEN_AGENTES }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+          CSD_QA_PASSWORD: ${{ secrets.QA_PROD_PASSWORD }}
         run: |
           set +e
           G="$RUNNER_TEMP/guardianes/scripts/guardianes"
@@ -271,10 +272,20 @@ jobs:
           if [ -n "$VERCEL_TOKEN_AGENTES" ]; then node "$G/salud.mjs" vercel-listo --sha "$SHA" --target production; V=$?; [ $V -eq 3 ] && V=0; else V=0; fi
           node "$G/salud.mjs" health --url "$PROD_URL"; H=$?
           [ $V -eq 0 ] && [ $H -eq 0 ] && HEALTH=ok || HEALTH=fail
-          # sin conteo de errores ni smoke e2e en la app: la decisión usa solo health (se anota)
-          node "$G/decidir.mjs" reversion --health "$HEALTH" --smoke ok --base "" --ahora "" | tee rev.txt | head -n1 >> "$GITHUB_OUTPUT"
+          # smoke e2e de la PWA (qa/e2e/humo-agentes.spec.ts): login QA, Inicio y Nueva requisición. Solo si health ok y hay secret.
+          SMOKE=ok
+          if [ "$HEALTH" = ok ] && [ -n "$CSD_QA_PASSWORD" ]; then
+            [ -f qa/e2e/humo-agentes.spec.ts ] || git checkout origin/dev -- qa/e2e
+            sleep 60 # deja que el alias de prod apunte al despliegue nuevo
+            npm i --no-save --no-audit --no-fund @playwright/test@1.49.1 && npx playwright install --with-deps chromium
+            CSD_QA_BASE="$PROD_URL" CSD_QA_EMAIL=qa_ingeniero_campo@constructorasd.com CSD_QA_PIN=4815 npx playwright test -c qa/e2e/playwright.config.ts
+            [ $? -eq 0 ] && SMOKE=ok || SMOKE=fail
+          else
+            echo "smoke e2e omitido (health=$HEALTH, secret QA_PROD_PASSWORD presente=$([ -n "$CSD_QA_PASSWORD" ] && echo si || echo no))"
+          fi
+          node "$G/decidir.mjs" reversion --health "$HEALTH" --smoke "$SMOKE" --base "" --ahora "" | tee rev.txt | head -n1 >> "$GITHUB_OUTPUT"
           echo "detalle=$(tail -n1 rev.txt)" >> "$GITHUB_OUTPUT"
-          echo "nota: la app no tiene smoke e2e ni conteo de errores en este carril: solo health del despliegue"
+          echo "nota: smoke=$SMOKE; sin conteo de errores en este carril"
           exit 0
 
       - name: Éxito -> tarea en_prod
